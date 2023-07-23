@@ -1,2 +1,4 @@
 # Algorithms_and_Datastructures
-A collection of implementations of algorithms and datastructures
+This contains several standard algorithms and data structures which I have written based on standard implementations.
+
+These are intended for revision and reference.
