@@ -1,3 +1,5 @@
+<h1>Algorithms</h1>
+
 This contains several standard algorithms which I have written based on standard implementations.
 Currently includes:
 - array_algorithms.py- Currently only includes the Boyer-Moore majority voting algorithm
