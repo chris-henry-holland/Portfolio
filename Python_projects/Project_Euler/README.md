@@ -8,6 +8,8 @@ The solutions are given by the computation of one of the functions in the Projec
 
 The functions representing the solution generally configured so that the default arguments result in the function giving the solution to the corresponding Project Euler problem. In other words, say that func is the function that calculates the solution to Project Euler problem n, where n is an integer. Then the solution to problem n is given by the return value of func(). The exception to this is for problems where the problem is the same just for different inputs (e.g. Project Euler 18 and 67, Maximum Path Sum I & II), for which the second and any other subsequent use of the function requires at least one argument to be explicitly specified.
 
+Each function and class defined has its own documentation, which can be accessed using the dunder method __doc__() or if looking at the code directly is between the triple double quotation marks at the beginning of the function/class definition. You can refer to these regarding using these functions and classes to solve the same problem with different parameters or a related probem.
+
 This directory also contains the .txt files conatining data that is provided by certain Project Euler problems on which the calculation for that problem should be based.
 
 All solutions written using Python 3.6.
