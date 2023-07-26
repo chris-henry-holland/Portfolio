@@ -2,7 +2,7 @@
 
 Contains the solutions to <a href="https://projecteuler.net/" target="_blank">Project Euler</a> problems.
 
-The solutions are written to give a solution to as general a collections of problems (of which the question posed in the specific Project Euler problem is a special case) as possible. In particular, the solutions also work with different inputs than those requested by Project Euler problems (which in general only request computation for a single case), and solutions to problems involving the digits of integers are where possible written so that the base used can be specified by the user, and not just limited to representation in base 10.
+The solutions are written to give a solution to as general a collections of problems (of which the question posed in the specific Project Euler problem is a special case) as possible. In particular, the solutions also work with different inputs than those requested by Project Euler problems (which in general only request computation for a single case), and solutions to problems involving the digits of integers or concatenation of integers are where possible written so that the base used can be specified by the user, and not just limited to representation in base 10.
 
 The solutions are given by the computation of one of the functions in the Project_Euler_m1_m2.py file (where m1 and m2 are integers and [m1, m2] is the range of the Project Euler problem labels whose solutions the file contains), with the specific function solving each problem outlined below.
 
