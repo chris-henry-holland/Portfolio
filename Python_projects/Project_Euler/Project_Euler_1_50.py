@@ -14,8 +14,8 @@ import time
 from sortedcontainers import SortedList
 from typing import Dict, List, Tuple, Set, Union, Generator, Callable, Optional, Any, Hashable
 
-sys.path.append("../bin/Algorithms")
-from Prime_sieves import PrimeSPFsieve
+sys.path.append("../Algorithms_and_Datastructures/Data_structures")
+from prime_sieves import PrimeSPFsieve
 
 # Problem 1
 def multipleSum(n_max: int=999, fact_list: Tuple[int]=(3, 5)) -> int:
