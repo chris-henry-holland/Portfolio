@@ -2,6 +2,8 @@
 
 from typing import Callable, Dict, List, Optional, Tuple, Union, Any
 
+from sortedcontainers import SortedSet
+
 class SegmentTree(object):
     
     """
@@ -292,7 +294,7 @@ class SegmentTreeWithLazyPropogation(object):
             start_idx: int,
             end_idx: int,
             op: Union[str, Tuple[Callable[[Any, Any], Any]]]="sum",
-            range_update_func: Optional[Callable[[Any, int, int], Any]]=None):
+            range_update_func: Optional[Callable[[Any, Any, int], Any]]=None):
         self.start_idx = start_idx
         self.end_idx = end_idx
         self.size = end_idx - start_idx + 1
@@ -300,7 +302,7 @@ class SegmentTreeWithLazyPropogation(object):
         self.op = self.std_ops[op] if isinstance(op, str) else op
         self.tree = [self.op[1] for _ in range(2 * self.size)]
         self.lazy = [self.op[1] for _ in range(2 * self.size)]
-        self.range_update_func = (lambda val, delta, ss, se: self.op[0](self.tree[si], self._scalarMultiple(delta, se - ss + 1))) if range_update_func is None else range_update_func
+        self.range_update_func = (lambda val, delta, range_size: self.op[0](val, self._scalarMultiple(delta, range_size))) if range_update_func is None else range_update_func
     
     def _scalarMultiple(self, val: Any, mult: int) -> Any:
         # Note- mult must be a non-negative integer
@@ -314,73 +316,63 @@ class SegmentTreeWithLazyPropogation(object):
             curr = self.op[0](curr, curr)
         return res
     
-    def _calculateRepresentedRange(self, i: int) -> Tuple[int, int]:
-        #print(f"Calling _calculateRepresentedRange() for i = {i}")
+    def _calculateRepresentedRangeSize(self, i: int) -> int:
+        if not i: return self.size
         l, r = i, i
+        res = 0
         while l < self.size:
+            if r >= self.size: res += r - self.size + 1
+            #print(l)
             l <<= 1
             r = (r << 1) + 1
-        rng = (l - self.size, min(r - self.size, self.size - 1))
-        #print(f"Represented range = {rng}")
-        return rng
+        return res + min(r, (self.size << 1) - 1) - l + 1
     
-    def _resolveLazyNode(self, si: int, ss: int, se: int) -> None:
-        if self.lazy[si] == self.op[1]: return
-        self.tree[si] = self.range_update_func(self.tree[si], self.lazy[si], ss, se)
-        # Pass on the pending updates to children if any
-        if ss != se:
-            # First child node index
-            ci1 = (si << 1)
-            #print(f"ci1 = {ci1}, self.lazy[ci1] = {self.lazy[ci1]}, self.lazy[ci1 + 1] = {self.lazy[ci1 + 1]}, self.lazy[si] = {self.lazy[si]}")
-            self.lazy[ci1] = self.op[0](self.lazy[ci1], self.lazy[si])
-            self.lazy[ci1 + 1] = self.op[0](self.lazy[ci1 + 1], self.lazy[si])
-        # Reset current lazy node to the identity
-        self.lazy[si] = self.op[1]
-        return
-    
-    
-    
-    def _resolveLazyRangeUtil(self, si: int, ss: int, se: int, rs: int, re: int) -> None:
-        if ss > se or ss > re or se < rs:
-            return
-        
-        self._resolveLazyNode(si, ss, se)
+    def _passDownLazy(self, idx: int) -> None:
+        # Changes the current tree node value based on lazy and
+        # propogates the lazy value to the child nodes (if any)
+        if self.lazy[idx] == self.op[1]: return
+        ci1 = idx << 1
+        if ci1 < len(self.lazy):
+            self.lazy[ci1] = self.op[0](self.lazy[ci1], self.lazy[idx])
+            if ci1 + 1 < len(self.lazy):
+                self.lazy[ci1 + 1] = self.op[0](self.lazy[ci1 + 1], self.lazy[idx])
 
-        # Sum range completely contains the resolve range
-        if ss >= rs and se <= re:
-            return
-        
-        # Sum range overlaps with but is not completely contained within the resolve
-        # range, so propogate to children. Note that if the current node is a leaf,
-        # it is impossible to reach here.
-        ci1 = (si << 1)
-        sm = (ss + se) >> 1
-        self._resolveLazyRangeUtil(ci1, ss, sm, rs, re)
-        self._resolveLazyRangeUtil(ci1 + 1, sm + 1, se, rs, re)
-
+        self.tree[idx] = self.range_update_func(self.tree[idx], self.lazy[idx], self._calculateRepresentedRangeSize(idx))
+        self.lazy[idx] = self.op[1]
         return
-    
-    def resolveLazyRange(self, rs: int, re: int) -> None:
-        self._resolveLazyRangeUtil(0, 0, self.size - 1, rs, re)
+
+    def _resolveLazyNodes(self, node_inds: List[int]) -> None:
+        resolve_stk = []
+        node_ss = SortedSet(node_inds)
+        idx = 0
+        while idx < len(node_ss):
+            i = node_ss[~idx]
+            node_ss.add(i >> 1)
+            idx += 1
+        for i in node_ss:
+            ci1 = i << 1
+            if ci1 < len(self.lazy):
+                self.lazy[ci1] = self.op[0](self.lazy[ci1], self.lazy[i])
+                if ci1 + 1 < len(self.lazy):
+                    self.lazy[ci1 + 1] = self.op[0](self.lazy[ci1 + 1], self.lazy[i])
+            self.tree[i] = self.range_update_func(self.tree[i], self.lazy[i], self._calculateRepresentedRangeSize(i))
+            self.lazy[i] = self.op[1]
+        return
     
     def _updateNodeFromChildren(self, i: int) -> None:
         #print(f"Using _updateNodeFromChildren() with i = {i}")
-        if i > self.size: return
+        if i >= self.size: return
+        self._passDownLazy(i)
+
         i2 = i << 1
-        self.lazy[i2] = self.op[0](self.lazy[i2], self.lazy[i])
-        self._resolveLazyNode(i2, *self._calculateRepresentedRange(i2))
-        
+        self.tree[i] = self.range_update_func(self.tree[i2], self.lazy[i2], self._calculateRepresentedRangeSize(i2))
         if i2 + 1 < len(self.tree):
-            self.lazy[i2 + 1] = self.op[0](self.lazy[i2 + 1], self.lazy[i])
-            self._resolveLazyNode(i2 + 1, *self._calculateRepresentedRange(i2 + 1))
-            self.tree[i] = self.op[0](self.tree[i2], self.tree[i2 + 1])
-        else:
-            self.tree[i] = self.tree[i2]
+            self.tree[i] = self.op[0](self.tree[i],
+                                      self.range_update_func(self.tree[i2 + 1], self.lazy[i2 + 1], self._calculateRepresentedRangeSize(i2 + 1)))
         self.lazy[i] = self.op[1]
         return
 
     def modifyRange(self, update_start_idx: int, update_end_idx: int, delta: Any) -> None:
-        #print(f"Using modifyRange() with update_start_idx = {update_start_idx}, update_end_idx = {update_end_idx}, delta = {delta}")
         l = max(update_start_idx, self.start_idx) + self.offset
         r = min(update_end_idx, self.end_idx) + self.offset + 1
         res = self.op[1] # The identity of the operation
@@ -439,9 +431,9 @@ class SegmentTreeWithLazyPropogation(object):
         """
         
         if i < self.start_idx or i > self.end_idx: return
-        # Resolve any pending lazy updates in the affected nodes
-        self.resolveLazyRange(i - self.start_idx, i - self.start_idx)
         i += self.offset
+        # Resolve any pending lazy updates in the affected nodes
+        self._resolveLazyNodes([i])
         if self.tree[i] == val: return
         self.tree[i] = val
         while i > 1:
@@ -476,18 +468,20 @@ class SegmentTreeWithLazyPropogation(object):
         l = max(l, self.start_idx) + self.offset
         r = min(r, self.end_idx) + self.offset + 1
 
-        res = self.op[1] # The identity of the operation
+        nodes = []
         while l < r:
             if l & 1:
-                self._resolveLazyNode(l, *self._calculateRepresentedRange(l))
-                res = self.op[0](res, self.tree[l])
+                nodes.append(l)
                 l += 1
             if r & 1:
                 r -= 1
-                self._resolveLazyNode(r, *self._calculateRepresentedRange(r))
-                res = self.op[0](res, self.tree[r])
+                nodes.append(r)
             l >>= 1
             r >>= 1
+        self._resolveLazyNodes(nodes)
+        res = self.op[1]
+        for idx in nodes: res = self.op[0](res, self.tree[idx])
+
         return res
     
     def __getitem__(self, i: int) -> Optional[Any]:
@@ -532,15 +526,16 @@ class SegmentTreeWithLazyPropogation(object):
         """
         if i0 < self.start_idx:
             arr = arr[self.start_idx - i0:]
-        # Resolve any pending lazy updates in the affected nodes
-        self.resolveLazyRange(i0 - self.start_idx, min(i0 + len(arr) - self.start_idx, self.size) - 1)
+            i0 = self.start_idx
+        if not arr: return
         i0 += self.offset
+        # Resolve any pending lazy updates in the affected nodes
+        self._resolveLazyNodes(range(i0 + self.offset, min(i0 + len(arr), len(self.tree))))
 
         for i, val in enumerate(arr, start=i0):
             self.tree[i] = val
         l = i0
         r = l + len(arr)
-        #print(l, r)
         while l > 1:
             for i in reversed(range(l, r)):
                 i2 = i >> 1
@@ -771,11 +766,15 @@ def handleQuery(nums1: List[int], nums2: List[int], queries: List[List[int]]) ->
         [[1,9,19],[1,1,16],[3,0,0],[2,5,0],[3,0,0],[2,29,0],[3,0,0]]
     """
     n = len(nums1)
-    st_nums1 = SegmentTreeWithLazyPropogation(0, n - 1, op="sum", range_update_func=(lambda val, delta, ss, se: (se - ss + 1 - val) if delta & 1 else val))
+    #m = 1
+    #while m < n:
+    #    m <<= 1
+    m = n
+    #print(f"m = {m}")
+    st_nums1 = SegmentTreeWithLazyPropogation(0, m - 1, op="sum", range_update_func=(lambda val, delta, range_size: (range_size - val) if delta & 1 else val))
     st_nums1.populate(0, nums1)
     while queries and queries[-1][0] != 3:
         queries.pop()
-    #print(st_nums1.tree, st_nums1.lazy)
     res = []
     curr = sum(nums2)
     for q in queries:
