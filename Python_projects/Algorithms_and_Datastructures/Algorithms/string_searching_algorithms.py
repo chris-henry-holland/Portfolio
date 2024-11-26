@@ -2,6 +2,7 @@
 
 from collections import deque
 from collections.abc import Iterable
+import heapq
 import itertools
 from typing import Dict, Generator, List, Tuple, Optional, Union,\
         Callable, Any
@@ -305,18 +306,21 @@ def rollingHash(s: Iterable, length: int, p_lst: Union[Tuple[int], List[int]]=(3
     iter_obj = iter(s)
     n_p = len(p_lst)
     hsh = [0] * n_p
+    val_qu = deque()
     for i in range(length):
         try: val = func(next(iter_obj))
         except StopIteration: return
+        val_qu.append(val)
         for j, p in enumerate(p_lst):
-            hsh[j] = (hsh[j] * p + lst[i]) % md
+            hsh[j] = (hsh[j] * p + val) % md
     yield tuple(hsh)
-    mults[j] = [pow(p, length, md) for p in p_lst]
+    mults = [pow(p, length, md) for p in p_lst]
     for i in itertools.count(length):
         try: val = func(next(iter_obj))
         except StopIteration: return
+        val_qu.append(val)
         for j, p in enumerate(p_lst):
-            hsh[j] = ((hsh[j] - mults[j] * lst[i - length]) * p + lst[i]) % md
+            hsh[j] = ((hsh[j] - mults[j] * val_qu.popleft()) * p + val) % md
         yield tuple(hsh)
     return
 
@@ -331,7 +335,7 @@ def rollingHashSearch(s: str, patterns: List[str],
     pattern_dict = {}
     for pattern in patterns:
         length = len(pattern)
-        pattern_dict.setdefault(l, {})
+        pattern_dict.setdefault(length, {})
         hsh = next(rollingHash(pattern, length, p_lst=p_lst, md=md, func=char2num))
         pattern_dict[length].setdefault(hsh, set())
         pattern_dict[length][hsh].add(pattern)
