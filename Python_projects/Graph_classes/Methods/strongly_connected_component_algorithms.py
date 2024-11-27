@@ -4,7 +4,9 @@ import inspect
 from typing import Dict, List, Set, Tuple, Optional, Union, Hashable,\
         Generator, Any, Callable
 
-from Graph_classes import ExplicitUnweightedDirectedGraph
+from Graph_classes import\
+        ExplicitUnweightedDirectedGraph,\
+        LimitedDirectedGraphTemplate
 
 from Graph_classes.utils import containsDirectedCycle
 

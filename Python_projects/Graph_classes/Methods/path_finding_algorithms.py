@@ -8,6 +8,9 @@ from sortedcontainers import SortedDict
 from typing import Dict, List, Set, Tuple, Optional, Union, Hashable,\
         Generator, Any, Callable
 
+from Graph_classes import\
+        LimitedGraphTemplate
+
 ### Eulerian path and circuit finding algorithms ###
 
 @abstractmethod

@@ -6,7 +6,8 @@ from typing import Dict, List, Set, Tuple, Optional, Union, Hashable,\
         Generator, Any, Callable
 
 from Graph_classes.explicit_graph_types import\
-        ExplicitWeightedDirectedGraph
+        ExplicitWeightedDirectedGraph,\
+        LimitedGraphTemplate
 
 ### Ford-Fulkerson algorithm for maximum flow through a network ###
 

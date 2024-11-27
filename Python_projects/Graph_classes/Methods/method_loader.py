@@ -5,6 +5,9 @@ import inspect
 
 from typing import Dict, List, Tuple, Callable, Union
 
+#from Graph_classes import\
+#        GenericGraphTemplate
+
 def loadMethodsMultipleModules(
     methodname_dicts: Dict[str, Dict["GenericGraphTemplate", List[Union[Tuple[str], str]]]]
 ) -> Dict["GenericGraphTemplate", Dict[str, Callable]]:

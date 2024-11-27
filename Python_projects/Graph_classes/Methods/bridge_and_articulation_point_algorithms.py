@@ -7,6 +7,9 @@ from typing import Dict, List, Set, Tuple, Optional, Union, Hashable,\
 
 #sys.path.append(os.path.abspath('../../'))
 
+from Graph_classes import\
+        LimitedUndirectedGraphTemplate
+
 from Graph_classes.utils import UnionFind
 
 ### Algorithms that find bridges in undirected graphs ###

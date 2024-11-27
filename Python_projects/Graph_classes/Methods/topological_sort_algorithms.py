@@ -5,6 +5,9 @@ import inspect
 from typing import Dict, List, Set, Tuple, Optional, Union, Hashable,\
         Generator, Any, Callable
 
+from Graph_classes import\
+        LimitedDirectedGraphTemplate
+
 from Graph_classes.utils import containsDirectedCycle
 
 ### Variants of Kahn's algorithm for topological sorting ###
