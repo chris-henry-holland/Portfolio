@@ -11,6 +11,8 @@ from typing import Dict, List, Set, Tuple, Optional, Union, Hashable,\
 from Graph_classes import\
         LimitedGraphTemplate
 
+# TODO- documentation
+
 ### Eulerian path and circuit finding algorithms ###
 
 @abstractmethod
@@ -23,7 +25,41 @@ def _hierholzerIndex_abstract(self, start_idx: Optional[int],\
 def hierholzerIndex(self, start_idx: Optional[int]=None,\
         end_idx: Optional[int]=None, sort: bool=False,\
         reverse: bool=False) -> List[int]:
-    # Can be used to solve Leetcode #1743
+    """
+    Implementation of the Hierholzer algorithm for finding an
+    Eulerian path or cycle if one exists, with the option to
+    specify either, both or neither of a start and end point.
+    If such a path or cycle exists, it is expressed in terms
+    of the indices of the vertices it traverses.
+    An Eulerian path is a path through a graph (directed or
+    undirected) that traverses every edge of the graph
+    exactly once. An Eulerian cycle is an Eulerian path that
+    starts and ends at the same vertex.
+
+    This can be used to solve Leetcode #1743
+
+    Args:
+        Optional named:
+        start_idx (int or None): The index of the vertex at
+                which the path must begin, or None if the
+                path may start at any vertex. 
+            Default: None
+        end_idx (int or None): The index of the vertex at
+                which the path must end, or None if the
+                path may end at any vertex.
+            Default: None
+        sort (bool): TODO
+            Default: False
+        reverse (bool): TODO
+            Default: False
+    
+    Returns:
+    List of integers (int), giving the indices of the vertices
+    encountered in a traversal of the identified Eulerian path or
+    cycle in the order they are encountered if an Eulerian path
+    or cycle fulfilling the specified restrictions exists,
+    otherwise an empty list. 
+    """
     return self._hierholzerIndex(start_idx, end_idx, sort=sort,\
             reverse=reverse)
 
