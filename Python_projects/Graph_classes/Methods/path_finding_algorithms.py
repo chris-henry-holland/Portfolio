@@ -36,7 +36,7 @@ def hierholzerIndex(self, start_idx: Optional[int]=None,\
     exactly once. An Eulerian cycle is an Eulerian path that
     starts and ends at the same vertex.
 
-    This can be used to solve Leetcode #1743
+    This can be used to solve Leetcode #332, #1743 and #2097
 
     Args:
         Optional named:
@@ -48,9 +48,16 @@ def hierholzerIndex(self, start_idx: Optional[int]=None,\
                 which the path must end, or None if the
                 path may end at any vertex.
             Default: None
-        sort (bool): TODO
+        sort (bool): If given as True, the Eulerian path or
+                cycle returned will at each step preferentially
+                move to the lowest (if reverse is False) or
+                highest (if reverse is True) index of the
+                vertices reachable by an edge not yet traversed.
             Default: False
-        reverse (bool): TODO
+        reverse (bool): If sort is True, determines whether the
+                each step in the Eulerian path or cycle should
+                move to the lowest (if False) or highest (if True)
+                index vertex still available.
             Default: False
     
     Returns:
@@ -58,7 +65,9 @@ def hierholzerIndex(self, start_idx: Optional[int]=None,\
     encountered in a traversal of the identified Eulerian path or
     cycle in the order they are encountered if an Eulerian path
     or cycle fulfilling the specified restrictions exists,
-    otherwise an empty list. 
+    otherwise an empty list.
+    The path given is an Eulerian cycle if and only if the
+    first and last elements of the returned list are the same.
     """
     return self._hierholzerIndex(start_idx, end_idx, sort=sort,\
             reverse=reverse)
@@ -66,6 +75,50 @@ def hierholzerIndex(self, start_idx: Optional[int]=None,\
 def hierholzer(self, start: Optional[Hashable]=None,\
         end: Optional[Hashable]=None, sort: bool=False,\
         reverse: bool=False) -> List[Hashable]:
+    """
+    Implementation of the Hierholzer algorithm for finding an
+    Eulerian path or cycle if one exists, with the option to
+    specify either, both or neither of a start and end point.
+    If such a path or cycle exists, it is expressed in terms
+    of the labels of the vertices it traverses.
+    An Eulerian path is a path through a graph (directed or
+    undirected) that traverses every edge of the graph
+    exactly once. An Eulerian cycle is an Eulerian path that
+    starts and ends at the same vertex.
+
+    This can be used to solve Leetcode #1743
+
+    Args:
+        Optional named:
+        start (hashable or None): The label of the vertex at
+                which the path must begin, or None if the
+                path may start at any vertex. 
+            Default: None
+        end (hashable or None): The label of the vertex at
+                which the path must end, or None if the
+                path may end at any vertex.
+            Default: None
+        sort (bool): If given as True, the Eulerian path or
+                cycle returned will at each step preferentially
+                move to the lowest (if reverse is False) or
+                highest (if reverse is True) index of the
+                vertices reachable by an edge not yet traversed.
+            Default: False
+        reverse (bool): If sort is True, determines whether the
+                each step in the Eulerian path or cycle should
+                move to the lowest (if False) or highest (if True)
+                index vertex still available.
+            Default: False
+    
+    Returns:
+    List of hashable objects, giving the labels of the vertices
+    encountered in a traversal of the identified Eulerian path or
+    cycle in the order they are encountered if an Eulerian path
+    or cycle fulfilling the specified restrictions exists,
+    otherwise an empty list. 
+    The path given is an Eulerian cycle if and only if the
+    first and last elements of the returned list are the same.
+    """
     start_idx = None if start is None else\
             self.vertex2Index(start)
     end_idx = None if end is None else\
