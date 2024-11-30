@@ -69,21 +69,26 @@ class SegmentTree(object):
                 given index.
     """
     
-    std_ops = {"sum": (lambda x, y: x + y, 0),
-               "product": (lambda x, y: x * y, 1),
-                "max": (lambda x, y: max(x, y), -float("inf")),
-                "min": (lambda x, y: min(x, y), float("inf")),
-                "union": (lambda x, y: x.union(y), set()),
-                "bitwise_and": (lambda x, y: x & y, -1),
+    std_ops = {"sum": (lambda x, y: x + y, 0, True),
+               "product": (lambda x, y: x * y, 1, True),
+                "max": (lambda x, y: max(x, y), -float("inf"), True),
+                "min": (lambda x, y: min(x, y), float("inf"), True),
+                "union": (lambda x, y: x.union(y), set(), True),
+                "bitwise_and": (lambda x, y: x & y, -1, True),
     }
     
-    def __init__(self, start_idx: int, end_idx: int, op: Union[str, Tuple[Callable[[Any, Any], Any]]]="sum"):
+    def __init__(self, start_idx: int, end_idx: int, op: Union[str, Tuple[Callable[[Any, Any], Any], Any, bool]]="sum"):
         self.start_idx = start_idx
         self.end_idx = end_idx
         self.size = end_idx - start_idx + 1
-        self.offset = self.size - self.start_idx
         self.op = self.std_ops[op] if isinstance(op, str) else op
-        self.tree = [self.op[1] for _ in range(2 * self.size)]
+        if not self.op[2]:
+            n = 1
+            while n < self.size:
+                n <<= 1
+        else: n = self.size
+        self.offset = n - self.start_idx
+        self.tree = [self.op[1] for _ in range(n << 1)]
     
     def __getitem__(self, i: int) -> Optional[Any]:
         """
@@ -119,7 +124,7 @@ class SegmentTree(object):
         the identity element of the binary operation.
         """
         l = max(l, self.start_idx) + self.offset
-        r = min(r, self.end_idx) + self.offset
+        r = min(r, self.end_idx) + self.offset + 1
         
         res = self.op[1] # The identity of the operation
         while l < r:
@@ -128,7 +133,7 @@ class SegmentTree(object):
                 l += 1
             if r & 1:
                 r -= 1
-                res = self.op[0](res, self.tree[r])
+                res = self.op[0](self.tree[r], res)
             l >>= 1
             r >>= 1
         return res
@@ -160,7 +165,8 @@ class SegmentTree(object):
         if self.tree[i] == val: return
         self.tree[i] = val
         while i > 1:
-            self.tree[i >> 1] = self.op[0](self.tree[i], self.tree[i ^ 1])
+            j1, j2 = sorted([i, i ^ 1])
+            self.tree[i >> 1] = self.op[0](self.tree[j1], self.tree[j2])
             i >>= 1
         return
     
@@ -203,9 +209,9 @@ class SegmentTree(object):
         l = i0
         r = l + len(arr)
         while l > 1:
-            for i in range(l, r):
-                i2 = i >> 1
-                self.tree[i2] = self.op[0](self.tree[i], self.tree[i ^ 1])
+            for i in reversed(range(l, r, 2)):
+                j1, j2 = sorted([i, i ^ 1])
+                self.tree[i >> 1] = self.op[0](self.tree[j1], self.tree[j2])
             l >>= 1
             r = ((r + 1) >> 1)
         return
@@ -279,14 +285,14 @@ class SegmentTreeWithLazyPropogation(object):
                 given index.
     """
     
-    std_ops = {"sum": (lambda x, y: x + y, 0),
-               "product": (lambda x, y: x * y, 1),
-                "max": (lambda x, y: max(x, y), -float("inf")),
-                "min": (lambda x, y: min(x, y), float("inf")),
-                "union": (lambda x, y: x.union(y), set()),
-                "bitwise_and": (lambda x, y: x & y, -1),
-                "bitwise_or": (lambda x, y: x | y, 0),
-                "bitwise_xor": (lambda x, y: x ^ y, 0),
+    std_ops = {"sum": (lambda x, y: x + y, 0, True),
+               "product": (lambda x, y: x * y, 1, True),
+                "max": (lambda x, y: max(x, y), -float("inf"), True),
+                "min": (lambda x, y: min(x, y), float("inf"), True),
+                "union": (lambda x, y: x.union(y), set(), True),
+                "bitwise_and": (lambda x, y: x & y, -1, True),
+                "bitwise_or": (lambda x, y: x | y, 0, True),
+                "bitwise_xor": (lambda x, y: x ^ y, 0, True),
     }
     
     def __init__(
@@ -298,10 +304,15 @@ class SegmentTreeWithLazyPropogation(object):
         self.start_idx = start_idx
         self.end_idx = end_idx
         self.size = end_idx - start_idx + 1
-        self.offset = self.size - self.start_idx
         self.op = self.std_ops[op] if isinstance(op, str) else op
-        self.tree = [self.op[1] for _ in range(2 * self.size)]
-        self.lazy = [self.op[1] for _ in range(2 * self.size)]
+        if not self.op[2]:
+            n = 1
+            while n < self.size:
+                n <<= 1
+        else: n = self.size
+        self.offset = n - self.start_idx
+        self.tree = [self.op[1] for _ in range(n << 1)]
+        self.lazy = [self.op[1] for _ in range(n << 1)]
         self.range_update_func = (lambda val, delta, range_size: self.op[0](val, self._scalarMultiple(delta, range_size))) if range_update_func is None else range_update_func
     
     def _scalarMultiple(self, val: Any, mult: int) -> Any:
@@ -437,7 +448,8 @@ class SegmentTreeWithLazyPropogation(object):
         if self.tree[i] == val: return
         self.tree[i] = val
         while i > 1:
-            self.tree[i >> 1] = self.op[0](self.tree[i], self.tree[i ^ 1])
+            j1, j2 = sorted([i, i ^ 1])
+            self.tree[i >> 1] = self.op[0](self.tree[j1], self.tree[j2])
             i >>= 1
         return
 
@@ -468,19 +480,21 @@ class SegmentTreeWithLazyPropogation(object):
         l = max(l, self.start_idx) + self.offset
         r = min(r, self.end_idx) + self.offset + 1
 
-        nodes = []
+        l_nodes = []
+        r_nodes = []
         while l < r:
             if l & 1:
-                nodes.append(l)
+                l_nodes.append(l)
                 l += 1
             if r & 1:
                 r -= 1
-                nodes.append(r)
+                r_nodes.append(r)
             l >>= 1
             r >>= 1
-        self._resolveLazyNodes(nodes)
+        self._resolveLazyNodes(l_nodes + r_nodes)
         res = self.op[1]
-        for idx in nodes: res = self.op[0](res, self.tree[idx])
+        for idx in l_nodes: res = self.op[0](res, self.tree[idx])
+        for idx in reversed(r_nodes): res = self.op[0](res, self.tree[idx])
 
         return res
     
@@ -537,9 +551,10 @@ class SegmentTreeWithLazyPropogation(object):
         l = i0
         r = l + len(arr)
         while l > 1:
-            for i in reversed(range(l, r)):
+            for i in reversed(range(l, r, 2)):
                 i2 = i >> 1
-                self.tree[i2] = self.op[0](self.tree[i], self.tree[i ^ 1])
+                j1, j2 = sorted([i, i ^ 1])
+                self.tree[i2] = self.op[0](self.tree[j1], self.tree[j2])
             l >>= 1
             r = ((r + 1) >> 1)
             #print(l, r)
@@ -598,7 +613,7 @@ def lengthOfLIS(nums: List[int], k: Optional[int]=None) -> int:
         start_idx = min(start_idx, num)
         end_idx = max(end_idx, num)
     n_sum = 0
-    st = SegmentTree(start_idx, end_idx, op=(lambda x, y: max(x, y), 0))
+    st = SegmentTree(start_idx, end_idx, op=(lambda x, y: max(x, y), 0, True))
     
     res = 1
     for num in nums:
@@ -736,6 +751,68 @@ def minimumValueSum(nums: List[int], andValues: List[int]) -> int:
             res = min(res, row[i - 1 - idx0] + nums[-1])
     return res if isinstance(res, int) else -1
 
+def maximumSumSubsequence(nums: List[int], queries: List[List[int]]) -> int:
+    """
+
+    Illustrates the use of segment tree with non-commutative binary
+    operations.
+
+    Solution to Leetcode #3165: Maximum Sum of Subsequence With Non-adjacent
+    Elements
+
+    Original problem #3165 description:
+
+    You are given an array nums consisting of integers. You are also given a
+    2D array queries, where queries[i] = [posi, xi].
+
+    For query i, we first set nums[posi] equal to xi, then we calculate the
+    answer to query i which is the maximum sum of a 
+    subsequence
+    of nums where no two adjacent elements are selected.
+
+    Return the sum of the answers to all queries.
+
+    Since the final answer may be very large, return it modulo 10^9 + 7.
+
+    A subsequence is an array that can be derived from another array by
+    deleting some or no elements without changing the order of the remaining
+    elements.
+
+    Examples:
+        >>> maximumSumSubsequence([3,5,9], [[1,-2],[0,-3]])
+        21
+
+        >>> maximumSumSubsequence([4,0,-1,-2,3,1,-1], [[3,1],[0,-2],[1,-1],[0,-2],[5,4],[6,-3],[6,-2],[2,-1]])
+        36
+    """
+
+    md = 10 ** 9 + 7
+
+    n = len(nums)
+
+    def combineFunction(vals1: Tuple[int, int, int, int], vals2: Tuple[int, int, int, int]) -> Tuple[int, int, int, int]:
+        res = (
+            max(vals1[0] + vals2[1], vals1[2] + vals2[0], vals1[0] + vals2[0], vals1[0], vals1[2], vals2[0], vals2[1]),
+            max(vals1[1] + vals2[1], vals1[3] + vals2[0], vals1[1] + vals2[0], vals1[1], vals1[3]),
+            max(vals1[0] + vals2[3], vals1[2] + vals2[2], vals1[0] + vals2[2], vals2[2], vals2[3]),
+            max(vals1[1] + vals2[3], vals1[3] + vals2[2], vals1[1] + vals2[2]),
+        )
+        #print(vals1, vals2, res)
+        return res
+
+    st = SegmentTree(0, n - 1, op=(combineFunction, (-float("inf"), -float("inf"), -float("inf"), -float("inf")), False))
+    arr = [(-float("inf"), -float("inf"), -float("inf"), num) for num in nums]
+    st.populate(0, arr)
+    #print(st.tree)
+    res = 0
+    for q in queries:
+        st.update(q[0], (-float("inf"), -float("inf"), -float("inf"), q[1]))
+        tup = st.query(0, n - 1)
+        ans = max(tup)
+        ans = max(ans, 0)
+        res = (res + ans) % md
+    return res
+
 def handleQuery(nums1: List[int], nums2: List[int], queries: List[List[int]]) -> List[int]:
     """
     
@@ -792,6 +869,17 @@ if __name__ == "__main__":
     
     res = minimumValueSum([2,3,5,7,7,7,5], [0,7,5])
     print("\nminimumValueSum([2,3,5,7,7,7,5], [0,7,5]) = "
+            f"{res}")
+    
+    res = maximumSumSubsequence([3,5,9], [[1,-2],[0,-3]])
+    print("\nmaximumSumSubsequence([3,5,9], [[1,-2],[0,-3]]) = "
+            f"{res}")
+
+    res = maximumSumSubsequence(
+        [4,0,-1,-2,3,1,-1],
+        [[3,1],[0,-2],[1,-1],[0,-2],[5,4],[6,-3],[6,-2],[2,-1]]
+    )
+    print("\nmaximumSumSubsequence([4,0,-1,-2,3,1,-1], [[3,1],[0,-2],[1,-1],[0,-2],[5,4],[6,-3],[6,-2],[2,-1]]) = "
             f"{res}")
     
     res = handleQuery([1,0,1], [0,0,0], [[1,1,1],[2,1,0],[3,0,0]])
