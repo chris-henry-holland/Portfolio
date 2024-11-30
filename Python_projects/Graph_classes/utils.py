@@ -50,6 +50,38 @@ class UnionFind:
     def connected(self, i1: int, i2: int) -> bool:
         return self.find(i1) == self.find(i2)
 
+def forestNodePairsTraversalStatistics(
+    adj: List[Dict[int, Any]],
+    op: Tuple[Callable[[Any, Any], Any], Any]=(lambda x, y: x + y, 0),
+) -> List[Dict[int, Tuple[Any, int]]]:
+    """
+    For each ordered pair of vertices in a weighted undirected forest, finds the
+    the result of applying an associative (but not necessarily commultative)
+    operation on all edges in the direct path between the vertices (in order)
+    and the first vertex on the path from the first vertex to the second.
+
+    Can be used to solve Leetcode #3067
+    """
+    n = len(adj)
+    d_dict = [{} for _ in range(n)]
+    def recur(idx: int, idx0: Optional[int])-> None:
+        if idx0 is not None:
+            d0 = adj[idx0][idx]
+            for idx2, (d, idx3) in d_dict[idx0].items():
+                #print(idx2, (d, idx3))
+                d2 = d + d0
+                d_dict[idx][idx2] = (op[0](d0, d), idx0)
+                d_dict[idx2][idx] = (op[0](d, d0), d_dict[idx2][idx0][1])
+            d_dict[idx][idx0] = (d0, idx0)
+            d_dict[idx0][idx] = (d0, idx)
+        for idx2 in adj[idx].keys():
+            if idx2 == idx0: continue
+            recur(idx2, idx)
+        return
+    recur(0, None)
+    return d_dict
+
+
 ### Random k-tuples from first n natural numbers functions ###
 ### and generators                                         ###
 
