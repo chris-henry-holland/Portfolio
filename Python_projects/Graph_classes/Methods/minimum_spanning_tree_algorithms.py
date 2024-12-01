@@ -38,11 +38,11 @@ def kruskalIndex(self) -> Tuple[Union[float, int], Set[Tuple[int, int, int]]]:
     edge_heap = []
     adj = getattr(self, self.adj_name)
     for idx1 in range(self.n):
-        for idx2, min_weight in self.getAdjMinimumWeightsIndex(idx1):
-            edge_heap.append((idx1, idx2, min_weight))
+        for idx2, min_weight in self.getAdjMinimumWeightsIndex(idx1).items():
+            edge_heap.append((min_weight, idx1, idx2))
     heapq.heapify(edge_heap)
     while edge_heap:
-        idx1, idx2, w = heapq.heappop(edge_heap)
+        w, idx1, idx2 = heapq.heappop(edge_heap)
         if uf.connected(idx1, idx2): continue
         uf.union(idx1, idx2)
         res.add((idx1, idx2, w))
@@ -95,12 +95,20 @@ def checkMinimumSpanningForest(
     # Checking there are no cycles and that the edges exist in the original
     # graph and have accurate weights
     for e in forest_edges:
-        if not graph.vertexInGraph(e[0]) or not graph.vertexInGraph(e[1]): return False
+        if not graph.vertexInGraph(e[0]) or not graph.vertexInGraph(e[1]):
+            print("fail1")
+            return False
         idx1, idx2 = graph.vertex2Index(e[0]), graph.vertex2Index(e[1])
-        if uf.connected(idx1, idx2): return False
+        if uf.connected(idx1, idx2):
+            print("fail2")
+            return False
         d_dict = graph.getAdjMinimumWeightsIndex(idx1)
-        if idx2 not in d_dict.keys(): return False
-        if abs(d_dict[idx2] - e[2]) > eps: return False
+        if idx2 not in d_dict.keys():
+            print("fail3")
+            return False
+        if abs(d_dict[idx2] - e[2]) > eps:
+            print("fail4")
+            return False
         uf.union(idx1, idx2)
     # Checking if the number of trees equals the number of connected
     # components of the original graph
@@ -112,7 +120,9 @@ def checkMinimumSpanningForest(
             if idx2 <= idx or uf2.connected(idx, idx2): continue
             n_connected -= 1
             uf2.union(idx, idx2)
-    if n_trees != n_connected: return False
+    if n_trees != n_connected:
+        print("fail5")
+        return False
     #treeNodePairsTraversalStatistics(
     #    adj: List[Dict[int, Any]],
     #    op: Tuple[Callable[[Any, Any], Any], Any]=(lambda x, y: x + y, 0),
@@ -120,14 +130,18 @@ def checkMinimumSpanningForest(
 
     # Checking if the tree can be improved by swapping out an included
     # edge for an excluded edge
+    v2idx = lambda v: graph.vertex2Index(v)
     forest_adj = [{} for _ in range(graph.n)]
     for e in forest_edges:
-        forest_adj[e[0]][e[1]] = e[2]
-        forest_adj[e[1]][e[0]] = e[2]
+        idx1, idx2 = v2idx(e[0]), v2idx(e[1])
+        forest_adj[idx1][idx2] = e[2]
+        forest_adj[idx2][idx1] = e[2]
     forest_path_stats = forestNodePairsTraversalStatistics(forest_adj, (lambda x, y: max(x, y), -float("inf")))
     for idx1, path_stats in enumerate(forest_path_stats):
         edge_weights = graph.getAdjMinimumWeightsIndex(idx1)
-        for idx2, max_weight in path_stats.items():
-            if idx2 <= idx1 or idx2 not in edge_weights.keys(): continue
-            if max_weight > edge_weights[idx2]: return False
+        for idx2, wt_tup in path_stats.items():
+            if idx2 <= idx1 or idx2 not in edge_weights.keys() or idx2 == wt_tup[1]: continue
+            max_weight = wt_tup[0]
+            if max_weight > edge_weights[idx2]:
+                return False
     return True
