@@ -653,7 +653,7 @@ def dijkstra(self, starts: Union[Set[Hashable],\
     the value corresponding to these vertices in the dictionaries
     starts and ends respectively).
     This may only be used if the graph contains no edges with
-    negative weight (i.e. the attribute neg_weight_edge is False.
+    negative weight (i.e. the attribute neg_weight_edge is False).
     If the graph contains at least one edge with negative weight
     (i.e. the attribute neg_weight_edge is True) and this method
     is called then an error will be raised.
@@ -874,7 +874,7 @@ def aStar(self, starts: Union[Set[Hashable],\
     the value corresponding to these vertices in the dictionaries
     starts and ends respectively).
     This may only be used if the graph contains no edges with
-    negative weight (i.e. the attribute neg_weight_edge is False.
+    negative weight (i.e. the attribute neg_weight_edge is False).
     If the graph contains at least one edge with negative weight
     (i.e. the attribute neg_weight_edge is True) and this method
     is called then an error will be raised.
@@ -893,7 +893,9 @@ def aStar(self, starts: Union[Set[Hashable],\
                 (ints or floats) representing the weight that
                 choice of start vertex contributes to the cost
                 of paths starting from that vertex.
-        heuristic (function): TODO
+        heuristic (function): A heuristic function that takes
+                two vertices as inputs and outputs an upper
+                bound for the cost of any path between them.
         
         Optional named:
         bidirectional (bool): Whether the A* search should be
@@ -994,6 +996,7 @@ def findShortestPathIndex(self, start_inds: Union[Set[int],\
         Union[int, float]]]=None,\
         bidirectional: bool=True)\
         -> Tuple[Union[Optional[Union[int, float]], Tuple[int]]]:
+
     if not all(0 <= idx < self.n for idx in start_inds):
         raise ValueError("For the method "\
                 f"{inspect.stack()[0][3]}(), all the indices "\
@@ -1029,6 +1032,70 @@ def findShortestPath(self, starts: Union[Set[Hashable],\
         bidirectional: bool=True)\
         -> Tuple[Union[Optional[Union[int, float]],\
         Tuple[Hashable]]]:
+    """
+    Performs an search for a minimum cost path between
+    any of the set of vertices given by starts and any of the set
+    of vertices given by ends in the graph, using either Dijkstra
+    algorithm, A* algorithm or SPFA (Shortest Path Faster Algorithm)
+    depending on whether the graph contains any negative weight
+    edges and whether a heuristic is given.
+    The SPFA will be chosen only if the graph contains any negative
+    weight edges. If there are no negative weight edges, then the
+    A* algorithm will be chosen if a heuristic function is given,
+    otherwise the Dijkstra algorithm will be used.
+    If argument bidirectional is given as True and the Dijkstra
+    or A* algorithm is chosen (i.e. there are no negative weight
+    edges in the graph), a bidirectional version of the chosen
+    algorithm will be used, where a search from both the vertices
+    in starts and the vertices in ends vertices is performed,
+    otherwise a unidirectional A* search from the vertices in starts
+    is performed.
+    The cost of a path is the sum of the weights of the (directed)
+    edges that it traverses, plus the weight associated with the
+    vertices at which the path begins and ends (as specified by
+    the value corresponding to these vertices in the dictionaries
+    starts and ends respectively).
+    This may only be used if the graph contains no negative weight
+    cycles (i.e. a cycle whose sum of weights is negative). If the
+    graph contains any negative weight cycle and this method is called
+    then an error will be raised.
+    
+    Args:
+        Required positional:
+        starts (dict): Dictionary whose keys are the vertices of
+                the graph at which the considered paths may start,
+                whose corresponding values are numeric values
+                (ints or floats) representing the weight that
+                choice of start vertex contributes to the cost
+                of paths starting from that vertex.
+        ends (dict): Dictionary whose keys are the vertices of
+                the graph at which the considered paths may end,
+                whose corresponding values are numeric values
+                (ints or floats) representing the weight that
+                choice of start vertex contributes to the cost
+                of paths starting from that vertex.
+        
+        
+        Optional named:
+        heuristic (function or None): If specified, a heuristic
+                function that takes two vertices as inputs and
+                outputs an upper bound for the cost of any path
+                between them.
+            Default: None
+        bidirectional (bool): Whether any A* or Dijkstra search
+                (if chosen) search should be bidirectional (True) or
+                unidirectional (False).
+            Default: True
+    
+    Returns:
+    2-tuple whose index 0 contains a numeric value (int or float)
+    giving the minimum cost for any path between any of the
+    vertices in the keys of starts and any of the vertices in the
+    keys of ends or -1 if no such path exists, and whose index
+    1 contains a tuple with the vertices on such a path with this
+    cost in the order they are encountered on the path, or an empty
+    tuple if no such path exists.
+    """
     if not all(self.vertexInGraph(x) for x in starts):
         raise ValueError("For the method "\
                 f"{inspect.stack()[0][3]}(), all the "\
@@ -1125,7 +1192,41 @@ def dijkstraFromSourcesPathfinderIndex(self,\
 
 def dijkstraFromSourcesPathfinder(self,\
         sources: Dict[Hashable, Union[float, int]])\
-        -> Dict[Hashable, Tuple[Union[int, float, Hashable]]]:
+        -> Dict[Hashable, Tuple[Union[int, float], Hashable]]:
+    """
+    Performs a Dijkstra search for a minimum cost path from the
+    vertices given by sources and any vertex in the graph that
+    is reachable from those vertices, giving the path cost and the
+    vertex from which one such path came for each reachable vertex
+    (allowing the user to identify a minimum weight path).
+    The cost of a path is the sum of the weights of the (directed)
+    edges that it traverses, plus the weight associated with the
+    vertices at which the path begins (as specified by the value
+    corresponding to these vertices in the dictionary sources).
+    This may only be used if the graph contains no edges with
+    negative weight (i.e. the attribute neg_weight_edge is False).
+    If the graph contains at least one edge with negative weight
+    (i.e. the attribute neg_weight_edge is True) and this method
+    is called then an error will be raised.
+    
+    Args:
+        Required positional:
+        sources (dict): Dictionary whose keys are the vertices of
+                the graph at which the considered paths may start,
+                whose corresponding values are numeric values
+                (ints or floats) representing the weight that
+                choice of start vertex contributes to the cost
+                of paths starting from that vertex.
+        
+    Returns:
+    Dictionary whose keys are all the labels of vertices in the graph
+    that are reachable from the vertices given in sources and whose
+    corresponding values are a 2-tuple whose index 0 contains a
+    numeric value representing the minimum cost of any path from
+    any vertex in sources to that vertex (including the start cost of
+    the start vertex) and whose index 1 contains the label of a vertex
+    that is the penultimate vertex on a such a path with that cost.
+    """
     if self.neg_weight_edge:
         raise ValueError("The method "\
                 f"{inspect.stack()[0][3]}() "\
@@ -1206,6 +1307,36 @@ def shortestPathFasterAlgorithmDistancesIndex(self,\
 def shortestPathFasterAlgorithmDistances(self,\
         sources: Dict[Hashable, Union[float, int]])\
         -> Dict[Hashable, Union[float, int]]:
+    """
+    Performs a SPFA (Shortest Path Faster Algorithm) search for
+    a minimum cost path from the vertices given by sources and any
+    vertex in the graph that is reachable from those vertices,
+    giving the path cost only.
+    The cost of a path is the sum of the weights of the (directed)
+    edges that it traverses, plus the weight associated with the
+    vertices at which the path begins (as specified by the value
+    corresponding to these vertices in the dictionary sources).
+    This may only be used if the graph contains no negative weight
+    cycles (i.e. a cycle whose sum of weights is negative). If the
+    graph contains any negative weight cycle and this method is called
+    then an error will be raised.
+    
+    Args:
+        Required positional:
+        sources (dict): Dictionary whose keys are the vertices of
+                the graph at which the considered paths may start,
+                whose corresponding values are numeric values
+                (ints or floats) representing the weight that
+                choice of start vertex contributes to the cost
+                of paths starting from that vertex.
+        
+    Returns:
+    Dictionary whose keys are all the labels of vertices in the graph
+    that are reachable from the vertices given in sources and whose
+    corresponding values are a numeric value representing the minimum
+    cost of any path from any vertex in sources to that vertex (including
+    the start cost of the start vertex).
+    """
     for v in sources.keys():
         if not self.vertexInGraph(v):
             raise ValueError("For the method "\
@@ -1293,6 +1424,40 @@ def shortestPathFasterAlgorithmPathfinderIndex(self,\
 def shortestPathFasterAlgorithmPathfinder(self,\
         sources: Dict[Hashable, Union[int, float]])\
         -> Dict[Hashable, Tuple[Union[int, float, Hashable]]]:
+    """
+    Performs a SPFA (Shortest Path Faster Algorithm) search for
+    a minimum cost path from the vertices given by sources and any
+    vertex in the graph that is reachable from those vertices,
+    giving the path cost and the vertex from which one such path came
+    for each reachable vertex (allowing the user to identify a
+    minimum weight path).
+    The cost of a path is the sum of the weights of the (directed)
+    edges that it traverses, plus the weight associated with the
+    vertices at which the path begins (as specified by the value
+    corresponding to these vertices in the dictionary sources).
+    This may only be used if the graph contains no negative weight
+    cycles (i.e. a cycle whose sum of weights is negative). If the
+    graph contains any negative weight cycle and this method is called
+    then an error will be raised.
+    
+    Args:
+        Required positional:
+        sources (dict): Dictionary whose keys are the vertices of
+                the graph at which the considered paths may start,
+                whose corresponding values are numeric values
+                (ints or floats) representing the weight that
+                choice of start vertex contributes to the cost
+                of paths starting from that vertex.
+        
+    Returns:
+    Dictionary whose keys are all the labels of vertices in the graph
+    that are reachable from the vertices given in sources and whose
+    corresponding values are a 2-tuple whose index 0 contains a
+    numeric value representing the minimum cost of any path from
+    any vertex in sources to that vertex (including the start cost of
+    the start vertex) and whose index 1 contains the label of a vertex
+    that is the penultimate vertex on a such a path with that cost.
+    """
     for v in sources.keys():
         if not self.vertexInGraph(v):
             raise ValueError("For the method "\
