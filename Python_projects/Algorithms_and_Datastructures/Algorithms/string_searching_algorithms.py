@@ -13,6 +13,51 @@ class KnuthMorrisPratt:
     algorithm, implemented to accept any finite ordered iterable
     object for both the pattern to be matched and the object(s)
     to be searched.
+
+    Initialisation args:
+        Required positional:
+        pattern (ordered iterable container): An ordered list-like
+                structure (e.g. a string) that is the pattern to be
+                found as a contiguous subsequence in other similar
+                structures.
+    
+    Attributes:
+        pattern_iter (ordered iterable container): An ordered
+                list-like structure (e.g. a string) that is the pattern
+                to be found as a contiguous subsequence in other
+                similar structures.
+        lps (list of ints): A list with the same length as the number
+                of elements in pattern_iter, representing the Longest
+                Prefix Suffix (LPS) array for pattern_iter using the
+                Knuth-Morris-Pratt (KMP) algorithm, in preparation for
+                its use for finding the pattern in a given iterable
+                object (see method matchStartGenerator()).
+                For a string p of length n, the LPS array is a 1D integer
+                array of length n, where the integer at a given index
+                represents the longest non-prefix substring of p (i.e.
+                a substring of p that does not begin at the start of p)
+                ending at the corresponding index that matches a prefix
+                of p. Alternatively, as the name suggests, the ith index
+                represents the length of the longest proper prefix (i.e.
+                a prefix that is not the whole string) of the string
+                p[:i + 1] (i.e. the substring of p consisting of the
+                first i + 1 characters of p) that is also a (proper)
+                suffix of p[:i + 1].
+    
+    Methods:
+        (For more detail see the documentation of the relevant method)
+        
+        constructLPS(): Constructs the Longest Prefix Suffix (LPS)
+                array for attribute pattern_iter using the Knuth-Morris-
+                Pratt algorithm in prepartion for use in identifying
+                where pattern_iter occurs as a contiguous subsequence
+                in some other similar ordered list-like structure.
+        matchStartGenerator(): Creates a generator which yields the
+                indices in a given ordered list-like structure (where
+                the first element of the structure has index 0) which
+                represent all the starts of contiguous subsequences
+                equal to pattern_iter, yielding these indices one
+                at a time in strictly increasing order.
     """
     def __init__(self, pattern: Iterable[Any]):
         self._pattern_iter = pattern
