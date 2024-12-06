@@ -16,16 +16,16 @@ class KnuthMorrisPratt:
 
     Initialisation args:
         Required positional:
-        pattern (ordered iterable container): An ordered list-like
-                structure (e.g. a string) that is the pattern to be
+        pattern (iterable object): A finite ordered iterable
+                object (e.g. a string) that is the pattern to be
                 found as a contiguous subsequence in other similar
-                structures.
+                iterable objects.
     
     Attributes:
-        pattern_iter (ordered iterable container): An ordered
-                list-like structure (e.g. a string) that is the pattern
+        pattern_iter (iterable object): A finite ordered iterable
+                object (e.g. a string) that is the pattern
                 to be found as a contiguous subsequence in other
-                similar structures.
+                similar iterable objects.
         lps (list of ints): A list with the same length as the number
                 of elements in pattern_iter, representing the Longest
                 Prefix Suffix (LPS) array for pattern_iter using the
@@ -51,11 +51,11 @@ class KnuthMorrisPratt:
                 array for attribute pattern_iter using the Knuth-Morris-
                 Pratt algorithm in prepartion for use in identifying
                 where pattern_iter occurs as a contiguous subsequence
-                in some other similar ordered list-like structure.
+                in some other similar finite ordered iterable objects.
         matchStartGenerator(): Creates a generator which yields the
-                indices in a given ordered list-like structure (where
-                the first element of the structure has index 0) which
-                represent all the starts of contiguous subsequences
+                indices in a given finite ordered iterable object (where
+                the first element of the object has index 0) which
+                represent all the start indices of contiguous subsequences
                 equal to pattern_iter, yielding these indices one
                 at a time in strictly increasing order.
     """
@@ -198,6 +198,30 @@ class ZAlgorithm:
     Class implementing the Z algorithm for string searching,
     implemented to accept any finite ordered iterable object for both
     the pattern to be matched and the object(s) to be searched.
+
+    Initialisation args:
+        Required positional:
+        pattern (ordered iterable container): A finite ordered
+                iterable object (e.g. a string) that is the pattern to
+                be found as a contiguous subsequence in other similar
+                finite ordered iterable objects.
+    
+    Attributes:
+        pattern_iter (iterable object): A finite ordered iterable
+                object that is the pattern to be found as a contiguous
+                subsequence in other similar objects.
+    
+    Methods:
+        (For more detail see the documentation of the relevant method)
+        
+        constructZArray(): Constructs the Z array for attribute
+                pattern_iter.
+        matchStartGenerator(): Creates a generator which yields the
+                indices in a given finite ordered iterable object (where
+                the first element of the object has index 0) which
+                represent all the start indices of contiguous subsequences
+                equal to pattern_iter, yielding these indices one
+                at a time in strictly increasing order.
     """
     def __init__(self, pattern: Iterable[Any]):
         self._pattern_iter = pattern
