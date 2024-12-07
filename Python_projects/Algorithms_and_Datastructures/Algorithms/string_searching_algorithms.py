@@ -348,21 +348,78 @@ class ZAlgorithm:
 
 
 def rollingHash(s: Iterable, length: int, p_lst: Union[Tuple[int], List[int]]=(37, 53),
-        md: int=10 ** 9 + 7, func: Optional[Callable]=None) -> Generator[int, None, None]:
+        md: int=10 ** 9 + 7, func: Optional[Callable[[Any], int]]=None) -> Generator[Tuple[int], None, None]:
     """
-    Generator that yields the rolling hash values of each contiguous subset of
+    Generator that yields the rolling hash values of each contiguous subsequence of
     the iterable s with length elements in order of their first element. The hash
     is polynomial-based around prime numbers as specified in p_lst modulo md.
     The elements of s are passed through the function func which transforms
     each possible input value into a distinct integer (by default, the identity
     if the elements of s are integers, and the ord() function if they are
     string characters).
+
+    For a given length l, a prime p and a modulus md, the hash value of a
+    0-indexed integer sequence of length l, arr, is calculated by the following
+    formula:
+        (arr[0] * p^(l - 1) + arr[1] * p^(l - 2) + ... + arr[l - 2] * p1 + arr[i + l - 1]) % md
+
+    Thus, for strictly positive integer l, non-negative integer i, prime md,
+    prime list of length n (p1, p2, ..., pn) and a 0-indexed string s with length
+    of no less than (i + l), the (i + 1)th value yielded by the evaluation
+    of:
+        rollingHash(s, l, p_lst=(p1, p2), md=md, func=ord)
+    is equal to the n-tuple of integers:
+        ((ord(s[i]) * p1^(l - 1) + ord(s[i + 1]) * p1^(l - 2) + ... + ord(s[i + l - 2]) * p1 + ord(s[i + l - 1])) % md,
+        (ord(s[i]) * p2^(l - 1) + ord(s[i + 1]) * p2^(l - 2) + ... + ord(s[i + l - 2]) * p2 + ord(s[i + l - 1])) % md,
+        ...,
+        (ord(s[i]) * pn^(l - 1) + ord(s[i + 1]) * pn^(l - 2) + ... + ord(s[i + l - 2]) * pn + ord(s[i + l - 1])) % md)
     
     Args:
         Required positional:
-            
+        s (iterable object): A finite ordered iterable object (e.g. a
+                string) for which the rolling hash is to be generated.
+        length (int): Strictly positive integer giving the lengths
+                of the contiguous subsequences over which the rolling
+                has is to be generated.
+        
+        Optional named:
+        p_lst (List/tuple of ints): A collection of prime numbers for
+                which the polynomial-based hashes are to be evaluated.
+                The larger and more numerous the primes given, the
+                less likely hash collisions are to occur (i.e. that
+                two different sequences give rise to the same hash
+                value), though each additional prime proportionally
+                increases the evaluation time.
+            Default: (37, 53)
+        md (int): Strictly positive integer giving the modulus the hash
+                values are to be taken (i.e. each hash is returned as
+                its remainder to this modulus). For best results, this
+                should be a prime number, and the larger the number
+                the less likely hash collisions are to occur (see p_lst).
+        func (callable): A function taking in an element of s and
+                returning an integer, or for integer or string sequences
+                None can be given (for integer sequences, the value is
+                used directly, and for strings, the ASCII code number is
+                used). To avoid hash collisions, this function should be
+                injective (i.e. there should be no two distinct elements
+                for which the result of applying the function is the
+                same).
+            Default: None
     
-    Modified version of rolling hash can be used to solve Leetcode #1554 (Premium)
+    Yields:
+    An len(p_lst)-tuple of integers (int), each between 0 and (md - 1)
+    inclusive, where index j (0 <= j < len(p_lst)) of the (i + 1)th yielded
+    tuple is the rolling hash value for the input length, the prime
+    p_lst[j] and the modulus md, as calculated above, for the contiguous
+    subsequence of s between indices i and (i + length - 1) inclusive,
+    where each element has been converted into an integer by the function
+    func.
+    The number of results yielded by the generator is one more than the
+    number of elements in s minus length as long as this is positive,
+    otherwise there are no yielded results
+            
+    Modified version of rolling hash can be used to solve Leetcode #1554
+    (Premium).
     """
     if hasattr(s, "__len__") and len(s) < length:
         return
@@ -370,7 +427,7 @@ def rollingHash(s: Iterable, length: int, p_lst: Union[Tuple[int], List[int]]=(3
         try: val = func(next(iter_obj))
         except StopIteration: return
         if isinstance(next(iter(s), str)):
-            func = lambda x: ord(x)
+            func = ord#lambda x: ord(x)
         else: func = lambda x: x
     iter_obj = iter(s)
     n_p = len(p_lst)
@@ -395,11 +452,60 @@ def rollingHash(s: Iterable, length: int, p_lst: Union[Tuple[int], List[int]]=(3
 
 def rollingHashSearch(s: str, patterns: List[str],
         p_lst: Optional[Union[List[int], Tuple[int]]]=(31, 37),
-        md: int=10 ** 9 + 7) -> Dict[str, List[int]]:
+        md: int=10 ** 9 + 7,
+        check: bool=True) -> Dict[str, List[int]]:
+    """
+    Performs a rolling hash search on the string s to find the starting
+    indices of all occurrences of contiguous substrings that match one
+    of the the strings in patterns (even if those occurrences overlap with
+    each other in s).
+    For details regarding the calculation of the rolling hash, see
+    rollingHash().
+    This is best suited for cases where many of the pattern strings in
+    patterns share lengths.
+
+    Args:
+        Required positional:
+        s (str): The string to be searched
+        patterns (list of str): List of strings whose starting indices
+                in s are to be found.
+        
+        
+        p_lst (list/tuple of ints): A list of distinct prime numbers to be
+                used in the calculation of the rolling hash (see rollingHash()
+                documentation for details). The larger and more numerous
+                the primes given, the less likely hash collisions are to
+                occur (i.e. that two different sequences give rise to the
+                same hash value), though each additional prime proportionally
+                increases the evaluation time.
+            Default: (31, 37)
+        md (int): The modulus used for the rolling hash (see rollingHash()
+                documentation for details). This should be a large prime
+                number.
+            Default: 10 ** 9 + 7
+        check (bool): Whether in the event of a hash match with a single
+                matching hash for one of the pattern strings of the
+                correct length, a check is performed to rule out a
+                hash collision, otherwise the match is assumed to be
+                correct (note that by increasing the value of md, and
+                using more and larger primes the chances that this could
+                result in an error can be made arbitrarily small, but there
+                is always a chance this could result in an error in the
+                form of a false inclusion. On the other hand, for cases
+                where a large numbers of pattern matches are present, not
+                performing the check can speed up the execution
+                significantly)
+            Default: True
     
-    ord_A = ord("A")
+    Returns:
+    Dictionary (dict) whose keys are the elements of patterns present as
+    a contiguous substring of s, and whose corresponding values are a
+    list of the (0-indexed) indices of s at which the contiguous substrings
+    that element of patterns start, in increasing order.
+    """
+    #ord_A = ord("A")
     def char2num(l: str) -> int:
-        return ord(l) - ord_A
+        return ord(l)# - ord_A
     
     pattern_dict = {}
     for pattern in patterns:
@@ -413,8 +519,11 @@ def rollingHashSearch(s: str, patterns: List[str],
     for length, hsh_dict in pattern_dict.items():
         for i, hsh in enumerate(rollingHash(s, length, p_lst=p_lst, md=md, func=char2num)):
             if hsh not in hsh_dict.keys(): continue
-            pattern = s[i: i + length]
-            if pattern not in hsh_dict[hsh]: continue
+            if not check and len(hsh_dict[hsh]) == 1:
+                pattern = next(iter(hsh_dict[hsh]))
+            else:
+                pattern = s[i: i + length]
+                if pattern not in hsh_dict[hsh]: continue
             res.setdefault(pattern, [])
             res[pattern].append(i)
     return res
