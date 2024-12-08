@@ -440,13 +440,14 @@ def rollingHash(s: Iterable, length: int, p_lst: Union[Tuple[int], List[int]]=(3
         for j, p in enumerate(p_lst):
             hsh[j] = (hsh[j] * p + val) % md
     yield tuple(hsh)
-    mults = [pow(p, length, md) for p in p_lst]
+    mults = [pow(p, length - 1, md) for p in p_lst]
     for i in itertools.count(length):
         try: val = func(next(iter_obj))
         except StopIteration: return
         val_qu.append(val)
+        val2 = val_qu.popleft()
         for j, p in enumerate(p_lst):
-            hsh[j] = ((hsh[j] - mults[j] * val_qu.popleft()) * p + val) % md
+            hsh[j] = ((hsh[j] - mults[j] * val2) * p + val) % md
         yield tuple(hsh)
     return
 
@@ -526,6 +527,95 @@ def rollingHashSearch(s: str, patterns: List[str],
                 if pattern not in hsh_dict[hsh]: continue
             res.setdefault(pattern, [])
             res[pattern].append(i)
+    return res
+
+def findRepeatedDnaSequences(s: str, substring_length: int=10) -> List[str]:
+    """
+    For a string s representing a DNA sequence consisting exclusively of
+    the characters "A", "C", "G" and "T", finds the set of contiguous
+    substrings in s with length substring_length that appear more than
+    once in the s (including if the matching substrings overlap with each
+    other), including each such substring in the returned list exactly
+    once. The returned substrings are not ordered.
+
+    This illustrates the use of a rolling hash for string matching.
+
+    Args:
+        Required positional:
+        s (str): String representing the DNA sequence consisting exclusively
+                of the characters "A", "C", "G" and "T" that is to be
+                searched for repeating contiguous substrings.
+        
+        Optional named:
+        substring_length (int): Strictly positive integer giving the length
+                of repeating contiguous substrings to be identified.
+            Default: 10
+    
+    Returns:
+    List of strings (str) containing all strings of length substring_length
+    that appear as contiguous substrings of s more than once. This list is
+    not ordered and has no repeated elements.
+
+    Examples:
+        >>> findRepeatedDnaSequences("AAAAACCCCCAAAAACCCCCCAAAAAGGGTTT", substring_length=10)
+        ["AAAAACCCCC","CCCCCAAAAA"]
+
+        This signifies that the only contiguous substrings of length 10 that
+        appear more than once in s are "AAAAACCCCC" (starting at indices 0
+        and 10 in s, where 0-indexing is used) and "CCCCCAAAAA" (starting at
+        indices 6 and 16 in s).
+
+        >>> findRepeatedDnaSequences("AAAAAAAAAAAAA", substring_length=10)
+        ["AAAAAAAAAA"]
+
+        This signifies that the only contiguous substrings of length 10 that
+        appear more than once in s are "AAAAAAAAAA" (starting at indices 0, 1,
+        2 and 3 in s, where 0-indexing is used). Note that these count as
+        repeated substrings even though they all overlap with each other.
+
+    Solution to Leetcode #187 using rolling hash (with
+    substring_length equal to 10)
+
+    Original Leetcode #187 problem description
+
+    The DNA sequence is composed of a series of nucleotides abbreviated
+    as 'A', 'C', 'G', and 'T'.
+
+    For example, "ACGAATTCCG" is a DNA sequence.
+    When studying DNA, it is useful to identify repeated sequences within
+    the DNA.
+
+    Given a string s that represents a DNA sequence, return all the 10-letter-long
+    sequences (substrings) that occur more than once in a DNA molecule. You may
+    return the answer in any order.
+    """
+
+    # Note- hash guaranteed to fit inside unsigned int (4 bytes/32 bit) since
+    # the maximum value it takes is (3 * (4 ** 11 - 1) / (4 - 1)) = (2 ** 22 - 1)
+    # (corresponding to 10 "T"s in a row) which is strictly less than 2 ** 31,
+    # as is required for an unsigned int
+
+    alpha = "ACGT"
+    alpha_dict = {x: i for i, x in enumerate(alpha)}
+    alpha_sz = len(alpha)
+
+    s_set = set(s)
+    if not s_set.issubset(alpha_dict.keys()):
+        raise ValueError("s can only contain the characters 'A', 'C', 'G' and 'T'")
+
+    def char2num(l: str) -> int:
+        return alpha_dict[l]
+    chk = True
+    md = 10 ** 9 + 7
+    p_lst = (31, 37)
+    hsh_dict = {}
+    res = []
+    for i, hsh in enumerate(rollingHash(s, substring_length, p_lst=(31, 37), md=md, func=char2num)):
+        if hsh in hsh_dict.keys():
+            if not hsh_dict[hsh]:
+                res.append(s[i: i + substring_length])
+                hsh_dict[hsh] = True
+        else: hsh_dict[hsh] = False
     return res
 
 class AhoCorasick:
@@ -864,3 +954,18 @@ def countPalindromicSubstrings(self, s: str) -> int:
         s2[(i << 1) + 1] = l
     manacher_arr = manacherAlgorithm(s2)
     return sum((x + 1) >> 1 for x in manacher_arr)
+
+if __name__ == "__main__":
+    res = findRepeatedDnaSequences(
+        "AAAAACCCCCAAAAACCCCCCAAAAAGGGTTT",
+        substring_length=10
+    )
+    print("\nfindRepeatedDnaSequences(\"AAAAACCCCCAAAAACCCCCCAAAAAGGGTTT\", substring_length=10) = "
+            f"{res}")
+
+    res = findRepeatedDnaSequences(
+        "AAAAAAAAAAAAA",
+        substring_length=10
+    )
+    print("\nfindRepeatedDnaSequences(\"AAAAAAAAAAAAA\", substring_length=10) = "
+            f"{res}")
