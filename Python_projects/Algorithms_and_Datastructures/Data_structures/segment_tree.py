@@ -6,7 +6,7 @@ class SegmentTree(object):
     
     """
     Creates a segment tree for an integer sequence based around
-    specified assoicative binary operations.
+    specified associative binary operations.
     
     Args:
         Required positional:

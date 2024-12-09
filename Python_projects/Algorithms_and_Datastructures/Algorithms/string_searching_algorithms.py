@@ -5,7 +5,7 @@ from collections.abc import Iterable
 import heapq
 import itertools
 from typing import Dict, Generator, List, Tuple, Optional, Union,\
-        Callable, Any
+        Callable, Any, Hashable
 
 class KnuthMorrisPratt:
     """    
@@ -347,7 +347,7 @@ class ZAlgorithm:
         return
 
 
-def rollingHash(s: Iterable, length: int, p_lst: Union[Tuple[int], List[int]]=(37, 53),
+def rollingHash(s: Iterable[Any], length: int, p_lst: Union[Tuple[int], List[int]]=(37, 53),
         md: int=10 ** 9 + 7, func: Optional[Callable[[Any], int]]=None) -> Generator[Tuple[int], None, None]:
     """
     Generator that yields the rolling hash values of each contiguous subsequence of
@@ -626,11 +626,15 @@ class AhoCorasick:
     of the lengths of the patterns and z is the total number of
     matches over all of the patterns in the string.
     
+    Initialization args:
+        Required positional:
+        words (str)
+
     Can use for solution of Leetcode: #139, #140 and Premium Leetcode:
     #616 and #758 (basically the same problem) and #1065
     """
 
-    def __init__(self, words: List[str]):
+    def __init__(self, words: List[Iterable[Hashable]]):
         self.goto = [{}]
         self.failure = [-1]
         self.out = [0]
@@ -810,7 +814,7 @@ def addBoldTag(self, s: str, words: List[str]) -> str:
     if be_i < n: res.append(s[be_i:])
     return "".join(res)
 
-def manacherAlgorithm(s: Iterable) -> List[int]:
+def manacherAlgorithm(s: Iterable[Any]) -> List[int]:
     """
     Implementation of Manacher's algorithm to find the 1D
     array or iterable (e.g. string) with the same size as s whose
