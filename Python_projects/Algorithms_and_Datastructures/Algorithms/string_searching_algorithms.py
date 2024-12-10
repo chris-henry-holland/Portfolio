@@ -621,15 +621,71 @@ def findRepeatedDnaSequences(s: str, substring_length: int=10) -> List[str]:
 class AhoCorasick:
     """
     Data structure used for simultaneous matching of multiple
-    patterns in a text, with time complexity O(n + m + z) where
-    n is the length of the string being searched, m is the sum
+    patterns in an ordered finite iterable object consisting of
+    hashable objects (e.g. a string), with time complexity
+    O(n + m + z) where n is the length of (i.e. the number of
+    elements in) the iterable object being searched, m is the sum
     of the lengths of the patterns and z is the total number of
     matches over all of the patterns in the string.
+
+    This is structured the form of a trie, with additional connections
+    between nodes in the trie for search failures.
     
     Initialization args:
         Required positional:
-        words (str)
-
+        words (list of ordered, finite iterables containing hashable
+                objects): The patterns that are to be found in the
+                samples given to this object.
+        
+    Attributes:
+        words (list of ordered, finite iterables containing hashable
+                objects): The patterns that are to be found in the
+                samples given to this object.
+        goto (list of dicts): Representation of the trie, with each
+                entry representing a node in the trie. The dictionary
+                has keys representing possible hashable objects that
+                can appear in the object being searched, with the
+                corresponding value being the index of goto to travel
+                to if the next object encountered in the search
+                equals the key.
+        failure (list of ints): A list the same length as that of
+                goto. In the event that during a search, the next
+                object encountered does not appear as a key in the
+                current node's entry in goto, the corresponding entry
+                (i.e. the entry with the same index) in this list
+                indicates which entry in goto to travel to next.
+        out (list of ints): A list the same length as that of goto.
+                This contains a bitmask indicating the indices in
+                the attribute words of the patterns that end at
+                the corresponding node in the trie.
+        out_lens (list of ints): A list the same length as that of
+                goto. This contains a bitmask indicating the lengths
+                of the patterns that end at the corresponding node in
+                the trie.
+    
+    Methods:
+        (For more details about a specific method see the documentation
+        for that method)
+        buildAutomaton(): Constructs the modified trie (including the
+                attributes goto, failure, out and out_lens) based on
+                the attribute words.
+        search(): Finds the starting index for every matching occurrence
+                of every element in words for a given ordered, finite
+                iterable object.
+        searchEndIndices(): For a given ordered, finite iterable object,
+                creates a generator that goes through the elements of
+                the object in order, and for each index one or more
+                occurrence of an element in words ends, yields the
+                index in the object being searched and the indices in
+                words of the elements with matches ending at that index.
+        searchLengths(): For a given ordered, finite iterable object,
+                creates a generator that goes through the elements of
+                the object in order, and for each index one or more
+                occurrence of an element in words ends, yields the
+                index in the object being searched and the lengths of
+                the elements of words elements with matches ending at
+                that index.
+                
     Can use for solution of Leetcode: #139, #140 and Premium Leetcode:
     #616 and #758 (basically the same problem) and #1065
     """
