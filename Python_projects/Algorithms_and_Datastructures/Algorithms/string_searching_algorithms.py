@@ -699,6 +699,17 @@ class AhoCorasick:
         self.buildAutomaton()
 
     def buildAutomaton(self) -> None:
+        """
+        Constructs the trie and failure connections for the finite ordered
+        iterable objects in the attribute words. This initialises the
+        attributes goto, failure, out and out_lens.
+
+        Args:
+            None
+        
+        Returns:
+            None
+        """
         for i, w in enumerate(self.words):
             j = 0
             for l in w:
@@ -727,15 +738,24 @@ class AhoCorasick:
                 queue.append(j2)
         return
     
-    def _findNext(self, j: int, l: str) -> int:
+    def _findNext(self, j: int, l: Hashable) -> int:
         while j and l not in self.goto[j].keys():
             j = self.failure[j]
         return self.goto[j].get(l, 0)
     
-    def search(self, s: str) -> Dict[str, List[int]]:
+    def search(self, s: Iterable[Hashable]) -> Dict[Iterable[Hashable], List[int]]:
         """
         Gives dictionary for the starting index of each occurrence
-        of each of self.words in the string s.
+        of each element of the attribute words as a contiguous
+        subsequence in the finite ordered iterable object s.
+
+        Args:
+            s (iterable object): The finite ordered iterable object
+                    with hashable elements being searched.
+        
+        Returns:
+        TODO
+        Dictionary 
         """
         j = 0
         res = {}
@@ -750,7 +770,7 @@ class AhoCorasick:
                 bm >>= 1
         return res
     
-    def searchEndIndices(self, s: str) -> Generator[Tuple[int, List[int]], None, None]:
+    def searchEndIndices(self, s: Iterable[Hashable]) -> Generator[Tuple[int, List[int]], None, None]:
         """
         Generator yielding a 2-tuple of each index of s (in ascending order)
         and a list of the corresponding indies of the patterns in self.words
@@ -769,7 +789,7 @@ class AhoCorasick:
             yield (i, res)
         return
 
-    def searchLengths(self, s: str) -> Generator[Tuple[int], None, None]:
+    def searchLengths(self, s: Iterable[Hashable]) -> Generator[Tuple[int], None, None]:
         j = 0
         for i, l in enumerate(s):
             j = self._findNext(j, l)
