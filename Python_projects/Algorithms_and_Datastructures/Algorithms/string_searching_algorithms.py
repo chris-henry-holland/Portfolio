@@ -743,7 +743,7 @@ class AhoCorasick:
             j = self.failure[j]
         return self.goto[j].get(l, 0)
     
-    def search(self, s: Iterable[Hashable]) -> Dict[Iterable[Hashable], List[int]]:
+    def search(self, s: Iterable[Hashable]) -> Dict[int, List[int]]:
         """
         Gives dictionary for the starting index of each occurrence
         of each element of the attribute words as a contiguous
@@ -754,8 +754,12 @@ class AhoCorasick:
                     with hashable elements being searched.
         
         Returns:
-        TODO
-        Dictionary 
+        Dictionary whose keys each give the index (0-indexed) of a
+        pattern in the attribute words that appears as a contiguous
+        subsequence in s with the corresponding value giving a list
+        containing all the indices in s (0-indexed) at which all the
+        matching contiguous subsequences in s, start in strictly
+        increasing order.
         """
         j = 0
         res = {}
@@ -766,7 +770,7 @@ class AhoCorasick:
                 if not bm: break
                 if bm & 1:
                     res.setdefault(w, [])
-                    res[w].append(i - len(w) + 1)
+                    res[i].append(i - len(w) + 1)
                 bm >>= 1
         return res
     
@@ -775,6 +779,20 @@ class AhoCorasick:
         Generator yielding a 2-tuple of each index of s (in ascending order)
         and a list of the corresponding indies of the patterns in self.words
         that have a match in s that ends exactly at that index of s.
+
+        Args:
+            s (iterable object): The finite ordered iterable object
+                    with hashable elements being searched.
+        
+        Yields:
+        A 2-tuple whose index 0 contains an index (0-indexed) in s at which at
+        least one contiguous substring of s is equal to a pattern in the
+        attribute words and whose index 1 contains a list with the indices
+        in the attribute words (0-indexed) in strictly increasing order of all
+        the patterns that are equal to a contiguous subsequence of s ending at
+        that index.
+        These are yielded in strictly increasing order with respect to the
+        indices (i.e. index 0 or the tuple) and all matches are yielded.
         """
         j = 0
         for i, l in enumerate(s):
@@ -790,6 +808,24 @@ class AhoCorasick:
         return
 
     def searchLengths(self, s: Iterable[Hashable]) -> Generator[Tuple[int], None, None]:
+        """
+        Generator yielding a 2-tuple of each index of s (in ascending order)
+        and a list of the lengths of the patterns in self.words that have a
+        match in s that ends exactly at that index of s.
+
+        Args:
+            s (iterable object): The finite ordered iterable object
+                    with hashable elements being searched.
+        
+        Yields:
+        A 2-tuple whose index 0 contains an index (0-indexed) in s at which at
+        least one contiguous substring of s is equal to a pattern in the
+        attribute words and whose index 1 contains a list with the lengths of
+        all the patterns in the attribute words that are equal to a contiguous
+        subsequence of s ending at that index in strictly increasing order.
+        These are yielded in strictly increasing order with respect to the
+        indices (i.e. index 0 or the tuple) and all matches are represented.
+        """
         j = 0
         for i, l in enumerate(s):
             j = self._findNext(j, l)
@@ -853,7 +889,7 @@ def addBoldTag(self, s: str, words: List[str]) -> str:
     for i, w in enumerate(words):
         rngs.append([])
         length = len(w)
-        for j in start_dict[w]:
+        for j in start_dict[i]:
             if not rngs[i] or j > rngs[i][-1][1]:
                 rngs[i].append([j, j + length])
             else: rngs[i][-1][1] = j + length
