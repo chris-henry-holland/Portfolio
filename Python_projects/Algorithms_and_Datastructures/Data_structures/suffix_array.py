@@ -5,6 +5,46 @@ from typing import Generator, Dict, List, Set, Tuple, Optional, Union
 
 class SuffixArray:
     # Using SA-IS algorithm constructed based on https://zork.net/~st/jottings/sais.html
+    """
+    Class implementing a suffix array for a given string, including
+    methods allowing it to be used to search the string.
+
+    A suffix array for a given string is an array with length one
+    greater than that of the string, storing the start indices of
+    all the suffixes of the string (including the whole string and
+    the empty suffix) in alphabetical order of the suffixes.
+    Construction of this array allows for efficient searching of
+    the string for matching patterns.
+
+    Initialization args:
+        Required positional:
+        s (str): The string for which the suffix array is to be
+                constructed.
+    
+    Attributes:
+        s (str): The string on which the suffix array is based.
+        n (int): The length of the string s.
+        suff_arr (list of ints): The suffix array of s, an array
+                of length one greater than that of s (i.e. n + 1).
+        lcp (list of ints): The longest common prefix array of
+                s, an array of length equal to that of suff_arr.
+                Assists with the searching of the string. TODO
+        lcp_lr (list of ints): The LCP-LR array of s. An array whose
+                length is the largest power of 2 not exceeding
+                the length of s. This further accelerates
+                the string searching process. TODO
+    
+    Methods:
+        (For details of a specific method, see the documentation of
+        that method)
+        encodeChars(): TODO
+        buildFrequencyArrays(): TODO
+        buildSuffixArray(): TODO
+        buildLongestCommonPrefixArray(): TODO
+        checkLCP(): TODO
+        buildLCPLR(): TODO
+        search(): TODO
+    """
     def __init__(self, s: str):
         self.s = s
         self.n = len(s)
@@ -48,8 +88,8 @@ class SuffixArray:
         for i, f in enumerate(f_arr):
             cumu_arr[i + 1] = cumu_arr[i] + f
         return (f_arr, cumu_arr)
-
-    def buildLSArrayAndLMS(self, nums: List[int]) -> Tuple[Union[List[bool], List[int]]]:
+    """
+    def buildFrequencyArrays(self, nums: List[int]) -> Tuple[Union[List[bool], List[int]]]:
         n = len(nums)
         arr = [True] * (n + 1)
         lms = []
@@ -60,7 +100,7 @@ class SuffixArray:
                 arr[i] = False
                 if arr[i + 1]: lms.append(i + 1)
         return (arr, lms[::-1])
-    
+    """
     def buildSuffixArray(self) -> List[int]:
 
         def induceSortLS(nums: List[int], suff_arr: List[int], ls_arr: List[bool], cumu_arr: List[int]) -> None:
@@ -306,6 +346,7 @@ def strStr(haystack: str, needle: str) -> int:
     of haystack.
     """
     sa = SuffixArray(haystack)
+    print(len(haystack), len(sa.suff_arr))
     ind_lst = sa.search(needle)
     return ind_lst[0] if ind_lst else -1
 
@@ -327,3 +368,6 @@ def countDistinct(s: str) -> int:
     n = len(s)
     sa = SuffixArray(s)
     return ((n * (n + 1)) >> 1) - sum(sa.lcp)
+
+if __name__ == "__main__":
+    print(strStr("abcbacba", "ba"))
