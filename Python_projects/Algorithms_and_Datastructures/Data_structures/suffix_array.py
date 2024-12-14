@@ -6,13 +6,23 @@ from typing import Generator, Dict, List, Set, Tuple, Optional, Union
 class SuffixArray:
     # Using SA-IS algorithm constructed based on https://zork.net/~st/jottings/sais.html
     """
-    Class implementing a suffix array for a given string, including
-    methods allowing it to be used to search the string.
+    Class the constructs and utilises a suffix array for a given
+    string, including creation of the longest common prefix (LCP)
+    array and methods allowing it to be used to search the string.
 
-    A suffix array for a given string is an array with length one
+    The suffix array for a given string is an array with length one
     greater than that of the string, storing the start indices of
     all the suffixes of the string (including the whole string and
-    the empty suffix) in alphabetical order of the suffixes.
+    the empty suffix) in alphabetical order of the suffixes. If
+    one suffix is equal to the prefix of a second, the first
+    appears earlier in the suffix array (as such, the empty suffix
+    is necessarily the first element in the suffix array).
+    
+    The longest common prefix (LCP) array for a given string and
+    its suffix array is an array the same length as the suffix
+    array denoting the longest common prefix between that suffix
+    and the suffix that appears next in the suffix array.
+    
     Construction of this array allows for efficient searching of
     the string for matching patterns.
 
@@ -39,15 +49,44 @@ class SuffixArray:
         that method)
         encodeChars(): TODO
         buildFrequencyArrays(): TODO
+        buildLSArrayAndLMS(): TODO
         buildSuffixArray(): TODO
         buildLongestCommonPrefixArray(): TODO
         checkLCP(): TODO
         buildLCPLR(): TODO
         search(): TODO
     """
-    def __init__(self, s: str):
-        self.s = s
-        self.n = len(s)
+    def __init__(self, s: str, head_chars: str=""):
+        self._s = s
+        self._head_chars = head_chars
+    
+    @property
+    def s(self):
+        return self._s if self._s is not None else ""
+    
+    @property
+    def n(self):
+        return len(self.s)
+    
+    @property
+    def head_chars(self):
+        return self._head_chars if self._head_chars is not None else ""
+
+    #@property
+    #def char_encoding(self):
+    #    res = getattr(self, "_char_encoding", None)
+    #    if res is None:
+    #        res = self.encodeChars(self.s, head_chars=self.head_chars)
+    #        self._char_encoding = res
+    #    return res
+    
+    @property
+    def head_char_ordering(self):
+        res = getattr(self, "_head_char_ordering", None)
+        if res is None:
+            res = self.calculateHeadCharOrdering(self.head_chars)
+            self._head_char_ordering = res
+        return res
     
     @property
     def suff_arr(self):
@@ -73,14 +112,39 @@ class SuffixArray:
             self._lcp_lr = res
         return res
 
-    def encodeChars(self, s: str) -> Dict[str, int]:
-        chars = sorted(set(s))
+    def _encodeChars(self, s: str, head_chars: str="") -> Dict[str, int]:
+        chars = set(s)
         res = {}
-        for i, l in enumerate(chars, start=1):
+        i = 1
+        for l in head_chars:
+            if l in res.keys(): continue
+            res[l] = i
+            i += 1
+            chars.discard(l)
+        for i, l in enumerate(sorted(chars), start=i):
             res[l] = i
         return res
     
-    def buildFrequencyArrays(self, nums: List[int], nums_mx: int) -> Tuple[List[int]]:
+    def calculateHeadCharOrdering(self, head_chars: str) -> Dict[str, int]:
+        res = {}
+        i = 1
+        for l in head_chars:
+            if l in res.keys(): continue
+            res[l] = i
+            i += 1
+        return res
+    
+    def compareCharacters(self, l1: str, l2: str) -> int:
+        # Returns 0 if l1 and l2 are equal, 1 if l1 is lexicographically
+        # smaller than l2 and -1 otherwise
+        if l1 == l2: return 0
+        hco = self.head_char_ordering
+        if l1 in hco.keys():
+            return 1 if self.hco[l1] < self.hco.get(l2, float("inf")) else -1
+        elif l2 in hco.keys(): return -1
+        return 1 if l1 < l2 else -1
+
+    def buildFrequencyArrays(self, nums: List[int], nums_mx: int) -> Tuple[List[int], List[int]]:
         f_arr = [0] * (nums_mx + 1)
         for num in nums:
             f_arr[num] += 1
@@ -88,8 +152,8 @@ class SuffixArray:
         for i, f in enumerate(f_arr):
             cumu_arr[i + 1] = cumu_arr[i] + f
         return (f_arr, cumu_arr)
-    """
-    def buildFrequencyArrays(self, nums: List[int]) -> Tuple[Union[List[bool], List[int]]]:
+    
+    def buildLSArrayAndLMS(self, nums: List[int]) -> Tuple[Union[List[bool], List[int]]]:
         n = len(nums)
         arr = [True] * (n + 1)
         lms = []
@@ -100,7 +164,7 @@ class SuffixArray:
                 arr[i] = False
                 if arr[i + 1]: lms.append(i + 1)
         return (arr, lms[::-1])
-    """
+    
     def buildSuffixArray(self) -> List[int]:
 
         def induceSortLS(nums: List[int], suff_arr: List[int], ls_arr: List[bool], cumu_arr: List[int]) -> None:
@@ -119,7 +183,8 @@ class SuffixArray:
                     curr_inds[char_idx] += incr
             return
 
-        encoding = self.encodeChars(self.s)
+        encoding = self._encodeChars(self.s, head_chars=self.head_chars)
+        #print(encoding)
         nums = [encoding[l] for l in self.s]
         nums.append(0)
 
@@ -266,9 +331,11 @@ class SuffixArray:
             end = min(self.n - i, len(p))
             is_ge_p = False
             for j in range(length, end):
-                if self.s[i + j] == p[j]:
+                comp = self.compareCharacters(self.s[i + j], p[j])
+                #print(self.s[i + j], p[j], comp)
+                if comp == 0:#self.s[i + j] == p[j]:
                     continue
-                elif self.s[i + j] > p[j]:
+                elif comp == -1:#self.s[i + j] > p[j]:
                     is_ge_p = True
                 break
             else:
@@ -346,7 +413,9 @@ def strStr(haystack: str, needle: str) -> int:
     of haystack.
     """
     sa = SuffixArray(haystack)
-    print(len(haystack), len(sa.suff_arr))
+    #print(len(haystack), len(sa.suff_arr))
+    #print(haystack)
+    #print (sa.suff_arr, sa.lcp)
     ind_lst = sa.search(needle)
     return ind_lst[0] if ind_lst else -1
 
@@ -369,5 +438,143 @@ def countDistinct(s: str) -> int:
     sa = SuffixArray(s)
     return ((n * (n + 1)) >> 1) - sum(sa.lcp)
 
+from sortedcontainers import SortedList
+from collections import deque
+import bisect
+def longestCommonSubstring(s_lst: List[str], k: int) -> List[str]:
+    """
+    Finds the longest strings that appears in at least k of
+    the strings in s_lst as a contiguous substring.
+
+    Solved using a suffix array and LCP array
+    """
+    n = len(s_lst)
+    if k > n: return []
+    elif k <= 0:
+        raise ValueError("k must be a strictly positive integer.")
+    elif k == 1:
+        length = max(len(x) for x in s_lst)
+        return [x for x in s_lst if len(x) == length]
+    incl_chars = set(s_lst[0])
+    for i in range(1, n):
+        incl_chars |= set(s_lst[i])
+    partition_chars = []
+    for i in range(len(incl_chars) + n - 1):
+        try:  l = chr(i + 32)
+        except ValueError:
+            raise ValueError("There are not enough ASCII characters "
+                    "to create the necessary partition characters.")
+        if l in incl_chars: continue
+        partition_chars.append(l)
+        if len(partition_chars) >= n - 1:
+            break
+    for _ in range(len(partition_chars), n - 1):
+        partition_chars.pop()
+    s = s_lst[0]
+    partition_char_inds = []
+    partition_chars = list(partition_chars)
+    for i in range(1, n):
+        partition_char_inds.append(len(s))
+        s = partition_chars[i - 1].join([s, s_lst[i]])
+    
+    sa = SuffixArray(s, head_chars=partition_chars)
+    #print(s)
+    #print(sa.suff_arr)
+    #print(sa.lcp)
+    # Sliding window
+    curr_mn_incl_lcp_val = float("inf")
+    incl_lcp_vals = SortedList()
+    
+    cnts = [0] * n
+    n_nonzero_cnts = 0
+    s_lst_idx_incl_qu = deque()
+    curr_mx_len = 0
+    res_inds = []
+    prev_incl_i = -1
+    # Start at n as we know the results do not include the empty substring
+    # (at index 0 in the suffix array) or any of the substrings of s
+    # beginning with the partition characters (which due to the partition
+    # characters them being defined to not be in any of the strings in
+    # s_lst and lexicographically smaller than any of the characters in
+    # the strings in s_lst are at indices 1 to (n - 1) inclusive in the
+    # suffix array)
+    i1 = n
+    #for i2, (suff_idx2, lcp_val2) in enumerate(zip(sa.suff_arr, sa.lcp)):
+    for i2 in range(n, sa.n + 1):
+        suff_idx2 = sa.suff_arr[i2]
+        lcp_val2 = sa.lcp[i2]
+        #print(i1, i2, incl_lcp_vals, curr_mn_incl_lcp_val, cnts, n_nonzero_cnts, suff_idx2, lcp_val2, s_lst_idx_incl_qu)
+        s_lst_idx2 = bisect.bisect_left(partition_char_inds, suff_idx2)
+        if not cnts[s_lst_idx2]:
+            n_nonzero_cnts += 1
+        cnts[s_lst_idx2] += 1
+        
+        if n_nonzero_cnts >= k:
+            for i1 in range(i1, i2 + 1):
+                s_lst_idx1 = s_lst_idx_incl_qu[0]
+                if cnts[s_lst_idx1] == 1:
+                    if n_nonzero_cnts == k:
+                        break
+                    n_nonzero_cnts -= 1
+                s_lst_idx_incl_qu.popleft()
+                cnts[s_lst_idx1] -= 1
+                #print(cnts)
+                lcp_val1 = sa.lcp[i1]
+                incl_lcp_vals.remove(lcp_val1)
+                if lcp_val1 == curr_mn_incl_lcp_val:
+                    # for k > 1, incl_lcp_vals is guaranteed not to be empty here
+                    curr_mn_incl_lcp_val = incl_lcp_vals[0]
+            else: i1 = i2 + 1 # should not get here
+        #print(f"i1 = {i1}, i2 = {i2}, n_nonzero_cnts = {n_nonzero_cnts}")
+        if n_nonzero_cnts >= k and curr_mn_incl_lcp_val >= curr_mx_len:
+            if curr_mn_incl_lcp_val > curr_mx_len:
+                res_inds = []
+                curr_mx_len = curr_mn_incl_lcp_val
+                prev_incl_i = -1
+            if prev_incl_i < i1: # Ensures no repetitions
+                res_inds.append(suff_idx2)
+                prev_incl_i = i2
+                #print(f"res_inds = {res_inds}, curr_mx_len = {curr_mx_len}, res_inds = {res_inds}")
+            
+        if not incl_lcp_vals or lcp_val2 < incl_lcp_vals[0]:
+            curr_mn_incl_lcp_val = lcp_val2
+        incl_lcp_vals.add(lcp_val2)
+        s_lst_idx_incl_qu.append(s_lst_idx2)
+
+    if not curr_mx_len: return [""]
+    return [s[suff_idx : suff_idx + curr_mx_len] for suff_idx in res_inds]
+
+def longestRepeatedSubstrings(s: str) -> List[str]:
+    """
+    Finds all the strings such that each is the same length, appears
+    in the string s at least once (including overlapping occurrences)
+    and there are no longer strings that satisfy these conditions.
+
+    This illustrates a straightforward use of the longest common
+    prefix (LCP) array
+    """
+    sa = SuffixArray(s)
+    length = max(sa.lcp)
+    res = []
+    prev_idx_incl = False
+    for suff_idx, lcp_val in zip(sa.suff_arr, sa.lcp):
+        if lcp_val != length:
+            prev_idx_incl = False
+            continue
+        elif prev_idx_incl:
+            continue
+        res.append(s[suff_idx:suff_idx + length])
+        prev_idx_incl = True
+    return res
+
 if __name__ == "__main__":
-    print(strStr("abcbacba", "ba"))
+    res = strStr("abcbacba", "ba")
+    print(f"strStr(\"abcbacba\", \"ba\") = {res}")
+
+    # Example from https://www.youtube.com/watch?v=DTLjHSToxmo&list=PLDV1Zeh2NRsCQ_Educ7GCNs3mvzpXhHW5&index=5
+    res = longestCommonSubstring(["aabb", "bcdc", "bcde", "cded"], 2)
+    print(f"\nlongestCommonSubstring([\"aabb\", \"bcdc\", \"bcde\", \"cded\"], 2) = {res}")
+
+    # Example from https://www.youtube.com/watch?v=OptoHwC3D-Y&list=PLDV1Zeh2NRsCQ_Educ7GCNs3mvzpXhHW5&index=6
+    res = longestRepeatedSubstrings("abracadabra")
+    print(f"\nlongestRepeatedSubstrings(\"abracadabra\") = {res}")
