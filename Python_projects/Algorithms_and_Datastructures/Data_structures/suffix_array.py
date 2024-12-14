@@ -441,13 +441,19 @@ def countDistinct(s: str) -> int:
 from sortedcontainers import SortedList
 from collections import deque
 import bisect
-def longestCommonSubstring(s_lst: List[str], k: int) -> List[str]:
+def longestCommonSubstring(s_lst: List[str], k: int, part_char_ascii_start: int=32) -> List[str]:
     """
     Finds the longest strings that appears in at least k of
     the strings in s_lst as a contiguous substring.
 
     Solved using a suffix array and LCP array
     """
+    # Default value of part_char_start is set to 32 as this is
+    # where the ASCII console readable characters start
+    # (for purposes of easier debugging, though this can be
+    # changed to 0 if the number of ASCII characters needed gets
+    # close to the total number of ASCII characters)
+
     n = len(s_lst)
     if k > n: return []
     elif k <= 0:
@@ -460,7 +466,7 @@ def longestCommonSubstring(s_lst: List[str], k: int) -> List[str]:
         incl_chars |= set(s_lst[i])
     partition_chars = []
     for i in range(len(incl_chars) + n - 1):
-        try:  l = chr(i + 32)
+        try:  l = chr(i + part_char_ascii_start) 
         except ValueError:
             raise ValueError("There are not enough ASCII characters "
                     "to create the necessary partition characters.")
