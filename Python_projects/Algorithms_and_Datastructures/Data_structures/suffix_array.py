@@ -573,6 +573,59 @@ def longestRepeatedSubstrings(s: str) -> List[str]:
         prev_idx_incl = True
     return res
 
+def longestDupSubstring(s: str) -> str:
+    """
+    Finds one of the strings that appears in the string s at least
+    once (including overlapping occurrences), and is at least as
+    long as any other such string (referred to as a longest
+    duplicate substring of s).
+
+    This illustrates a straightforward use of the longest common
+    prefix (LCP) array
+
+    Examples:
+        >>> longestDupSubstring("banana")
+        "ana"
+        
+        This signifies that one of the longest duplicate substrings
+        of "banana" is "ana" (with the two occurrences starting at
+        the 2nd and 4th letter respectively).
+
+        >>> longestDupSubstring("abcd")
+        ""
+
+        This signifies that "abcd" has no repeating substrings
+        (which is due to there being no repeated characters in
+        the string).
+
+        >>> longestDupSubstring("aaaa")
+        "aaa"
+        
+        This signifies that one of the longest duplicate substrings
+        of "aaaa" is "aaa" (with the two occurrences starting at
+        the 1st and 2nd letter respectively). Note that the
+        two occurrences of "aaa" overlap with each other, which
+        is permitted.
+    
+    Solution to Leetcode #1044: Longest Duplicate Substring
+
+    Original problem description for Leetcode #1044:
+
+    Given a string s, consider all duplicated substrings: (contiguous)
+    substrings of s that occur 2 or more times. The occurrences may
+    overlap.
+
+    Return any duplicated substring that has the longest possible length.
+    If s does not have a duplicated substring, the answer is "".
+    """
+    sa = SuffixArray(s)
+    mx_len = max(sa.lcp)
+    if not mx_len: return ""
+    for i, lcp_val in enumerate(sa.lcp):
+        if lcp_val == mx_len: break
+    j = sa.suff_arr[i]
+    return s[j: j + mx_len]
+
 if __name__ == "__main__":
     res = strStr("abcbacba", "ba")
     print(f"strStr(\"abcbacba\", \"ba\") = {res}")
@@ -584,3 +637,12 @@ if __name__ == "__main__":
     # Example from https://www.youtube.com/watch?v=OptoHwC3D-Y&list=PLDV1Zeh2NRsCQ_Educ7GCNs3mvzpXhHW5&index=6
     res = longestRepeatedSubstrings("abracadabra")
     print(f"\nlongestRepeatedSubstrings(\"abracadabra\") = {res}")
+
+    res = longestDupSubstring("banana")
+    print(f"\nlongestDupSubstring(\"banana\") = \"{res}\"")
+
+    res = longestDupSubstring("abcd")
+    print(f"\nlongestDupSubstring(\"abcd\") = \"{res}\"")
+
+    res = longestDupSubstring("aaaa")
+    print(f"\nlongestDupSubstring(\"aaaa\") = \"{res}\"")
