@@ -30,6 +30,16 @@ class SuffixArray:
         Required positional:
         s (str): The string for which the suffix array is to be
                 constructed.
+        
+        Optional named:
+        head_chars (str): a string containing characters that are
+                considered to be alphabetically first, with
+                the earlier the first occurrence of a character
+                in head_chars appears the earlier it is considered
+                to be alphabetically. This is included to
+                facilitate the use of partition characters, for
+                instance in the longest common substring problem.
+            Default: "" (the empty string)
     
     Attributes:
         s (str): The string on which the suffix array is based.
@@ -38,23 +48,37 @@ class SuffixArray:
                 of length one greater than that of s (i.e. n + 1).
         lcp (list of ints): The longest common prefix array of
                 s, an array of length equal to that of suff_arr.
-                Assists with the searching of the string. TODO
         lcp_lr (list of ints): The LCP-LR array of s. An array whose
                 length is the largest power of 2 not exceeding
-                the length of s. This further accelerates
-                the string searching process. TODO
+                the length of s. This pre-computes the longest
+                common prefix between suffixes that are not adjacent
+                to each other in the suffix array, with the choice
+                of the pairs matching that of a binary search of
+                the suffix array, in order to facilitate that search.
     
     Methods:
         (For details of a specific method, see the documentation of
         that method)
-        encodeChars(): TODO
+        encodeChars(): Translates the characters included in s and
+                head_chars into unique positive integers, such that
+                the earlier alphabetically a character is, the
+                smaller it is (accounting for the characters in
+                head_chars being alphabetically first).
         buildFrequencyArrays(): TODO
-        buildLSArrayAndLMS(): TODO
-        buildSuffixArray(): TODO
-        buildLongestCommonPrefixArray(): TODO
-        checkLCP(): TODO
-        buildLCPLR(): TODO
-        search(): TODO
+        buildLSArrayAndLMS(): Creates the L-type S-type (LS)
+                array and left-most S-type suffix (LMS) arrays,
+                each used in the construction of the suffix array
+        buildSuffixArray(): Builds the suffix array
+        buildLongestCommonPrefixArray(): Builds the longest common
+                prefix (LCP) array using the suffix array
+        checkLCP(): Checks the correctness of the calculated
+                LCP array
+        buildLCPLR(): Builds the longest common prefix long range
+                (LCP-LR) array
+        search(): Uses the suffix, LCP and LCP-LR arrays to
+                search for a particular contiguous substring in
+                the attribute s, utilising a binary search
+                technique.
     """
     def __init__(self, s: str, head_chars: str=""):
         self._s = s
