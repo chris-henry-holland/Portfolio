@@ -64,6 +64,10 @@ class SuffixArray:
                 the earlier alphabetically a character is, the
                 smaller it is (accounting for the characters in
                 head_chars being alphabetically first).
+        compareCharacters(): Performs a comparison between two
+                characters to determine their relative alphabetical
+                ordering (accounding for the characters in
+                head_chars being alphabetically first)
         buildFrequencyArrays(): TODO
         buildLSArrayAndLMS(): Creates the L-type S-type (LS)
                 array and left-most S-type suffix (LMS) arrays,
@@ -108,7 +112,7 @@ class SuffixArray:
     def head_char_ordering(self):
         res = getattr(self, "_head_char_ordering", None)
         if res is None:
-            res = self.calculateHeadCharOrdering(self.head_chars)
+            res = self._calculateHeadCharOrdering(self.head_chars)
             self._head_char_ordering = res
         return res
     
@@ -136,7 +140,7 @@ class SuffixArray:
             self._lcp_lr = res
         return res
 
-    def _encodeChars(self, s: str, head_chars: str="") -> Dict[str, int]:
+    def encodeChars(self, s: str, head_chars: str="") -> Dict[str, int]:
         chars = set(s)
         res = {}
         i = 1
@@ -149,7 +153,7 @@ class SuffixArray:
             res[l] = i
         return res
     
-    def calculateHeadCharOrdering(self, head_chars: str) -> Dict[str, int]:
+    def _calculateHeadCharOrdering(self, head_chars: str) -> Dict[str, int]:
         res = {}
         i = 1
         for l in head_chars:
@@ -207,7 +211,7 @@ class SuffixArray:
                     curr_inds[char_idx] += incr
             return
 
-        encoding = self._encodeChars(self.s, head_chars=self.head_chars)
+        encoding = self.encodeChars(self.s, head_chars=self.head_chars)
         #print(encoding)
         nums = [encoding[l] for l in self.s]
         nums.append(0)
@@ -424,8 +428,27 @@ class SuffixArray:
 
 def strStr(haystack: str, needle: str) -> int:
     """
+    Finds the smallest index (0-indexed) in the string haystack such
+    that there is a contiguous substring of haystack starting at that
+    index that is equal to needle. If no such index exists, returns
+    -1.
+
+    Args:
+        Required positional:
+        haystack (str): The string to be searched for a contiguous
+                substring equal to needle
+        needle (str): The string to be sought as a contiguous
+                substring inside hastack
     
+    Returns:
+    Integer (int) denoting the smallest index (0-indexed) in
+    haystack such that there is a contiguous substring of haystack
+    starting at that index that is equal to needle, or -1 if no
+    such index exists.
     
+    This illustrates the use of the SuffixArray class for string
+    searching
+
     An overkill solution to Leetcode #28 (Find the Index of the First
     Occurrence in a String) to illustrate and test the use of suffix
     array for pattern matching.
@@ -467,8 +490,17 @@ from collections import deque
 import bisect
 def longestCommonSubstring(s_lst: List[str], k: int, part_char_ascii_start: int=32) -> List[str]:
     """
-    Finds the longest strings that appears in at least k of
-    the strings in s_lst as a contiguous substring.
+    Finds the longest strings that each appear as contiguous
+    substrings in at least k of the strings in s_lst.
+
+    Args:
+        Required positional:
+        s_lst (list of strs): TODO
+        k (int): TODO
+
+        Optional named:
+        part_char_ascii_start (int):
+            Default: 32
 
     Solved using a suffix array and LCP array
     """
