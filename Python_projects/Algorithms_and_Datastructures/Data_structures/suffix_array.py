@@ -493,16 +493,41 @@ def longestCommonSubstring(s_lst: List[str], k: int, part_char_ascii_start: int=
     Finds the longest strings that each appear as contiguous
     substrings in at least k of the strings in s_lst.
 
+    Solved using a suffix array and LCP array.
+
     Args:
         Required positional:
-        s_lst (list of strs): TODO
-        k (int): TODO
+        s_lst (list of strs): The collection of strings for which
+                the longest substrings common to at least k of them
+                is sought.
+        k (int): The minimum number of strings in s_lst for which
+                the returned strings must be substrings.
 
         Optional named:
-        part_char_ascii_start (int):
+        part_char_ascii_start (int): Integer giving the smallest
+                ASCII code considered for use as a partition
+                character as part of the algorithm. This has
+                a default value of 32 as this is the smallest
+                code that displays on a console as a character,
+                so avoiding the issues use of characters that
+                do not show up on console when debugging. If
+                the number of ASCII characters needed gets
+                close to the maximum ASCII code (17 * 2^16 - 1)
+                then this can be set to 0 (though in a case
+                when so many characters are needed, adding
+                an extra 32 is extremely unlikely to make a
+                meaningful difference).
             Default: 32
 
-    Solved using a suffix array and LCP array
+    Returns:
+    A list of strings (str) containing strings of the same length,
+    consisting of all strings that appear as contiguous substrings
+    in at least k of the strings in s_lst. If there are no such
+    substrings (because k exceeds the number of strings in s_lst)
+    then an empty list is returned.
+    Note that since the empty string is a contiguous substring of
+    any string, as long as k does not exceed the number of strings
+    in s_lst then there is at least one returned string.
     """
     # Default value of part_char_start is set to 32 as this is
     # where the ASCII console readable characters start
