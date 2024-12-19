@@ -633,13 +633,62 @@ def longestCommonSubstring(s_lst: List[str], k: int, part_char_ascii_start: int=
 
 def longestRepeatedSubstrings(s: str) -> List[str]:
     """
-    Finds all the strings such that each is the same length, appears
-    in the string s at least once (including overlapping occurrences)
+    Finds all the strings that appear in the string s as contiguous
+    substrings at least once (including overlapping occurrences)
     and there are no longer strings that satisfy these conditions.
 
     This illustrates a straightforward use of the longest common
-    prefix (LCP) array
+    prefix (LCP) array.
+
+    Args:
+        Required positional:
+        s (str): The string to be searched for the repeated
+                longest contiguous substrings.
+
+    Returns:
+    A list of strings (str) containing all strings that appear as
+    contiguous substrings in s at least once.
+    Note that all strings will be the same length, and the only
+    string that gives no result is the empty string, as for all
+    other strings the empty string is a contiguous substring at
+    either end and in between each character in the string.
+
+    Examples:
+        >>> longestRepeatedSubstrings("abracadabra")
+        ['abra']
+
+        This signifies that the longest string that is a
+        contiguous substring of "abracadabra" more than once is
+        "abra", with one occurrence starting at the 1st character
+        and another at the 8th character. It further signifies that
+        there are no other such strings of length 4 or greater.
+
+        >>> longestRepeatedSubstrings("anbaban")
+        ['an', 'ba']
+
+        This signifies that the longest strings that appear more
+        than once as contiguous substrings in "anbaban" are of
+        length 2, and consist of "an" and "bn" only.
+
+        >>> longestRepeatedSubstrings("abc")
+        ['']
+
+        This signifies that the longest (and consequently only)
+        string that appears as a contiguous substring in "abc"
+        more than once is the empty string (which appears at
+        the beginning and end and between each character). This
+        result occurs if and only if the string is non-empty with
+        no repeated characters.
+
+        >>> longestRepeatedSubstrings("")
+        []
+
+        This signifies that there are no strings (not even the
+        empty string itself) that appear as a contiguous substring
+        of the empty string. As observed above, the empty string
+        is the only string for which this result occurs.
     """
+    if not s: return []
     sa = SuffixArray(s)
     length = max(sa.lcp)
     res = []
@@ -666,21 +715,21 @@ def longestDupSubstring(s: str) -> str:
 
     Examples:
         >>> longestDupSubstring("banana")
-        "ana"
+        'ana'
         
         This signifies that one of the longest duplicate substrings
         of "banana" is "ana" (with the two occurrences starting at
         the 2nd and 4th letter respectively).
 
         >>> longestDupSubstring("abcd")
-        ""
+        ''
 
         This signifies that "abcd" has no repeating substrings
         (which is due to there being no repeated characters in
         the string).
 
         >>> longestDupSubstring("aaaa")
-        "aaa"
+        'aaa'
         
         This signifies that one of the longest duplicate substrings
         of "aaaa" is "aaa" (with the two occurrences starting at
@@ -718,6 +767,15 @@ if __name__ == "__main__":
     # Example from https://www.youtube.com/watch?v=OptoHwC3D-Y&list=PLDV1Zeh2NRsCQ_Educ7GCNs3mvzpXhHW5&index=6
     res = longestRepeatedSubstrings("abracadabra")
     print(f"\nlongestRepeatedSubstrings(\"abracadabra\") = {res}")
+
+    res = longestRepeatedSubstrings("anbaban")
+    print(f"\nlongestRepeatedSubstrings(\"anan\") = {res}")
+
+    res = longestRepeatedSubstrings("abc")
+    print(f"\nlongestRepeatedSubstrings(\"abc\") = {res}")
+
+    res = longestRepeatedSubstrings("")
+    print(f"\nlongestRepeatedSubstrings(\"\") = {res}")
 
     res = longestDupSubstring("banana")
     print(f"\nlongestDupSubstring(\"banana\") = \"{res}\"")
