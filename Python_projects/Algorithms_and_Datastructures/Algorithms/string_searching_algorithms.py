@@ -839,9 +839,66 @@ class AhoCorasick:
             yield res
         return
     
-def wordBreak(self, s: str, wordDict: List[str]) -> bool:
+def wordBreak(s: str, wordDict: List[str]) -> bool:
     """
+    Function identifying whether the string s can be partitioned into
+    contiguous substrings such that each substring appears in
+    wordDict. There is no restriction on how many times an element
+    of wordDict can appear as a substring in s.
+
+    Args:
+        Required positional:
+        s (str): The string to be partitioned
+        wordDict (list of strs): The strings from which each substring
+                must come for a successful partitioning of s into
+                contiguous substrings.
+    
+    Returns:
+    Boolean (bool) giving True if such a partitioning of s into
+    contiguous substrings is possible, otherwise False.
+
+    Examples:
+        >>> wordBreak("leetcode", wordDict = ["leet", "code"])
+        True
+
+        This signifies that "leetcode" can be partitioned into
+        contiguous substrings such that each substring is in the
+        list ["leet", "code"]. Such a partitioning (indeed the
+        only possible partitioning) is "leet" "code".
+
+        >>> wordBreak("applepenapple", ["apple", "pen"])
+        True
+
+        This signifies that "applepenapple" can be partitioned into
+        contiguous substrings such that each substring is in the
+        list ["apple","pen"]. Such a partitioning (indeed the only
+        possible such  partitioning) is "apple" "pen" "apple". Note
+        that "apple" appears twice despite only appearing once in
+        the list, which is permitted.
+
+        >>> wordBreak("catsandog", ["cats", "dog", "sand", "and", "cat"])
+        False
+
+        This signifies that there are no partitionings of "catsandog"
+        such that each substring is in the list:
+            ["cats", "dog", "sand", "and", "cat"]
+        This is despite each character in the string being part of
+        a contiguous substring present in the list. However, any choice
+        of these substrings has at least one overlap or gap between the substrings
+        (i.e. one character in the string that is either in more than one
+        or none of the substrings respectively), meaning it is not a
+        partitioning. 
+
     Solution to Leetcode #139 using Aho Corasick
+
+    Original problem description for Leetcode #139:
+
+    Given a string s and a dictionary of strings wordDict, return true if
+    s can be segmented into a space-separated sequence of one or more
+    dictionary words.
+
+    Note that the same word in the dictionary may be reused multiple times
+    in the segmentation.
     """
     ac = AhoCorasick(wordDict)
     arr = [False] * len(s)
@@ -1072,6 +1129,15 @@ def countPalindromicSubstrings(self, s: str) -> int:
     return sum((x + 1) >> 1 for x in manacher_arr)
 
 if __name__ == "__main__":
+    res = wordBreak("leetcode", wordDict = ["leet", "code"])
+    print(f"\nwordBreak(\"leetcode\", wordDict = [\"leet\", \"code\"]) = {res}")
+
+    res = wordBreak("applepenapple", ["apple", "pen"])
+    print(f"\nwordBreak(\"applepenapple\", [\"apple\", \"pen\"])= {res}")
+
+    res = wordBreak("catsandog", ["cats", "dog", "sand", "and", "cat"])
+    print(f"\nwordBreak(\"catsandog\", [\"cats\", \"dog\", \"sand\", \"and\", \"cat\"])) = {res}")
+
     res = findRepeatedDnaSequences(
         "AAAAACCCCCAAAAACCCCCCAAAAAGGGTTT",
         substring_length=10
