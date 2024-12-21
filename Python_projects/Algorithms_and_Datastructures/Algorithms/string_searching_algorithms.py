@@ -844,7 +844,7 @@ def wordBreak(s: str, wordDict: List[str]) -> bool:
     Function identifying whether the string s can be partitioned into
     contiguous substrings such that each substring appears in
     wordDict. There is no restriction on how many times an element
-    of wordDict can appear as a substring in s.
+    of wordDict can appear in a partitioning.
 
     Args:
         Required positional:
@@ -889,7 +889,7 @@ def wordBreak(s: str, wordDict: List[str]) -> bool:
         or none of the substrings respectively), meaning it is not a
         partitioning. 
 
-    Solution to Leetcode #139 using Aho Corasick
+    Solution to Leetcode #139 (Word Break) using Aho Corasick
 
     Original problem description for Leetcode #139:
 
@@ -910,9 +910,56 @@ def wordBreak(s: str, wordDict: List[str]) -> bool:
             if arr[i]: break
     return arr[-1]
 
-def wordBreak2(self, s: str, wordDict: List[str]) -> List[str]:
+def wordBreak2(s: str, wordDict: List[str]) -> List[str]:
     """
-    Solution to Leetcode #140 using Aho Corasick
+    Function identifying all the ways the string s can be partitioned
+    into contiguous substrings such that each substring appears in
+    wordDict. There is no restriction on how many times an element
+    of wordDict can appear as a substring in a partitioning.
+
+    Args:
+        Required positional:
+        s (str): The string to be partitioned
+        wordDict (list of strs): The strings from which each substring
+                must come for a successful partitioning of s into
+                contiguous substrings.
+    
+    Returns:
+    List of strings (str), each giving a partitioning of s into contiguous
+    substrings such that each substring is an element of wordDict, and
+    between them giving all such possible partitionings. The borders between
+    the partitions in a given partitioning is signified by a space. There
+    order of in which the partitionings are given has no special
+    significance.
+
+    Examples:
+        >>> wordBreak2("leetcode", ["leet", "code"])
+        ['leet code']
+
+        >>> wordBreak2("catsanddog", ["cat", "cats", "and", "sand", "dog"])
+        ['cats and dog', 'cat sand dog']
+
+        >>> wordBreak2("pineapplepenapple", ["apple", "pen", "applepen", "pine", "pineapple"])
+        ['pine apple pen apple', 'pineapple pen apple', 'pine applepen apple'])
+
+        >>> wordBreak2("catsandog", ["cats", "dog", "sand", "and", "cat"])
+        []
+
+        The returned empty list indicates that there are no partitionings of
+        "catsandog" into contiguous substrings such that each substring is in
+        the list:
+            ["cats", "dog", "sand", "and", "cat"]
+
+    Solution to Leetcode #140 (Word Break II) using Aho Corasick
+
+    Original problem description for Leetcode #140:
+
+    Given a string s and a dictionary of strings wordDict, add spaces in
+    s to construct a sentence where each word is a valid dictionary word.
+    Return all such possible sentences in any order.
+
+    Note that the same word in the dictionary may be reused multiple
+    times in the segmentation.
     """
     n = len(s)
     ac = AhoCorasick(wordDict)
@@ -1057,15 +1104,41 @@ def manacherAlgorithm(s: Iterable[Any]) -> List[int]:
             curr_centre = i
     return res
 
-def longestPalindromicSubstrings(s: str) -> Tuple[str]:
+def longestPalindromicSubstrings(s: str) -> Tuple[int, List[int]]:
     """
-    Uses Manacher's algorithm to find all palindromic
-    substrings of s for which there are no longer
-    palindromic substrings in s
+    For a given string s, identifies the length such that there exists
+    at least one palindromic string of that length that is a contiguous
+    substring of s and there are no longer such substrings, and the
+    start indices in s at which each such string appears as a substring.
 
-    
+    A string is palindromic if and only if it is equal to itself
+    reversed.
+
+    This demonstrates a use of Manacher's algorithm.
+
+    Args:
+        Required positional:
+        s (str): The string to be searched for the palindromic
+                contiguous substrings.
+
+    Returns:
+    A 2-tuple whose index 0 contains and integer (int) giving the length
+    of the longest palindromic contiguous substring of s and whose index 1
+    is a list of integers (int) giving the 0-indexed starting indices in s
+    of all the longest palindromic contiguous substrings of that length,
+    in strictly increasing order.
+
+    Example:
+        >>> longestPalindromicSubstrings("ebabadbab")
+        (3, [1, 2, 6])
+
+        This signifies that the longest a palindromic contiguous substring
+        of "ebabadbab" can be is 3, of which there are three occurrences,
+        starting at the 0-indexed indices 1 ("bab"), 2 ("aba") and 6
+        ("bab"). Note that two of these substrings are the same string,
+        and the indices of both occurrences are included.
     """
-    if not s: return [""]
+    if not s: return (0, [0])
     n = len(s)
     s2 = ["#"] * ((n << 1) + 1)
     for i, l in enumerate(s):
@@ -1082,10 +1155,10 @@ def longestPalindromicSubstrings(s: str) -> Tuple[str]:
     res = []
     for i in mx_i:
         j1 = (i - mx_len) >> 1
-        res.append(s[j1:j1 + mx_len])
-    return tuple(res)
+        res.append(j1)
+    return (mx_len, res)
 
-def longestPalindrome(self, s: str) -> str:
+def longestPalindrome(s: str) -> str:
     """
     Uses Manacher's algorithm to find the unique palindromic
     substring of s for which there are no longer palindromic
@@ -1105,7 +1178,7 @@ def longestPalindrome(self, s: str) -> str:
     """
     return longestPalindromicSubstrings(s)[0]
 
-def countPalindromicSubstrings(self, s: str) -> int:
+def countPalindromicSubstrings(s: str) -> int:
     """
     
     Solution to Leetcode #647- Palindromic Substrings
@@ -1137,6 +1210,24 @@ if __name__ == "__main__":
 
     res = wordBreak("catsandog", ["cats", "dog", "sand", "and", "cat"])
     print(f"\nwordBreak(\"catsandog\", [\"cats\", \"dog\", \"sand\", \"and\", \"cat\"])) = {res}")
+
+    res = wordBreak2("leetcode", ["leet", "code"])
+    print(f"\nwordBreak2(\"leetcode\", [\"leet\", \"code\"]) = {res}")
+
+    res = wordBreak2("catsanddog", ["cat", "cats", "and", "sand", "dog"])
+    print(f"\nwordBreak2(\"catsanddog\", [\"cat\", \"cats\", \"and\", \"sand\", \"dog\"]) = {res}")
+
+    res = wordBreak2("pineapplepenapple", ["apple", "pen", "applepen", "pine", "pineapple"])
+    print(f"\n\"pineapplepenapple\", [\"apple\", \"pen\", \"applepen\", \"pine\", \"pineapple\"]) = {res}")
+
+    res = wordBreak2("catsandog", ["cats", "dog", "sand", "and", "cat"])
+    print(f"\n\"catsandog\", [\"cats\", \"dog\", \"sand\", \"and\", \"cat \"]) = {res}")
+
+    res = longestPalindrome("ebabad")
+    print(f"\nlongestPalindrome(\"ebabad\") = {res}")
+
+    res = longestPalindromicSubstrings("ebabadbab")
+    print(f"\nlongestPalindromicSubstrings(\"ebabadbab\") = {res}")
 
     res = findRepeatedDnaSequences(
         "AAAAACCCCCAAAAACCCCCCAAAAAGGGTTT",
