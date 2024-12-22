@@ -2,7 +2,7 @@
 
 from collections import deque
 import heapq
-from typing import Dict, List, Set, Tuple, Optional, Union
+from typing import Any, Dict, List, Set, Tuple, Optional, Union, Generator
 
 def HierholzerAlgorithm(edges: List[list], start=None, sort: bool=False, reverse: bool=False) -> List[int]:
     """
@@ -104,7 +104,7 @@ def FloydWarshallAdj(out_adj: dict) -> dict:
     for v in v_lst: dists[v][v] = 0
     return dists
 
-def FloydWarshallEdge(n: int, edges: List[list], thresh: Union[int, float]=float("inf")) -> dict:
+def FloydWarshallEdge(v_lst: List[Any], edges: List[Tuple[Any, Any]], thresh: Union[int, float]=float("inf")) -> dict:
     # Need to check
     # For weighted directed graph
     # Returns empty dict if negative weight cycle detected
@@ -132,8 +132,8 @@ def FloydWarshallThreshEdge(v_lst: list, edges: List[list], thresh: Union[int, f
     adj = {v: {} for v in v_lst}
     for e in edges:
         if e[2] > thresh: continue
-        adj[e[0]][e[1]] = min(dists[e[0]].get(e[1], float("inf")), e[2])
-        adj[e[1]][e[0]] = dists[e[0]][e[1]]
+        adj[e[0]][e[1]] = min(adj[e[0]].get(e[1], float("inf")), e[2])
+        adj[e[1]][e[0]] = adj[e[0]][e[1]]
     return FloydWarshallThreshAdj(adj, thresh, edges_under_thresh=True)
 
 
@@ -157,7 +157,7 @@ def BellmanFordStepLimitAdj(out_edges: dict, start, mx_step: Union[int, float]=f
                     row[v2] = d3
         if not updated2: break
         updated = updated2
-    return {x: (k if isinstance(x, int) else -1) for k, v in row.items()}
+    return {k: (v if isinstance(v, int) else -1) for k, v in row.items()}
 
 def BellmanFordStepLimitEdges(v_lst: list, edges: List[list], start, mx_step: Union[int, float]=float("inf")) -> dict:
     """
@@ -677,7 +677,7 @@ def TarjanArticulationAdj(graph: dict) -> tuple:
         if child_count > 1: artic.append(v)
     return tuple(artic)
 
-def TarjanArticulationAdjGrid() -> Union[List[Set[Tuple[int]]], Set[Tuple[int]]]:
+def TarjanArticulationAdjGrid(grid: List[List[Any]], open_obj: Any) -> Union[List[Set[Tuple[int]]], Set[Tuple[int]]]:
     # Check and adapt to generic graph (Leetcode #1263)
     """
     Modified Tarjan Algorithm for finding articulation points in
@@ -686,12 +686,26 @@ def TarjanArticulationAdjGrid() -> Union[List[Set[Tuple[int]]], Set[Tuple[int]]]
     other after the removal of that articulation point. Also finds
     which non-wall grid positions are connected to each other.
     """
+    shape = (len(grid), len(grid[0]))
+    def move(pos: Tuple[int, int]) -> Generator[Tuple[int, int], None, None]:
+        if pos[0] > 0:
+            pos2 = (pos[0] - 1, pos[1])
+            if grid[pos2[0]][pos2[1]] == open_obj: yield pos2
+        if pos[0] < shape[0] - 1:
+            pos2 = (pos[0] + 1, pos[1])
+            if grid[pos2[0]][pos2[1]] == open_obj: yield pos2
+        if pos[1] > 0:
+            pos2 = (pos[0], pos[1] - 1)
+            if grid[pos2[0]][pos2[1]] == open_obj: yield pos2
+        if pos[1] < shape[0] - 1:
+            pos2 = (pos[0], pos[1] + 1)
+            if grid[pos2[0]][pos2[1]] == open_obj: yield pos2
 
     groups = []
     articulation = {}
     low = {}
     times = {}
-    def recurr(pos: Tuple[int], parent: Optional[Tuple[int]]=None, t: int=0) -> int:
+    def recur(pos: Tuple[int], parent: Optional[Tuple[int]]=None, t: int=0) -> int:
         if pos in times.keys():
             return times[pos]
         groups[-1].add(pos)
@@ -712,7 +726,7 @@ def TarjanArticulationAdjGrid() -> Union[List[Set[Tuple[int]]], Set[Tuple[int]]]
         for pos2 in move(pos):
             if pos2 == parent or pos2 not in remain:
                 continue
-            l = recurr(pos2, parent=pos, t=t + 1)
+            l = recur(pos2, parent=pos, t=t + 1)
             low[pos] = min(low[pos], l)
             if l < t: i = 0
             else:
@@ -734,5 +748,5 @@ def TarjanArticulationAdjGrid() -> Union[List[Set[Tuple[int]]], Set[Tuple[int]]]
             if pos in low.keys() or grid[i][j] == "#":
                 continue
             groups.append(set())
-            recurr(pos)
+            recur(pos)
     return (groups, articulation)

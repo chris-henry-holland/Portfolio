@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-from collections import deque
+from collections import deque, Counter
 import time
 from typing import Generator, Dict, List, Set, Tuple, Optional, Union
 
@@ -96,7 +96,7 @@ class TreeLowestCommonAncestorFinder:
         # in the level found
         return self.bin_lift[idx1][0]
 
-def closestNode(self, n: int, edges: List[List[int]], query: List[List[int]]) -> List[int]:
+def closestNode(n: int, edges: List[List[int]], query: List[List[int]]) -> List[int]:
     """
     
     
@@ -172,7 +172,6 @@ def treeNodePairsTraversalStatistics(
     return res
 
 def countPairsOfConnectableServers(
-    self,
     edges: List[List[int]],
     signalSpeed: int
 ) -> List[int]:
