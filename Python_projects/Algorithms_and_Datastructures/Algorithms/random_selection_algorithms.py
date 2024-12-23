@@ -28,9 +28,10 @@ def uniformRandomDistinctIntegers(n: int, mn: int, mx: int) -> List[int]:
         >>> uniformRandomDistinctIntegers(3, 5, 20)
         [8, 11, 13]
 
-        Note that the returned values will by design vary, but for this
-        input will always be exactly 3 distinct integers in strictly
-        increasing order, each between 5 and 20 inclusive.
+        Note that the returned values will by design vary with each
+        execution, but for this input will always be exactly 3 distinct
+        integers in strictly increasing order, each between 5 and 20
+        inclusive.
     """
     sz = mx - mn + 1
     if sz < n:
