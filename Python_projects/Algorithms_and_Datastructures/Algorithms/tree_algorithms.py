@@ -4,12 +4,13 @@ from collections import deque, Counter
 import time
 from typing import Generator, Dict, List, Set, Tuple, Optional, Union
 
-def findCentralNodes(graph: List[Set[int]]) -> Tuple[int]:
+def findCentralNodes(graph: List[Set[int]], deepcopy_graph: bool=True) -> Tuple[int]:
     # BFS
     
     # Creating deepcopy of graph as the algorithm deconstructs the
     # graph during the calculation
-    graph = [set(x) for x in graph]
+    if deepcopy_graph:
+        graph = [set(x) for x in graph]
     n = len(graph)
     qu = deque()
     for idx in range(n):

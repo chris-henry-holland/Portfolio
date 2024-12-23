@@ -7,7 +7,30 @@ from typing import List
 
 def uniformRandomDistinctIntegers(n: int, mn: int, mx: int) -> List[int]:
     """
+    Takes a uniform random sample of n distinct integers between mn and
+    mx inclusive.
+
     Time complexity O(n * (log(n)) ** 2)
+
+    Args:
+        Required positional:
+        n (int): The number of distinct integers to select in the sample.
+                This must not exceed (mx - mn + 1)
+        mn (int): The smallest an element of the sample should be
+        mx (int): The largest an element of the sample should be
+
+    Returns:
+    List of n distinct integers between mn and mx inclusive representing
+    a uniform random sample. The integers are sorted in strictly increasing
+    order.
+
+    Example:
+        >>> uniformRandomDistinctIntegers(3, 5, 20)
+        [8, 11, 13]
+
+        Note that the returned values will by design vary, but for this
+        input will always be exactly 3 distinct integers in strictly
+        increasing order, each between 5 and 20 inclusive.
     """
     sz = mx - mn + 1
     if sz < n:
@@ -46,3 +69,8 @@ def uniformRandomDistinctIntegers(n: int, mn: int, mx: int) -> List[int]:
     for num in range(num + 1, sz):
         res.append(num + mn)
     return res
+
+if __name__ == "__main__":
+    res = uniformRandomDistinctIntegers(3, 5, 20)
+
+    print(f"uniformRandomDistinctIntegers(3, 5, 20) = {res}")
