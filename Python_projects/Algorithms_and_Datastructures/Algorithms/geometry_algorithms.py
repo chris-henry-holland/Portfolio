@@ -10,6 +10,19 @@ from typing import Generator, Dict, List, Set, Tuple, Optional, Union
 def determinant(mat: List[List[Union[int, float]]]) -> Union[int, float]:
     """
     Calculates the determinant of a square matrix mat.
+
+    Args:
+        Required positional:
+        mat (list of lists of real numeric values): The matrix
+                whose determinant is to be calculated, expressed
+                as a list of the rows of the matrix. This is
+                required be a square matrix (i.e. all of the
+                lists within mat are the same length as each
+                other and mat itself).
+    
+    Returns:
+    Real numeric value (int or float) giving the determinant of
+    the matrix mat.
     """
     n = len(mat)
     cols = SortedList(range(n))
@@ -33,9 +46,27 @@ def circumcircle(points: List[Tuple[Union[int, float]]])\
     """
     For a set of between 1 and 3 points (inclusive) in the 2d plane,
     finds the centre and radius squared of the smallest circle passing
-    through every one of those points.
+    through every one of those points (the so-called circumcircle),
+    specifying the circle by the Cartesian coordinates of its centre
+    and its radius squared.
     
-    If three points are given, these should not be colinear.
+    If three points are given, these should not be colinear (i.e. there
+    should not exist a single straight line that passes exactly through
+    all three points).
+
+    Args:
+        Required positional:
+        points (list of 2-tuples of real numeric values): A list of no
+                more than 3 points, expressed in Cartesian coordinates
+                for which the circumcircle is to be calculated. For
+                lists of three points, these should not be colinear.
+    
+    Returns:
+    2-tuple whose index 0 contains a 2-tuple of real numeric values
+    specifying the location of the centre of the circumcircle
+    identified in Cartesian coordinates and whose index 1 contains
+    a non-negative numeric value specifying the radius squared of
+    the circumcircle.
     """
     if not (1 <= len(points) <= 3):
         raise ValueError("Function circumcircle() may only be applied to "
@@ -60,13 +91,25 @@ def circumcircle(points: List[Tuple[Union[int, float]]])\
     rad_sq = sum((x - y) ** 2 for x, y in zip(points[0], centre))
     return (centre, rad_sq)
 
-def welzl(points: List[Tuple[Union[int, float]]], eps: float=10 ** -5)\
+def welzl(points: List[Tuple[Union[int, float]]])\
         -> Tuple[Union[Tuple[Union[int, float]], Union[int, float]]]:
     """
     Uses the Welzl algorithm to find the centre and radius squared of
     the smallest circle that encloses every one of a set of points
-    in the 2d plane (where points on the circle itself are considered
-    to be enclosed by the circle).
+    in the 2D plane (where points on the edge of circle itself are
+    considered to be enclosed by the circle).
+
+    Args:
+        Required positional:
+        points (list of 2-tuples with numeric values): The 2D Cartesian
+                coordinates of the points to be enclosed.
+    
+    Returns:
+    2-tuple whose index 0 contains a 2-tuple of real numeric values
+    specifying the location of the centre of the enclosing circle
+    identified in Cartesian coordinates and whose index 1 contains
+    a non-negative numeric value specifying the radius squared of
+    that enclosing circle.
     """
 
     # Based on https://en.wikipedia.org/wiki/Smallest-circle_problem
@@ -84,8 +127,7 @@ def welzl(points: List[Tuple[Union[int, float]]], eps: float=10 ** -5)\
             return circumcircle(boundary_points)
         pt = points[idx]
         centre, rad_sq = recur(idx + 1)
-        if sum((x - y) ** 2 for x, y in zip(centre, pt)) <=\
-                rad_sq + eps:
+        if sum((x - y) ** 2 for x, y in zip(centre, pt)) <= rad_sq:
             return centre, rad_sq
         boundary_points.append(pt)
         centre, rad_sq = recur(idx + 1)
@@ -121,7 +163,6 @@ def outerTrees(self, trees: List[List[int]]) -> List[float]:
     return [*centre, math.sqrt(rad_sq)]
 
 def grahamScan(points: List[Tuple[Union[int, float]]], include_border_points: bool=False) -> List[Tuple[int]]:
-
     """
     Implementation of the Graham scan to find the convex hull of a set
     of points in 2 dimensional space expressed in Cartesian coordinates.
@@ -214,7 +255,25 @@ def grahamScan(points: List[Tuple[Union[int, float]]], include_border_points: bo
 
 def outerTrees(trees: List[List[int]]) -> List[List[int]]:
     """
+    Given the two dimensional Cartesian coordinates of multiple trees,
+    consider the fence of minimal length that encloses all of the
+    trees (with trees in contact with the fence considered to be
+    enclosed). This function finds the coordinates of the trees that
+    are in contact with the fence.
 
+    Args:
+        Required positional:
+        trees (list of lists of ints): List of 2-dimensional integer
+                Cartesian coordinates (each given as lists of length 2
+                with integer values) representing the positions of the
+                trees to be enclosed.
+
+    Returns:
+    List of lists, where each element of the outer list has length 2
+    and contains integers (int), giving the Cartesian coordinates of
+    all the trees that are in contact with the minimal length fence
+    that encloses all of the trees given.
+    
     Examples:
         >>> outerTrees([[1, 1], [2, 2], [2, 0], [2, 4], [3, 3], [4, 2]])
         [[1, 1], [2, 0], [4, 2], [3, 3], [2, 4]]
