@@ -5,7 +5,7 @@ import math
 import random
 from sortedcontainers import SortedList
 import time
-from typing import Generator, Dict, List, Set, Tuple, Optional, Union
+from typing import Dict, List, Set, Tuple, Optional, Union
 
 def determinant(mat: List[List[Union[int, float]]]) -> Union[int, float]:
     """
@@ -135,12 +135,28 @@ def welzl(points: List[Tuple[Union[int, float]]])\
         return centre, rad_sq
     return recur(0)
 
-def outerTrees(self, trees: List[List[int]]) -> List[float]:
+def smallestCircularEnclosure(trees: List[List[int]]) -> List[float]:
     """
+    Finds the circular enclosure with the smallest circumference that
+    encloses every 2D point in the list trees. Points that fall on
+    the edge of the enclosure are considered to be inside the enclosure.
+
+    Args:
+        Required positional:
+        trees (list of list of ints): The 2D points to be enclosed,
+                expressed in Cartesian coordinates (such that each
+                element of the list is a length 2 list containing
+                integers).
     
-    Solution to Leetcode #1924 (Premium)
+    Returns:
+    A list containing exactly three real numeric values, with the
+    first two giving the x and y coordinates of the centre of the
+    circular enclosure respectively and the final value giving its
+    radius.
+
+    Solution to Leetcode #1924 (Premium): Erect the Fence II
     
-    Original problem description:
+    Original problem description of Leetcode #1924:
     
     You are given a 2D integer array trees where trees[i] = [xi, yi]
     represents the location of the ith tree in the garden.
