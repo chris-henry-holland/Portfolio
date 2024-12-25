@@ -1,10 +1,8 @@
 #!/usr/bin/env python
 
-from collections import deque
 import math
 import random
 from sortedcontainers import SortedList
-import time
 from typing import Dict, List, Set, Tuple, Optional, Union
 
 def determinant(mat: List[List[Union[int, float]]]) -> Union[int, float]:

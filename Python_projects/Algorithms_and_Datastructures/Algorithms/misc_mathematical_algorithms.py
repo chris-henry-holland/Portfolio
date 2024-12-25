@@ -5,10 +5,44 @@ from typing import List, Union
 
 Real = Union[int, float]
 
-def nthRoot(a: Real, b: Real, eps: Real=1e-5) -> Real:
-    # Finds the b:th root of a (i.e. the positive real value of
-    # a ** (1 / b))
-    # Newton-Raphson method
+def nthRoot(a: Real, b: int, eps: Real=1e-5) -> Real:
+    """
+    Finds the non-negative real b:th root of a (a^(1/b)) to a given
+    accuracy using the Newton-Raphson method.
+
+    Args:
+        Required positional:
+        a (real numeric value): The number whose root is sought.
+                This number should be real and non-negative.
+        b (int): The root of a to be found. Must be non-zero.
+                If this is negative, then a must be non-zero.
+        
+        Optional named:
+        eps (small positive real numeric value): The maximum
+                permitted error (i.e. the absolute difference
+                between the actual value and the returned value
+                must be no larger than this)
+    
+    Returns:
+    Real numeric value giving a value within eps of the non-negative
+    b:th root of a.
+
+    Examples:
+        >>> nthRoot(2, 2, eps=1e-5)
+        1.4142156862745097
+
+        This is indeed within 0.00001 of the square root of 2, which
+        is 1.4142135623730950 (to 16 decimal places)
+
+        >>> nthRoot(589, 5, eps=1e-5)
+        3.5811555709280753
+
+        >>> nthRoot(2, -2, eps=1e-5)
+        0.7071078431372548
+
+        Again, this is indeed within 0.00001 of the square root of a
+        half, which is 0.7071067811865476 (to 16 decimal places)
+    """
     if a < 0:
         raise ValueError("a should be non-negative")
     if not a: return 0
@@ -17,8 +51,8 @@ def nthRoot(a: Real, b: Real, eps: Real=1e-5) -> Real:
             raise ValueError("If b is negative, a must be non-zero")
         b = -b
         a = 1 / a
-    if b < 1:
-        raise ValueError("b must have an absolute value no less than 1")
+    if b == 1:
+        raise ValueError("b must be non-zero")
     x2 = float("inf")
     x1 = a
     while abs(x2 - x1) >= eps:
@@ -183,3 +217,13 @@ class PrimeModuloCalculator:
         for k in k_lst:
             res = self.mult(res, self.inverseFactorialDivPPow(k))
         return res
+
+if __name__ == "__main__":
+    res = nthRoot(2, 2, eps=1e-5)
+    print(f"nthRoot(2, 2, eps=1e-5) = {res}")
+
+    res = nthRoot(589, 5, eps=1e-5)
+    print(f"nthRoot(589, 5, eps=1e-5) = {res}")
+
+    res = nthRoot(2, -2, eps=1e-5)
+    print(f"nthRoot(2, -2, eps=1e-5) = {res}")
