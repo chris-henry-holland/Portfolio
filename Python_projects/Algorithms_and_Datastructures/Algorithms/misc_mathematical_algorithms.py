@@ -119,9 +119,23 @@ def isqrt(n: int) -> int:
     """
 
 def factorialPrimeFactorExponent(n: int, p: int) -> int:
-    # The exponent of the prime p in the prime
-    # factorisation of n!
-    # Assumes p is prime
+    """
+    For a positive integer n and a prime p, calculates the exponent
+    of p in the prime factorisation of n! (n factorial).
+
+    Args:
+        n (int): The positive integer whose factorial is being
+                assessed for the exponent of the chosen prime in
+                the prime factorisation.
+        p (int): The prime number whose exponent in n! is being
+                calculated. This is assumed to be a prime and is
+                not checked, so specifying a non-prime will give
+                unexpected behaviour.
+    
+    Returns:
+    Non-negative integer (int) giving the exponent of p in the prime
+    factorisation of n! (n factorial).
+    """
     res = 0
     while n:
         n //= p
@@ -129,20 +143,68 @@ def factorialPrimeFactorExponent(n: int, p: int) -> int:
     return res
 
 class PrimeModuloCalculator:
-    # Can be used to solve Leetcode #2954
+    """
+    Class for making integer calculations modulo a given prime (i.e.
+    calculations as a remainder when divided by p).
+
+    Intended to be extended to accommodate further common calculation
+    types.
+
+    Initialization args:
+        Required positional:
+        p (int): The prime to be used as the modulus for all calculations.
+    
+    Attributes:
+        p (int): The prime to be used as the modulus for all calculations.
+    
+    Methods:
+        (For more detail about a specific method, see that method's
+        documentation)
+
+        add(): Finds the sum of two integers modulo p.
+        mult(): Finds the product of two integers modulo p.
+        pow(): Finds a given integer to a given integer power modulo
+                p. For numbers that are not multiples of p, allows
+                negative exponents.
+        multiplicativeInverse(): Finds the multiplicative inverse of a
+                given integer modulo p (i.e. the integer between 1 and
+                (p - 1) inclusive that multiplies with the chosen number
+                modulo p to give 1). Requires that the chosen integer
+                is not a multiple of p.
+        factorial(): Finds the factorial of a non-negative integer
+                modulo p.
+        multiplicativeInverseFactorial(): Finds the multiplicative inverse
+                of the factorial of a non-negative integer modulo p.
+        binomial(): For an ordered pair of two non-negative integers
+                finds the corresponding binomial coefficient modulo
+                p.
+        multinomial(): For a list of non-negative integers finds the
+                multinomial coefficient modulo p.
+
+    Can be used to solve Leetcode #2954
+    """
     def __init__(self, p: int):
         self.p = p
 
-    factorials_div_ppow = [1, 1]
+    _factorials_div_ppow = [1, 1]
     #inv_factorials = [1, 1]
 
     def add(self, a: int, b: int) -> int:
+        """
+        TODO
+        """
         return (a + b) % self.p
 
     def mult(self, a: int, b: int) -> int:
+        """
+        TODO
+        """
         return (a * b) % self.p
     
     def pow(self, a: int, n: int) -> int:
+        """
+        TODO
+        """
         if not n: return 1
         elif n > 0:
             return pow(a, n, self.p)
@@ -150,28 +212,31 @@ class PrimeModuloCalculator:
             raise ValueError("a may not be a multiple of p for negative exponents")
         return pow(a, self.p - n - 1, self.p)
 
-    def inv(self, a: int) -> int:
+    def multiplicativeInverse(self, a: int) -> int:
+        """
+        TODO
+        """
         return pow(a, self.p - 2, self.p)
     
-    def extendFactorialsDivPPow(self, a: int) -> None:
-        a0 = len(self.factorials_div_ppow) - 1
+    def _extendFactorialsDivPPow(self, a: int) -> None:
+        a0 = len(self._factorials_div_ppow) - 1
         if a <= a0: return
         q0, r0 = divmod(a0, self.p)
         q1, r1 = divmod(a, self.p)
         if q0 == q1:
             for i in range(r0 + 1, r1 + 1):
-                self.factorials_div_ppow.append(self.mult(self.factorials_div_ppow[-1], i))
-            return self.factorials_div_ppow[a]
+                self._factorials_div_ppow.append(self.mult(self._factorials_div_ppow[-1], i))
+            return self._factorials_div_ppow[a]
         
         for i in range(r0 + 1, self.p):
-            self.factorials_div_ppow.append(self.mult(self.factorials_div_ppow[-1], i))
+            self._factorials_div_ppow.append(self.mult(self._factorials_div_ppow[-1], i))
         
         def interPMultExtension(q: int, r_max: int) -> None:
             while not q % self.p:
                 q //= self.p
-            self.factorials_div_ppow.append(self.mult(self.factorials_div_ppow[-1], q))
+            self._factorials_div_ppow.append(self.mult(self._factorials_div_ppow[-1], q))
             for i in range(1, r_max):
-                self.factorials_div_ppow.append(self.mult(self.factorials_div_ppow[-1], i))
+                self._factorials_div_ppow.append(self.mult(self._factorials_div_ppow[-1], i))
             return
         
         for q in range(q0 + 1, q1):
@@ -179,24 +244,33 @@ class PrimeModuloCalculator:
         interPMultExtension(q1, r1 + 1)
         return
     
-    def factorialDivPPow(self, a: int) -> int:
-        self.extendFactorialsDivPPow(a)
-        return self.factorials_div_ppow[a]
+    def _factorialDivPPow(self, a: int) -> int:
+        self._extendFactorialsDivPPow(a)
+        return self._factorials_div_ppow[a]
     
     def factorial(self, a: int) -> int:
+        """
+        TODO
+        """
         if a >= self.p:
             return 0
-        return self.factorialDivPPow(a)
+        return self._factorialDivPPow(a)
     
-    def inverseFactorialDivPPow(self, a: int) -> int:
-        return self.inv(self.factorialDivPPow(a))
+    def _multiplicativeInverseFactorialDivPPow(self, a: int) -> int:
+        return self.multiplicativeInverse(self._factorialDivPPow(a))
     
-    def inverseFactorial(self, a: int) -> int:
+    def multiplicativeInverseFactorial(self, a: int) -> int:
+        """
+        TODO
+        """
         if not a % self.p:
             raise ValueError("a may not be a multiple of p")
-        return self.inverseFactorialDivPPow(a)
+        return self._multiplicativeInverseFactorialDivPPow(a)
 
     def binomial(self, n: int, k: int) -> int:
+        """
+        TODO
+        """
         if k > n or k < 0:
             return 0
         if n >= self.p:
@@ -204,18 +278,25 @@ class PrimeModuloCalculator:
             p_exp_denom = factorialPrimeFactorExponent(k, self.p) + factorialPrimeFactorExponent(n - k, self.p)
             if p_exp_numer > p_exp_denom:
                 return 0
-        return self.mult(self.factorialDivPPow(n), self.mult(self.inverseFactorialDivPPow(k), self.inverseFactorialDivPPow(n - k)))
+        return self.mult(
+            self._factorialDivPPow(n),
+            self.mult(self._multiplicativeInverseFactorialDivPPow(k),
+            self._multiplicativeInverseFactorialDivPPow(n - k))
+        )
 
     def multinomial(self, k_lst: List[int]) -> int:
+        """
+        TODO
+        """
         n = sum(k_lst)
         if n >= self.p:
             p_exp_numer = factorialPrimeFactorExponent(n, self.p)
             p_exp_denom = sum(factorialPrimeFactorExponent(k, self.p) for k in k_lst)
             if p_exp_numer > p_exp_denom:
                 return 0
-        res = self.factorialDivPPow(n)
+        res = self._factorialDivPPow(n)
         for k in k_lst:
-            res = self.mult(res, self.inverseFactorialDivPPow(k))
+            res = self.mult(res, self._multiplicativeInverseFactorialDivPPow(k))
         return res
 
 if __name__ == "__main__":
