@@ -299,7 +299,17 @@ class PrimeModuloCalculator:
     
     def factorial(self, a: int) -> int:
         """
-        TODO
+        For a non-negative integer a calculates the factorial of a modulo
+        the attribute p.
+
+        Args:
+            Required positional:
+            a (int): Non-negative integer whose factorial modulo p is to
+                    be calculated
+        
+        Returns:
+        Integer between 0 and (p - 1) inclusive giving the factorial of
+        a modulo p (i.e. a! mod p)
         """
         if a >= self.p:
             return 0
@@ -310,7 +320,19 @@ class PrimeModuloCalculator:
     
     def multiplicativeInverseFactorial(self, a: int) -> int:
         """
-        TODO
+        For non-negative a strictly less than the attribute p, calculates
+        the modulo p multiplicative inverse of the factorial of a.
+
+        Args:
+            Required positional:
+            a (int): Non-negative integer strictly less than p whose
+                    factorial the modulo p multiplicative inverse is to
+                    be calculated.
+
+        Returns:
+        Integer between 0 and (p - 1) inclusive giving the modulo p
+        multiplicative inverse of the factorial of a (i.e. the integer
+        b such that b * a! = 1 mod p)
         """
         if not a % self.p:
             raise ValueError("a may not be a multiple of p")
@@ -318,7 +340,19 @@ class PrimeModuloCalculator:
 
     def binomial(self, n: int, k: int) -> int:
         """
-        TODO
+        For integers n and k, calculates the binomial coefficient
+        n choose k modulo the attribute p.
+
+        Args:
+            Required positional:
+            n (int): Integer giving the total number of objects
+                    from which to choose.
+            k (int): Integer giving the number of the n objects
+                    to be selected.
+
+        Returns:
+        Integer (int) between 0 and (p - 1) inclusive giving the
+        binomial coefficient n choose k modulo p.
         """
         if k > n or k < 0:
             return 0
@@ -335,7 +369,18 @@ class PrimeModuloCalculator:
 
     def multinomial(self, k_lst: List[int]) -> int:
         """
-        TODO
+        For the list of non-negative integers k_lst, finds the multinomial
+        coefficient modulo the attribute p.
+
+        Args:
+            Required positional:
+            k_lst (list of ints): List of non-negative integers specifying
+                    the multinomial coefficient to be calculated.
+
+        Returns:
+        The multinomial coefficient corresponding to k_lst (i.e. sum(k_lst)
+        choose (k_lst[0], k_lst[1], ..., k_lst[-1])) modulo the attribute
+        p.
         """
         n = sum(k_lst)
         if n >= self.p:
