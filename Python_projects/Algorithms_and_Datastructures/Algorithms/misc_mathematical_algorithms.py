@@ -147,6 +147,8 @@ class PrimeModuloCalculator:
     Class for making integer calculations modulo a given prime (i.e.
     calculations as a remainder when divided by p).
 
+    All results modulo p are integers between 0 and (p - 1) inclusive.
+
     Intended to be extended to accommodate further common calculation
     types.
 
@@ -191,19 +193,54 @@ class PrimeModuloCalculator:
 
     def add(self, a: int, b: int) -> int:
         """
-        TODO
+        Calculates the sum of the integers a and b modulo the attribute
+        p (i.e. (a + b) % self.p).
+
+        Args:
+            Required positional:
+            a (int): One of the two integers to sum modulo p.
+            b (int): The other of the two integers to sum modulo p.
+        
+        Returns:
+        An integer (int) between 0 and (p - 1) inclusive giving the
+        sum of a and b modulo the attribute p.
         """
         return (a + b) % self.p
 
     def mult(self, a: int, b: int) -> int:
         """
-        TODO
+        Calculates the product of the integers a and b modulo the attribute
+        p (i.e. (a * b) % self.p).
+
+        Args:
+            Required positional:
+            a (int): One of the two integers to multiply modulo p.
+            b (int): The other of the two integers to multiply modulo p.
+        
+        Returns:
+        An integer (int) between 0 and (p - 1) inclusive giving the
+        product of a and b modulo the attribute p.
         """
         return (a * b) % self.p
     
     def pow(self, a: int, n: int) -> int:
         """
-        TODO
+        Calculates the a to the power of n modulo the attribute p for
+        integers a and n (i.e. (a ^ n) % self.p).
+        For negative n, calculates the modulo p multiplicative inverse of
+        a to the power of the absolute value of n (using Fermat's Little
+        Theorem). This case requires that a is not a multiple of the
+        attribute p.
+
+        Args:
+            Required positional:
+            a (int): The integer whose exponent modulo p is to be calculated.
+            n (int): The integer giving the exponent a is to be taken to.
+        
+        Returns:
+        An integer (int) between 0 and (p - 1) inclusive giving a to the power
+        of n modulo p for non-negative n or the modulo p multiplicative inverse
+        of a to the power of (-n) modulo p for negative n.
         """
         if not n: return 1
         elif n > 0:
@@ -214,8 +251,20 @@ class PrimeModuloCalculator:
 
     def multiplicativeInverse(self, a: int) -> int:
         """
-        TODO
+        Calculates the modulo p multiplicative inverse of the integer a (where
+        p is the attribute p), i.e. the integer b such that (a * b) = 1 mod p.
+        a must not be a multiple of the attribute p.
+
+        Args:
+            Required positional:
+            a (int): The integer whose modulo p multiplicative inverse is to be
+                    calculated
+        
+        Returns:
+        The modulo p multiplicative inverse of a, i.e. the unique integer b between
+        1 and (p - 1) inclusive for which (a - b) = 1 mod p.
         """
+        if not a % self.p: raise ValueError("a cannot be a multiple of the attribute p")
         return pow(a, self.p - 2, self.p)
     
     def _extendFactorialsDivPPow(self, a: int) -> None:
