@@ -14,7 +14,9 @@ import time
 from sortedcontainers import SortedList
 from typing import Dict, List, Tuple, Set, Union, Generator, Callable, Optional, Any, Hashable
 
-sys.path.append("../Algorithms_and_Datastructures/Data_structures")
+#print(os.path.dirname(__file__))
+sys.path.append(os.path.join(os.path.dirname(__file__), "../Algorithms_and_Datastructures/Data_structures"))
+#sys.path.append("../Algorithms_and_Datastructures/Data_structures")
 from prime_sieves import PrimeSPFsieve
 
 # Problem 1
