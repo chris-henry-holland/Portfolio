@@ -53,6 +53,48 @@ def isqrt(n: int) -> int:
         x1 = (x2 + n // x2) >> 1
     return x2
 
+def addFractions(frac1: Tuple[int, int], frac2: Tuple[int, int]) -> Tuple[int, int]:
+    """
+    Finds the sum of two fractions in lowest terms (i.e. such that
+    the numerator and denominator are coprime)
+
+    Args:
+        frac1 (2-tuple of ints): The first of the fractions to sum,
+                in the form (numerator, denominator)
+        frac2 (2-tuple of ints): The second of the fractions to sum,
+                in the form (numerator, denominator)
+    
+    Returns:
+    2-tuple of ints giving the sum of frac1 and frac2 in the form (numerator,
+    denominator). If the result is negative then the numerator is negative
+    and the denominator positive.
+    """
+    denom = lcm(abs(frac1[1]), abs(frac2[1]))
+    numer = (frac1[0] * denom // frac1[1]) + (frac2[0] * denom // frac2[1])
+    g = gcd(numer, denom)
+    return (numer // g, denom // g)
+
+def multiplyFractions(frac1: Tuple[int, int], frac2: Tuple[int, int]) -> Tuple[int, int]:
+    """
+    Finds the product of two fractions in lowest terms (i.e. such that
+    the numerator and denominator are coprime)
+
+    Args:
+        frac1 (2-tuple of ints): The first of the fractions to multiply,
+                in the form (numerator, denominator)
+        frac2 (2-tuple of ints): The second of the fractions to multiply,
+                in the form (numerator, denominator)
+    
+    Returns:
+    2-tuple of ints giving the product of frac1 and frac2 in the form (numerator,
+    denominator). If the result is negative then the numerator is negative
+    and the denominator positive.
+    """
+    neg = (frac1[1] < 0) ^ (frac1[1] < 0) ^ (frac2[0] < 0) ^ (frac2[1] < 0)
+    frac_prov = (abs(frac1[0] * frac2[0]), abs(frac1[1] * frac2[1]))
+    g = gcd(frac_prov[0], frac_prov[1])
+    return (-(frac_prov[0] // g) if neg else (frac_prov[0] // g), frac_prov[1] // g)
+
 # Problem 101- Look into Lagrange polynomial interpolation
 def polynomialFit(seq: List[int], n0=0) -> Tuple[Tuple[int], int]:
     """
@@ -95,7 +137,7 @@ def polynomialFit(seq: List[int], n0=0) -> Tuple[Tuple[int], int]:
     denom = 1
     for frac in res:
         if hasattr(frac, "denominator"):
-            denom = lcm(denom, frac.denominator())
+            denom = lcm(denom, frac.denominator)
     return (tuple(int(x * denom) for x in res), denom)
 
 def optimumPolynomial(coeffs: Tuple[int]=(1, -1, 1, -1, 1, -1, 1, -1, 1, -1, 1))\
@@ -203,6 +245,8 @@ def loadTriangles(doc: str) -> List[Tuple[Tuple[int]]]:
     the 2-dimensional Cartesian coordinates (as a 2-tuple of ints)
     of the vertices of the triangle.
     """
+    if not doc.startswith("/"):
+        doc = os.path.join(os.path.dirname(__file__), doc)
     with open(doc) as f:
         txt = f.read()
     res = []
@@ -585,7 +629,7 @@ def isSpecialSumSet(nums: Tuple[int], nums_sorted: bool=False) -> bool:
         seen.add(sm)
     return True
 
-def findOptimalSpecialSumSet(n: int=7) -> Tuple[int]:
+def findOptimalSpecialSumSet(n: int) -> Tuple[int]:
     """
     
     
@@ -626,7 +670,7 @@ def findOptimalSpecialSumSet(n: int=7) -> Tuple[int]:
     """
     if n == 1: return (1,)
     elif n == 2: return (1, 2)
-    since = time.time()
+    
     curr_best = float("inf")
     curr = [0] * n
     curr_sums = [0, 0]
@@ -719,17 +763,17 @@ def findOptimalSpecialSumSet(n: int=7) -> Tuple[int]:
         return
         """
     
-    res = ()
+    res = (float("inf"), 0)
     pair1_sum = ((n - 1) << 1) + 1
     while True:
-        print(f"pair 1 sum = {pair1_sum}")
+        #print(f"pair 1 sum = {pair1_sum}")
         looped = False
         curr_sums = [pair1_sum, 0]
         for num1 in reversed(range(n - 1, -((-pair1_sum) >> 1))):
             num2 = pair1_sum - num1
             #print(pair1_sum, num1, num2)
             lb = num1 + (((num2 + n - 1) * (num2 + n - 2) - num2 * (num2 - 1)) >> 1)
-            if lb >= curr_best: break
+            if lb >= res[0]: break
             looped = True
             curr[0], curr[1] = num1, num2
             for num_mx in range(num2 + n - 2, pair1_sum):
@@ -737,14 +781,24 @@ def findOptimalSpecialSumSet(n: int=7) -> Tuple[int]:
                 curr_sums[1] = num_mx
                 sum_set = {num1, num2, num_mx, num1 + num2,\
                         num1 + num_mx, num2 + num_mx, num1 + num2 + num_mx}
-                for res in recur(sum_set=sum_set,i1=2, i2=n - 2):
-                    curr_best = sum(curr_sums)
-                    print(res, curr_best)
+                for seq in recur(sum_set=sum_set,i1=2, i2=n - 2):
+                    ans = (sum(seq), seq)
+                    if ans < res:
+                        res = ans
+                        #print(ans)
         if not looped: break
         pair1_sum += 1
+    
+    return res[1]
+
+def specialSubsetSumsOptimum(n: int=7) -> Tuple[int]:
+    """
+    Solution to Project Euler #103
+    """
+    since = time.time()
+    res = findOptimalSpecialSumSet(n)
     print(f"Time taken = {time.time() - since:.4f} seconds")
-    print(res, sum(res))
-    return res
+    return "".join([str(x) for x in res])
 
 # Problem 104
 def isPandigital(num: int, base: int=10, chk_rng: bool=True) -> bool:
@@ -822,6 +876,9 @@ def pandigitalFibonacciStart(i: int, base: int=10) -> bool:
     return res
 
 def pandigitalFibonacciEnds(base: int=10) -> int:
+    """
+    Solution to Project Euler #104
+    """
     since = time.time()
     if base == 2: return 1
     curr = [1, 1]
@@ -848,6 +905,8 @@ def pandigitalFibonacciEnds(base: int=10) -> int:
 
 # Problem 105
 def loadSets(doc: str) -> List[Tuple[int]]:
+    if not doc.startswith("/"):
+        doc = os.path.join(os.path.dirname(__file__), doc)
     with open(doc) as f:
         txt = f.read()
     return [tuple(int(y.strip()) for y in x.split(",")) for x in txt.split("\n")]
@@ -1423,7 +1482,107 @@ def squareRemainders(a_min: int=3, a_max: int=1000) -> int:
         res += max(2 % md, (2 * ((a - 1) >> 1) * a) % md)
     return res
 
+# Problem 121
+def diskGameBlueDiskProbability(n_turns: int, min_n_blue_disks: int) -> Tuple[int, int]:
+    """
+    Consider a game consisting of a bag and red and blue disks.
+    Initially, the bag contains one red and one blue disk. A
+    turn of the game consists of randomly choosing a disk from
+    the bag such that the probability fo drawing each individual
+    disk is the same. After each turn the drawn disk is replaced
+    and an additional red disk is placed in the bag.
 
+    This function calculates the probability that after n_turns
+    turns of this game the total number of times the blue disk
+    is drawn is at least min_n_blue_disks as a fraction.
 
+    Args:
+        Required positional:
+        n_turns (int): The number of turns in the game considered.
+        min_n_blue_disks (int): The number of blue disks for which
+                the probability of drawing at least this many in
+                the number of turns is to be calculated.
+    
+    Returns:
+    2-tuple giving the probability that in a run of the described
+    game with n_turns turns a total of at least min_n_blue_disks are
+    drawn over the course of the game, expressed as a fraction
+    (numerator, denominator).
+    """
+    if min_n_blue_disks > n_turns: return (0, 1)
+    row = [(1, 1)]
+    n_red = 1
+    n_tot = 2
+    for i in range(n_turns):
+        prev = row
+        row = [(1, 1)]
+        for i in range(1, min(len(prev), min_n_blue_disks) + 1):
+            row.append(addFractions(multiplyFractions(prev[i - 1], (n_tot - n_red, n_tot)), multiplyFractions(prev[i], (n_red, n_tot)) if i < len(prev) else (0, 1)))
+        n_red += 1
+        n_tot += 1
+    #print(row[-1])
+    return row[-1]
 
+def diskGameMaximumNonLossPayout(n_turns: int=15) -> int:
+    """
+    Solution to Project Euler #121
 
+    Consider a game consisting of a bag and red and blue disks.
+    Initially, the bag contains one red and one blue disk. A
+    turn of the game consists of randomly choosing a disk from
+    the bag such that the probability fo drawing each individual
+    disk is the same. After each turn the drawn disk is replaced
+    and an additional red disk is placed in the bag.
+
+    The player wins if the number of blue disks drawn over the
+    course of the game strictly exceeds the number of red disks
+    drawn.
+
+    Given a wager of £1 that the player will win a game consisting
+    of n_turns turns, this function calculates the whole pound
+    maximum payout such that as the number of attempts approaches
+    infinity, the organisation running the game should not expect
+    to make a net loss (with the payout including the player's
+    initial wager).
+
+    Args:
+        Required positional:
+        n_turns (int): The number of turns in the game considered.
+
+    Returns:
+    Integer (int) giving the whole pound maximum payout such that
+    the organisation should not expect to make a net loss in the
+    long term repeated running of the described game with n_turns
+    turns.
+    """
+    player_win_n_blue_disks = (n_turns >> 1) + 1
+    p_player_win = diskGameBlueDiskProbability(n_turns, player_win_n_blue_disks)
+    return math.floor(p_player_win[1] / p_player_win[0])
+
+if __name__ == "__main__":
+    to_evaluate = {121}
+
+    if not to_evaluate or 101 in to_evaluate:
+        res = optimumPolynomial(((1, -1, 1, -1, 1, -1, 1, -1, 1, -1, 1)))
+        print(f"Solution to Project Euler #101 = {res}")
+
+    if not to_evaluate or 102 in to_evaluate:
+        res = triangleContainment(p=(0, 0), doc="0102_triangles.txt", include_surface=True)
+        print(f"Solution to Project Euler #102 = {res}")
+    
+    if not to_evaluate or 103 in to_evaluate:
+        res = specialSubsetSumsOptimum(n=7)
+        print(f"Solution to Project Euler #103 = {res}")
+    
+    if not to_evaluate or 104 in to_evaluate:
+        res = pandigitalFibonacciEnds(base=10)
+        print(f"Solution to Project Euler #104 = {res}")
+
+    if not to_evaluate or 105 in to_evaluate:
+        res = specialSubsetSumsTesting(doc="0105_sets.txt")
+        print(f"Solution to Project Euler #105 = {res}")
+    
+
+    if not to_evaluate or 121 in to_evaluate:
+        res = diskGameMaximumNonLossPayout(15)
+        print(f"Solution to Project Euler #121 = {res}")
