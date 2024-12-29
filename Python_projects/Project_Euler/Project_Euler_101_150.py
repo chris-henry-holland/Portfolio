@@ -19,9 +19,47 @@ sys.path.append(os.path.join(os.path.dirname(__file__), "../Algorithms_and_Datas
 from prime_sieves import PrimeSPFsieve
 
 def gcd(a: int, b: int) -> int:
+    """
+    For non-negative integers a and b (not both zero),
+    calculates the greatest common divisor of the two, i.e.
+    the largest positive integer that is an exact divisor
+    of both a and b.
+
+    Args:
+        Required positional:
+        a (int): Non-negative integer which is the first
+                which the greatest common divisor must
+                divide.
+        b (int): Non-negative integer which is the second
+                which the greatest common divisor must
+                divide. Must be non-zero if a is zero.
+    
+    Returns:
+    Strictly positive integer giving the greatest common
+    divisor of a and b.
+    """
     return a if not b else gcd(b, a % b)
     
 def lcm(a: int, b: int) -> int:
+    """
+    For non-negative integers a and b (not both zero),
+    calculates the lowest common multiple of the two, i.e.
+    the smallest positive integer that is a multiple
+    of both a and b.
+
+    Args:
+        Required positional:
+        a (int): Non-negative integer which is the first
+                which must divide the lowest common multiple.
+        b (int): Non-negative integer which is the second
+                which must divide the lowest common multiple.
+                Must be non-zero if a is zero.
+    
+    Returns:
+    Strictly positive integer giving the lowest common
+    multiple of a and b.
+    """
+
     return a * (b // gcd(a, b))
 
 def isqrt(n: int) -> int:
@@ -220,7 +258,7 @@ def optimumPolynomial(coeffs: Tuple[int]=(1, -1, 1, -1, 1, -1, 1, -1, 1, -1, 1))
     return res2
 
 # Problem 102
-def loadTriangles(doc: str) -> List[Tuple[Tuple[int]]]:
+def loadTriangles(doc: str, relative_to_program_file_directory: bool=False) -> List[Tuple[Tuple[int]]]:
     """
     Loads the coordinates in the plane of the vertices of a
     sequence of triangles from the .txt file at relative or
@@ -236,6 +274,14 @@ def loadTriangles(doc: str) -> List[Tuple[Tuple[int]]]:
         doc (str): The relative or absolute path to the .txt
                 file containing the coordinates of the vertices
                 of the triangles.
+        
+        Optional named:
+        relative_to_program_file_directory (bool): If True then
+                if doc is specified as a relative path, that
+                path is relative to the directory containing
+                the program file, otherwise relative to the
+                current working directory.
+            Default: False
     
     Returns:
     A list of 3-tuples of 2-tuples of ints. Each element of the list
@@ -245,7 +291,7 @@ def loadTriangles(doc: str) -> List[Tuple[Tuple[int]]]:
     the 2-dimensional Cartesian coordinates (as a 2-tuple of ints)
     of the vertices of the triangle.
     """
-    if not doc.startswith("/"):
+    if relative_to_program_file_directory and not doc.startswith("/"):
         doc = os.path.join(os.path.dirname(__file__), doc)
     with open(doc) as f:
         txt = f.read()
@@ -569,7 +615,7 @@ def triangleContainsOrigin(v1: Tuple[int], v2: Tuple[int], v3: Tuple[int]) -> bo
     return all(len(x) > 1 for x in intercept_sgns)
 
 def triangleContainment(p: Tuple[int]=(0, 0), doc: str="0102_triangles.txt",\
-        include_surface: bool=True):
+        relative_to_program_file_directory: bool=True, include_surface: bool=True):
     """
     Solution to Project Euler #102
     Given the list of triangles represented by the 2-dimensional
@@ -587,10 +633,17 @@ def triangleContainment(p: Tuple[int]=(0, 0), doc: str="0102_triangles.txt",\
                 containing the coordinates of the vertices of the
                 triangles.
             Default: "0102_triangles.txt"
+        relative_to_program_file_directory (bool): If True then
+                if doc is specified as a relative path, that
+                path is relative to the directory containing
+                the program file, otherwise relative to the
+                current working directory.
+            Default: True
         include_surface (bool): If True, considers points that are
                 exactly on the edge or on a vertex of a given triangle
                 as being inside that triangle, otherwise considers
                 these points to be outside the triangle.
+            Default: True
     
     Returns:
     Integer (int) giving the number of triangles from the .txt file
@@ -599,7 +652,7 @@ def triangleContainment(p: Tuple[int]=(0, 0), doc: str="0102_triangles.txt",\
     exactly on an edge or vertex of a triangle.
     """
     since = time.time()
-    triangles = loadTriangles(doc)
+    triangles = loadTriangles(doc, relative_to_program_file_directory=relative_to_program_file_directory)
     res = sum(triangleContainsPoint(p, x,\
             include_surface=include_surface) for x in triangles)
     #res = sum(triangleContainsOrigin(*x) for x in triangles)
@@ -608,13 +661,71 @@ def triangleContainment(p: Tuple[int]=(0, 0), doc: str="0102_triangles.txt",\
 
 # Problem 103
 def isSpecialSumSet(nums: Tuple[int], nums_sorted: bool=False) -> bool:
-    if not nums_sorted: nums = sorted(nums)
+    """
+    For a given list of integers nums, identifies whether it is
+    a special sum set.
+
+    A special sum set is a set of distinct positive integers for
+    which:
+     1) For any two disjoint non-empty subsets (i.e. subsets that
+        contain at least one element and have no common element)
+        the sums over all elements is different for the two subsets
+     2) For any subset, the sum over all elements in that subset
+        is strictly greater than that of any other subset that is
+        disjoint with the chosen set that contains fewer elements.
+    
+    
+    Args:
+        Required positional:
+        nums (tuple of ints): The set of integers to be assessed
+                for whether it is a special sum set.
+        
+        Optional named:
+        nums_sorted (bool): Whether the contents of nums has
+                already been sorted.
+            Default: False
+    
+    Returns:
+    Boolean (bool) giving True if nums represents a special sum
+    set and False if not.
+    
+    Note- the two conditions for a special sum set are equivalent
+    to the same conditions with the disjoint requirement being
+    replaced by a distinct requirement. This is because the
+    distinct requirement encompasses the disjoint requirement, and
+    in both of the conditions, if there exist two distinct non-empty
+    subsets that violate that condition, then by removing the common
+    elements of the two sets, we can construct disjoint sets that
+    violate the condition, at least one of which must be non-empty.
+    If the constructed sets are both non-empty then there exist
+    disjoint non-empty sets that violate one of the conditions. On
+    the other hand it is actually impossible for either of the
+    constructed sets to be empty if the original sets violate one
+    of the conditions, as for sets containing strictly positive
+    integers an empty set always has a strictly smaller sum (0)
+    than a non-empty set. Thus, this replacement of distinct for
+    disjoint gives rise equivalent conditions for the special sum
+    set. As this condition is easier to work with, it is used
+    instead in the calculation.
+    """
     n = len(nums)
+    # Sorting and ensuring no repeated elements
+    if not nums_sorted:
+        if len(set(nums)) != n: return False
+        nums = sorted(nums)
+    else:
+        for i in range(n - 1):
+            if nums[i] == nums[i + 1]: return False
+    # Checking that all elements are strictly positive
+    if nums[0] < 1: return False
+    # Checking that all subsets have sums strictly greater
+    # than any subsets with fewer elements
     curr = [0, 0]
     for i in range(-((-n) >> 1)):
         curr[0] += nums[i]
         if curr[0] <= curr[1]: return False
         curr[1] += nums[~i]
+    # Checking that there are no repeated sums
     seen = set()
     for bm in range(1, 1 << n):
         cnt = 0
@@ -629,9 +740,35 @@ def isSpecialSumSet(nums: Tuple[int], nums_sorted: bool=False) -> bool:
         seen.add(sm)
     return True
 
-def findOptimalSpecialSumSet(n: int) -> Tuple[int]:
+def findOptimalSpecialSumSets(n: int) -> List[Tuple[int]]:
     """
+    Identifies every optimal special sum set with n elements.
+
+    A special sum set is a set of distinct positive integers for
+    which:
+     1) For any two disjoint non-empty subsets (i.e. subsets that
+        contain at least one element and have no common element)
+        the sums over all elements is different for the two subsets
+     2) For any subset, the sum over all elements in that subset
+        is strictly greater than that of any other subset that is
+        disjoint with the chosen set that contains fewer elements.
     
+    An optimal special sum set for a given number of elements is
+    a special sum set such that the sum of its elements is no
+    greater than than of any other special sum set with the same
+    number of elements.
+
+    Args:
+        Required positional:
+        n (int): The number of elements for which an optimal special
+                sum set is sought.
+    
+    Returns:
+    List of n-tuples containing strictly positive integers (int),
+    representing every optimal special sum set with n elements,
+    each sorted in strictly increasing order. The optimal special
+    sum sets are sorted in lexicographically increasing order
+    over the elements from left to right.
     
     Outline of rationale:
     We can simplify the requirements by making the following
@@ -763,7 +900,8 @@ def findOptimalSpecialSumSet(n: int) -> Tuple[int]:
         return
         """
     
-    res = (float("inf"), 0)
+    res = []
+    curr_best = float("inf")
     pair1_sum = ((n - 1) << 1) + 1
     while True:
         #print(f"pair 1 sum = {pair1_sum}")
@@ -773,7 +911,7 @@ def findOptimalSpecialSumSet(n: int) -> Tuple[int]:
             num2 = pair1_sum - num1
             #print(pair1_sum, num1, num2)
             lb = num1 + (((num2 + n - 1) * (num2 + n - 2) - num2 * (num2 - 1)) >> 1)
-            if lb >= res[0]: break
+            if lb >= curr_best: break
             looped = True
             curr[0], curr[1] = num1, num2
             for num_mx in range(num2 + n - 2, pair1_sum):
@@ -782,26 +920,88 @@ def findOptimalSpecialSumSet(n: int) -> Tuple[int]:
                 sum_set = {num1, num2, num_mx, num1 + num2,\
                         num1 + num_mx, num2 + num_mx, num1 + num2 + num_mx}
                 for seq in recur(sum_set=sum_set,i1=2, i2=n - 2):
-                    ans = (sum(seq), seq)
-                    if ans < res:
-                        res = ans
-                        #print(ans)
+                    sm = sum(seq)
+                    if sm > curr_best: continue
+                    if sm < curr_best:
+                        curr_best = sm
+                        res = []
+                    res.append(seq)
         if not looped: break
         pair1_sum += 1
-    
-    return res[1]
+    #print(res)
+    return sorted(res)
 
-def specialSubsetSumsOptimum(n: int=7) -> Tuple[int]:
+def specialSubsetSumsOptimum(n: int=7) -> str:
     """
     Solution to Project Euler #103
+
+    Identifies the lexicographically smallest optimum special
+    subset sum for n elements (where the lexicographic sorting is
+    over the elements in the set from smallest to largest). The
+    result is given as the string concatenation of the numbers
+    in the identified optimum special subset sum from smallest to
+    largest, each expressed in base 10.
+
+    A special sum set is a set of distinct positive integers for
+    which:
+     1) For any two disjoint non-empty subsets (i.e. subsets that
+        contain at least one element and have no common element)
+        the sums over all elements is different for the two subsets
+     2) For any subset, the sum over all elements in that subset
+        is strictly greater than that of any other subset that is
+        disjoint with the chosen set that contains fewer elements.
+    
+    An optimal special sum set for a given number of elements is
+    a special sum set such that the sum of its elements is no
+    greater than than of any other special sum set with the same
+    number of elements.
+
+    Args:
+        Optional named:
+        n (int): The number of elements for which an optimal special
+                sum set is sought.
+            Default: 7
+    
+    Returns:
+    String (str) containing the concatenation of the numbers in the
+    lexicographically smallest optimum special subset sum for n
+    elements (where the lexicographic sorting is over the elements
+    in the set from smallest to largest), where the numbers are
+    concatenated in order from smallest to largest.
     """
     since = time.time()
-    res = findOptimalSpecialSumSet(n)
+    res = findOptimalSpecialSumSets(n)[0]
     print(f"Time taken = {time.time() - since:.4f} seconds")
     return "".join([str(x) for x in res])
 
 # Problem 104
 def isPandigital(num: int, base: int=10, chk_rng: bool=True) -> bool:
+    """
+    Function assessing whether an integer num is pandigital in a given
+    base (i.e. which num is expressed in the chosen base each digit from
+    0 to (base - 1)) appears as one of the digits in this expression and
+    0 is not the first digit).
+
+    Args:
+        Required positional:
+        num (int): The number whose status as pandigital in the chosen
+                base is being assessed.
+        
+        Optional named:
+        base (int): Integer strictly greater than 1 giving the base in
+                which num is to be expressed for its pandigital status.
+            Default: 10
+        chk_rng (bool): Whether to check that the number is in the
+                value range that is a necessary condition for it to
+                be pandigital in the chosen base. If this is given
+                as False, it is assumed that this has already been
+                tested and the test was passed.
+            Default: True
+    
+    Returns:
+    Boolean (bool) which is True if num is pandigital in the chosen base,
+    False otherwise.
+    """
     if chk_rng and not base ** (base - 2) <= num < base ** (base - 1):
         return False
     dig_set = set()
@@ -904,19 +1104,36 @@ def pandigitalFibonacciEnds(base: int=10) -> int:
     return i
 
 # Problem 105
-def loadSets(doc: str) -> List[Tuple[int]]:
-    if not doc.startswith("/"):
+def loadSets(doc: str, relative_to_program_file_directory: bool=False) -> List[Tuple[int]]:
+    """
+        Optional named:
+        relative_to_program_file_directory (bool): If True then
+                if doc is specified as a relative path, that
+                path is relative to the directory containing
+                the program file, otherwise relative to the
+                current working directory.
+            Default: False
+    """
+    if relative_to_program_file_directory and not doc.startswith("/"):
         doc = os.path.join(os.path.dirname(__file__), doc)
     with open(doc) as f:
         txt = f.read()
     return [tuple(int(y.strip()) for y in x.split(",")) for x in txt.split("\n")]
 
-def specialSubsetSumsTesting(doc: str="0105_sets.txt") -> int:
+def specialSubsetSumsTesting(doc: str="0105_sets.txt", relative_to_program_file_directory: bool=True) -> int:
     """
     Solution to Project Euler #105
+
+        Optional named:
+        relative_to_program_file_directory (bool): If True then
+                if doc is specified as a relative path, that
+                path is relative to the directory containing
+                the program file, otherwise relative to the
+                current working directory.
+            Default: True
     """
     since = time.time()
-    sp_sets = loadSets(doc)
+    sp_sets = loadSets(doc, relative_to_program_file_directory=relative_to_program_file_directory)
     #print(sp_sets)
     res = sum(sum(x) for x in sp_sets if isSpecialSumSet(x, nums_sorted=False))
     print(f"Time taken = {time.time() - since:.4f} seconds")
@@ -960,7 +1177,18 @@ class UnionFind:
     def connected(self, v1: int, v2: int) -> bool:
         return self.find(v1) == self.find(v2)
 
-def loadNetwork(doc: str) -> Tuple[Union[int, List[Tuple[int]]]]:
+def loadNetwork(doc: str, relative_to_program_file_directory: bool=False) -> Tuple[Union[int, List[Tuple[int]]]]:
+    """
+        Optional named:
+        relative_to_program_file_directory (bool): If True then
+                if doc is specified as a relative path, that
+                path is relative to the directory containing
+                the program file, otherwise relative to the
+                current working directory.
+            Default: False
+    """
+    if relative_to_program_file_directory and not doc.startswith("/"):
+        doc = os.path.join(os.path.dirname(__file__), doc)
     with open(doc) as f:
         txt = f.read()
     res = []
@@ -987,11 +1215,19 @@ def KruskallAlgorithm(n: int, edges: List[Tuple[int]]):
         res.append(e)
     return res
 
-def minimalNetwork(doc: str="0107_network.txt"):
+def minimalNetwork(doc: str="0107_network.txt", relative_to_program_file_directory: bool=True):
     """
     Solution to Project Euler #107
+
+        Optional named:
+        relative_to_program_file_directory (bool): If True then
+                if doc is specified as a relative path, that
+                path is relative to the directory containing
+                the program file, otherwise relative to the
+                current working directory.
+            Default: True
     """
-    n, edges = loadNetwork(doc)
+    n, edges = loadNetwork(doc, relative_to_program_file_directory=relative_to_program_file_directory)
     mst_edges = KruskallAlgorithm(n, edges)
     return sum(x[2] for x in edges) - sum(x[2] for x in mst_edges)
 
@@ -1560,14 +1796,14 @@ def diskGameMaximumNonLossPayout(n_turns: int=15) -> int:
     return math.floor(p_player_win[1] / p_player_win[0])
 
 if __name__ == "__main__":
-    to_evaluate = {121}
+    to_evaluate = {103}
 
     if not to_evaluate or 101 in to_evaluate:
         res = optimumPolynomial(((1, -1, 1, -1, 1, -1, 1, -1, 1, -1, 1)))
         print(f"Solution to Project Euler #101 = {res}")
 
     if not to_evaluate or 102 in to_evaluate:
-        res = triangleContainment(p=(0, 0), doc="0102_triangles.txt", include_surface=True)
+        res = triangleContainment(p=(0, 0), doc="0102_triangles.txt", relative_to_program_file_directory=True, include_surface=True)
         print(f"Solution to Project Euler #102 = {res}")
     
     if not to_evaluate or 103 in to_evaluate:
@@ -1579,9 +1815,29 @@ if __name__ == "__main__":
         print(f"Solution to Project Euler #104 = {res}")
 
     if not to_evaluate or 105 in to_evaluate:
-        res = specialSubsetSumsTesting(doc="0105_sets.txt")
+        res = specialSubsetSumsTesting(doc="0105_sets.txt", relative_to_program_file_directory=True)
         print(f"Solution to Project Euler #105 = {res}")
     
+    if not to_evaluate or 106 in to_evaluate:
+        res = specialSubsetSumsComparisons(n=12)
+        print(f"Solution to Project Euler #106 = {res}")
+    
+    if not to_evaluate or 107 in to_evaluate:
+        res = minimalNetwork(doc="0107_network.txt", relative_to_program_file_directory=True)
+        print(f"Solution to Project Euler #107 = {res}")
+    
+    if not to_evaluate or 108 in to_evaluate:
+        res = diophantineReciprocals(min_n_solutions=1001)
+        print(f"Solution to Project Euler #108 = {res}")
+
+    if not to_evaluate or 109 in to_evaluate:
+        res = dartCheckouts(mx_score=99)
+        print(f"Solution to Project Euler #109 = {res}")
+    
+    if not to_evaluate or 110 in to_evaluate:
+        res = diophantineReciprocals(min_n_solutions=4 * 10 ** 6 + 1)
+        print(f"Solution to Project Euler #110 = {res}")
+
 
     if not to_evaluate or 121 in to_evaluate:
         res = diskGameMaximumNonLossPayout(15)
