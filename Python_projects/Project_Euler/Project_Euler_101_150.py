@@ -15,8 +15,10 @@ from collections import deque
 from sortedcontainers import SortedDict, SortedList
 from typing import Dict, List, Tuple, Set, Union, Generator, Callable, Optional, Any, Hashable
 
+sys.path.append(os.path.join(os.path.dirname(__file__), "../Algorithms_and_Datastructures/Algorithms"))
 sys.path.append(os.path.join(os.path.dirname(__file__), "../Algorithms_and_Datastructures/Data_structures"))
 from prime_sieves import PrimeSPFsieve
+from addition_chains import AdditionChainCalculator
 
 def gcd(a: int, b: int) -> int:
     """
@@ -1413,6 +1415,9 @@ def mostRepeatDigitPrimes(n_dig: int, rpt_dig: int, base: int=10,\
 
 def primesWithRuns(n_dig: int=10, base: int=10,\
         ps: Optional[PrimeSPFsieve]=None) -> int:
+    """
+    Solution for Project Euler #111
+    """
     since = time.time()
     if ps is None: ps = PrimeSPFsieve()
     res = sum(sum(mostRepeatDigitPrimes(n_dig, d, base=10, ps=ps)[0])\
@@ -1446,6 +1451,9 @@ def isBouncy(num: int, base: int=10) -> bool:
     return False
 
 def bouncyProportions(prop_numer: int=99, prop_denom: int=100) -> int:
+    """
+    Solution to Project Euler #112
+    """
     since = time.time()
     bouncy_cnt = 0
     g = gcd(prop_numer, prop_denom)
@@ -1515,7 +1523,7 @@ def countingBlockCombinations(tot_len: int=50, min_large_len: int=3) -> int:
 # Problem 115
 def countingBlockCombinationsII(min_large_len: int=50, target_count: int=10 ** 6 + 1) -> int:
     """
-    Solution to Project Euler #114
+    Solution to Project Euler #115
     """
     since = time.time()
     if target_count <= 1: return 0
@@ -1569,7 +1577,9 @@ def redGreenAndBlueTiles(tot_len: int=50, min_large_len: int=2,\
 
 # Problem 118- try to make faster
 def pandigitalPrimeSets(base: int=10) -> int:
-    
+    """
+    Solution to Project Euler #118
+    """
     since = time.time()
     ps = PrimeSPFsieve(isqrt(base ** base))
     res = [0]
@@ -1698,7 +1708,7 @@ def digitPowerSumSequence(n_terms: int, base: int=10) -> List[Tuple[int]]:
             heapq.heappush(heap, (mx_a ** b2, mx_a, b2))
     return res
 
-def digitPowerSum(n: int, base: int=10) -> int:
+def digitPowerSum(n: int=30, base: int=10) -> int:
     """
     Solution to Project Euler #119
     """
@@ -1795,8 +1805,77 @@ def diskGameMaximumNonLossPayout(n_turns: int=15) -> int:
     p_player_win = diskGameBlueDiskProbability(n_turns, player_win_n_blue_disks)
     return math.floor(p_player_win[1] / p_player_win[0])
 
+# Problem 122
+def efficientExponentiation(sum_min: int=1, sum_max: int=200, method: Optional[str]="exact") -> float:
+    """
+    Solution to Project Euler #122
+
+    Calculates the sum over the least number of multiplications
+    required to achieve each of the powers individually from
+    sum_min to sum_max using a specified method.
+
+    Args:
+        Optional named:
+        sum_min (int): Strictly positive integer giving the smallest
+                exponent considered
+            Default: 1
+        sum_max (int): Strictly positive integer giving the largest
+                exponent considered
+            Default: 200
+        method (string or None): Specifies the method:
+                "exact": calculates exactly, in a way that is
+                        guaranteed to give the correct answer
+                        for any sum_min and sum_max. This is an
+                        exponential time algorithm, so can be very
+                        slow for larger values of sum_max. Specifying
+                        the method as None defaults to this method
+                "Brauer": Uses the Brauer method, which restricts
+                        the search space, giving faster evaluation but
+                        not guaranteeing that the result found is
+                        optimum. Gives the optimum number for all
+                        exponents less than 12509
+                "approx": A method that further restricts the search
+                        space, giving still faster evaluation but
+                        again not guaranteeing that the result found
+                        is optimum. Gives the optimum number for all
+                        exponents less than 77.
+                "binary": Uses the binary method, where the path is
+                        constructed on exponents that are powers of
+                        2. This is the fastest but least accurate
+                        method (as it can be calculated directly from
+                        the binary expression for the exponent). Gives
+                        the optimum number for all exponents less than
+                        14.
+            Default: "exact"
+
+    Returns:
+    Integer giving the sum over the least number of multiplications
+    required to achieve each of the powers individually from
+    sum_min to sum_max for the chosen method, with this being guranteed
+    to be the optimum if the method "exact" is chosen.
+    """
+    since = time.time()
+    if method is None:
+        method = "exact"
+    
+    addition_chain_calculator = AdditionChainCalculator()
+    if method == "approx":
+        func = addition_chain_calculator.shortestAddPathApprox
+    elif method == "Brauer":
+        func = addition_chain_calculator.shortestAddPathBrauer
+    elif method == "exact":
+        func = addition_chain_calculator.shortestAddPathExact
+    elif method == "binary":
+        func = addition_chain_calculator.shortestAddPathBinary
+    
+    res = sum(len(func(i)) - 1 for i in range(sum_min, sum_max + 1))
+    print(f"Time taken = {time.time() - since:.4f} seconds")
+    return res
+
+
+
 if __name__ == "__main__":
-    to_evaluate = {103}
+    to_evaluate = {122}
 
     if not to_evaluate or 101 in to_evaluate:
         res = optimumPolynomial(((1, -1, 1, -1, 1, -1, 1, -1, 1, -1, 1)))
@@ -1838,7 +1917,50 @@ if __name__ == "__main__":
         res = diophantineReciprocals(min_n_solutions=4 * 10 ** 6 + 1)
         print(f"Solution to Project Euler #110 = {res}")
 
+    if not to_evaluate or 111 in to_evaluate:
+        res = primesWithRuns(n_dig=10, base=10, ps=None)
+        print(f"Solution to Project Euler #111 = {res}")
+
+    if not to_evaluate or 112 in to_evaluate:
+        res = bouncyProportions(prop_numer=99, prop_denom=100)
+        print(f"Solution to Project Euler #112 = {res}")
+
+    if not to_evaluate or 113 in to_evaluate:
+        res = nonBouncyNumbers(mx_n_dig=100, base=10)
+        print(f"Solution to Project Euler #113 = {res}")
+
+    if not to_evaluate or 114 in to_evaluate:
+        res = countingBlockCombinations(tot_len=50, min_large_len=3)
+        print(f"Solution to Project Euler #114 = {res}")
+    
+    if not to_evaluate or 115 in to_evaluate:
+        res = countingBlockCombinationsII(min_large_len=50, target_count=10 ** 6 + 1)
+        print(f"Solution to Project Euler #115 = {res}")
+    
+    if not to_evaluate or 116 in to_evaluate:
+        res = redGreenOrBlueTiles(tot_len=50, min_large_len=2, max_large_len=4)
+        print(f"Solution to Project Euler #116 = {res}")
+    
+    if not to_evaluate or 117 in to_evaluate:
+        res = redGreenAndBlueTiles(tot_len=50, min_large_len=2, max_large_len=4)
+        print(f"Solution to Project Euler #117 = {res}")
+    
+    if not to_evaluate or 118 in to_evaluate:
+        res = pandigitalPrimeSets(base=10)
+        print(f"Solution to Project Euler #118 = {res}")
+    
+    if not to_evaluate or 119 in to_evaluate:
+        res = digitPowerSum(n=30, base=10)
+        print(f"Solution to Project Euler #119 = {res}")
+    
+    if not to_evaluate or 120 in to_evaluate:
+        res = squareRemainders(a_min=3, a_max=1000)
+        print(f"Solution to Project Euler #120 = {res}")
 
     if not to_evaluate or 121 in to_evaluate:
         res = diskGameMaximumNonLossPayout(15)
         print(f"Solution to Project Euler #121 = {res}")
+
+    if not to_evaluate or 122 in to_evaluate:
+        res = efficientExponentiation(sum_min=1, sum_max=200, method="exact")
+        print(f"Solution to Project Euler #122 = {res}")
