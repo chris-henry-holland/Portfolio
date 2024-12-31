@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 
+import bisect
 import heapq
 import itertools
 import math
@@ -1872,10 +1873,77 @@ def efficientExponentiation(sum_min: int=1, sum_max: int=200, method: Optional[s
     print(f"Time taken = {time.time() - since:.4f} seconds")
     return res
 
+# Problem 123
+def calculateSquareRemainder(num: int, exp: int) -> int:
+    """
+    For the integer num and the non-negative integer exp,
+    calculates the remainder when:
+        (num - 1)^exp + (num + 1)^exp
+    is divided by num^2.
 
+    Args:
+        Required positional:
+        num (int): The integer num used in the above expression.
+        exp (int): The non-negative integer exp in the above
+                expression.
+    
+    Returns:
+    Integer between 0 and (num^2 - 1) inclusive giving the
+    remainder when:
+        (num - 1)^exp + (num + 1)^exp
+    is divided by num^2.
+    """
+    md = num ** 2
+    return (pow(num - 1, exp, md) + pow(num + 1, exp, md)) % md
+
+def primeSquareRemainders(target_remainder: int=10 ** 10 + 1):
+    """
+    Solution to Project Euler #123
+
+    Finds the smallest number n such that if p_n is the n:th prime
+    (where p_1 = 2, p_2 = 3, ...) then the remainder when:
+        (p_n - 1)^n + (p_n - 1)^n
+    is divided by p_n^2, the result is at least target_remainder.
+
+    Args:
+        Optional named:
+        target_remainder (int): The minimum target result of the
+                calculation given above.
+            Default: 10 ** 10 + 1
+    
+    Returns:
+    Strictly positive integer (int) giving the smallest number
+    n such that the remainder when:
+        (p_n - 1)^n + (p_n - 1)^n
+    is divided by p_n^2, the result is at least target_remainder.
+    """
+    # Review- prove that for even n the remainder is always 2 and
+    # try to find further rules that restricts the search space,
+    # or enables direct calculation of the answer
+    since = time.time()
+    ps = PrimeSPFsieve()
+    # p_n^2 must be strictly greater than the square root of target_remainder,
+    # as the remainder on dividing by p_n^2 is strictly smaller than p_n^2.
+    start = isqrt(target_remainder) + 1
+    mx = start * 10
+    ps.extendSieve(mx)
+    
+    i = bisect.bisect_left(ps.p_lst, start)
+    if i & 1: i += 1
+    # For even i, the result is always 2
+    while True:
+        while i >= len(ps.p_lst):
+            mx *= 10
+            ps.extendSieve(mx)
+        #print(i + 1, ps.p_lst[i], calculateSquareRemainder(ps.p_lst[i], i + 1))
+        if calculateSquareRemainder(ps.p_lst[i], i + 1) >= target_remainder:
+            print(f"Time taken = {time.time() - since:.4f} seconds")
+            return i + 1
+        i += 2
+    return -1
 
 if __name__ == "__main__":
-    to_evaluate = {122}
+    to_evaluate = {123}
 
     if not to_evaluate or 101 in to_evaluate:
         res = optimumPolynomial(((1, -1, 1, -1, 1, -1, 1, -1, 1, -1, 1)))
@@ -1964,3 +2032,8 @@ if __name__ == "__main__":
     if not to_evaluate or 122 in to_evaluate:
         res = efficientExponentiation(sum_min=1, sum_max=200, method="exact")
         print(f"Solution to Project Euler #122 = {res}")
+
+    if not to_evaluate or 123 in to_evaluate:
+        res = primeSquareRemainders(target_remainder=10 ** 10 + 1)
+        print(f"Solution to Project Euler #123 = {res}")
+        
