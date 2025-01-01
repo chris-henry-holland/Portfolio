@@ -1627,6 +1627,26 @@ def pandigitalPrimeSets(base: int=10) -> int:
 
 # Problem 119- TODO
 def isPower(num: int, base: int) -> int:
+    """
+    Identifies whether a strictly positive integer num is
+    a power of the strictly positive integer base (i.e.
+    num = base^n for some non-negative integer n), and if
+    so what the exponent is (i.e. the integer n in the
+    previous formula).
+
+    Args:
+        Required positional:
+        num (int): Strictly positive integer whose status
+                as an integer power of the integer base.
+        base (int): The number for which the status of num
+                as an integer power of this number is being
+                assessed.
+    
+    Returns:
+    Integer (int) which is the integer power to which base is
+    to be taken to get num if such a number exists, and if
+    not -1.
+    """
     num2 = base
     res = 1
     while num2 < num:
@@ -1634,16 +1654,78 @@ def isPower(num: int, base: int) -> int:
         res += 1
     return res if num2 == num else -1
 
-def digitCountAndDigitSum(num: int, base: int=10) -> int:
+def digitCountAndDigitSum(num: int, base: int=10) -> Tuple[int, int]:
+    """
+    Calculates the number and sum of digits of a strictly
+    positive integer when expressed terms of a given base.
+
+    Args:
+        Required positional:
+        num (int): The strictly positive integer whose number
+                and sum of digits when expressed in the
+                chosen base is to be calculated.
+
+        Optional named:
+        base (int): The integer strictly exceeding 1 giving
+                the base in which num is to be expressed when
+                assessing the digit number and sum.
+            Default: 10
+
+    Returns:
+    2-tuple whose index 0 contains the number of digits (without
+    leading 0s) of num, and whose index 1 contains the sum of
+    digits of num, both when num is expressed in the chosen base.
+
+    Examples:
+        >>> digitCountAndDigitSum(5496, base=10)
+        (4, 24)
+
+        This signifies that 5496 when expressed in base 10 (i.e.
+        the standard base) has 4 digits which sum to 24
+        (5 + 4 + 9 + 6).
+
+        >>> digitCountAndDigitSum(6, base=2)
+        (3, 2)
+
+        This signifies that 6 when expressed in base 2 (binary,
+        in which 6 is expressed as 101) has 3 digits which sum
+        to 2 (1 + 0 + 1).
+    """
     res = [0, 0]
     while num:
         num, r = divmod(num, base)
         res[0] += 1
         res[1] += r
-    return res
+    return tuple(res)
 
 def powerDigitSumEqualNumDigitCountUpperBound(exp: int, base: int=10) -> int:
+    """
+    For a given exponent and base, finds an upper bound for the
+    number of digits a strictly positive integer can have in
+    that base and it be possible for the sum over the chosen exponent
+    of each of its digits in the chosen base to be equal to the
+    integer itself.
+
+    Args:
+        Required positional:
+        exp (int): Non-negative positive integer giving the exponent
+                to which each of the digits in the chosen base is
+                taken in the described sum.
+
+        Optional named:
+        base (int): Integer strictly greater than 1 giving the base
+                in which the integers are expressed when taking
+                the exponentiated digit sums as described.
     
+    Returns:
+    Strictly positive integer (int) giving an upper bound on the
+    number of digits in the chosen base an integer may have, and
+    for the described exponentiated digit sum of that integer
+    to be equal to the integer itself. That is to say, there
+    may exist integers with this property with this number of
+    digits or fewer in the chosen base, but there cannot be
+    any with more.
+    """
     def check(n_dig: int) -> bool:
         num = ((base - 1) * n_dig) ** exp
         return num >= base ** (n_dig - 1)
@@ -1676,7 +1758,9 @@ def powerDigitSumEqualNumDigitCountUpperBound(exp: int, base: int=10) -> int:
     """
 
 def digitPowerSumSequence(n_terms: int, base: int=10) -> List[Tuple[int]]:
-    
+    """
+    TODO
+    """
     res = []
     heap = [(2 ** 2, 2, 2)]
     n_dig_limit_heap = [(powerDigitSumEqualNumDigitCountUpperBound(2, base=base), 2)]
@@ -1712,9 +1796,36 @@ def digitPowerSumSequence(n_terms: int, base: int=10) -> List[Tuple[int]]:
 def digitPowerSum(n: int=30, base: int=10) -> int:
     """
     Solution to Project Euler #119
+
+    Finds the n:th smallest integer no less than base, such
+    that when expressed in that base, there exists a non-negative
+    integer exponent for which the sum over the digits taken
+    to the power of that exponent is equal to the integer
+    itself.
+
+    Args:
+        Optional named:
+        n (int): Strictly positive integer specifying the term
+                in the sequence of the integers with the described
+                property in ascending order, starting at 1 is to
+                be found.
+            Default: 30
+        base (int): Strictly positive integer specifying the
+                base in which the integers should be expressed
+                when assessing the described property.
+            Default: 10
+    
+    Returns:
+    Integer (int), giving the n:th smallest integer no less than
+    base such that when expressed in that base, there exists a
+    non-negative integer exponent for which the sum over the
+    digits taken to the power of that exponent is equal to the
+    integer itself.
     """
     since = time.time()
-    res = digitPowerSumSequence(n, base=base)[-1][0]
+    seq = digitPowerSumSequence(n, base=base)
+    res = seq[-1][0]
+    #print(seq)
     print(f"Time taken = {time.time() - since:.4f} seconds")
     return res
 
@@ -2131,7 +2242,7 @@ def orderedRadicals(n: int=100000, k: int=10000) -> int:
     return res
 
 if __name__ == "__main__":
-    to_evaluate = {124}
+    to_evaluate = {119}
 
     if not to_evaluate or 101 in to_evaluate:
         res = optimumPolynomial(((1, -1, 1, -1, 1, -1, 1, -1, 1, -1, 1)))
