@@ -1722,6 +1722,48 @@ def digitPowerSum(n: int=30, base: int=10) -> int:
 def squareRemainders(a_min: int=3, a_max: int=1000) -> int:
     """
     Solution to Project Euler #120
+
+    For given non-negative integers a and n, consider the maximum
+    value of the remainder of (a - 1)^n + (a + 1)^n when divided
+    by a^2.
+    Keeping a the fixed, consider the value of this remainder for
+    all possible values of n and choose the largest. This function
+    calculates the sum of these largest values for all values of
+    a between a_min and a_max inclusive.
+    
+    Args:
+        Optional named:
+        a_min (int): Non-negative integer giving the smallest value
+                of a considered in the sum.
+            Default: 3
+        a_max (int): Non-negative integer giving the largest value
+                of a considered in the sum.
+    
+    Returns:
+    Non-negative integer giving the calculated value of the sum
+    described above.
+
+    Outline of rationale:
+    
+    In the binomial expansion of (a + 1)^n and (a - 1)^n, all
+    terms except the constant term and linear term are divisible
+    by a^2. As such,
+        (a + 1)^n = a * n + 1 (mod a^2)
+        (a - 1)^n = (-1)^n * (1 - a * n) (mod a^2)
+    Therefore, for even n:
+        (a - 1)^n + (a + 1)^n = 2 (mod a^2)
+    and for odd n:
+        (a - 1)^n + (a + 1)^n = 2 * a * n (mod a^2)
+    Thus, for even n the maximum value modulo a^2 is 2 mod a^2,
+    and for odd n the maximum value modulo a^2 is when n
+    is the largest odd number strictly smaller than an integer
+    multiple of half of a modulo a^2. By considering the
+    different remainders of a modulo 4, it can be found that
+    the maximising value of n modulo a^2 is:
+        floor((a - 1) / 2)
+    Thus, for given a, the maximum value of (a - 1)^n + (a + 1)^n
+    modulo a^2 for non-negative integers n is:
+        max(2 (mod a^2), 2 * a * floor((a - 1) / 2))
     """
     res = 0
     for a in range(a_min, a_max + 1):
@@ -1919,7 +1961,8 @@ def primeSquareRemainders(target_remainder: int=10 ** 10 + 1):
     """
     # Review- prove that for even n the remainder is always 2 and
     # try to find further rules that restricts the search space,
-    # or enables direct calculation of the answer
+    # or enables direct calculation of the answer- see solution to
+    # Project Euler #120
     since = time.time()
     ps = PrimeSPFsieve()
     # p_n^2 must be strictly greater than the square root of target_remainder,
@@ -1942,8 +1985,153 @@ def primeSquareRemainders(target_remainder: int=10 ** 10 + 1):
         i += 2
     return -1
 
+# Problem 124
+def radicalCount(p_facts: Set[int], mx: int) -> int:
+    """
+    For a given set of distinct primes p_facts, finds the number of positive
+    integers up to and including mx whose radical is the product of those
+    primes.
+
+    The radical of a positive integer is the product of its distinct prime
+    factors (note that as 1 has no prime factoris, it has a radical of the
+    multiplicative identity, 1).
+
+    Args:
+        Required positional:
+        p_facts (set of ints): List of distinct prime numbers for which
+                the number of integers not exceeding mx whose radicals
+                are equal to the product of these primes is to be
+                calculated.
+                It is assumed that these are indeed primes, and this
+                property is not checked.
+        mx (int): The largest number considered.
+    
+    Returns:
+    Integer (int) equal to the number of positive integers not exceeding
+    mx whose radicals are equal to the product of p_facts.
+    """
+    n_p = len(p_facts)
+    p_facts_lst = list(p_facts)
+    mn = 1
+    for p in p_facts_lst: mn *= p
+    mx2 = mx // mn
+    #if mn < 1: return 0
+    #elif mn == 1: return 1
+    #res = [0]
+
+    memo = {}
+    def recur(curr: int, p_i: int=0) -> int:
+        if not curr: return 0
+        args = (curr, p_i)
+        if args in memo.keys():
+            return memo[args]
+        res = 1
+        for i in range(p_i, n_p):
+            p = p_facts_lst[i]
+            res += recur(curr // p, p_i=i)
+        memo[args] = res
+        return res
+    
+    return recur(mx2, p_i=0)
+
+def orderedRadicals(n: int=100000, k: int=10000) -> int:
+    """
+    Solution to Project Euler #124
+
+    Consider all the integers between 1 and n inclusive. Sort
+    these into a list based on:
+
+    1) The radical of the integer from smallest to largest
+    2) For numbers with the same radical, the size of the integer
+       from smallest to largest.
+
+    The radical of a positive integer is the product of its distinct prime
+    factors (note that as 1 has no prime factoris, it has a radical of the
+    multiplicative identity, 1).
+
+    This function calculates the k:th item on that list (1-indexed)
+
+    Args:
+        Named positional:
+        n (int): The largest number considered
+        k (int): Which item on the list to be returned (with k = 1
+                corresponding to the first item on the list).
+        
+    Returns:
+    Integer (int) giving the k:th number on the list constructed as
+    described above.
+
+    Examples:
+        >>> orderedRadicals(n=10, k=4)
+        8
+
+        >>> orderedRadicals(n=10, k=6)
+        9
+
+        Of the numbers between 1 and 10, the number 1 has radical
+        1, the numbers 2, 4 and 8 have radical 2, the numbers
+        3 and 9 have radical 3, and the numbers 5, 6, 7 and 10
+        do not have any repeated prime factors and so they are
+        each their own radical. As per the instructions for sorting
+        as given above, the list for n = 10 becomes:
+            [1, 2, 4, 8, 3, 9, 5, 6, 7, 10]
+        Thus, for n = 10, k = 4 gives the 4th item on this list
+        (8) while k = 6 gives the 6th item in this list (9).
+    """
+    since = time.time()
+    if k == 1:
+        print(f"Time taken = {time.time() - since:.4f} seconds")
+        return 1
+    ps = PrimeSPFsieve(n_max=k)
+    """
+    chk = 1
+    for i in range(2, n + 1):
+        pf = ps.primeFactorisation(i)
+        if max(pf.values()) > 1: continue
+        p_lst = sorted(pf.keys())
+        rad_cnt = radicalCount(p_lst, n)
+        chk += rad_cnt
+    print(f"Total = {chk}")
+    """
+
+    k2 = k - 1 # Minus one to account for 1
+    for i in range(2, k + 1):
+        pf = ps.primeFactorisation(i)
+        if max(pf.values()) > 1: continue
+        #p_lst = sorted(pf.keys())
+        rad_cnt = radicalCount(pf.keys(), n)
+        #print(i, rad_cnt)
+        if rad_cnt >= k2: break
+        k2 -= rad_cnt
+    #print(p_lst)
+    #print(k2)
+    rad = 1
+    mx = n
+    p_lst = sorted(pf.keys())
+    n_p = len(p_lst)
+    for p in p_lst:
+        mx //= p
+        rad *= p
+    heap = [-1]
+    def recur(curr: int, p_i: int=0) -> None:
+        for i in range(p_i, n_p):
+            p = p_lst[i]
+            nxt = curr * p
+            if nxt > mx: break
+            if len(heap) < k2:
+                heapq.heappush(heap, -nxt)
+            else:
+                heapq.heappushpop(heap, -nxt)
+            recur(nxt, p_i=i)
+        return
+
+    recur(1, p_i=0)
+    res = -heap[0] * rad
+    print(f"Time taken = {time.time() - since:.4f} seconds")
+    return res
+
 if __name__ == "__main__":
-    to_evaluate = {123}
+    to_evaluate = {124}
 
     if not to_evaluate or 101 in to_evaluate:
         res = optimumPolynomial(((1, -1, 1, -1, 1, -1, 1, -1, 1, -1, 1)))
@@ -2037,3 +2225,6 @@ if __name__ == "__main__":
         res = primeSquareRemainders(target_remainder=10 ** 10 + 1)
         print(f"Solution to Project Euler #123 = {res}")
         
+    if not to_evaluate or 124 in to_evaluate:
+        res = orderedRadicals(n=100000, k=10000)
+        print(f"Solution to Project Euler #124 = {res}")
