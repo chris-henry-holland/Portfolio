@@ -1014,6 +1014,7 @@ def isPandigital(num: int, base: int=10, chk_rng: bool=True) -> bool:
         dig_set.add(r)
     return True
 
+"""
 def startAndEndPandigital(num: int, base: int=10, target: Optional[int]=None,\
         md: Optional[int]=None) -> bool:
     if target is None: target = base ** (base - 2)
@@ -1022,11 +1023,33 @@ def startAndEndPandigital(num: int, base: int=10, target: Optional[int]=None,\
     if not isPandigital(num % md): return False
     while num > md: num //= base
     return isPandigital(num)
-
+"""
 def FibonacciFirstKDigits(i: int, k: int, base: int=10) -> int:
     """
+    Finds the first k digits in the i:th Fibonacci number (where
+    the 0th term is 0 and the 1st term is 1) when expressed in
+    the chosen base.
+
+    Calculated using Binet's formula.
+
+    Args:
+    Required positional:
+        i (int): Non-negative integer giving the term in the Fibonacci
+                sequence for which the first k digits when expressed
+                in the chosen base are to be calculated.
+        k (int): Strictly positive integer giving the number of digits
+                to be calculated.
+        
+        Optional named:
+        base (int): Integer strictly greater than 1 giving the base
+                in which the i:th Fibonacci number is to be expressed
+                when finding the first k digits.
+            Default: 10
     
-    Using Binet's formula
+    Returns:
+    Integer (int) giving the value of the first k digits of the i:th
+    Fibonacci number when expressed in the chosen base, when interpreted
+    as a number in the chosen base.
     """
     phi = (1 + math.sqrt(5)) / 2 # The golden ratio
     lg_rt5 = math.log(math.sqrt(5), base)
@@ -1059,8 +1082,31 @@ def FibonacciFirstKDigits(i: int, k: int, base: int=10) -> int:
 
 def pandigitalFibonacciStart(i: int, base: int=10) -> bool:
     """
+    Finds whether the first base digits in the i:th Fibonacci number 
+    where the 0th term is 0 and the 1st term is 1) when expressed in
+    the chosen base are pandigital in that base. Leading zeroes are
+    not allowed.
+
+    Calculated using Binet's formula (via FibonacciFirstKDigits()).
+
+    Args:
+    Required positional:
+        i (int): Non-negative integer giving the term in the Fibonacci
+                sequence for which the first base digits when expressed
+                in the chosen base are to be assessed for their
+                pandigital status in that base.
+        
+        Optional named:
+        base (int): Integer strictly greater than 1 giving the base
+                in which the i:th Fibonacci number is to be expressed
+                when assessing whether its first base digits are
+                pandigital.
+            Default: 10
     
-    Using Binet's formula
+    Returns:
+    Boolean (bool) giving True if the first base digits in the i:th
+    Fibonacci number when expressed in that base without leading zeroes
+    are pandigital in the chosen base.
     """
     return isPandigital(FibonacciFirstKDigits(i, k=base - 1, base=10))
     
@@ -1081,6 +1127,24 @@ def pandigitalFibonacciStart(i: int, base: int=10) -> bool:
 def pandigitalFibonacciEnds(base: int=10) -> int:
     """
     Solution to Project Euler #104
+
+    Finds the smallest Fibonacci number such that when expressed in
+    the chosen base, the first base digits and the last base digits
+    are both pandigital in that base. Leading zeroes are not allowed
+    for the first base digits.
+
+    Args:
+    Required positional:
+        Optional named:
+        base (int): Integer strictly greater than 1 giving the base
+                in which the i:th Fibonacci number is to be expressed
+                when assessing whether its first base digits and
+                last base digits are pandigital.
+            Default: 10
+    
+    Returns:
+    Integer (int) giving the value of the smallest Fibonacci number that
+    fulfills the stated requirement.
     """
     since = time.time()
     if base == 2: return 1
@@ -1625,7 +1689,7 @@ def pandigitalPrimeSets(base: int=10) -> int:
     print(f"Time taken = {time.time() - since:.4f} seconds")
     return res[0]
 
-# Problem 119- TODO
+# Problem 119
 def isPower(num: int, base: int) -> int:
     """
     Identifies whether a strictly positive integer num is
@@ -2241,8 +2305,126 @@ def orderedRadicals(n: int=100000, k: int=10000) -> int:
     print(f"Time taken = {time.time() - since:.4f} seconds")
     return res
 
+# Problem 125
+def isPalindromic(num: int, base: int=10) -> bool:
+    """
+    For a given non-negative integer, assesses whether it is
+    palindromic when expressed in the chosen base (i.e. the
+    digits in the expression read the same forwards and
+    backwards).
+
+    Args:
+        Required positional:
+        num (int): The non-negative integer to be assessed
+                for its status as palindromic when expressed
+                in the chosen base.
+        
+        Optional named:
+        base (int): Integer strictly greater than 1 giving
+                the base in which num is to be expressed
+                when assessing whether or not it is
+                palindromic.
+            Default: 10
+    
+    Returns:
+    Boolean (bool) giving True if num is palindromic when
+    expressed in the chosen base and False otherwise.
+    """
+    digs = []
+    num2 = num
+    while num2:
+        num2, r = divmod(num2, base)
+        digs.append(r)
+    for i in range(len(digs) >> 1):
+        if digs[i] != digs[~i]: return False
+    return True
+
+def palindromicConsecutiveSquareSumStart(start: int, mx: int, base: int=10) -> List[int]:
+    """
+    For a given integer start, finds all of the integers with
+    value no greater than mx that can be expressed as the
+    sum of at least two consecutive integer squares, starting
+    with start^2, and are palindromic in the chosen base (i.e.
+    the digits in the expression read the same forwards and
+    backwards).
+
+    Args:
+        Required positional:
+        start (int): The integer whose square is the first
+                in the consecutive integer square sums
+                considered.
+        mx (int): The maximum allowed returned value.
+
+        Optional named:
+        base (int): Integer strictly greater than 1 giving the
+                base in which integers are to be expressed
+                when assessing whether or not they are
+                palindromic.
+            Default: 10
+    
+    Returns:
+    List of integers (ints) giving all the sums of at least 2
+    consecutive squares starting at start^2 that are 
+    palindromic and no greater than mx, in strictly increasing
+    order.
+    """
+    curr = start
+    tot = curr * curr
+    res = []
+    while True:
+        curr += 1
+        tot += curr * curr
+        if tot > mx: break
+        if isPalindromic(tot): res.append(tot)
+    return res
+
+def palindromicConsecutiveSquareSums(mx: int=100000000 - 1, base: int=10) -> int:
+    """
+    Solution to Project Euler #125
+
+    Finds the sum of all of the integers with value no greater than mx
+    that are palindromic in the chosen base (i.e. the digits in the
+    expression of the integer in the chosen base read the same forwards
+    and backwards) and can be expressed as the sum of at least two
+    consecutive integer squares.
+    Note that if a palindromic integer can be expressed as the
+    sum of consecutive squares in more than one way, it is still
+    only included once in the sum.
+
+    Args:
+        Optional named:
+        mx (int): The maximum value allowed to be included in the
+                sum.
+            Default: 99999999
+        base (int): Integer strictly greater than 1 giving the
+                base in which integers are to be expressed
+                when assessing whether or not they are
+                palindromic.
+            Default: 10
+    
+    Returns:
+    Integer (int) giving the sum of all the integers with value no
+    greater than mx that are palindromic and can be expressed as the
+    sum of at least two consecutive integer squares.
+    """
+    since = time.time()
+    end = isqrt(mx >> 1)
+    res = 0
+    palindromic_set = set()
+    #count = 0
+    for start in range(1, end + 1):
+        lst = palindromicConsecutiveSquareSumStart(start, mx, base=10)
+        palindromic_set |= set(lst)
+        #print(start, lst)
+        #count += len(lst)
+        res += sum(lst)
+    #print(count)
+    res = sum(palindromic_set)
+    print(f"Time taken = {time.time() - since:.4f} seconds")
+    return res
+
 if __name__ == "__main__":
-    to_evaluate = {119}
+    to_evaluate = {125}
 
     if not to_evaluate or 101 in to_evaluate:
         res = optimumPolynomial(((1, -1, 1, -1, 1, -1, 1, -1, 1, -1, 1)))
@@ -2339,3 +2521,7 @@ if __name__ == "__main__":
     if not to_evaluate or 124 in to_evaluate:
         res = orderedRadicals(n=100000, k=10000)
         print(f"Solution to Project Euler #124 = {res}")
+    
+    if not to_evaluate or 125 in to_evaluate:
+        res = palindromicConsecutiveSquareSums(mx=100000000 - 1, base=10)
+        print(f"Solution to Project Euler #125 = {res}")
