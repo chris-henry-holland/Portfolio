@@ -2423,8 +2423,99 @@ def palindromicConsecutiveSquareSums(mx: int=100000000 - 1, base: int=10) -> int
     print(f"Time taken = {time.time() - since:.4f} seconds")
     return res
 
+# Problem 126
+def cuboidLayerSizes(dims: Tuple[int, int, int], max_layer_size: int, min_layer_size: int=1) -> List[int]:
+    n_faces = (dims[0] * dims[1] + dims[0] * dims[2] + dims[1] * dims[2]) << 1
+    n_edges = sum(dims) << 2
+    if n_faces > max_layer_size: return []
+    #n_internal_edges = 0
+    #n_internal_corners = 0
+    i = 0
+    a = 4
+    b = n_edges - 4
+    c = n_faces - (min_layer_size - 1)
+    rad = b ** 2 - 4 * a * c
+    if rad >= 0:
+        rad_sqrt = isqrt(rad)
+        i = max(0, ((rad_sqrt - b) // (2 * a)) + 1)
+    
+    func = lambda x : a * x ** 2 + b * x + n_faces
+    if func(i) < min_layer_size: print(f"i too small")
+    #if i > 0 and func(i - 1) >= min_layer_size:
+    #    print(f"i too large")
+    #    print(f"i = {i}, func(i - 1) = {func(i - 1)}, min_layer_size = {min_layer_size}")
+    #print(i)
+    res = []
+    #n_internal_edges = n_edges
+    #n_internal_corners = 6
+    while True:
+        nxt = func(i)
+        #print(nxt, max_layer_size)
+        if nxt > max_layer_size: break
+        if nxt >= min_layer_size:
+            res.append(nxt)
+        i += 1
+    return res
+
+def cuboidHasLayerSize(dims: Tuple[int, int, int], target_layer_size: int) -> bool:
+    n_faces = (dims[0] * dims[1] + dims[0] * dims[2] + dims[1] * dims[2]) << 1
+    n_edges = sum(dims) << 2
+    a = 4
+    b = n_edges - 4
+    c = n_faces - target_layer_size
+    rad = b ** 2 - 4 * a * c
+    if rad < 0: return False
+    rad_sqrt = isqrt(rad)
+    if rad_sqrt ** 2 != rad: return False
+    return rad_sqrt >= b
+
+def cuboidLayers(target_layer_size_count: int=1000, step_size: int=10000) -> int:
+    since = time.time()
+
+    #step_size = 20000
+    sz_rng = [1, step_size]
+    print(sz_rng)
+    #tot = 0
+    #tot2 = 0
+    while True:
+        counts = {}
+        candidates = SortedList()
+        a_mx = (sz_rng[1] - 2) // 4
+        for a in range(1, a_mx + 1):
+            #print(f"a = {a}")
+            b_mx = (sz_rng[1] - 2 * a) // (2 * (a + 1))
+            for b in range(1, min(a, b_mx) + 1):
+                #print(f"b = {b}")
+                c_mx = (sz_rng[1] - 2 * a * b) // (2 * (a + b))
+                for c in range(1, min(b, c_mx) + 1):
+                    #print(f"c = {c}")
+                    #print(a, b, c)
+                    lst = cuboidLayerSizes((a, b, c), sz_rng[1], min_layer_size=sz_rng[0])
+                    #print(a, b, c)
+                    #print(lst)
+                    for sz in set(lst):
+                        #tot += 1
+                        counts[sz] = counts.get(sz, 0) + 1
+                        if counts[sz] == target_layer_size_count:
+                            candidates.add(sz)
+                        elif counts[sz] == target_layer_size_count + 1:
+                            candidates.remove(sz)
+        #print(sz_rng)
+        #print(counts)
+        #if 154 in counts.keys():
+        #    print(f"C(154) = {counts[154]}")
+        #tot2 += sum(counts.values())
+        if candidates: break
+        sz_rng = [sz_rng[1] + 1, sz_rng[1] + step_size]
+        print(sz_rng)
+    #print(f"tot = {tot}")
+    #print(f"tot2 = {tot2}")
+    res = candidates[0]
+    print(f"Time taken = {time.time() - since:.4f} seconds")
+    return res
+
 if __name__ == "__main__":
-    to_evaluate = {125}
+    to_evaluate = {126}
 
     if not to_evaluate or 101 in to_evaluate:
         res = optimumPolynomial(((1, -1, 1, -1, 1, -1, 1, -1, 1, -1, 1)))
@@ -2525,3 +2616,7 @@ if __name__ == "__main__":
     if not to_evaluate or 125 in to_evaluate:
         res = palindromicConsecutiveSquareSums(mx=100000000 - 1, base=10)
         print(f"Solution to Project Euler #125 = {res}")
+    
+    if not to_evaluate or 126 in to_evaluate:
+        res = cuboidLayers(target_layer_size_count=1000, step_size=10000)
+        print(f"Solution to Project Euler #126 = {res}")
