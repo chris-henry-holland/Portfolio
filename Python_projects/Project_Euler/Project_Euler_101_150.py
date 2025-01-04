@@ -2514,8 +2514,99 @@ def cuboidLayers(target_layer_size_count: int=1000, step_size: int=10000) -> int
     print(f"Time taken = {time.time() - since:.4f} seconds")
     return res
 
+# Problem 127
+def abcHits(c_max: int=199999) -> int:
+    """
+    
+    Note that if a + b = c and gcd(a, b) = 1 then gcd(a, c) = 1
+    and gcd(b, c) = 1 and rad(abc) = rad(a) * rad(b) * rad(c).
+    """
+    since = time.time()
+
+    
+
+    def radical(p_facts: List[int]) -> int:
+        res = 1
+        for p in p_facts: res *= p
+        return res
+
+    ps = PrimeSPFsieve(n_max=c_max, use_p_lst=True)
+    radicals = [1] * (c_max + 1)
+    for p in ps.p_lst:
+        for i in range(p, c_max + 1, p):
+            radicals[i] *= p
+    
+    b_radicals = SortedList()
+
+    res = 0
+    for c in range(5, c_max + 1):
+        if not c % 1000: print(f"c = {c}")
+        b_radicals.add((radicals[c - 2], c - 2))
+        if not c & 1:
+            b_radicals.remove((radicals[c >> 1], c >> 1))
+        #c_facts = ps.primeFactors(c)
+        rad_c = radicals[c]
+        if rad_c == c: continue
+        rad_ab_mx = (c - 1) // rad_c
+        rad_b_mx = rad_ab_mx >> 1
+        i_mx = b_radicals.bisect_right((rad_b_mx, float("inf")))
+        for i in range(i_mx):
+            rad_b, b = b_radicals[i]
+            if gcd(rad_b, rad_c) != 1: continue
+            a = c - b
+            if radicals[a] * rad_b <= rad_ab_mx:
+                res += c
+        b = c - 1
+        #b_facts = ps.primeFactors(b)
+        if radicals[b] <= rad_ab_mx:
+            res += c
+        """
+        #b_sieve = [True] * c
+        #for p in c_facts:
+        #    start = ((((c - 1) >> 1) // p) + 1) * p
+        #    for i in range(start, c, p):
+        #        b_sieve[i] = False
+        
+        # If c is even then both a and b must be odd
+        if c & 1:
+            rng = ((c + 1) >> 1, c - 1)
+        else:
+            start = (c + 1) >> 1
+            if not start & 1: start += 1
+            rng = (start, c - 1, 2)
+        for b in range(*rng):
+            #if not b_sieve[b]: continue
+            rad_b = radicals[b]
+            if rad_b > rad_b_mx or gcd(rad_b, rad_c) != 1: continue
+            #b_facts = ps.primeFactors(b)
+            #rad_b = radical(b_facts)
+            a = c - b
+            #a_facts = ps.primeFactors(a)
+            if radicals[a] * rad_b <= rad_ab_mx:
+                res += c
+        b = c - 1
+        #b_facts = ps.primeFactors(b)
+        if radicals[b] <= rad_ab_mx:
+            res += c
+        """
+        """
+        a_sieve = [True] * b
+        for p in b_facts:
+            for i in range(p, b, p):
+                a_sieve[i] = False
+        for a in range(1, min(b, c_max - b + 1)):
+            if not a_sieve[a]: continue
+            a_facts = ps.primeFactors(a)
+            c = a + b
+            c_facts = ps.primeFactors(c)
+            res += radical(a_facts) * rad_b * radical(c_facts) < c
+        """
+    print(f"Time taken = {time.time() - since:.4f} seconds")
+    return res
+    
+
 if __name__ == "__main__":
-    to_evaluate = {126}
+    to_evaluate = {127}
 
     if not to_evaluate or 101 in to_evaluate:
         res = optimumPolynomial(((1, -1, 1, -1, 1, -1, 1, -1, 1, -1, 1)))
@@ -2620,3 +2711,7 @@ if __name__ == "__main__":
     if not to_evaluate or 126 in to_evaluate:
         res = cuboidLayers(target_layer_size_count=1000, step_size=10000)
         print(f"Solution to Project Euler #126 = {res}")
+    
+    if not to_evaluate or 127 in to_evaluate:
+        res = abcHits(c_max=119999)
+        print(f"Solution to Project Euler #127 = {res}")
