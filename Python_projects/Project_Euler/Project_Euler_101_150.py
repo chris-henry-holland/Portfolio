@@ -2604,9 +2604,139 @@ def abcHits(c_max: int=199999) -> int:
     print(f"Time taken = {time.time() - since:.4f} seconds")
     return res
     
+# Problem 128
+def hexagonalLayerPrimeDifferenceCountIs3(layer: int, ps: PrimeSPFsieve) -> List[int]:
+    # layer >= 2
+    #if idx not in {0, 1, 3, 5}: return False
+    #num = findHexagonalCorner(layer, idx)
+    if not ps.isPrime(layer * 6 - 1, extend_sieve=False, extend_sieve_sqrt=True):
+        return []
+    diffs = [
+        (6 * layer + 1, 12 * layer + 5),
+        (12 * layer - 7, 6 * layer + 5)
+    ]
+    res = []
+    if ps.isPrime(6 * layer + 1, extend_sieve=False, extend_sieve_sqrt=True) and ps.isPrime(12 * layer + 5, extend_sieve=False, extend_sieve_sqrt=True):
+        #print(layer, 0)
+        res.append(3 * layer * (layer - 1) + 2)
+    
+    if ps.isPrime(6 * layer + 5, extend_sieve=False, extend_sieve_sqrt=True) and ps.isPrime(12 * layer - 7, extend_sieve=False, extend_sieve_sqrt=True):
+        #print(layer, 1)
+        res.append(3 * layer * (layer + 1) + 1)
+    
+    return res
+
+def hexagonalTileDifferences(sequence_number: int=2000) -> int:
+    """
+    Solution to Project Euler #128
+
+    Outline of rationale:
+
+    In the first two layers (up to hexagon 7) the hexagons
+    with 3 neighbours with prime differences are hexagons
+    1 and 2
+
+    Counting the layers from 0, from layer 2 onwards (the layer
+    starting with number 8) the only possible hexagons for which
+    three adjacent hexagons have prime difference are the
+    first and last hexagon in that layer.
+    
+    First note that after the first two layers, the difference
+    between any two neighbours is either 1 or strictly greater
+    than 2 (so any neighbour difference divisible by 2 for these
+    layers means that the difference is not prime).
+    
+    Now, consider the hexagons for which the preceding and
+    succeeding values are opposite. We refer to these as
+    edge hexagons. The differences between this tile and
+    the preceding and suceeding tiles are both one, which
+    is not prime. Considering the two neighbouring hexagons
+    on the next layer in. These are two consecutive numbers
+    and so the difference with the chosen hexagon must be
+    even for one of them and so (since as established the
+    difference cannot be 2) not prime. Thus, the difference
+    can only be prime for at most one of these hexagons.
+    Using identical reasoning, we can also conclude that
+    for the two neighbouring hexagons on the next layer
+    out, at most one of the differences with the chosen
+    hexagon can be prime. Thus, for edge hexagons, the
+    largest number of prime differences with neighbouring
+    hexagons is 2, so none of these hexagons will be
+    counted.
+
+    Consider the hexagons for which the preceding and
+    succeeding values are neighbouring but not opposite.
+    We refer to these as corner hexagons. As for the edge
+    hexagons, the differences between this tile and the
+    preceding and succeeding tiles are both one, which
+    is not prime. Considering the three neighbouring
+    hexagons on the next layer out, we first note that
+    the middle of these is a corner hexagon of the next
+    layer out, which we refer to as the corresponding
+    corner hexagon of the next layer out. These three
+    hexagons contain three consecutive numbers. At most
+    two of these can have prime difference with the
+    chosen hexagon, and when that is the case they must
+    be the two hexagons other than the corresponding
+    corner hexagon of the next layer out. The remaining
+    neighbouring hexagon is on the next layer in and
+    is also a corner hexagon, which we refer to as the
+    corresponding corner hexagon of the next layer in.
+    As such, in order for three of the differences to
+    be prime, the difference with the corresponding
+    corner hexagon of the next layer in must be prime
+    and the difference with the preceding and
+    succeeding hexagons of the corresponding corner
+    hexagon of the next layer out must both be
+    prime. It can be shown that the corresponding corner
+    hexagons of the next layer out and in must either
+    both be odd or both be even, and so the corresponding
+    corner hexagon on the next layer in must have
+    different parity from the preceding and succeeding
+    hexagons of the corresponding corner hexagon of the
+    next layer out. This implies that the differences
+    of these three hexagons and the chosen hexagon
+    cannot all be odd and so (since as established the
+    differences are all strictly greater than 2) cannot
+    all be prime. Thus, like for edge hexagons, for
+    corner hexagons, the largest number of prime
+    differences with neighbouring hexagons is 2, so none
+    of these hexagons will be counted.
+
+    The only cases that remain for layers 2 and out
+    (i.e. the only hexagons on these layers that are
+    not classified as either an edge hexagon or as
+    a corner hexagon) are when the hexagon does not
+    neighbour to both its preceding and succeeding
+    hexagon, which is the case if and only if the
+    hexagon is the first in its layer or the last in
+    its layer. Therefore, we restrict our search to
+    those two cases. In both cases there are only 3
+    neighbouring hexagons that may have prime difference,
+    and a formula can be derived based on the layer
+    number to calculate those candidate differences.
+    TODO
+    """
+    since = time.time()
+    ps = PrimeSPFsieve(12 * sequence_number)
+
+    if sequence_number <= 2: return sequence_number
+    count = 2
+    layer = 2
+    while True:
+        layer_candidates = hexagonalLayerPrimeDifferenceCountIs3(layer, ps)
+        count += len(layer_candidates)
+        #if layer_candidates: print(layer_candidates)
+        if count >= sequence_number:
+            print(f"Time taken = {time.time() - since:.4f} seconds")
+            return layer_candidates[~(count - sequence_number)]
+
+        layer += 1
+    return -1
+
 
 if __name__ == "__main__":
-    to_evaluate = {127}
+    to_evaluate = {128}
 
     if not to_evaluate or 101 in to_evaluate:
         res = optimumPolynomial(((1, -1, 1, -1, 1, -1, 1, -1, 1, -1, 1)))
@@ -2715,3 +2845,8 @@ if __name__ == "__main__":
     if not to_evaluate or 127 in to_evaluate:
         res = abcHits(c_max=119999)
         print(f"Solution to Project Euler #127 = {res}")
+
+    if not to_evaluate or 128 in to_evaluate:
+        res = hexagonalTileDifferences(sequence_number=2000)
+        print(f"Solution to Project Euler #127 = {res}")
+        
