@@ -126,17 +126,18 @@ class SegmentTree(object):
         l = max(l, self.start_idx) + self.offset
         r = min(r, self.end_idx) + self.offset + 1
         
-        res = self.op[1] # The identity of the operation
+        res_l = self.op[1] # The identity of the operation
+        res_r = self.op[1]
         while l < r:
             if l & 1:
-                res = self.op[0](res, self.tree[l])
+                res_l = self.op[0](res_l, self.tree[l])
                 l += 1
             if r & 1:
                 r -= 1
-                res = self.op[0](self.tree[r], res)
+                res_r = self.op[0](self.tree[r], res_r)
             l >>= 1
             r >>= 1
-        return res
+        return self.op[0](res_l, res_r)
     
     def update(self, i: int, val: Any) -> None:
         """
@@ -754,6 +755,13 @@ def minimumValueSum(nums: List[int], andValues: List[int]) -> int:
 def maximumSumSubsequence(nums: List[int], queries: List[List[int]]) -> int:
     """
 
+    Examples:
+        >>> maximumSumSubsequence([3,5,9], [[1,-2],[0,-3]])
+        21
+
+        >>> maximumSumSubsequence([4,0,-1,-2,3,1,-1], [[3,1],[0,-2],[1,-1],[0,-2],[5,4],[6,-3],[6,-2],[2,-1]])
+        36
+    
     Illustrates the use of segment tree with non-commutative binary
     operations.
 
@@ -766,9 +774,8 @@ def maximumSumSubsequence(nums: List[int], queries: List[List[int]]) -> int:
     2D array queries, where queries[i] = [posi, xi].
 
     For query i, we first set nums[posi] equal to xi, then we calculate the
-    answer to query i which is the maximum sum of a 
-    subsequence
-    of nums where no two adjacent elements are selected.
+    answer to query i which is the maximum sum of a subsequence of nums where
+    no two adjacent elements are selected.
 
     Return the sum of the answers to all queries.
 
@@ -778,13 +785,12 @@ def maximumSumSubsequence(nums: List[int], queries: List[List[int]]) -> int:
     deleting some or no elements without changing the order of the remaining
     elements.
 
-    Examples:
-        >>> maximumSumSubsequence([3,5,9], [[1,-2],[0,-3]])
-        21
-
-        >>> maximumSumSubsequence([4,0,-1,-2,3,1,-1], [[3,1],[0,-2],[1,-1],[0,-2],[5,4],[6,-3],[6,-2],[2,-1]])
-        36
+    
     """
+    # index 0: neither left-most nor right-most subarray element selected
+    # index 1: left-most but not right-most subarray element selected
+    # index 2: right-most but not left-most subarray element selected
+    # index 3: both left-most and right-most subarray element selected
 
     md = 10 ** 9 + 7
 
@@ -811,6 +817,87 @@ def maximumSumSubsequence(nums: List[int], queries: List[List[int]]) -> int:
         ans = max(tup)
         ans = max(ans, 0)
         res = (res + ans) % md
+    return res
+
+def maxSubarraySum(nums: List[int]) -> int:
+    """
+    
+    Examples:
+        >>> maxSubarraySum([-3,2,-2,-1,3,-2,3])
+        7
+
+        >>> maxSubarraySum([1,2,3,4])
+        10
+
+    Illustrates the use of segment tree with non-commutative binary
+    operations.
+
+    Solution to Leetcode #3410: Maximumize Subarray Sum After Removing
+    All Occurrences of One Element
+
+    Original problem #3410 description:
+
+    You are given an integer array nums.
+
+    You can do the following operation on the array at most once:
+
+    - Choose any integer x such that nums remains non-empty on removing
+      all occurrences of x.
+    - Remove all occurrences of x from the array.
+    
+    Return the maximum subarray sum across all possible resulting
+    arrays.
+
+    A subarray is a contiguous non-empty sequence of elements within an
+    array.
+    """
+    # index 0: maximum subarray sum
+    # index 1: maximum subarray sum including the left-most subarray element
+    # index 2: maximum subarray sum including the right-most subarray element
+    # index 3: maximum subarray sum including both the left-most and
+    #          right-most subarray elements
+
+    n = len(nums)
+
+    mx = max(nums)
+    mn = min(nums)
+    if mx <= 0: return mx
+    elif mn >= 0: return sum(nums)
+
+    def combineSubarraySums(tup1: Tuple[int, int, int, int], tup2: Tuple[int, int, int, int]):
+        res1 = max(tup1[0], tup2[0], tup1[2] + tup2[1])
+        res2 = max(tup1[1], tup1[3] + tup2[1])
+        res3 = max(tup2[2], tup1[2] + tup2[3])
+        res4 = tup1[3] + tup2[3]
+        return (res1, res2, res3, res4)
+
+    op = (combineSubarraySums, (-float("inf"), -float("inf"), -float("inf"), 0), False)
+    st = SegmentTree(0, n - 1, op=op)
+    st.populate(0, [(x, x, x, x) for x in nums])
+    #print(st.tree)
+
+    neg_inds = {}
+    for i, num in enumerate(nums):
+        if num >= 0: continue
+        neg_inds.setdefault(num, [])
+        neg_inds[num].append(i)
+    
+    res = mx
+    for num, inds in neg_inds.items():
+        #print(f"\nnum = {num}, inds = {inds}")
+        rng_sum = st.query(0, inds[0] - 1)
+        #print(0, inds[0] - 1, rng_sum)
+        curr = rng_sum
+        for i in range(1, len(inds)):
+            if inds[i - 1] + 1 == inds[i]: continue
+            rng_sum = st.query(inds[i - 1] + 1, inds[i] - 1)
+            #print(inds[i - 1] + 1, inds[i] - 1, rng_sum)
+            curr = combineSubarraySums(curr, rng_sum)
+        rng_sum = st.query(inds[-1] + 1, n - 1)
+        #print(inds[-1] + 1, n - 1, rng_sum)
+        curr = combineSubarraySums(curr, st.query(inds[-1] + 1, n - 1))
+        #print(num, curr)
+        res = max(res, curr[0])
     return res
 
 def handleQuery(nums1: List[int], nums2: List[int], queries: List[List[int]]) -> List[int]:
@@ -881,6 +968,12 @@ if __name__ == "__main__":
     )
     print("\nmaximumSumSubsequence([4,0,-1,-2,3,1,-1], [[3,1],[0,-2],[1,-1],[0,-2],[5,4],[6,-3],[6,-2],[2,-1]]) = "
             f"{res}")
+    
+    res = maxSubarraySum([-3,2,-2,-1,3,-2,3])
+    print(f"\nmaxSubarraySum([-3,2,-2,-1,3,-2,3]) = {res}")
+
+    res = maxSubarraySum([1,2,3,4])
+    print(f"\nmaxSubarraySum([1,2,3,4]) = {res}")
     
     res = handleQuery([1,0,1], [0,0,0], [[1,1,1],[2,1,0],[3,0,0]])
     print("\nhandleQuery([1,0,1], [0,0,0], [[1,1,1],[2,1,0],[3,0,0]]) = "
