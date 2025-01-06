@@ -2606,6 +2606,58 @@ def abcHits(c_max: int=199999) -> int:
     
 # Problem 128
 def hexagonalLayerPrimeDifferenceCountIs3(layer: int, ps: PrimeSPFsieve) -> List[int]:
+    """
+    Consider a tessellating tiling of numbered regular hexagons
+    of equal size constructed in the following manner. First,
+    place hexagon 1. This is layer 0. For each subsequent layer
+    (labelled with the number one greater than that of the
+    previous layer), place the next unused positive integer
+    hexagon so that it shares an edge (i.e. neighbours) only the
+    first placed hexagon of the previous layer. Then, place the
+    next unused positive integer hexagon so that it neighbours
+    the first hexagon of that layer and a hexagon in the previous
+    layer on the anticlockwise side of the first hexagon of that
+    layer (where rotation is around hexagon 1, the very first
+    hexagon placed). Then place repeatedly place the hexagon with
+    the next unused positive integer in the unique position
+    neighbouring the immediately previously placed hexagon and
+    a hexagon in the previous layer until there are no such
+    positions available. The last hexagon placed in the layer
+    will be neighbouring the first hexagon placed in the layer.
+    Then repeat the process with the next layer.
+
+    For a given layer, numbered as described and with number
+    no less than 2, this identifies the numbers of the hexagons
+    in that layer for which three of the neighbouring hexagons
+    in the tiling (i.e. hexagons that share an edge with the
+    chosen hexagon) have numbers that differ from the number of
+    the chosen hexagon (either above or below) by a prime number. 
+
+    Args:
+        Required positional:
+        layer (int): Non-negative integer giving the layer number
+                to be considered, where layer 0 consists of hexagon
+                1 only, layer 1 consists of the hexagons 2 to 7,
+                layer 2 consists of the hexagons 8 to 19 etc.
+        ps (PrimeSPFsieve object): Object representing a prime
+                sieve, enabling the rapid assessment of whether
+                a number is prime in the case of repeated testing
+                of relatively small number (<= 10 ** 6).
+    
+    Returns:
+    List of integers (int) giving the numbers of hexagons in the
+    chosen layer for which three of the neighbouring hexagons
+    in the tiling (i.e. hexagons that share an edge with the
+    chosen hexagon) have numbers that differ from the number of
+    the chosen hexagon (either above or below) by a prime number.
+    These are sorted in strictly increasing order.
+    
+    Note that this uses the fact that the only hexagons in a
+    layer with number no less than 2 that can possibly have the
+    described property are the first and last hexagons placed
+    in that layer. For an outline of a proof of this, see
+    documentation for hexagonalTileDifferences().
+    """
     # layer >= 2
     #if idx not in {0, 1, 3, 5}: return False
     #num = findHexagonalCorner(layer, idx)
@@ -2628,6 +2680,45 @@ def hexagonalLayerPrimeDifferenceCountIs3(layer: int, ps: PrimeSPFsieve) -> List
 
 def hexagonalTileDifferences(sequence_number: int=2000) -> int:
     """
+    Consider a tessellating tiling of numbered regular hexagons
+    of equal size constructed in the following manner. First,
+    place hexagon 1. This is layer 0. For each subsequent layer
+    (labelled with the number one greater than that of the
+    previous layer), place the next unused positive integer
+    hexagon so that it shares an edge (i.e. neighbours) only the
+    first placed hexagon of the previous layer. Then, place the
+    next unused positive integer hexagon so that it neighbours
+    the first hexagon of that layer and a hexagon in the previous
+    layer on the anticlockwise side of the first hexagon of that
+    layer (where rotation is around hexagon 1, the very first
+    hexagon placed). Then place repeatedly place the hexagon with
+    the next unused positive integer in the unique position
+    neighbouring the immediately previously placed hexagon and
+    a hexagon in the previous layer until there are no such
+    positions available. The last hexagon placed in the layer
+    will be neighbouring the first hexagon placed in the layer.
+    Then repeat the process with the next layer.
+
+    Now consider all the hexagons in this tiling for which three
+    of the neighbouring hexagons in the tiling (i.e. hexagons that
+    share an edge with the chosen hexagon) have numbers that differ
+    from the number of the chosen hexagon (either above or below)
+    by a prime number. Let the numbers of all such hexagons,
+    organised in strictly increasing order form a sequence. This
+    function identifies term sequence_number in that sequence
+    (where the first term is term 1).
+
+    Args:
+        Optional named:
+        sequence_number (int): Strictly positive integer
+                specifying the term in the sequence described to be
+                returned, with the sequence starting with term
+                1.
+    
+    Returns:
+    Integer (int) giving term sequence_number in the sequence
+    described above.
+
     Solution to Project Euler #128
 
     Outline of rationale:
@@ -2639,7 +2730,8 @@ def hexagonalTileDifferences(sequence_number: int=2000) -> int:
     Counting the layers from 0, from layer 2 onwards (the layer
     starting with number 8) the only possible hexagons for which
     three adjacent hexagons have prime difference are the
-    first and last hexagon in that layer.
+    first and last hexagon in that layer. This can be proved as
+    follows.
     
     First note that after the first two layers, the difference
     between any two neighbours is either 1 or strictly greater
