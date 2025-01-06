@@ -2734,9 +2734,127 @@ def hexagonalTileDifferences(sequence_number: int=2000) -> int:
         layer += 1
     return -1
 
+# Problem 129
+def findSmallestRepunitDivisibleByK(k: int, base: int=10) -> int:
+    """
+    For a given base, finds the smallest repunit in that base
+    that is divisible by k. If no such repunit exists, then
+    returns -1.
+
+    In a given base, a repunit of length n (where n is strictly
+    positive) is the strictly positive integer that when
+    expressed in the chosen base is the concatenation of
+    n 1s. For instance, the repunit of length 3 for base 10
+    is 111 and the repunit of length 4 for base 2 is
+    15 (which, when expressed in base 2 i.e. binary is 1111).
+
+    Args:
+        Required positional:
+        k (int): Strictly positive integer giving the quantity
+                for which the returned repunit must be divisible.
+        
+        Optional named:
+        base (int): The base in which the repunits are expressed.
+            Default: 10
+
+    Returns:
+    Integer (int) giving the value of the smallest repunit in
+    the chosen base that is divisible by k if any such
+    repunit exists, otherwise -1.
+
+    Note that we have used the property that if k and
+    base are not coprime then no repunit in this base can
+    be divisible by k. To see this, suppose k and base share
+    a prime divisor p and there exists a repunit r in the
+    chosen base that is divisible by k. Then r = 0 (mod p)
+    and base = 0 (mod p). Now, r - 1 ends in a 0 when
+    expressed in the chosen base and so is divisible by base,
+    and therefore p. Consequently:
+        r - 1 = 0 (mod p)
+        r = p - 1 (mod p)
+        0 = p - 1 (mod p)
+    Given that no prime is less than 2, this cannot occur,
+    so we have a contradiction. Therefore, if k and base
+    share a prime divisor then there cannot exist a repunit
+    in that base that is divisible by k.
+
+    We have also used the property that if there exists a
+    repunit divisible by k then the shortest such repunit
+    will be at most length k (see documentation of
+    repunitDivisibility() for an outline of the proof of
+    this).
+    """
+    if gcd(k, base) != 1: return -1
+    if k == 1: return 1
+    base_mod_k = base % k
+    res = 1
+    curr = 1
+    while curr:
+        curr = (curr * base_mod_k + 1) % k
+        res += 1
+        if res > k: return -1
+    return res
+    
+def repunitDivisibility(target_repunit_length: int=1000000, base: int=10) -> int:
+    """
+    Solution to Project Euler #129
+
+    For a given base, finds the smallest integer k such that
+    the smallest repunit in that base divisible by k exists and
+    is no smaller than target_repunit_length.
+
+    In a given base, a repunit of length n (where n is strictly
+    positive) is the strictly positive integer that when
+    expressed in the chosen base is the concatenation of
+    n 1s. For instance, the repunit of length 3 for base 10
+    is 111 and the repunit of length 4 for base 2 is
+    15 (which, when expressed in base 2 i.e. binary is 1111).
+
+    Args:
+        Optional named:
+        target_repunit_length (int): Strictly positive integer
+                giving the target size of the smallest repunit
+                divisible by the returned value k.
+            Default: 1000000
+        base (int): The base in which the repunits are expressed.
+            Default: 10
+
+    Returns:
+    Integer (int) giving the value k such that the smallest
+    repunit in that base divisible by k exists and is no smaller
+    than target_repunit_length.
+    
+    Outline of rationale:
+
+    We observe that if there exists a repunit that is divisible
+    by an integer k, then the smallest such repunit must have
+    a length that does not exceed k. This can be seen by finding
+    the remainder on division by k as we build up the repunit
+    adding one 1 at a time. At each stage, we can calculate
+    the value by multiplying the value for the previous repunit
+    by 10 and adding 1, then taking the modulus. Thus, the
+    value of a repunit can be calculated solely from the repunit
+    with one fewer digit. Suppose the value calculated has been
+    seen before. Then this will give rise to an infinite cycle.
+    Thus, if the value 0 occurs in any of the repunits, then
+    there can be no repeated values for the remainder among all
+    of the repunits smaller than it. As there are only (k - 1)
+    other possible remainders, this implies that if any of the
+    repunits have remainder 0 on division by k (and thus the
+    repunit is divisible by k) then the first such occurrence
+    must be for a repunit of length no greater than k.
+    """
+    since = time.time()
+    num = target_repunit_length
+    while True:
+        if findSmallestRepunitDivisibleByK(num, base=base) >= target_repunit_length:
+            break
+        num += 1
+    print(f"Time taken = {time.time() - since:.4f} seconds")
+    return num
 
 if __name__ == "__main__":
-    to_evaluate = {128}
+    to_evaluate = {129}
 
     if not to_evaluate or 101 in to_evaluate:
         res = optimumPolynomial(((1, -1, 1, -1, 1, -1, 1, -1, 1, -1, 1)))
@@ -2848,5 +2966,8 @@ if __name__ == "__main__":
 
     if not to_evaluate or 128 in to_evaluate:
         res = hexagonalTileDifferences(sequence_number=2000)
-        print(f"Solution to Project Euler #127 = {res}")
-        
+        print(f"Solution to Project Euler #128 = {res}")
+    
+    if not to_evaluate or 129 in to_evaluate:
+        res = repunitDivisibility(target_repunit_length=1000000, base=10)
+        print(f"Solution to Project Euler #129 = {res}")
