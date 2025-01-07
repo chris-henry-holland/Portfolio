@@ -2517,13 +2517,36 @@ def cuboidLayers(target_layer_size_count: int=1000, step_size: int=10000) -> int
 # Problem 127
 def abcHits(c_max: int=199999) -> int:
     """
+    Solution to Project Euler #127
+
+    Consider strictly positive integers a, b and c such that
+     1) a + b = c
+     2) gcd(a, b) = 1, gcd(a, c) = 1 and gcd(b, c) = 1
+     3) a < b
     
-    Note that if a + b = c and gcd(a, b) = 1 then gcd(a, c) = 1
-    and gcd(b, c) = 1 and rad(abc) = rad(a) * rad(b) * rad(c).
+    Find the sum of the values of c for all such combinations
+    for which c is no greater than c_max and the radical of
+    the product of a, b and c is strictly less than c.
+
+    The radical of a non-negative integer is the product of
+    its unique prime factors (for the multiplicative identity
+    1, it is defined to be 1).
+
+    Args:
+        Optional named
+        c_max (int): The largest value of c for the a, b, c
+                combinations considered.
+            Default: 199999
+    
+    Returns:
+    Integer (int) giving the sum over the c values for all
+    unique a, b, c combinations that satisfy all of the
+    described properties.
     """
     since = time.time()
 
-    
+    # Note that if a + b = c and gcd(b, c) = 1 then gcd(a, c) = 1
+    # and gcd(a, b) = 1 and rad(abc) = rad(a) * rad(b) * rad(c).
 
     def radical(p_facts: List[int]) -> int:
         res = 1
@@ -2560,47 +2583,6 @@ def abcHits(c_max: int=199999) -> int:
         #b_facts = ps.primeFactors(b)
         if radicals[b] <= rad_ab_mx:
             res += c
-        """
-        #b_sieve = [True] * c
-        #for p in c_facts:
-        #    start = ((((c - 1) >> 1) // p) + 1) * p
-        #    for i in range(start, c, p):
-        #        b_sieve[i] = False
-        
-        # If c is even then both a and b must be odd
-        if c & 1:
-            rng = ((c + 1) >> 1, c - 1)
-        else:
-            start = (c + 1) >> 1
-            if not start & 1: start += 1
-            rng = (start, c - 1, 2)
-        for b in range(*rng):
-            #if not b_sieve[b]: continue
-            rad_b = radicals[b]
-            if rad_b > rad_b_mx or gcd(rad_b, rad_c) != 1: continue
-            #b_facts = ps.primeFactors(b)
-            #rad_b = radical(b_facts)
-            a = c - b
-            #a_facts = ps.primeFactors(a)
-            if radicals[a] * rad_b <= rad_ab_mx:
-                res += c
-        b = c - 1
-        #b_facts = ps.primeFactors(b)
-        if radicals[b] <= rad_ab_mx:
-            res += c
-        """
-        """
-        a_sieve = [True] * b
-        for p in b_facts:
-            for i in range(p, b, p):
-                a_sieve[i] = False
-        for a in range(1, min(b, c_max - b + 1)):
-            if not a_sieve[a]: continue
-            a_facts = ps.primeFactors(a)
-            c = a + b
-            c_facts = ps.primeFactors(c)
-            res += radical(a_facts) * rad_b * radical(c_facts) < c
-        """
     print(f"Time taken = {time.time() - since:.4f} seconds")
     return res
     
