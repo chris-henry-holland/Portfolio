@@ -2945,8 +2945,101 @@ def repunitDivisibility(target_repunit_length: int=1000000, base: int=10) -> int
     print(f"Time taken = {time.time() - since:.4f} seconds")
     return num
 
+def compositesWithPrimeRepunitProperty(n_smallest: int, base: int=10) -> List[int]:
+    """
+    For a given base, finds the n_smallest smallest composite
+    integers such that for each such integer, the smallest repunit
+    in that base divisible by the integer exists and the number of
+    digits it contains in the chosen base exactly divides one less
+    than the integer.
+
+    A composite integer is a strictly positive integer such that
+    there exists a prime number that exactly divides it that is not
+    equal to that integer. 
+
+    In a given base, a repunit of length n (where n is strictly
+    positive) is the strictly positive integer that when
+    expressed in the chosen base is the concatenation of
+    n 1s. For instance, the repunit of length 3 for base 10
+    is 111 and the repunit of length 4 for base 2 is
+    15 (which, when expressed in base 2 i.e. binary is 1111).
+
+    Args:
+        Required positional:
+        n_smallest (int): The number of integers with the described
+                property to be found.
+        
+        Optional named:
+        base (int): The base in which the repunits are expressed.
+            Default: 10
+    
+    Returns:
+    List of integers (int) giving the smallest n_smallest composite
+    integers with the described property in strictly increasing
+    order.
+    """
+
+    ps = PrimeSPFsieve()
+    p_gen = ps.endlessPrimeGenerator()
+    p0 = 2
+    res = []
+    for p in p_gen:
+        #print(p0, p)
+        for i in range(p0 + 1, p):
+            val = findSmallestRepunitDivisibleByK(i, base=base)
+            if val > 0 and not (i - 1) % val:
+                res.append(i)
+                if len(res) == n_smallest: break
+        else:
+            p0 = p
+            continue
+        break
+    print(res)
+    return res
+
+
+def sumCompositesWithPrimeRepunitProperty(n_to_sum=25, base: int=10) -> List[int]:
+    """
+    Solution to Project Euler #130
+    
+    For a given base, finds sum of the n_to_sum smallest composite
+    integers such that for each such integer, the smallest repunit
+    in that base divisible by the integer exists and the number of
+    digits it contains in the chosen base exactly divides one less
+    than the integer.
+
+    A composite integer is a strictly positive integer such that
+    there exists a prime number that exactly divides it that is not
+    equal to that integer. 
+
+    In a given base, a repunit of length n (where n is strictly
+    positive) is the strictly positive integer that when
+    expressed in the chosen base is the concatenation of
+    n 1s. For instance, the repunit of length 3 for base 10
+    is 111 and the repunit of length 4 for base 2 is
+    15 (which, when expressed in base 2 i.e. binary is 1111).
+
+    Args:
+        Required positional:
+        n_to_sum (int): The number of integers with the described
+                property to be included in the sum.
+        
+        Optional named:
+        base (int): The base in which the repunits are expressed.
+            Default: 10
+    
+    Returns:
+    Integer (int) giving the sum of the smallest n_to_sum composite
+    integers with the described property in strictly increasing
+    order.
+    """
+    since = time.time()
+    res = sum(compositesWithPrimeRepunitProperty(n_to_sum, base=base))
+    print(f"Time taken = {time.time() - since:.4f} seconds")
+    return res
+
 if __name__ == "__main__":
-    to_evaluate = {129}
+    to_evaluate = {130}
 
     if not to_evaluate or 101 in to_evaluate:
         res = optimumPolynomial(((1, -1, 1, -1, 1, -1, 1, -1, 1, -1, 1)))
@@ -3063,3 +3156,7 @@ if __name__ == "__main__":
     if not to_evaluate or 129 in to_evaluate:
         res = repunitDivisibility(target_repunit_length=1000000, base=10)
         print(f"Solution to Project Euler #129 = {res}")
+
+    if not to_evaluate or 130 in to_evaluate:
+        res = sumCompositesWithPrimeRepunitProperty(n_to_sum=25, base=10)
+        print(f"Solution to Project Euler #130 = {res}")
