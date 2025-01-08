@@ -94,6 +94,30 @@ def isqrt(n: int) -> int:
         x1 = (x2 + n // x2) >> 1
     return x2
 
+def integerNthRoot(m: int, n: int) -> int:
+    # Finds the floor of the n:th root of m, using the positive
+    # root in the case that n is even.
+    # Newton-Raphson method
+    if n < 1:
+        raise ValueError("n must be strictly positive")
+    if m < 0:
+        if n & 1:
+            neg = True
+            m = -m
+        else:
+            raise ValueError("m can only be negative if n is odd")
+    else: neg = False
+    if not m: return 0
+    x2 = float("inf")
+    x1 = m
+    while x1 < x2:
+        x2 = x1
+        x1 = ((n - 1) * x2 + m // x2 ** (n - 1)) // n
+    if not neg: return x2
+    if x2 ** n < m:
+        x2 += 1
+    return -x2
+
 def addFractions(frac1: Tuple[int, int], frac2: Tuple[int, int]) -> Tuple[int, int]:
     """
     Finds the sum of two fractions in lowest terms (i.e. such that
@@ -3020,8 +3044,145 @@ def sumCompositesWithPrimeRepunitProperty(n_to_sum=25, base: int=10) -> List[int
     print(f"Time taken = {time.time() - since:.4f} seconds")
     return res
 
+# Problem 131
+def findPrimeCubePartnerships(p_max: int) -> List[Tuple[int, int]]:
+    """
+    
+
+    Outline of rationale:
+
+    We can factor n^3 + n^2 * p to get:
+        n^2 * (n + p)
+    Given that p is prime, n is either coprime with p or a
+    multiple of p. If n is a multiple of p then n = a * p
+    for some strictly positive integer a. Then the expression
+    becomes:
+        a^2 * (a + 1) * p^3
+    For this to be a perfect cube, a^2 * (a + 1) must be
+    a perfect cube. For a^2 to be a perfect cube, a must be a
+    perfect cube. Since they differ by 1, a and (a + 1) are
+    coprime, for a^2 * (a + 1) to be a perfect cube, both
+    a and (a + 1) must be perfect cubes. Since there are no
+    two strictly positive consecutive cubes that differ by
+    1 this is not possible and we have a contradiction.
+    Therefore, n^3 + n^2 * p cannot be a perfect cube if
+    n is a multiple of p.
+
+    Consequently, n and p must be coprime. In that case, n
+    and (n + p) are coprime, so for n^2 * (n + p) to be a
+    perfect cube both n and (n + p) must be perfect cubes.
+    Then since n and p are strictly positive integers, there
+    exist strictly positive integer n = a^3 and (n + p) = b^3.
+    Note that since p is strictly positive, b is strictly
+    greater than a, This means that in terms of a and b:
+        p = b^3 - a^3 = (b - a) * (a^2 + a * b + b^2)
+    Now, since a and b are strictly positive and b is strictly
+    greater than a, (a^2 + a * b + b^2) is an integer strictly
+    greater than 1 and (b - a) is a strictly positive integer.
+    Therefore, in order for p to be prime, (b - a) must equal
+    1. Thus, n and (n + p) must be consecutive perfect cubes.
+    
+    Conversely, consider two strictly positive consecutive cubes
+    whose difference is prime, a and (a + 1). Let n = a^3 and
+    p = (a + 1)^3 - a^3. Then:
+        n^2 * (n + p) = a^6 * (a + 1)^3 = (a^2 * (a + 1))^3
+    which is a perfect cube. Therefore, there is a one-to-one
+    correspondence between the values of strictly positive
+    integer n and prime p pairs such that (n^3 + n^2 * p) and
+    consecutive perfect cubes a^3 and (a + 1)^3 pairs that
+    differ by a prime number (where a is a strictly positive
+    integer), linked by the relations:
+        n = a^3, p = (a + 1)^3 - a^3
+    
+    We are therefore searching for positive integer a and
+    prime p no greater than p_max pairs such that:
+        (a + 1)^3 - a^3 - p = 0
+        3 * a^2 + 3 * a - (p - 1) = 0
+    Solving this in terms of a, we get the discriminant:
+        12 * p - 3
+    To get an integer solution for a, this must be a square.
+    Since p is an integer, (12 * p - 3) is divisible by 3,
+    so if this is a square then the square root must also
+    be divisible by 3, so (12 * p - 3) is divisible by 3^2 = 9.
+    Therefore, for a prime p a solution exists as long as:
+        (4 * p - 1) / 3
+    is a perfect square. Thus, p can only be part of a solution
+    if there exists an integer d such that:
+        d^2 = (4 * p - 1) / 3
+    which can be rearranged to get:
+        p = (3 * d^2 + 1) / 4
+    and which in such a case, by finding the solution to the
+    quadratic we find:
+        a = (-3 +/- 3 * d) / 6
+    Since a must be positive and the negative branch always gives
+    a negative answer, we must choose the positive branch, which
+    gives the only possible n to give a solution with this p (as
+    long as this is an integer):
+        n = ((d - 1) / 2)^3
+
+    Conversely, consider a non-negative integer d. If:
+        p = (3 * d^2 + 1) / 4
+    is a prime integer, and we let n = ((d - 1) / 2)^3, then
+        n^2 * (n + p) = n^2 * (d^3 - 3 * d^2 + 3 * d - 1 + 6 * d^2 + 2) / 8
+                      = n^2 * (d^3 + 3 * d^2 + 3 * d + 1) / 8
+                      = (((d - 1) / 2) * ((d + 1) / 2)) ^ 3
+    Note that for p to be an integer, (3 * d^2 + 1) must be
+    divisible by 4 and so d must be odd, which also guarantees
+    that (d - 1) and (d + 1) are even, so n is an integer and
+    n^2 * (n + p) is a perfect cube.
+
+    Consequently, all (p, n) pairs for prime p and strictly positive
+    integer n for which n^3 + n^2 * p is a perfect cube have a
+    one-to-one correspondence with the odd positive integers d,
+    where (3 * d^2 + 1) / 4 is a prime number, where the
+    corresponding (p, n) pair to such a value of d is:
+        (3 * d^2 + 1) / 4, ((d - 1) / 2)^3)
+
+    Therefore, given that increasing d gives increasing p, we can
+    find all possible solutions with p <= p_max by iterating over
+    increasing odd values of d up to and including the floor of the
+    square root of (4 * p_max - 1) divided by 3, choosing those for
+    which p = (3 * d^2 + 1) / 4 is a prime number and adding:
+        ((3 * d^2 + 1) / 4, ((d - 1) / 2)^3)
+    as a (p, n) solution pair for each such value of d.
+    """
+    ps = PrimeSPFsieve(n_max=isqrt(p_max))#n_max=12 * n_max)
+    res = []
+    for d in range(1, isqrt((4 * p_max - 1) // 3) + 1, 2):
+        p, r = divmod(3 * d ** 2 + 1, 4)
+        if not r and ps.isPrime(p, extend_sieve=False, extend_sieve_sqrt=True):
+            res.append((p, ((d - 1) // 2) ** 3))
+    #print(res)
+    return res
+    """
+    ps = PrimeSPFsieve()
+    res = []
+    for p in ps.endlessPrimeGenerator():
+        if p > n_max: break
+        q, r = divmod(4 * p - 1, 3)
+        if r: continue
+        num = q
+        #num = 12 * p - 3
+        #pf = ps.primeFactorisation(num)
+        #if all(not x & 1 for x in pf.values()):
+        #    res.append(p)
+        if isqrt(num) ** 2 == num:
+            res.append(p)
+    print(res)
+    return res
+    """
+
+def primeCubePartnership(p_max: int=999999) -> int:
+    """
+    Solution to Project Euler #131
+    """
+    since = time.time()
+    res = len(findPrimeCubePartnerships(p_max))
+    print(f"Time taken = {time.time() - since:.4f} seconds")
+    return res
+
 if __name__ == "__main__":
-    to_evaluate = {130}
+    to_evaluate = {131}
 
     if not to_evaluate or 101 in to_evaluate:
         res = optimumPolynomial(((1, -1, 1, -1, 1, -1, 1, -1, 1, -1, 1)))
@@ -3142,3 +3303,7 @@ if __name__ == "__main__":
     if not to_evaluate or 130 in to_evaluate:
         res = sumCompositesWithPrimeRepunitProperty(n_to_sum=25, base=10)
         print(f"Solution to Project Euler #130 = {res}")
+    
+    if not to_evaluate or 131 in to_evaluate:
+        res = primeCubePartnership(p_max=999999)
+        print(f"Solution to Project Euler #131 = {res}")
