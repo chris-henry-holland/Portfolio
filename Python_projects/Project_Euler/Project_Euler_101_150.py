@@ -3181,8 +3181,131 @@ def primeCubePartnership(p_max: int=999999) -> int:
     print(f"Time taken = {time.time() - since:.4f} seconds")
     return res
 
+# Problem 132
+"""
+def repunitDivisorCycle(p: int, base: int=10) -> List[int]:
+    res = [0, 1]
+    while res[-1] != 0:
+        res.append((res[-1] * base + 1) % p)
+    res.pop()
+    return res
+"""
+
+def repunitPrimeFactors(n_ones: int, n_p: int, base: int=10) -> List[int]:
+    """
+    Finds the n_p smallest distinct prime factors of the
+    chosen base's repunit of length n_ones.
+
+    In a given base, a repunit of length n (where n is strictly
+    positive) is the strictly positive integer that when
+    expressed in the chosen base is the concatenation of
+    n 1s. For instance, the repunit of length 3 for base 10
+    is 111 and the repunit of length 4 for base 2 is
+    15 (which, when expressed in base 2 i.e. binary is 1111).
+
+    Args:
+        Required positional:
+        n_ones (int): The length of the repunit in the chosen
+                base whose prime factors are being sought.
+        n_p (int): The number of distinct prime factors to
+                be found.
+        
+        Optional named:
+        base (int): The base in which the repunit is expressed,
+                and in which it consists of the concatenation
+                of n_ones ones.
+            Default: 10
+
+    Returns:
+    List of n_p integers (ints), giving the n_p smallest distinct
+    prime factors of the chosen base's repunit of length n_ones
+    in strictly increasing order.
+    """
+    ps = PrimeSPFsieve(base)
+    base_facts = ps.primeFactors(base)
+    mx_base_fact = max(base_facts)
+    p_gen = ps.endlessPrimeGenerator()
+    #print(format(n_ones, "b"))
+
+    def pDividesRepunit(n_ones: int, p: int, base: int=10) -> bool:
+        #print(f"p = {p}")
+        if n_ones == 1: return False
+        res = 0
+        #n_ones >>= 1
+        curr = 1
+        #print(curr, res)
+        base_pow_md = base % p
+        while True:
+            if n_ones & 1:
+                res = (res * base_pow_md + curr) % p
+            n_ones >>= 1
+            if not n_ones: break
+            curr = (curr * (base_pow_md + 1)) % p
+            if not curr: break
+            #print(curr, res)
+            base_pow_md = pow(base_pow_md, 2, p)
+        #print(res)
+        return not res
+    res = []
+    for p in p_gen:
+        if p in base_facts:
+            if p == mx_base_fact: break
+            continue
+        #if n_ones % len(repunitDivisorCycle(p, base=base)): continue
+        if not pDividesRepunit(n_ones, p, base=base): continue
+        res.append(p)
+        #print(len(res), p)
+        if len(res) == n_p:
+            return res
+    for p in p_gen:
+        #if n_ones % len(repunitDivisorCycle(p, base=base)): continue
+        if not pDividesRepunit(n_ones, p, base=base): continue
+        res.append(p)
+        #print(len(res), p)
+        if len(res) == n_p:
+            return res
+    return res
+
+def repunitPrimeFactorsSum(n_ones: int=1000000000, n_p: int=40, base: int=10) -> int:
+    """
+    Solution to Project Euler #132
+
+    Finds the sum of the n_p smallest distinct prime factors of
+    the chosen base's repunit of length n_ones.
+
+    In a given base, a repunit of length n (where n is strictly
+    positive) is the strictly positive integer that when
+    expressed in the chosen base is the concatenation of
+    n 1s. For instance, the repunit of length 3 for base 10
+    is 111 and the repunit of length 4 for base 2 is
+    15 (which, when expressed in base 2 i.e. binary is 1111).
+
+    Args:
+        Required positional:
+        n_ones (int): The length of the repunit in the chosen
+                base whose prime factors are being sought.
+        n_p (int): The number of distinct prime factors to
+                be found.
+        
+        Optional named:
+        base (int): The base in which the repunit is expressed,
+                and in which it consists of the concatenation
+                of n_ones ones.
+            Default: 10
+
+    Returns:
+    Integer (int), giving the sum of the n_p smallest distinct
+    prime factors of the chosen base's repunit of length n_ones.
+    """
+    since = time.time()
+    p_lst = repunitPrimeFactors(n_ones, n_p, base=base)
+    #print(p_lst)
+    res = sum(p_lst)
+    print(f"Time taken = {time.time() - since:.4f} seconds")
+    return res
+
 if __name__ == "__main__":
-    to_evaluate = {131}
+    to_evaluate = {132}
 
     if not to_evaluate or 101 in to_evaluate:
         res = optimumPolynomial(((1, -1, 1, -1, 1, -1, 1, -1, 1, -1, 1)))
@@ -3305,5 +3428,9 @@ if __name__ == "__main__":
         print(f"Solution to Project Euler #130 = {res}")
     
     if not to_evaluate or 131 in to_evaluate:
-        res = primeCubePartnership(p_max=999999)
+        res = primeCubePartnership(p_max=999_999)
         print(f"Solution to Project Euler #131 = {res}")
+    
+    if not to_evaluate or 132 in to_evaluate:
+        res = repunitPrimeFactorsSum(n_ones=1_000_000_000, n_p=40, base=10) 
+        print(f"Solution to Project Euler #132 = {res}")
