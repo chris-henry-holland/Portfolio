@@ -5,6 +5,103 @@ from typing import List, Union
 
 Real = Union[int, float]
 
+def extendedEuclideanAlgorithm(a: int, b: int) -> Tuple[int, Tuple[int, int]]:
+    """
+    Implementation of the extended Euclidean Algorithm to find the
+    greatest common divisor (gcd) of integers a and b and finds an
+    ordered pair of integers (m, n) such that:
+        m * a + n * b = gcd(a, b)
+    
+    Args:
+        Required positional:
+        a (int): The first of the integers on which the extended
+                Euclidean Algorithm is to be applied
+        b (int): The second of the integers on which the extended
+                Euclidan Algorithm is to be applied
+    
+    Returns:
+    2-tuple whose index 0 contains a non-negative integer giving
+    the greatest common divisor (gcd) of a and b, and whose
+    index 1 contains a 2-tuple of integers, giving an ordered
+    pair of integers (m, n) such that:
+        m * a + n * b = gcd(a, b)
+    """
+    if b > a:
+        swapped = True
+        a, b = b, a
+    else: swapped = False
+    q_stk = []
+    curr = [a, b]
+    while True:
+        q, r = divmod(*curr)
+        if not r: break
+        q_stk.append(q)
+        curr = [curr[1], r]
+
+    g = curr[1]
+    mn_pair = [0, 1]
+    while q_stk:
+        q = q_stk.pop()
+        mn_pair = [mn_pair[1], mn_pair[0] + mn_pair[1] * (-q)]
+    if swapped: mn_pair = mn_pair[::-1]
+    return (g, tuple(mn_pair))
+
+def solveLinearCongruence(a: int, b: int, md: int) -> int:
+    """
+    Finds the smallest non-negative integer k such that solves
+    the linear congruence:
+        k * a = b (mod md)
+    if such a value exists.
+
+    A congruence relation for two integers m and n over a given
+    modulus md:
+        m = n (mod md)
+    is a relation such that there exists an integer q such that:
+        m + q * md = n
+    
+    Args:
+        Required positional:
+        a (int): Integer specifying the value of a in the above
+                congruence to be solved for k.
+        b (int): Integer specifying the value of b in the above
+                linear congruence to be solved for k.
+        md (int): Strictly positive integer specifying the
+                modulus of the congruence (i.e. the value md in
+                the linear congruence to be solved for k)
+        
+    Returns:
+    Integer (int) giving the smallest non-negative integer value
+    of k for which the linear congruence:
+        k * a = b (mod md)
+    is true if any such value exists, otherwise -1.
+
+    Outline of method:
+    Solves by first using the extended Euclidean algorithm to
+    find the greatest common divisor (gcd) of a and md and
+    an integer pair (m, n) for which:
+        m * a + n * md = gcd(a, md)
+    This implies the congruence:
+        m * a = gcd(a, md) (mod md)
+    If gcd(a, md) does not divide b then the linear congruence
+    has no solution, as any linear combination of a and md with
+    integer coefficients is a multiple of gcd(a, md). Otherwise,
+    a solution to the linear congruence is:
+        k = m * (b / gcd(a, md))
+    A known property of linear congruences is that if there
+    exists a solution, then any other integer is a solution
+    if and only if it is congruent to the known solution under
+    the chosen modulus.
+    Therefore, to find the smallest non-negative such value,
+    we take the smallest non-negative integer to which this
+    value is congruent modulo md (which in Python can be found
+    using k % md).
+    """
+    a %= md
+    g, (m, n) = extendedEuclideanAlgorithm(a, md)
+    b %= md
+    q, r = divmod(b, g)
+    return -1 if r else (q * m) % md
+
 def nthRoot(a: Real, b: int, eps: Real=1e-5) -> Real:
     """
     Finds the non-negative real b:th root of a (a^(1/b)) to a given

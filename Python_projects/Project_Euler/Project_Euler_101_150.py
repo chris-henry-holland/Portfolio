@@ -3182,15 +3182,6 @@ def primeCubePartnership(p_max: int=999999) -> int:
     return res
 
 # Problem 132
-"""
-def repunitDivisorCycle(p: int, base: int=10) -> List[int]:
-    res = [0, 1]
-    while res[-1] != 0:
-        res.append((res[-1] * base + 1) % p)
-    res.pop()
-    return res
-"""
-
 def repunitPrimeFactors(n_ones: int, n_p: int, base: int=10) -> List[int]:
     """
     Finds the n_p smallest distinct prime factors of the
@@ -3304,8 +3295,310 @@ def repunitPrimeFactorsSum(n_ones: int=1000000000, n_p: int=40, base: int=10) ->
     print(f"Time taken = {time.time() - since:.4f} seconds")
     return res
 
+# Problem 133
+"""
+def repunitDivisorCycle(p: int, base: int=10) -> List[int]:
+    res = [0, 1]
+    while res[-1] != 0:
+        res.append((res[-1] * base + 1) % p)
+    res.pop()
+    return res
+"""
+
+def repunitPowBaseNonFactors(p_max: int, base: int=10) -> List[int]:
+    """
+    Finds the primes not exceeding p_max that do not divide any
+    of the chosen base's repunits with length base^n for any
+    non-negative integer n.
+
+    In a given base, a repunit of length n (where n is strictly
+    positive) is the strictly positive integer that when
+    expressed in the chosen base is the concatenation of
+    n 1s. For instance, the repunit of length 3 for base 10
+    is 111 and the repunit of length 4 for base 2 is
+    15 (which, when expressed in base 2 i.e. binary is 1111).
+
+    Args:
+        Required positional:
+        p_max (int): The largest possible value of the prime
+                numbers considered.
+        
+        Optional named:
+        base (int): The base in which the repunit is expressed,
+                and in which it consists of the concatenation
+                of n_ones ones.
+            Default: 10
+
+    Returns:
+    List of integers (ints), giving the prime numbers no greater
+    than p_max that do not divide any of the chosen base's repunits
+    with length base^n for any non-negative integer n, in strictly
+    increasing order.
+    """
+    ps = PrimeSPFsieve()
+    base_facts = set(ps.primeFactors(base))
+    res = []
+    for p in ps.endlessPrimeGenerator():
+        if p > p_max: break
+        elif p in base_facts:
+            res.append(p)
+            continue
+        #cycle_len = len(repunitDivisorCycle(p, base=base))
+        cycle_len = findSmallestRepunitDivisibleByK(p, base=base)
+        p_facts = set(ps.primeFactors(cycle_len))
+        if not p_facts.issubset(base_facts):
+            res.append(p)
+        else:
+            print(p)
+    return res
+
+def repunitPowBaseNonFactorsSum(p_max: int=99_999, base: int=10) -> List[int]:
+    """
+    Finds the sum of all prime numbers not exceeding p_max that
+    do not divide any of the chosen base's repunits with length
+    base^n for any non-negative integer n.
+
+    In a given base, a repunit of length n (where n is strictly
+    positive) is the strictly positive integer that when
+    expressed in the chosen base is the concatenation of
+    n 1s. For instance, the repunit of length 3 for base 10
+    is 111 and the repunit of length 4 for base 2 is
+    15 (which, when expressed in base 2 i.e. binary is 1111).
+
+    Args:
+        Optional named:
+        p_max (int): The largest possible value of the prime
+                numbers included in the sum.
+            Default: 10^5 - 1
+        base (int): The base in which the repunit is expressed,
+                and in which it consists of the concatenation
+                of n_ones ones.
+            Default: 10
+
+    Returns:
+    Integer (int), giving sum over the prime numbers no greater
+    than p_max that do not divide any of the chosen base's repunits
+    with length base^n for any non-negative integer n.
+    """
+    since = time.time()
+    repunit_nonfactors = repunitPowBaseNonFactors(p_max, base=10)
+    print(repunit_nonfactors)
+    res = sum(repunit_nonfactors)
+    print(f"Time taken = {time.time() - since:.4f} seconds")
+    return res
+
+# Problem 134
+def extendedEuclideanAlgorithm(a: int, b: int) -> Tuple[int, Tuple[int, int]]:
+    """
+    Implementation of the extended Euclidean Algorithm to find the
+    greatest common divisor (gcd) of integers a and b and finds an
+    ordered pair of integers (m, n) such that:
+        m * a + n * b = gcd(a, b)
+    
+    Args:
+        Required positional:
+        a (int): The first of the integers on which the extended
+                Euclidean Algorithm is to be applied
+        b (int): The second of the integers on which the extended
+                Euclidan Algorithm is to be applied
+    
+    Returns:
+    2-tuple whose index 0 contains a non-negative integer giving
+    the greatest common divisor (gcd) of a and b, and whose
+    index 1 contains a 2-tuple of integers, giving an ordered
+    pair of integers (m, n) such that:
+        m * a + n * b = gcd(a, b)
+    """
+    if b > a:
+        swapped = True
+        a, b = b, a
+    else: swapped = False
+    #print(a, b)
+    q_stk = []
+    curr = [a, b]
+    while True:
+        q, r = divmod(*curr)
+        if not r: break
+        q_stk.append(q)
+        curr = [curr[1], r]
+    #if not q_stk:
+
+    g = curr[1]
+    mn_pair = [0, 1]
+    #print(mn_pair)
+    #qr_pair = qr_pair_stk.pop()
+    while q_stk:
+        q = q_stk.pop()
+        mn_pair = [mn_pair[1], mn_pair[0] + mn_pair[1] * (-q)]
+        #print(mn_pair)
+    #print(mn_pair[0] * a + mn_pair[1] * b, g)
+    if swapped: mn_pair = mn_pair[::-1]
+    return (g, tuple(mn_pair))
+
+def solveLinearCongruence(a: int, b: int, md: int) -> int:
+    """
+    Finds the smallest non-negative integer k such that solves
+    the linear congruence:
+        k * a = b (mod md)
+    if such a value exists.
+
+    A congruence relation for two integers m and n over a given
+    modulus md:
+        m = n (mod md)
+    is a relation such that there exists an integer q such that:
+        m + q * md = n
+    
+    Args:
+        Required positional:
+        a (int): Integer specifying the value of a in the above
+                congruence to be solved for k.
+        b (int): Integer specifying the value of b in the above
+                linear congruence to be solved for k.
+        md (int): Strictly positive integer specifying the
+                modulus of the congruence (i.e. the value md in
+                the linear congruence to be solved for k)
+        
+    Returns:
+    Integer (int) giving the smallest non-negative integer value
+    of k for which the linear congruence:
+        k * a = b (mod md)
+    is true if any such value exists, otherwise -1.
+
+    Outline of method:
+    Solves by first using the extended Euclidean algorithm to
+    find the greatest common divisor (gcd) of a and md and
+    an integer pair (m, n) for which:
+        m * a + n * md = gcd(a, md)
+    This implies the congruence:
+        m * a = gcd(a, md) (mod md)
+    If gcd(a, md) does not divide b then the linear congruence
+    has no solution, as any linear combination of a and md with
+    integer coefficients is a multiple of gcd(a, md). Otherwise,
+    a solution to the linear congruence is:
+        k = m * (b / gcd(a, md))
+    A known property of linear congruences is that if there
+    exists a solution, then any other integer is a solution
+    if and only if it is congruent to the known solution under
+    the chosen modulus.
+    Therefore, to find the smallest non-negative such value,
+    we take the smallest non-negative integer to which this
+    value is congruent modulo md (which in Python can be found
+    using k % md).
+    """
+    a %= md
+    g, (m, n) = extendedEuclideanAlgorithm(a, md)
+    #print(m, n, g)
+    b %= md
+    q, r = divmod(b, g)
+    return -1 if r else (q * m) % md
+
+def primeConnection(p1: int, p2: int, base: int=10) -> int:
+    """
+    For two prime number p1 and p2, finds the smallest positive
+    multiple of p2 which, when expressed in the chosen
+    base, contains the expression of p1 in than base (without
+    leading zeroes) as a suffix, if such a value exists.
+
+    Args:
+        Required positional:
+        p1 (int): Prime number whose representation in the
+                chosen base (without leading zeroes) should
+                be a suffix of the returned value when expressed
+                in the chosen base.
+        p2 (int): Prime number which the solution must divide.
+
+        Optional named:
+        base (int): The base in which the solution and p2 are
+                to be expressed when assessing whether the
+                representation of p2 is a suffix of the
+                representation of the solution.
+            Default: 10
+    
+    Returns:
+    Integer (int) giving the smallest positive multiple of
+    p2 such that when expressed in the chosen base, the
+    representation of p1 in that base without losing zeros
+    is one of its suffixes, if such a value exists, otherwise
+    -1.
+    
+    Outine of rationale:
+    We can identify the solution by finding the smallest
+    non-negative integer k that is a multiple of p2 and:
+        k * p2 = p1 (mod base ** n_dig1)
+    where n_dig1 is the number of digits without leading zeros
+    in the representation of p1 in the chosen base. This is
+    a linear congruence and can be solved via the extended
+    Euclidean algorithm (see solveLinearCongruence() and
+    extendedEuclideanAlgorithm()) as long as gcd(p2, base * n_dig1)
+    divides p1 (which is guaranteed if p2 is larger than
+    the largest prime factor of base), otherwise there
+    is no solution.
+    """
+    p1_n_dig = 0
+    p1_2 = p1
+    md = 1
+    while p1_2:
+        p1_n_dig += 1
+        p1_2 //= base
+        md *= base
+    #print(p1, p2, md)
+    cong_sol = solveLinearCongruence(p2, p1, md)
+    return -1 if cong_sol == -1 else cong_sol * p2
+
+def primePairConnectionsSum(p1_min: int=5, p1_max: int=1_000_000, base: int=10) -> int:
+    """
+    Solution to Project Euler #134
+
+    Finds the sum over all pairs of consecutive primes p1 and
+    p2 (where p2 is the larger) with p1_min <= p1 <= p1_max of
+    the smallest positive multiple of p2 which, when expressed
+    in the chosen base, contains the expression of p1 in than
+    base (without leading zeroes) as a suffix, if such a value
+    exists (otherwise the term is 0).
+
+    Args:
+        Optional named:
+        p1_min (int): The smallest possible value of p1 among
+                the pairs of primes included in the sum.
+            Default: 5
+        p1_max (int): The largest possible value of p1 among
+                the pairs of primes included in the sum.
+            Default: 10^6
+        base (int): The base in which for each (p1, p2) pair
+                the sum term and p2 are to be expressed when
+                assessing whether the representation of p2 is
+                a suffix of the representation of the sum term.
+            Default: 10
+    
+    Returns:
+    Integer (int) giving the sum over all the pairs of
+    consecutive primes p1, p2 (where p2 is the larger) with
+    p1_min <= p1 <= p1_max of the smallest positive multiple of
+    p2 which, when expressed in the chosen base, contains the
+    expression of p1 in than base (without leading zeroes) as
+    a suffix, if such a value exists (otherwise the term is 0).
+    """
+    since = time.time()
+    if p1_min > p1_max:
+        print(f"Time taken = {time.time() - since:.4f} seconds")
+        return 0
+    ps = PrimeSPFsieve()
+    p_gen = ps.endlessPrimeGenerator()
+    
+    for p in p_gen:
+        if p >= p1_min: break
+    res = 0
+    p1 = p
+    for p2 in p_gen:
+        if p1 > p1_max: break
+        connect = primeConnection(p1, p2, base=base)
+        res += 0 if connect == -1 else connect
+        p1 = p2
+    print(f"Time taken = {time.time() - since:.4f} seconds")
+    return res
+
 if __name__ == "__main__":
-    to_evaluate = {132}
+    to_evaluate = {134}
 
     if not to_evaluate or 101 in to_evaluate:
         res = optimumPolynomial(((1, -1, 1, -1, 1, -1, 1, -1, 1, -1, 1)))
@@ -3434,3 +3727,11 @@ if __name__ == "__main__":
     if not to_evaluate or 132 in to_evaluate:
         res = repunitPrimeFactorsSum(n_ones=1_000_000_000, n_p=40, base=10) 
         print(f"Solution to Project Euler #132 = {res}")
+
+    if not to_evaluate or 133 in to_evaluate:
+        res = repunitPowBaseNonFactorsSum(p_max=99_999, base=10)
+        print(f"Solution to Project Euler #133 = {res}")
+    
+    if not to_evaluate or 134 in to_evaluate:
+        res = primePairConnectionsSum(p1_min=5, p1_max=1_000_000, base=10)
+        print(f"Solution to Project Euler #134 = {res}")
