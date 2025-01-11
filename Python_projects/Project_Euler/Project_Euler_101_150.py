@@ -3597,8 +3597,108 @@ def primePairConnectionsSum(p1_min: int=5, p1_max: int=1_000_000, base: int=10) 
     print(f"Time taken = {time.time() - since:.4f} seconds")
     return res
 
+# Problem 135
+def sameDifferences(n_max: int=999_999, target_count: int=10) -> int:
+    """
+    Solution to Project Euler #135
+
+    Finds the number of strictly positive integers no greater than
+    n_max for which there are exactly target_count distinct
+    integer triples (a, b, c) such that:
+     1) a, b and c are strictly positive
+     2) a, b and c form an arithmetic progression (i.e. a - b = b - c)
+     3) a^2 - b^2 - c^2 = n (where n is the integer in question)
+    
+    Args:
+        Optional named:
+        n_max (int): Strictly positive integer giving the largest
+                value of n considered for the count.
+            Default: 10^6 - 1
+        target_count (int): Non-negative integer giving the exact
+                number of distinct (a, b, c) triples there exists
+                for a given integer n for it to be included in the
+                count.
+            Default: 10
+    
+    Returns:
+    The number of strictly positive integers no greater than n_max
+    such that there exists exactly target_count distinct positive
+    integer triples that satisfy all of the stated conditions.
+    """
+    since = time.time()
+    counts = {}
+    rng = [float("inf"), -float("inf")]
+    for a in range(1, n_max + 1):
+        for b in range((a >> 2) + 1, min(a, (((n_max // a) + a) >> 2) + 1)):
+            num = a * (4 * b - a)
+            rng[0] = min(rng[0], num)
+            rng[1] = max(rng[1], num)
+            counts[num] = counts.get(num, 0) + 1
+    #print(counts)
+    #print(rng)
+    res = []
+    for k, v in counts.items():
+        if v != target_count: continue
+        res.append(k)
+    #print(sorted(res))
+    #res.sort()
+    #print([x >> 2 for x in res if not x & 3])
+    #print([x >> 4 for x in res if not x & 15])
+    #print([x >> 5 for x in res if not x & 31])
+    #print([x for x in res if x & 1])
+    #res = sum(x for x in counts.values() if x == target_count)
+    print(f"Time taken = {time.time() - since:.4f} seconds")
+    return len(res)
+
+def singletonDifferences(n_max: int=49_999_999) -> int:
+    """
+    Solution to Project Euler #136
+
+    Finds the number of strictly positive integers no greater than
+    n_max for which there is one and only one  integer triple
+    (a, b, c) such that:
+     1) a, b and c are strictly positive
+     2) a, b and c form an arithmetic progression (i.e. a - b = b - c)
+     3) a^2 - b^2 - c^2 = n (where n is the integer in question)
+    
+    Args:
+        Optional named:
+        n_max (int): Strictly positive integer giving the largest
+                value of n considered for the count.
+            Default: 10^6 - 1
+    
+    Returns:
+    The number of strictly positive integers no greater than n_max
+    such that there exists one and only one positive integer triples
+    that satisfies all of the stated conditions.
+
+    Outline of rationale:
+    Empirically, it appears that n has a unique solution
+    if and only if:
+     1) n is a prime congruent to 3 modulo 4
+     2) n is 1 or an odd prime multiplied by 4 or 16
+    TODO- prove this
+    """
+    since = time.time()
+    ps = PrimeSPFsieve(n_max=n_max)
+    print("finished creating prime sieve")
+    res = 0
+    if n_max >= 4:
+        res += 1
+        if n_max >= 16: res += 1
+    #next(p_gen)
+    for p in ps.p_lst[1:]:
+        if p > n_max: break
+        if p & 3 == 3: res += 1
+        if 4 * p <= n_max:
+            res += 1
+            if 16 * p <= n_max:
+                res += 1
+    print(f"Time taken = {time.time() - since:.4f} seconds")
+    return res
+
 if __name__ == "__main__":
-    to_evaluate = {134}
+    to_evaluate = {136}
 
     if not to_evaluate or 101 in to_evaluate:
         res = optimumPolynomial(((1, -1, 1, -1, 1, -1, 1, -1, 1, -1, 1)))
@@ -3735,3 +3835,11 @@ if __name__ == "__main__":
     if not to_evaluate or 134 in to_evaluate:
         res = primePairConnectionsSum(p1_min=5, p1_max=1_000_000, base=10)
         print(f"Solution to Project Euler #134 = {res}")
+    
+    if not to_evaluate or 135 in to_evaluate:
+        res = sameDifferences(n_max=999_999, target_count=10)
+        print(f"Solution to Project Euler #135 = {res}")
+
+    if not to_evaluate or 136 in to_evaluate:
+        res = singletonDifferences(n_max=49_999_999)
+        print(f"Solution to Project Euler #136 = {res}")
