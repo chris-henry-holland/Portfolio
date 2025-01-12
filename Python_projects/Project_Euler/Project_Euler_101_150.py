@@ -20,6 +20,7 @@ sys.path.append(os.path.join(os.path.dirname(__file__), "../Algorithms_and_Datas
 sys.path.append(os.path.join(os.path.dirname(__file__), "../Algorithms_and_Datastructures/Data_structures"))
 from prime_sieves import PrimeSPFsieve
 from addition_chains import AdditionChainCalculator
+from continued_fractions_and_Pell_equations import generalisedPellSolutionGenerator
 
 def gcd(a: int, b: int) -> int:
     """
@@ -3697,8 +3698,49 @@ def singletonDifferences(n_max: int=49_999_999) -> int:
     print(f"Time taken = {time.time() - since:.4f} seconds")
     return res
 
+# Problem 137
+def modifiedFibonacciGoldenNuggetsList(n_nuggets: int, G0: int=0, G1: int=1) -> List[int]:
+
+    # x ** 2 - D * y ** 2 = n
+    res = []
+    r = G1 + 2 * G0
+    r_md = r % 5
+    d = 4 * (G0 ** 2 + G0 * G1 - G1 ** 2)
+    for (x, y) in generalisedPellSolutionGenerator(5, d, excl_trivial=False):
+        #print((x, y))
+        if x <= r or x % 5 != r_md: continue
+        res.append((x - r) // 5)
+        #print((x - 1) // 5)
+        if len(res) >= n_nuggets: break
+    return res
+
+def modifiedFibonacciGoldenNugget(nugget_number: int=15, G1: int=1, G2: int=1) -> int:
+    """
+    Solution to Project Euler #137
+    """
+    since = time.time()
+    G0 = G2 - G1
+    res = modifiedFibonacciGoldenNuggetsList(nugget_number, G0=G0, G1=G1)
+    print(res)
+    print(f"Time taken = {time.time() - since:.4f} seconds")
+    return res[-1]
+
+# Problem 140
+def modifiedFibonacciGoldenNuggetSum(n_nugget_numbers: int=30, G1: int=1, G2: int=4) -> int:
+    """
+    Solution to Project Euler #140
+    """
+    since = time.time()
+    G0 = G2 - G1
+    lst = modifiedFibonacciGoldenNuggetsList(n_nugget_numbers, G0=G0, G1=G1)
+    res = sum(lst)
+    print(lst)
+    print(res)
+    print(f"Time taken = {time.time() - since:.4f} seconds")
+    return res
+
 if __name__ == "__main__":
-    to_evaluate = {136}
+    to_evaluate = {140}
 
     if not to_evaluate or 101 in to_evaluate:
         res = optimumPolynomial(((1, -1, 1, -1, 1, -1, 1, -1, 1, -1, 1)))
@@ -3843,3 +3885,19 @@ if __name__ == "__main__":
     if not to_evaluate or 136 in to_evaluate:
         res = singletonDifferences(n_max=49_999_999)
         print(f"Solution to Project Euler #136 = {res}")
+
+    if not to_evaluate or 137 in to_evaluate:
+        res = modifiedFibonacciGoldenNugget(nugget_number=15, G1=1, G2=1)
+        print(f"Solution to Project Euler #137 = {res}")
+    
+    if not to_evaluate or 140 in to_evaluate:
+        res = modifiedFibonacciGoldenNuggetSum(n_nugget_numbers=30, G1=1, G2=4) 
+        print(f"Solution to Project Euler #140 = {res}")
+
+    """
+    for n in range(1, 100_000_001):
+        num = 5 * n ** 2 + 2 * n + 1
+        rt = isqrt(num)
+        if rt * rt == num:
+            print(n)
+    """

@@ -5014,7 +5014,7 @@ def pandigitalDivPropsSum(subnum_n_dig: int=3, n_prime: int=7,\
     return res
 
 # Problem 44 - Review. This method has not been rigerously
-# proven to word, though it gives the correct answer for
+# proven to work, though it gives the correct answer for
 # Project Euler #44. Though this is likely to be extremely
 # difficult (assuming it is indeed correct)
 def nthConvergent(n: int, cf_func: Callable[[int], int]) -> Tuple[int]:
@@ -5446,23 +5446,27 @@ def generalisedPellSolutionGenerator(D: int, n: int,\
     pell_heap = []
     for x, y in generalisedPellFundamentalSolutions(D, n,\
             pell_basic_sol=pell_basic_sol):
-        pell_heap.append((x, y, True))
-        if y: pell_heap.append((x, y, False))
+        #print(x, y)
+        pell_heap.append((abs(x), abs(y), x, y, True))
+        if y: pell_heap.append((abs(x), abs(y), x, y, False))
     heapq.heapify(pell_heap)
     prev_x = None
+    #print(f"pell_heap = {pell_heap}")
     while pell_heap:
-        x, y, b = heapq.heappop(pell_heap)
-        #print(x, y)
-        x2, y2 = abs(x), abs(y)
+        x2, y2, x, y, b = heapq.heappop(pell_heap)
+        #print(f"x = {x}, y = {y}")
+        #x2, y2 = abs(x), abs(y)
         if x2 != prev_x and x2 and y2:
             yield (x2, y2)
         prev_x = x2
         if b:
+            x_, y_ = (x * x0 + y * y0 * D, x * y0 + y * x0)
             heapq.heappush(pell_heap,\
-                    (x * x0 + y * y0 * D, x * y0 + y * x0, b))
+                    (abs(x_), abs(y_), x_, y_, b))
         else:
+            x_, y_ = (x * x0 - y * y0 * D, -x * y0 + y * x0)
             heapq.heappush(pell_heap,\
-                    (x * x0 - y * y0 * D, -x * y0 + y * x0, b))
+                    (abs(x_), abs(y_), x_, y_, b))
     return
 
 def kPolygonalMinKPolyDiffExperimental(k: int=5,\
