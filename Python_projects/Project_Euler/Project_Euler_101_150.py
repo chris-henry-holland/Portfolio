@@ -3844,6 +3844,106 @@ def specialIsocelesTriangleSum(n_smallest_to_sum: int=12) -> int:
     print(f"Time taken = {time.time() - since:.4f} seconds")
     return res
 
+# Problem 139
+def pythagoreanTripleGeneratorByHypotenuse(primitive_only: bool=False, max_hypotenuse: Optional[int]=None) -> Generator[Tuple[Tuple[int, int, int], bool], None, None]:
+    m = 1
+    heap = []
+    if max_hypotenuse is None: max_hypotenuse = float("inf")
+    while True:
+        m += 1
+        m_odd = m & 1
+        n_mn = 1 + m_odd
+        m_sq = m ** 2
+        min_hyp = m_sq + n_mn ** 2
+        while heap and heap[0][0][0] < min_hyp:
+            ans = heapq.heappop(heap) if primitive_only or heap[0][0][0] + heap[0][1][0] > max_hypotenuse else heapq.heappushpop(heap, (tuple(x + y for x, y in zip(*heap[0][:2])), heap[0][1], False))
+            yield (tuple(ans[0][::-1]), ans[2])
+        if min_hyp > max_hypotenuse: break
+        max_n = min(m - 1, isqrt(max_hypotenuse - m_sq)) if max_hypotenuse != float("inf") else m - 1
+        # Note that since m and n are coprime and not both can be odd,
+        # m and n must have different parity (as if they were both
+        # even then they would not be coprime)
+        for n in range(1 + m_odd, max_n + 1, 2):
+            if gcd(m, n) != 1: continue
+            a, b, c = m_sq - n ** 2, 2 * m * n, m_sq + n ** 2
+            if b < a: a, b = b, a
+            heapq.heappush(heap, ((c, b, a), (c, b, a), True))
+    return
+
+def pythagoreanTripleGeneratorByPerimeter(primitive_only: bool=False, max_perimeter: Optional[int]=None) -> Generator[Tuple[Tuple[int, int, int], int, bool], None, None]:
+    m = 1
+    heap = []
+    if max_perimeter is None: max_perimeter = float("inf")
+    while True:
+        m += 1
+        m_odd = m & 1
+        n_mn = 1 + m_odd
+        m_sq = m ** 2
+        min_perim = m * (m + n_mn)
+        while heap and heap[0][0] < min_perim:
+            new_perim = heap[0][0] + sum(heap[0][2])
+            ans = heapq.heappop(heap) if primitive_only or new_perim > max_perimeter else heapq.heappushpop(heap, (new_perim, tuple(x + y for x, y in zip(*heap[0][1:3])), heap[0][2], False))
+            yield (tuple(ans[1][::-1]), ans[0], ans[3])
+        if min_perim > max_perimeter: break
+        max_n = min(m - 1, max_perimeter // (2 * m) - m) if max_perimeter != float("inf") else m - 1
+        for n in range(1 + m_odd, max_n + 1, 2):
+            if gcd(m, n) != 1: continue
+            a, b, c = m_sq - n ** 2, 2 * m * n, m_sq + n ** 2
+            if b < a: a, b = b, a
+            heapq.heappush(heap, ((a + b + c), (c, b, a), (c, b, a), True))
+    return
+
+def pythagoreanTiles(max_triangle_perimeter: int=99_999_999) -> int:
+    """
+    Solution to Project Euler #139
+
+    Outline of rationale:
+    We first observe that for a Pythagorean triple, a tiling
+    is possible if and only if it is possible for its primitive
+    (i.e. the Pythagorean triple created when all sides of that
+    triple are divided by their collective greatest common
+    divisor). We can therefore restrict our attention to the
+    primitive Pythagorean triples, and for each primitive
+    Pythagorean triple for which a tiling is possible, add the
+    floor of max_triangle_perimeter divided by the triple's
+    perimeter. This also means that we need only consider
+    the primitive Pythagorean triples with a perimeter no
+    greater than max_triangle_perimeter, as any with a larger
+    perimeter will not contribute to the answer.
+
+    TODO- prove that for primitive Pythagorean triples to
+    create a tiling, the two non-hypotenuse sides must differ by
+    exactly 1.
+    """
+    """
+    since = time.time()
+    res = 0
+    for triple in pythagoreanTripleGeneratorByPerimeter(primitive_only=True, max_perimeter=max_triangle_perimeter):
+        a, b, c = triple[0]
+        perim = triple[1]
+        if c % (b - a): continue
+        cnt = max_triangle_perimeter // perim
+        print((a, b, c), cnt)
+        res += cnt
+    print(f"Time taken = {time.time() - since:.4f} seconds")
+    return res
+    """
+    since = time.time()
+    res = 0
+    for neg in (False, True):
+        for x, y in pellSolutionGenerator(2, negative=neg):
+            #print(x, y)
+            m, n = x + y, y
+            #print((m - n) ** 2 - 2 * n ** 2)
+            perim = 2 * m * (m + n)
+            if perim > max_triangle_perimeter: break
+            if gcd(m, n) != 1 or m & 1 == n & 1: continue
+            print(sorted([m ** 2 - n ** 2, 2 * m * n, m ** 2 + n ** 2]))
+            res += max_triangle_perimeter // perim
+    print(f"Time taken = {time.time() - since:.4f} seconds")
+    return res
+    
+    
 # Problem 140
 def modifiedFibonacciGoldenNuggetSum(n_nugget_numbers: int=30, G1: int=1, G2: int=4) -> int:
     """
@@ -3859,7 +3959,7 @@ def modifiedFibonacciGoldenNuggetSum(n_nugget_numbers: int=30, G1: int=1, G2: in
     return res
 
 if __name__ == "__main__":
-    to_evaluate = {138}
+    to_evaluate = {139}
 
     if not to_evaluate or 101 in to_evaluate:
         res = optimumPolynomial(((1, -1, 1, -1, 1, -1, 1, -1, 1, -1, 1)))
@@ -4013,8 +4113,12 @@ if __name__ == "__main__":
         res = specialIsocelesTriangleSum(n_smallest_to_sum=12)
         print(f"Solution to Project Euler #138 = {res}")
 
+    if not to_evaluate or 139 in to_evaluate:
+        res = pythagoreanTiles(max_triangle_perimeter=99_999_999)
+        print(f"Solution to Project Euler #139 = {res}")
+
     if not to_evaluate or 140 in to_evaluate:
-        res = modifiedFibonacciGoldenNuggetSum(n_nugget_numbers=30, G1=1, G2=4) 
+        res = modifiedFibonacciGoldenNuggetSum(n_nugget_numbers=30, G1=1, G2=4)
         print(f"Solution to Project Euler #140 = {res}")
 
     """
@@ -4023,4 +4127,16 @@ if __name__ == "__main__":
         rt = isqrt(num)
         if rt * rt == num:
             print(n)
+    """
+    """
+    tot = 0
+    for triple in pythagoreanTripleGeneratorByHypotenuse(primitive_only=True, max_hypotenuse=100):
+        #if triple[2] >= 100: break
+        tot += 1
+        print(triple)
+    #for triple in pythagoreanTripleGeneratorByPerimeter(primitive_only=False, max_perimeter=1000):
+    #    #if triple[2] >= 100: break
+    #    tot += 1
+    #    print(triple)
+    print(f"total = {tot}")
     """
