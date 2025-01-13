@@ -20,7 +20,7 @@ sys.path.append(os.path.join(os.path.dirname(__file__), "../Algorithms_and_Datas
 sys.path.append(os.path.join(os.path.dirname(__file__), "../Algorithms_and_Datastructures/Data_structures"))
 from prime_sieves import PrimeSPFsieve
 from addition_chains import AdditionChainCalculator
-from continued_fractions_and_Pell_equations import generalisedPellSolutionGenerator
+from continued_fractions_and_Pell_equations import generalisedPellSolutionGenerator, pellSolutionGenerator
 
 def gcd(a: int, b: int) -> int:
     """
@@ -3725,6 +3725,125 @@ def modifiedFibonacciGoldenNugget(nugget_number: int=15, G1: int=1, G2: int=1) -
     print(f"Time taken = {time.time() - since:.4f} seconds")
     return res[-1]
 
+# Problem 138
+def specialIsocelesTriangles(n_smallest: int) -> List[Tuple[int, int, int]]:
+    """
+    Consider isoceles triangles with a base b and the two matching
+    sides L. Let the height from the base be h. This finds the
+    n_smallest triangles of this form with the smallest L for which
+    L and b are integers and h is one greater or less than b.
+
+    Args:
+        Required positional:
+        n_smallest (int): The number of triangles to be found.
+    
+    Returns:
+    List of 3-tuples of integers (int), containing the dimensions
+    of each of the triangles satisfying the given constraints with
+    the n_smallest values of L in the form (b, h, L).
+    These are given in order of increasing L.
+    
+    Outline of rationale:
+    Consider a solution (b, h, L). Given that L and b are integers,
+    and h is exactly one greater or less than b, h is an integer.
+    Furthermore, since h, b / 2 and L form a right angled triangle,
+    b / 2 must be an integer, so b is even. Consequently, h must
+    be odd.
+    Consider the right angled triangle (hb, h, L), where hb is
+    half of b. As established, these are all integers and so form
+    a Pythagorean triple, and additionally h is odd and equal to
+    either (2 * hb + 1) or (2 * hb - 1).
+    A Pythagorean triple can always be uniquely expressed as:
+        (k * (m ** 2 - n ** 2), k * (2 * m * n), k * (m ** 2 + n ** 2))
+    where the final length is the hypotenuse (corresponding to L),
+    k, m and n are strictly positive integers, m > n, m and n are
+    coprime and not both odd. As h must be odd, the value of k must
+    be 1 and h must correspond to the first of these lengths (and
+    therefore bh corresponds to the second). We therefore have:
+        h = m ** 2 - n ** 2
+        hb = 2 * m * n -> b = 4 * m * n
+        L = m ** 2 + n ** 2
+    for strictly positive coprime integers m and n that are not
+    both odd with m > n.
+    If we now set h to be one greater or less than hb, we get
+    the equation:
+        m ** 2 - n ** 2 = 4 * m * n +/- 1
+    which can be rearranged to get:
+        (m - 2 * n) ** 2 - 5 * n ** 2 = +/- 1
+    This is a variant of Pell's equation (with the + option and
+    Pell's negative equation with the - option) with D = 5.
+    Note that for both versions of the equation, for positive
+    m and n the larger n gets the larger also m gets, and
+    consequently (given L = m ** 2 + n ** 2) the larger L gets.
+    We can therefore find the smallest solutions (in terms of
+    their value for L) by finding the smallest collective
+    non-negative solutions of Pell's equation and Pell's negative
+    equation:
+        x ** 2 - 5 * y ** 2 = +/- 1
+    such that when m = x + 2 * y and n = y, m and n are strictly
+    positive coprime integers that are not both odd and m > n.
+    This can be done using a standard technique with continued
+    fractions for the square root of 5 (see
+    pellSolutionGenerator()).
+    Then, the corresponding triangle for the solution (m, n)
+    is:
+        h = m ** 2 - n ** 2
+        b = 4 * m * n
+        L = m ** 2 + n ** 2
+    """
+    gens = []
+    mn_heap = []
+    for j, neg in enumerate((False, True)):
+        gen = pellSolutionGenerator(5, negative=neg)
+        try:
+            first = next(gen)
+        except TypeError:
+            continue
+        gens.append(gen)
+        heapq.heappush(mn_heap, (first, j))
+    if not gens: return []
+    res = []
+    for _ in range(n_smallest):
+        while True:
+            pair, j = mn_heap[0]
+            heapq.heappushpop(mn_heap, (next(gens[j]), j))
+            n = pair[1]
+            m = pair[0] + 2 * n
+            if gcd(m, n) != 1 or m <= n or (m & 1 == 1 and n & 1 == 1):
+                continue
+            res.append((4 * m * n, m ** 2 - n ** 2, m ** 2 + n ** 2))
+            break
+    return res
+
+def specialIsocelesTriangleSum(n_smallest_to_sum: int=12) -> int:
+    """
+    Solution to Project Euler #138
+
+    Consider isoceles triangles with a base b and the two matching
+    sides L. Let the height from the base be h. This finds the sum
+    of the values of L over the n_smallest_to_sum triangles of this
+    form with the smallest L for which L and b are integers and h is
+    one greater or less than b.
+
+    Args:
+        Optional named:
+        n_smallest (int): The number of triangles whose value of L
+                is to be included in the sum.
+            Default: 12
+    
+    Returns:
+    Sum over the values of L for the triangles satisfying the given
+    constraints with the n_smallest_to_sum values of L.
+    
+    Outline of rationale:
+    See documentation for specialIsocelesTriangles()
+    """
+    since = time.time()
+    lst = specialIsocelesTriangles(n_smallest_to_sum)
+    res = sum(x[2] for x in lst)
+    print(f"Time taken = {time.time() - since:.4f} seconds")
+    return res
+
 # Problem 140
 def modifiedFibonacciGoldenNuggetSum(n_nugget_numbers: int=30, G1: int=1, G2: int=4) -> int:
     """
@@ -3734,13 +3853,13 @@ def modifiedFibonacciGoldenNuggetSum(n_nugget_numbers: int=30, G1: int=1, G2: in
     G0 = G2 - G1
     lst = modifiedFibonacciGoldenNuggetsList(n_nugget_numbers, G0=G0, G1=G1)
     res = sum(lst)
-    print(lst)
-    print(res)
+    #print(lst)
+    #print(res)
     print(f"Time taken = {time.time() - since:.4f} seconds")
     return res
 
 if __name__ == "__main__":
-    to_evaluate = {140}
+    to_evaluate = {138}
 
     if not to_evaluate or 101 in to_evaluate:
         res = optimumPolynomial(((1, -1, 1, -1, 1, -1, 1, -1, 1, -1, 1)))
@@ -3890,6 +4009,10 @@ if __name__ == "__main__":
         res = modifiedFibonacciGoldenNugget(nugget_number=15, G1=1, G2=1)
         print(f"Solution to Project Euler #137 = {res}")
     
+    if not to_evaluate or 138 in to_evaluate:
+        res = specialIsocelesTriangleSum(n_smallest_to_sum=12)
+        print(f"Solution to Project Euler #138 = {res}")
+
     if not to_evaluate or 140 in to_evaluate:
         res = modifiedFibonacciGoldenNuggetSum(n_nugget_numbers=30, G1=1, G2=4) 
         print(f"Solution to Project Euler #140 = {res}")
