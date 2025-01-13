@@ -3846,6 +3846,41 @@ def specialIsocelesTriangleSum(n_smallest_to_sum: int=12) -> int:
 
 # Problem 139
 def pythagoreanTripleGeneratorByHypotenuse(primitive_only: bool=False, max_hypotenuse: Optional[int]=None) -> Generator[Tuple[Tuple[int, int, int], bool], None, None]:
+    """
+    Generator iterating over Pythagorean triples, yielding them
+    in order of increasing size of the hypotenuse (i.e. the largest
+    value in the Pythagorean triple).
+
+    Args:
+        Optional named:
+        primitive_only (bool): Boolean specifying whether to
+                iterate only over primitive Pythagorean triples
+                (i.e. those whose side lengths are coprime) or
+                all Pythagorean triples, with True specifying
+                only primitive Pythagorean triples are to be
+                iterated over.
+            Default: False
+        max_hypotenuse (None or int): If given, specifies the
+                largest possible value of the hypotenuse of
+                any Pythagorean triple yielded.
+                If this is not given or given as None, the
+                iterator will not self-terminate, so any loop
+                based around this iterator must contain a
+                mechanism to break the loop (e.g. break or
+                return) to avoid an infinite loop.
+            Default: None
+    
+    Yields:
+    2-tuple whose index 0 contains a 3-tuple of integers
+    specifying the corresponding Pythagorean triple, with
+    the 3 items ordered in increasing size (so the hypotenuse
+    is last) and whose index 1 contains a boolean denoting
+    whether this Pythagorean triple is primitive (with True
+    indicating that it is primitive).
+    The triples are yielded in order of increasing size of
+    hypotenuse, with triples with the same hypotenuse yielded
+    in increasing order of their next longest side.
+    """
     m = 1
     heap = []
     if max_hypotenuse is None: max_hypotenuse = float("inf")
@@ -3871,6 +3906,45 @@ def pythagoreanTripleGeneratorByHypotenuse(primitive_only: bool=False, max_hypot
     return
 
 def pythagoreanTripleGeneratorByPerimeter(primitive_only: bool=False, max_perimeter: Optional[int]=None) -> Generator[Tuple[Tuple[int, int, int], int, bool], None, None]:
+    """
+    Generator iterating over Pythagorean triples, yielding them
+    in order of increasing size of the perimeter (i.e. the sum
+    over the three values in the Pythagorean triple).
+
+    Args:
+        Optional named:
+        primitive_only (bool): Boolean specifying whether to
+                iterate only over primitive Pythagorean triples
+                (i.e. those whose side lengths are coprime) or
+                all Pythagorean triples, with True specifying
+                only primitive Pythagorean triples are to be
+                iterated over.
+            Default: False
+        max_perimeter (None or int): If given, specifies the
+                largest possible value of the perimeter of
+                any Pythagorean triple yielded.
+                If this is not given or given as None, the
+                iterator will not self-terminate, so any loop
+                based around this iterator must contain a
+                mechanism to break the loop (e.g. break or
+                return) to avoid an infinite loop.
+            Default: None
+    
+    Yields:
+    3-tuple whose index 0 contains a 3-tuple of integers
+    specifying the corresponding Pythagorean triple, with
+    the 3 items ordered in increasing size (so the hypotenuse
+    is last), whose index 1 contains an integer giving the
+    perimeter of this Pythagorean triple and whose index 2
+    contains a boolean denoting whether this Pythagorean
+    triple is primitive (with True indicating that it is
+    primitive).
+    The triples are yielded in order of increasing size of
+    perimeter, with triples with the same perimeter yielded
+    in increasing order of hypotenuse, with triples with the
+    same perimeter and hypotenuse yielded in increasing order
+    of their next longest side.
+    """
     m = 1
     heap = []
     if max_perimeter is None: max_perimeter = float("inf")
@@ -3897,6 +3971,29 @@ def pythagoreanTiles(max_triangle_perimeter: int=99_999_999) -> int:
     """
     Solution to Project Euler #139
 
+    For all right angled triangles with integer side lengths (the
+    side lengths of which are known as a Pythagorean triple)
+    with perimeter (i.e. the sum of the side lengths) no greater
+    than max_triangle_perimeter, counts the number of these such
+    that a square with side length equal to the hypotenuse of the
+    triangle can be tiled exactly by square tiles with side length
+    equal to the difference between the other two triangle side
+    lengths.
+
+    Args:
+        Optional named:
+        max_triangle_perimeter (int): Strictly positive integer
+                specifying the largest perimeter (i.e. the sum of
+                the side lengths) for the right angled triangles
+                with integer side lengths considered.
+            Default: 10 ** 8 - 1
+    
+    Returns:
+    Integer giving the number of right angled triangles with
+    integer side lengths and perimeter no greater than
+    max_triangle_perimeter for which the described exact tiling
+    is possible.
+
     Outline of rationale:
     We first observe that for a Pythagorean triple, a tiling
     is possible if and only if it is possible for its primitive
@@ -3911,9 +4008,76 @@ def pythagoreanTiles(max_triangle_perimeter: int=99_999_999) -> int:
     greater than max_triangle_perimeter, as any with a larger
     perimeter will not contribute to the answer.
 
-    TODO- prove that for primitive Pythagorean triples to
-    create a tiling, the two non-hypotenuse sides must differ by
-    exactly 1.
+    Now, suppose (a, b, c) is a primitive Pythagorean triple
+    with hypotenuse c (so that gcd(a, b, c) = 1). Note that a
+    and b must have opposite parity, as if a and b are both even,
+    then c is even so gcd(a, b, c) >= 2 and if a and b are both
+    odd then a ** 2 + b ** 2 = 2 (mod 4) which is impossible.
+    Additionally, note that gcd(a, b) = 1 if a prime divides
+    both a and b then k also divides a ** 2 + b ** 2 = c ** 2
+    and so must divide c, meaning that (a, b, c) is not a
+    primitive Pythagorean triple.
+    Suppose there exists a prime p that divides both (b - a)
+    and c. Then p divides (b - a) ** 2 and so divides
+    (b ** 2 + a ** 2 - 2 * a * b). But b ** 2 + a ** 2 = c ** 2
+    and p divides c and so c ** 2. Therefore, p must divide
+    2 * a * b. As p is prime, it must divide at least one of 2,
+    a and b. If p divides 2 then p = 2, meaning (b - a) is even.
+    But a and b have different parity so (b - a) must be odd, and
+    thus p cannot divide 2. If p divides a then since p divides
+    (b - a), p must also divide b, which contradicts the
+    observation that gcd(a, b) = 1. Thus, p cannot divide a.
+    Similarly, p cannot divide b. Consequently, p cannot divide
+    2 * a * b, which is a contradiction. Therefore, there cannot
+    exist a prime p that divides both (b - a) and c, implying
+    that a tiling is only possible for a primitive Pythagorean
+    triple if the difference between the two non-hypotenuse sides
+    is not divisible by any prime, which can only be the case
+    when the difference is +/- 1.
+    Conversely, for any primitive Pythagorean triple whose
+    non-hypotenuse sides differ by 1, the tile has dimensions
+    1 x 1 and so trivially, this can exactly tile the c x c
+    rectangle. Thus, a tiling is possible for a primitive
+    Pythagorean triple if and only if its non-hypotenuse sides
+    differ by exactly 1.
+
+    A primitive Pythagorean triple can always be uniquely
+    expressed as:
+        ((m ** 2 - n ** 2), (2 * m * n), (m ** 2 + n ** 2))
+    where the final length is the hypotenuse m and n are
+    strictly positive integers, m > n, m and n are
+    coprime and not both odd. Note that this has a perimeter
+    of 2 * m * (m + n)
+    As we require the non-hypotenuse sides to differ by 1
+    we get:
+        m ** 2 - n ** 2 = 2 * m * n +/- 1
+    which can be rearranged to get:
+        (m - n) ** 2 - 2 * n ** 2 = +/- 1
+    This is a variant of Pell's equation (with the + option and
+    Pell's negative equation with the - option) with D = 2.
+    Note that for both versions of the equation, for positive
+    m and n the larger n gets the larger also m gets, and
+    consequently (given the perimeter is 2 * m * (m + n)) the
+    larger the perimeter gets.
+    We can therefore find all of the primitive Pythagorean
+    triples for which a tiling is possible and whose perimeter
+    is no greater than max_triangle_perimeter by finding the
+    non-negative solutions of Pell's equation and Pell's negative
+    equation:
+        x ** 2 - 2 * y ** 2 = +/- 1
+    such that when m = x + y and n = y, m and n are strictly
+    positive coprime integers that are not both odd, m > n and
+    2 * m * (m + n) <= max_triangle_perimeter.
+    This can be done using a standard technique with continued
+    fractions for the square root of 2 (see
+    pellSolutionGenerator()).
+    Then, as initially observed, for each of these primitive
+    Pythagorean triples, the amount contributed to the sum by
+    its multiples is then the floor of max_triangle_perimeter
+    divided by the perimeter of the primitive Pythagorean
+    triple (given by 2 * m * (m + n)).
+    TODO- review wording of the explanation for the logic and
+    clarity of the arguments
     """
     """
     since = time.time()
