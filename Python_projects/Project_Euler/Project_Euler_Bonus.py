@@ -174,14 +174,56 @@ def rootExpansionDigits(num: int, n_digs: int, base: int=10) -> List[int]:
     return res
 
 def rootExpansionDigitSum(num: int=13, n_digs: int=1_000, base: int=10) -> int:
+    """
+    Solution to Project Euler #root 13
+    """
     since = time.time()
     res = sum(rootExpansionDigits(num, n_digs, base=base))
     print(f"Time taken = {time.time() - since:.4f} seconds")
     return res
 
+# Problem 18i
+def polynomialPrimeProductRemainder(p_min: int=10 ** 9, p_max: int=11 * 10 ** 8) -> int:
+    since = time.time()
+    ps = PrimeSPFsieve(p_max)
+    print("found prime sieve")
+    poly_func = lambda x: x ** 3 - 3 * x + 4
+    res = 0
+    p_i_mn = bisect.bisect_left(ps.p_lst, p_min)
+    seen_primes = set()
+    largest_poly_arg = -1
+    poly_past_range = False
+    for p_i in range(p_i_mn, len(ps.p_lst)):
+        p = ps.p_lst[p_i]
+        if not poly_past_range:
+            for largest_poly_arg in range(largest_poly_arg + 1, p):
+                val = poly_func(largest_poly_arg)
+                #print(f"arg = {largest_poly_arg}, val = {val}")
+                if val > p_max:
+                    poly_past_range = True
+                    break
+                p_facts = ps.primeFactors(val)
+                seen_primes |= set(p_facts)
+                #if ps.isPrime(val):
+                #    seen_primes.add(val)
+        if p in seen_primes: continue
+        ans = 1
+        for i in range(p):
+            ans = (ans * poly_func(i)) % p
+            if not ans: break
+        #print(f"p = {p}, product = {ans}")
+        res += ans
+    #print(seen_primes)
+    print(f"Time taken = {time.time() - since:.4f} seconds")
+    return res
+
 if __name__ == "__main__":
-    to_evaluate = {"root_13"}
+    to_evaluate = {"18i"}
 
     if not to_evaluate or "root_13" in to_evaluate:
         res = rootExpansionDigitSum(num=13, n_digs=1_000, base=10)
         print(f"Solution to Project Euler #root 13 = {res}")
+    
+    #if not to_evaluate or "18i" in to_evaluate:
+    #    res = polynomialPrimeProductRemainder(p_min=100_000, p_max=110_000)
+    #    print(f"Solution to Project Euler #18i = {res}")

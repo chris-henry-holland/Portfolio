@@ -4102,7 +4102,7 @@ def pythagoreanTiles(max_triangle_perimeter: int=99_999_999) -> int:
             perim = 2 * m * (m + n)
             if perim > max_triangle_perimeter: break
             if gcd(m, n) != 1 or m & 1 == n & 1: continue
-            print(sorted([m ** 2 - n ** 2, 2 * m * n, m ** 2 + n ** 2]))
+            #print(sorted([m ** 2 - n ** 2, 2 * m * n, m ** 2 + n ** 2]))
             res += max_triangle_perimeter // perim
     print(f"Time taken = {time.time() - since:.4f} seconds")
     return res
@@ -4122,8 +4122,43 @@ def modifiedFibonacciGoldenNuggetSum(n_nugget_numbers: int=30, G1: int=1, G2: in
     print(f"Time taken = {time.time() - since:.4f} seconds")
     return res
 
+# Problem 141
+def squareProgressiveNumbers(n_max: int) -> List[Tuple[int, int, Tuple[int, int, int]]]:
+    """
+    
+    Review- prove and optimise
+    """
+    m_max = isqrt(n_max)
+    a_max = integerNthRoot(n_max, 3)
+    res = []
+    for a in range(1, a_max + 1):
+        for b in range(1, a):
+            if gcd(a, b) != 1: continue
+            r_max = (isqrt(b ** 4 + 4 * a ** 3 * b * n_max) - b ** 2) // (2 * a ** 3 * b)
+            for r_ in range(1, r_max + 1):
+                m_sq = r_ ** 2 * a ** 3 * b + r_ * b ** 2
+                #if m_sq > n_max: continue
+                m = isqrt(m_sq)
+                if m ** 2 != m_sq: continue
+                res.append((m, m_sq, (r_ * a * b, r_ * a ** 2, r_ * b ** 2)))
+                print(a, b, r_, res[-1])
+                #sqrt_r_ = isqrt(r_)
+                #print(r_, sqrt_r_, sqrt_r_ ** 2 == r_)
+    return sorted(res)
+
+def squareProgressiveNumbersSum(n_max: int=10 ** 12 - 1) -> int:
+    """
+
+    
+    """
+    since = time.time()
+    nums = {x[1] for x in squareProgressiveNumbers(n_max)}
+    res = sum(nums)
+    print(f"Time taken = {time.time() - since:.4f} seconds")
+    return res
+
 if __name__ == "__main__":
-    to_evaluate = {139}
+    to_evaluate = {141}
 
     if not to_evaluate or 101 in to_evaluate:
         res = optimumPolynomial(((1, -1, 1, -1, 1, -1, 1, -1, 1, -1, 1)))
@@ -4285,6 +4320,10 @@ if __name__ == "__main__":
         res = modifiedFibonacciGoldenNuggetSum(n_nugget_numbers=30, G1=1, G2=4)
         print(f"Solution to Project Euler #140 = {res}")
 
+    if not to_evaluate or 141 in to_evaluate:
+        res = squareProgressiveNumbersSum(n_max=10 ** 12)
+        print(f"Solution to Project Euler #141 = {res}")
+
     """
     for n in range(1, 100_000_001):
         num = 5 * n ** 2 + 2 * n + 1
@@ -4302,5 +4341,17 @@ if __name__ == "__main__":
     #    #if triple[2] >= 100: break
     #    tot += 1
     #    print(triple)
+    print(f"total = {tot}")
+    """
+    """
+    tot = 0
+    for num in range(1, isqrt(10 ** 9 - 1) + 1):
+        num_sq = num ** 2
+        for d in range(1, num + 1):
+            q, r = divmod(num_sq, d)
+            n1, n2, n3 = sorted([[d, "d"], [q, "q"], [r, "r"]])
+            if n2[0] ** 2 == n3[0] * n1[0]:
+                print(f"num = {num}, num_sq = {num_sq}, {n1[1]} = {n1[0]}, {n2[1]} = {n2[0]}, {n3[1]} = {n3[0]}")
+                tot += num_sq
     print(f"total = {tot}")
     """
