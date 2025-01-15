@@ -4148,8 +4148,7 @@ def squareProgressiveNumbers(n_max: int) -> List[Tuple[int, int, Tuple[int, int,
 
 def squareProgressiveNumbersSum(n_max: int=10 ** 12 - 1) -> int:
     """
-
-    
+    Solution to Project Euler #141
     """
     since = time.time()
     nums = {x[1] for x in squareProgressiveNumbers(n_max)}
@@ -4157,8 +4156,43 @@ def squareProgressiveNumbersSum(n_max: int=10 ** 12 - 1) -> int:
     print(f"Time taken = {time.time() - since:.4f} seconds")
     return res
 
+#Problem 142
+def perfectSquareCollectionGenerator() -> Generator[Tuple[int, Tuple[int, int, int]], None, None]:
+    #ps = PrimeSPFsieve()
+    # TODO- find a less brute force solution. Look up Rolle's puzzle
+    seen = {}
+    candidates_heap = []
+    for triple in pythagoreanTripleGeneratorByHypotenuse(primitive_only=False, max_hypotenuse=None):
+        a, b, c = triple[0]
+        print(c)
+        while candidates_heap and c + 3 >= candidates_heap[0][0]:
+            yield heapq.heappop(candidates_heap)
+        for (x, y, m) in ((c, a, b), (c, b, a)):
+            num1 = x + y
+            rt1 = isqrt(num1)
+            if rt1 ** 2 != num1: continue
+            seen.setdefault(x, set())
+            seen[x].add(y)
+            #print((x, y))
+            if y not in seen.keys(): continue
+            for z in seen[y].intersection(seen[x]):
+                print((x + y + z), (x, y, z))
+                heapq.heappush(candidates_heap, ((x + y + z), (x, y, z)))
+    return
+
+def perfectSquareCollection() -> int:
+    """
+    Solution to Project Euler #142
+    """
+    since = time.time()
+    #for coll in perfectSquareCollectionGenerator():
+    #    break
+    res = next(perfectSquareCollectionGenerator())[0]#coll[0]
+    print(f"Time taken = {time.time() - since:.4f} seconds")
+    return res
+
 if __name__ == "__main__":
-    to_evaluate = {141}
+    to_evaluate = {142}
 
     if not to_evaluate or 101 in to_evaluate:
         res = optimumPolynomial(((1, -1, 1, -1, 1, -1, 1, -1, 1, -1, 1)))
@@ -4323,6 +4357,10 @@ if __name__ == "__main__":
     if not to_evaluate or 141 in to_evaluate:
         res = squareProgressiveNumbersSum(n_max=10 ** 12)
         print(f"Solution to Project Euler #141 = {res}")
+
+    if not to_evaluate or 142 in to_evaluate:
+        res = perfectSquareCollection()
+        print(f"Solution to Project Euler #142 = {res}")
 
     """
     for n in range(1, 100_000_001):
