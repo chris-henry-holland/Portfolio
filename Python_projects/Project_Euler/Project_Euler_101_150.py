@@ -42,7 +42,10 @@ def gcd(a: int, b: int) -> int:
     Strictly positive integer giving the greatest common
     divisor of a and b.
     """
-    return a if not b else gcd(b, a % b)
+    #return a if not b else gcd(b, a % b)
+    while b != 0:
+        a, b = b, a % b
+    return a
     
 def lcm(a: int, b: int) -> int:
     """
@@ -138,6 +141,7 @@ def addFractions(frac1: Tuple[int, int], frac2: Tuple[int, int]) -> Tuple[int, i
     denom = lcm(abs(frac1[1]), abs(frac2[1]))
     numer = (frac1[0] * denom // frac1[1]) + (frac2[0] * denom // frac2[1])
     g = gcd(numer, denom)
+    #print(frac1, frac2, (numer // g, denom // g))
     return (numer // g, denom // g)
 
 def multiplyFractions(frac1: Tuple[int, int], frac2: Tuple[int, int]) -> Tuple[int, int]:
@@ -156,8 +160,9 @@ def multiplyFractions(frac1: Tuple[int, int], frac2: Tuple[int, int]) -> Tuple[i
     denominator). If the result is negative then the numerator is negative
     and the denominator positive.
     """
-    neg = (frac1[1] < 0) ^ (frac1[1] < 0) ^ (frac2[0] < 0) ^ (frac2[1] < 0)
+    neg = (frac1[0] < 0) ^ (frac1[1] < 0) ^ (frac2[0] < 0) ^ (frac2[1] < 0)
     frac_prov = (abs(frac1[0] * frac2[0]), abs(frac1[1] * frac2[1]))
+    #print(frac_prov)
     g = gcd(frac_prov[0], frac_prov[1])
     return (-(frac_prov[0] // g) if neg else (frac_prov[0] // g), frac_prov[1] // g)
 
@@ -4164,7 +4169,7 @@ def perfectSquareCollectionGenerator() -> Generator[Tuple[int, Tuple[int, int, i
     candidates_heap = []
     for triple in pythagoreanTripleGeneratorByHypotenuse(primitive_only=False, max_hypotenuse=None):
         a, b, c = triple[0]
-        print(c)
+        #print(c)
         while candidates_heap and c + 3 >= candidates_heap[0][0]:
             yield heapq.heappop(candidates_heap)
         for (x, y, m) in ((c, a, b), (c, b, a)):
@@ -4191,8 +4196,230 @@ def perfectSquareCollection() -> int:
     print(f"Time taken = {time.time() - since:.4f} seconds")
     return res
 
+# Problem 143
+
+
+# Problem 144
+def ellipseNorm(
+    ellipse: Tuple[int, int, int],
+    pos: Tuple[Tuple[int, int], Tuple[int, int]]
+) -> Tuple[int, int]:
+    # Pointing into the ellipse
+    return (-ellipse[0] * pos[0][0] * pos[1][1], -ellipse[1] * pos[0][1] * pos[1][0])
+
+def otherRationalEllipseIntersection(
+    ellipse: Tuple[int, int, int],
+    pos: Tuple[Tuple[int, int], Tuple[int, int]],
+    vec: Tuple[Tuple[int, int], Tuple[int, int]]
+) -> Tuple[Tuple[int, int], Tuple[int, int]]:
+    """
+    Given a rational point on a rational ellipse and a vector with a
+    rational Cartesian representation, for a line parallel to that
+    vector intersecting that ellipse at that rational point, identifies
+    the other point at which the line and ellipse intersect.
+    """
+    #print(pos, vec)
+    A, B, C = ellipse
+    x0, y0 = pos
+    beta, alpha = vec
+    #pos_f = (x0[0] / x0[1], y0[0] / y0[1])
+    #vec_f = (alpha[0] / alpha[1], beta[0] / beta[1])
+    #print(f"pos_f = {pos_f}, vec_f = {vec_f}")
+    #x_f = ((B * vec_f[0] ** 2 - A * vec_f[1] ** 2) * pos_f[0] - 2 * B * vec_f[0] * vec_f[1] * pos_f[1]) / (A * vec_f[1] ** 2 + B * vec_f[0] ** 2)
+    #print(f"x float = {x_f}")
+    #y_f = ((A * vec_f[1] ** 2 - B * vec_f[0] ** 2) * pos_f[1] - 2 * A * vec_f[1] * vec_f[0] * pos_f[0]) / (A * vec_f[1] ** 2 + B * vec_f[0] ** 2)
+    #print(f"y float = {y_f}")
+    denom = addFractions((B * alpha[0] ** 2, alpha[1] ** 2), (A * beta[0] ** 2, beta[1] ** 2))
+    #print(f"denom: {denom[0] / denom[1]} vs {(A * vec_f[1] ** 2 + B * vec_f [0] ** 2)}")
+    x0_term_x = multiplyFractions(addFractions((B * alpha[0] ** 2, alpha[1] ** 2), (-A * beta[0] ** 2, beta[1] ** 2)), x0)
+    #print(addFractions((B * alpha[0] ** 2, alpha[1] ** 2), (-A * beta[0] ** 2, beta[1] ** 2)), x0)
+    #print((B * vec_f[0] ** 2 - A * vec_f[1] ** 2), pos_f[0])
+    #print(f"x0_term_x: {x0_term_x[0] / x0_term_x[1]} vs {(B * vec_f[0] ** 2 - A * vec_f[1] ** 2) * pos_f[0]}")
+    y0_term_x = multiplyFractions((-2 * B * alpha[0] * beta[0], alpha[1] * beta[1]), y0)
+    #print(f"y0_term_x: {y0_term_x[0] / y0_term_x[1]} vs {- 2 * B * vec_f[0] * vec_f[1] * pos_f[1]}")
+    numer_x = addFractions(x0_term_x, y0_term_x)
+    x = multiplyFractions(numer_x, (denom[1], denom[0]))
+    x0_term_y = multiplyFractions((-2 * A * alpha[0] * beta[0], alpha[1] * beta[1]), x0)
+    y0_term_y = multiplyFractions(addFractions((A * beta[0] ** 2, beta[1] ** 2), (-B * alpha[0] ** 2, alpha[1] ** 2)), y0)
+    numer_y = addFractions(x0_term_y, y0_term_y)
+    y = multiplyFractions(numer_y, (denom[1], denom[0]))
+    return (x, y)
+
+def nextEllipseReflectedRay(
+    ellipse: Tuple[int, int, int],
+    pos: Tuple[Tuple[int, int], Tuple[int, int]],
+    vec: Tuple[Tuple[int, int], Tuple[int, int]]
+) -> Tuple[Tuple[Tuple[int, int], Tuple[int, int]], Tuple[Tuple[int, int], Tuple[int, int]]]: 
+
+    norm = ellipseNorm(ellipse, pos)
+    #print(f"norm = {norm}")
+    norm_mag_sq = sum(x * x for x in norm)
+    dot_prod = addFractions(*[(y * x[0], x[1]) for x, y in zip(vec, norm)])
+    mult = multiplyFractions(dot_prod, (2, norm_mag_sq))
+    add_vec = tuple((-x * mult[0], mult[1]) for x in norm)
+    #print(f"add_vec = {add_vec}")
+    vec2 = tuple(addFractions(x, y) for x, y in zip(vec, add_vec))
+    pos2 = otherRationalEllipseIntersection(ellipse, pos, vec2)
+    return (pos2, vec2)
+
+def laserBeamEllipseReflectionPointGenerator(
+    ellipse: Tuple[int, int, int],
+    pos0: Tuple[Tuple[int, int], Tuple[int, int]],
+    reflect1: Tuple[Tuple[int, int], Tuple[int, int]]
+) -> Generator[Tuple[Tuple[int, int], Tuple[int, int]], None, None]:
+    pos0_neg = ((-pos0[0][0], pos0[0][1]), (-pos0[1][0], pos0[1][1]))
+    #print(reflect1, pos0_neg)
+    vec = tuple(addFractions(x, y) for x, y in zip(reflect1, pos0_neg))
+    #print(f"vec0 = {vec} = {(vec[0][0] / vec[0][1], vec[1][0] / vec[1][1])}")
+    #print(f"reflect1 = {reflect1} = {(reflect1[0][0] / reflect1[0][1], reflect1[1][0] / reflect1[1][1])}")
+    
+    pos = reflect1
+    while True:
+        pos, vec = nextEllipseReflectedRay(ellipse, pos, vec)
+        #print(f"vec = {vec} = {(vec[0][0] / vec[0][1], vec[1][0] / vec[1][1])}")
+        #print(f"pos = {pos} = {(pos[0][0] / pos[0][1], pos[1][0] / pos[1][1])}")
+        
+        yield pos
+    return
+
+def ellipseNormFloat(
+    ellipse: Tuple[int, int, int],
+    pos: Tuple[float, float]
+) -> Tuple[int, int]:
+    # Pointing into the ellipse
+    return (-ellipse[0] * pos[0], -ellipse[1] * pos[1])
+
+def otherRationalEllipseIntersectionFloat(
+    ellipse: Tuple[int, int, int],
+    pos: Tuple[float, float],
+    vec: Tuple[float, float]
+) -> Tuple[Tuple[int, int], Tuple[int, int]]:
+    """
+    Given a rational point on a rational ellipse and a vector with a
+    rational Cartesian representation, for a line parallel to that
+    vector intersecting that ellipse at that rational point, identifies
+    the other point at which the line and ellipse intersect.
+    """
+    #print(pos, vec)
+    A, B, C = ellipse
+    x0, y0 = pos
+    beta, alpha = vec
+    #pos_f = (x0[0] / x0[1], y0[0] / y0[1])
+    #vec_f = (alpha[0] / alpha[1], beta[0] / beta[1])
+    #print(f"pos_f = {pos_f}, vec_f = {vec_f}")
+    #x_f = ((B * vec_f[0] ** 2 - A * vec_f[1] ** 2) * pos_f[0] - 2 * B * vec_f[0] * vec_f[1] * pos_f[1]) / (A * vec_f[1] ** 2 + B * vec_f[0] ** 2)
+    #print(f"x float = {x_f}")
+    #y_f = ((A * vec_f[1] ** 2 - B * vec_f[0] ** 2) * pos_f[1] - 2 * A * vec_f[1] * vec_f[0] * pos_f[0]) / (A * vec_f[1] ** 2 + B * vec_f[0] ** 2)
+    #print(f"y float = {y_f}")
+    denom = (B * alpha ** 2) + (A * beta ** 2)
+    #print(f"denom: {denom[0] / denom[1]} vs {(A * vec_f[1] ** 2 + B * vec_f [0] ** 2)}")
+    x0_term_x = (B * alpha ** 2 - A * beta ** 2) * x0
+    y0_term_x = -2 * B * alpha * beta * y0
+    numer_x = x0_term_x + y0_term_x
+    x = numer_x / denom
+    x0_term_y = (-2 * A * alpha * beta) * x0
+    y0_term_y = (A * beta ** 2 - B * alpha ** 2) * y0
+    numer_y = x0_term_y + y0_term_y
+    y = numer_y / denom
+    return (x, y)
+
+def nextEllipseReflectedRayFloat(
+    ellipse: Tuple[int, int, int],
+    pos: Tuple[float, float],
+    vec: Tuple[float, float]
+) -> Tuple[Tuple[float, float], Tuple[float, float]]: 
+
+    norm = ellipseNormFloat(ellipse, pos)
+    #print(f"norm = {norm}")
+    norm_mag_sq = sum(x * x for x in norm)
+    dot_prod = sum((y * x) for x, y in zip(vec, norm))
+    mult = dot_prod * 2 / norm_mag_sq
+    add_vec = tuple((-x * mult) for x in norm)
+    #print(f"add_vec = {add_vec}")
+    vec2 = tuple(x + y for x, y in zip(vec, add_vec))
+    pos2 = otherRationalEllipseIntersectionFloat(ellipse, pos, vec2)
+    return (pos2, vec2)
+
+def laserBeamEllipseReflectionPointFloatGenerator(
+    ellipse: Tuple[int, int, int],
+    pos0: Tuple[float, float],
+    reflect1: Tuple[float, float]
+) -> Generator[Tuple[float, float], None, None]:
+    pos0_neg = (-pos0[0], -pos0[1])
+    #print(reflect1, pos0_neg)
+    vec = tuple(x + y for x, y in zip(reflect1, pos0_neg))
+    #print(f"vec0 = {vec} = {(vec[0][0] / vec[0][1], vec[1][0] / vec[1][1])}")
+    #print(f"reflect1 = {reflect1} = {(reflect1[0][0] / reflect1[0][1], reflect1[1][0] / reflect1[1][1])}")
+    
+    pos = reflect1
+    while True:
+        pos, vec = nextEllipseReflectedRayFloat(ellipse, pos, vec)
+        #print(f"vec = {vec} = {(vec[0][0] / vec[0][1], vec[1][0] / vec[1][1])}")
+        #print(f"pos = {pos} = {(pos[0][0] / pos[0][1], pos[1][0] / pos[1][1])}")
+        
+        yield pos
+    return
+
+def laserBeamEllipseReflectionCount(
+    ellipse: Tuple[int, int, int]=(4, 1, 100),
+    pos0: Tuple[Tuple[int, int], Tuple[int, int]]=((0, 1), (101, 10)),
+    reflect1: Tuple[Tuple[int, int], Tuple[int, int]]=((7, 5), (-48, 5)),
+    x_window: Tuple[Tuple[int, int], Tuple[int, int]]=((-1, 100), (1, 100)),
+    use_float: bool=True
+) -> int:
+    """
+    Solution to Project Euler #144
+
+    Note that this solves the problem very quickly if use_float is set to
+    True, even though this means that we cannot be completely confident
+    in the answer due to rounding errors. If use_float is set to False then
+    the solution is exact, though this results in fractions whose numberator
+    and denominator that get larger with each reflection (it appears to be
+    exponentially so), rapidly resulting in unmanageably large integers
+    which not only makes it extremely slow, but also likely to exhaust all
+    memory resources. The exact version has never been run to the extent
+    that it solves for the parameters used in the Project Euler problem
+    due to the extreme slow down (it reached reflection 56 before being
+    abandoned). However, the option to solve exactly has been left in
+    to illustrate that at least in theory, an exact solution in rationals
+    is possible.
+    """
+    since = time.time()
+    #print(reflect1)
+    res = 1
+    closest = float("inf")
+    if use_float:
+        x_window_float = tuple(x[0] / x[1] for x in x_window)
+        #print(x_window_float)
+        pos0_float = tuple(x[0] / x[1] for x in pos0)
+        reflect1_float = tuple(x[0] / x[1] for x in reflect1)
+        for pos in laserBeamEllipseReflectionPointFloatGenerator(ellipse, pos0_float, reflect1_float):
+            #if res == 354:
+            #    print(f"354 result: {pos}")
+            #if res < 10:
+            #    print(res, pos)
+            if pos[1] > 0 and pos[0] >= x_window_float[0] and pos[0] <= x_window_float[1]:
+                break
+            
+            res += 1
+            
+            #dist = min(abs(pos[0] - x_window_float[0]), abs(pos[0] - x_window_float[1]))
+            #if pos[1] > 0 and dist < closest:
+            #    closest = dist
+            #    print(f"closest yet on reflection {res} at distance of {dist} at position {pos}")
+            
+            #print(f"n_reflections = {res}")
+    else:
+        for pos in laserBeamEllipseReflectionPointGenerator(ellipse, pos0, reflect1):
+            if pos[1][0] > 0 and pos[0][0] * x_window[0][1] >= pos[0][1] * x_window[0][0] and pos[0][0] * x_window[1][1] <= pos[0][1] * x_window[1][0]:
+                break
+            res += 1
+            #print(f"n_reflections = {res}")
+    print(f"Time taken = {time.time() - since:.4f} seconds")
+    return res
+
 if __name__ == "__main__":
-    to_evaluate = {142}
+    to_evaluate = {144}
 
     if not to_evaluate or 101 in to_evaluate:
         res = optimumPolynomial(((1, -1, 1, -1, 1, -1, 1, -1, 1, -1, 1)))
@@ -4361,6 +4588,17 @@ if __name__ == "__main__":
     if not to_evaluate or 142 in to_evaluate:
         res = perfectSquareCollection()
         print(f"Solution to Project Euler #142 = {res}")
+
+
+    if not to_evaluate or 144 in to_evaluate:
+        res = laserBeamEllipseReflectionCount(
+            ellipse=(4, 1, 100),
+            pos0=((0, 1), (101, 10)),
+            reflect1=((7, 5), (-48, 5)),
+            x_window=((-1, 100), (1, 100)),
+            use_float=True
+        )
+        print(f"Solution to Project Euler #144 = {res}")
 
     """
     for n in range(1, 100_000_001):
