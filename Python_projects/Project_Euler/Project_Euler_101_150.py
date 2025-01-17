@@ -4418,8 +4418,127 @@ def laserBeamEllipseReflectionCount(
     print(f"Time taken = {time.time() - since:.4f} seconds")
     return res
 
+def investigatingAPrimePatternList(n_max: int=150 * 10 ** 6 - 1, add_nums: List[int]=[1, 3, 7, 9, 13, 27]) -> List[int]:
+
+
+    # Try to make more efficient
+    ps = PrimeSPFsieve(min(10 ** 6, n_max))
+    add_nums_set = set(add_nums)
+    mx_add = max(add_nums)
+    mn_add = min(add_nums)
+    curr_md = 1
+    r_lst = [(0, set(range(mx_add)).difference(set(add_nums)))]
+    filter_p_max = 4 * mx_add
+    for p in ps.p_lst:
+        if p > filter_p_max: break
+        #print(f"p = {p}")
+        prev_r_lst = r_lst
+        r_lst = []
+        for r in range(p):
+            #if p == 11:
+            #    print(f"r = {r}")
+            r_sq_md = r ** 2 % p
+            num0 = (-r_sq_md) % p
+            neg_chk_rm_set = set()
+            for num in range(num0, mx_add + 1, p):
+                if num in add_nums_set: break
+                neg_chk_rm_set.add(num)
+            else:
+                for r0, neg_chk_set in prev_r_lst:
+                    for r2 in range(r0, min(curr_md * p, n_max + 1), curr_md):
+                        if r2 % p == r:
+                            break
+                    else: continue
+                    r_lst.append((r2, neg_chk_set.difference(neg_chk_rm_set)))
+        #r_lst.sort()
+        print(f"p = {p}, curr_md = {curr_md}, number of remainders = {len(r_lst)}")
+        #print(r_lst[:min(5, len(r_lst))])
+        if curr_md <= n_max: curr_md *= p
+    r_lst.sort()
+    #print(r_lst[:5])
+    #print(len(r_lst))
+    print(f"modulus = {curr_md}, number of remainders to check = {len(r_lst)}")
+    #print(r_lst)
+
+    # To enusure not ruling out a number for having a number divisible
+    # by one of the primes iterated over above that is actually that
+    # prime
+    res = []
+    small_end = isqrt(filter_p_max - mn_add)
+    print(f"small_end = {small_end}")
+    for num in range(small_end + 1):
+        num_sq = num ** 2
+        #print(f"num = {num}, num_sq = {num_sq}")
+        for num2 in range(min(add_nums), max(add_nums) + 1):
+            #print(num2, ps.isPrime(num_sq + num2), (num2 in add_nums_set))
+            if ps.isPrime(num_sq + num2) != (num2 in add_nums_set): break
+        else:
+            res.append(num)
+            print(num)
+    
+    for num0 in range(0, n_max + 1, curr_md):
+        #print(f"num0 = {num0}")
+        for r, neg_chk_set in r_lst:
+            num = num0 + r
+            if num <= small_end: continue
+            elif num > n_max: break
+            num_sq = num ** 2
+            for num2 in add_nums:
+                if not ps.millerRabinPrimalityTest(num_sq + num2, n_trials=1):
+                    break
+            else:
+                for num2 in add_nums:
+                    if not ps.isPrime(num_sq + num2, use_miller_rabin_screening=False):
+                        break
+                else:
+                    for num2 in neg_chk_set:
+                        if ps.isPrime(num_sq + num2, use_miller_rabin_screening=True, n_miller_rabin_trials=3):
+                            break
+                    else:
+                        res.append(num)
+                        print(num)
+        else: continue
+        break
+    return res
+
+    """
+    add_lst = [1, 3, 7, 9, 13, 27]
+    neg_chk_lst = [21]
+    res = 0
+    sq_cnt = 0
+    for i in range(10, 150 * 10 ** 6, 10):
+        i_sq = i ** 2
+        if i_sq % 420 != 100: continue
+        #i_rt = isqrt(i)
+        #if not i_rt ** 2 == i: continue
+        sq_cnt += 1
+        for j in add_lst:
+            if not ps.isPrime(i_sq + j, extend_sieve=False, extend_sieve_sqrt=False, use_miller_rabin_screening=True, n_miller_rabin_trials=3):
+                break
+        else:
+            for j in neg_chk_lst:
+                if ps.isPrime(i_sq + j, extend_sieve=False, extend_sieve_sqrt=False, use_miller_rabin_screening=True, n_miller_rabin_trials=3):
+                    break
+            else:
+                print(i)
+            res += i
+    print(f"Time taken = {time.time() - since:.4f} seconds")
+    print(f"square count = {sq_cnt}")
+    print(f"sum = {res}")
+    """
+
+def investigatingAPrimePatternSum(n_max: int=150 * 10 ** 6 - 1, add_nums: List[int]=[1, 3, 7, 9, 13, 27]) -> int:
+    """
+    Solution to Project Euler #146
+    """
+    since = time.time()
+    lst = investigatingAPrimePatternList(n_max=n_max, add_nums=add_nums)
+    res = sum(lst)
+    print(f"Time taken = {time.time() - since:.4f} seconds")
+    return res
+
 if __name__ == "__main__":
-    to_evaluate = {144}
+    to_evaluate = {146}
 
     if not to_evaluate or 101 in to_evaluate:
         res = optimumPolynomial(((1, -1, 1, -1, 1, -1, 1, -1, 1, -1, 1)))
@@ -4600,6 +4719,9 @@ if __name__ == "__main__":
         )
         print(f"Solution to Project Euler #144 = {res}")
 
+    if not to_evaluate or 146 in to_evaluate:
+        res = investigatingAPrimePatternSum(n_max=150 * 10 ** 6 - 1, add_nums=[1, 3, 7, 9, 13, 27])
+        print(f"Solution to Project Euler #146 = {res}")
     """
     for n in range(1, 100_000_001):
         num = 5 * n ** 2 + 2 * n + 1
@@ -4630,4 +4752,45 @@ if __name__ == "__main__":
                 print(f"num = {num}, num_sq = {num_sq}, {n1[1]} = {n1[0]}, {n2[1]} = {n2[0]}, {n3[1]} = {n3[0]}")
                 tot += num_sq
     print(f"total = {tot}")
+    """
+    """
+    since = time.time()
+    ps = PrimeSPFsieve(10 ** 6)
+    add_lst = [1, 3, 7, 9, 13, 27]
+    neg_chk_lst = [21]
+    res = 0
+    sq_cnt = 0
+    for i in range(10, 150 * 10 ** 6, 10):
+        i_sq = i ** 2
+        if i_sq % 420 != 100: continue
+        #i_rt = isqrt(i)
+        #if not i_rt ** 2 == i: continue
+        sq_cnt += 1
+        for j in add_lst:
+            if not ps.isPrime(i_sq + j, extend_sieve=False, extend_sieve_sqrt=False, use_miller_rabin_screening=True, n_miller_rabin_trials=3):
+                break
+        else:
+            for j in neg_chk_lst:
+                if ps.isPrime(i_sq + j, extend_sieve=False, extend_sieve_sqrt=False, use_miller_rabin_screening=True, n_miller_rabin_trials=3):
+                    break
+            else:
+                print(i)
+            res += i
+    print(f"Time taken = {time.time() - since:.4f} seconds")
+    print(f"square count = {sq_cnt}")
+    print(f"sum = {res}")
+    """
+    """
+        i_sq = i ** 2
+        p_i = bisect.bisect_left(ps.p_lst, i_sq)
+        for j, p_i in enumerate(range(p_i, p_i + len(add_lst))):
+            num = i_sq + add_lst[j]
+            if p_i >= len(ps.p_lst) or ps.p_lst[p_i] != num:
+                if i == 10:
+                    print(f"i = 10, 100 + {j} does not equal ps.p_lst[p_i]")
+                break
+        else:
+            print(i_rt)
+            res += i_rt
+    print(f"sum = {res}")
     """

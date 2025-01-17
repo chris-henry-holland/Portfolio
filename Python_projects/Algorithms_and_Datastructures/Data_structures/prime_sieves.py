@@ -164,6 +164,7 @@ class PrimeSPFsieve:
             a = 0
             while a in seen:
                 a = random.randrange(2, n - 1)
+            seen.add(a)
             x = pow(a, d, n)
             for _ in range(s):
                 y = pow(x, 2, n)
@@ -209,6 +210,7 @@ class PrimeSPFsieve:
                     Miller-Rabin primality test (with different bases each
                     time) each return that n may be prime before performing
                     the full primality test.
+                Default: 3
         
         Returns:
         Boolean (bool) giving whether or not n is a prime number.
