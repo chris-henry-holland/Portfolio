@@ -4418,6 +4418,237 @@ def laserBeamEllipseReflectionCount(
     print(f"Time taken = {time.time() - since:.4f} seconds")
     return res
 
+# Problem 145
+def nDigitReversibleNumbersCount(n_dig: int, base: int=10) -> int:
+    """
+    Calculates the number of integers which, when expressed in the
+    chosen base are n_dig digits long without leading zeros, do not
+    end with a 0 and when added to the number consisting of the same
+    digits reversed (without leading zeros) when expressed in the
+    chosen base results in an integer which when expressed in the
+    chosen base contains only odd digits.
+
+    Args:
+        Required positional:
+        n_dig (int): Strictly positive integer giving the number
+                of digits in the integers considered when expressed
+                in the chosen base
+        
+        Optional named:
+        base (int): Integer strictly greater than 1 giving the base
+                in which the integers are expressed, in particular
+                when reversing the digits of the integer and
+                assessing whether the sum consists only of odd
+                digits.
+    
+    Returns:
+    Integer (int) giving the number of integers which when expressed
+    in the chosen base consists of n_dig digits without leading
+    zeros that satisfy the stated requirements.
+    """
+    # TODO- look into the closed form solution, and adapt it to  work
+    # with odd bases
+
+    n_dig_hlf = n_dig >> 1
+    odd_n_dig = n_dig & 1
+    base_odd = base & 1
+    tail = []
+    memo = {}
+    def recur(idx: int=0, head_needs_carry: bool=False, carry: bool=False) -> int:
+        if idx == n_dig_hlf:
+            if not odd_n_dig: return head_needs_carry == carry
+            if not base_odd:
+                #print(idx, head_needs_carry, carry)
+                if not carry: return 0
+                return base >> 1
+            else:
+                if carry != head_needs_carry: return 0
+                if not carry: return (base >> 1) + 1
+                return (base >> 1) - (not idx)
+
+        args = (idx, head_needs_carry, carry)
+        if args in memo.keys(): return memo[args]
+
+        tail_d = tail[idx]
+
+        res = 0
+        if carry:
+            cnt10 = 0
+            cnt11 = 0
+            # TODO- try to find a closed form expression for the
+            # counts without looping over the digit options
+            for d in range(not idx, base):
+                d_wo_carry = tail_d + d
+                if base & 1:
+                    if d_wo_carry < base - 1:
+                        needs_carry = not d_wo_carry & 1
+                    elif d_wo_carry >= base:
+                        needs_carry = d_wo_carry & 1
+                    else: continue
+                else:
+                    needs_carry = not d_wo_carry & 1
+                if head_needs_carry and tail_d + d + needs_carry < base:
+                    continue
+                elif not head_needs_carry and tail_d + d >= base:
+                    continue
+                carries = tail_d + d + carry >= base
+                if carries: cnt11 += needs_carry
+                else: cnt10 += needs_carry
+            if cnt10: res += cnt10 * recur(idx=idx + 1, head_needs_carry=True, carry=False)
+            if cnt11: res += cnt11 * recur(idx=idx + 1, head_needs_carry=True, carry=True)
+            memo[args] = res
+            return res
+        cnt00 = 0
+        cnt01 = 0
+        for d in range(not idx, base):
+            d_wo_carry = tail_d + d
+            if base & 1:
+                if d_wo_carry < base - 1:
+                    needs_carry = not d_wo_carry & 1
+                elif d_wo_carry >= base:
+                    needs_carry = d_wo_carry & 1
+                else: continue
+            else:
+                needs_carry = not d_wo_carry & 1
+            if head_needs_carry and tail_d + d + needs_carry < base:
+                continue
+            elif not head_needs_carry and tail_d + d >= base:
+                continue
+            carries = tail_d + d + carry >= base
+            if carries: cnt01 += not needs_carry
+            else: cnt00 += not needs_carry
+        #print(tail, args, cnt00, cnt01, cnt10, cnt11)
+        
+        if cnt00 and not carry: res += cnt00 * recur(idx=idx + 1, head_needs_carry=False, carry=False)
+        if cnt01 and not carry: res += cnt01 * recur(idx=idx + 1, head_needs_carry=False, carry=True)
+        #if cnt10 and carry: res += cnt10 * recur(idx=idx + 1, head_needs_carry=True, carry=False)
+        #if cnt11 and carry: res += cnt11 * recur(idx=idx + 1, head_needs_carry=True, carry=True)
+        memo[args] = res
+        return res
+        """
+        for opt in range(not idx, base):
+            d_wo_carry = tail_d + opt
+            if base & 1:
+                if d_wo_carry < base - 1:
+                    needs_carry = not d_wo_carry & 1
+                elif d_wo_carry >= base:
+                    needs_carry = d_wo_carry & 1
+                else: continue
+            else:
+                needs_carry = not d_wo_carry & 1
+            if head_needs_carry and tail_d + opt + needs_carry < base:
+                continue
+            elif not head_needs_carry and tail_d + opt >= base:
+                continue
+            carries = tail_d + opt + carry >= base
+            if carries:
+                if needs_carry: cnt11 += 1
+                else: cnt01 += 1
+            else:
+                if needs_carry: cnt10 += 1
+                else: cnt00 += 1
+        #print(tail, args, cnt00, cnt01, cnt10, cnt11)
+        
+        if cnt00 and not carry: res += cnt00 * recur(idx=idx + 1, head_needs_carry=False, carry=False)
+        if cnt01 and not carry: res += cnt01 * recur(idx=idx + 1, head_needs_carry=False, carry=True)
+        #if cnt10 and carry: res += cnt10 * recur(idx=idx + 1, head_needs_carry=True, carry=False)
+        #if cnt11 and carry: res += cnt11 * recur(idx=idx + 1, head_needs_carry=True, carry=True)
+        memo[args] = res
+        return res
+        """
+            
+
+    res = 0
+    for tail_num in range(1, base ** n_dig_hlf):
+        if not tail_num % base: continue
+        tail_num2 = tail_num
+        
+        tail = []
+        for _ in range(n_dig_hlf):
+            tail_num2, d = divmod(tail_num2, base)
+            tail.append(d)
+        memo = {}
+        res += recur(idx=0, head_needs_carry=False, carry=False) + recur(idx=0, head_needs_carry=True, carry=False)
+    return res
+
+    """
+    n_dig_hlf = -((-n_dig) >> 1)
+    odd = n_dig & 1
+
+    def recur(tail: List[int], head: List[int], carry: bool=False) -> int:
+        if len(tail) == len(head) + odd:
+            if odd:
+                if not carry: return 0
+                carry = (tail[-1] << 1) + 1 >= base
+            for i in reversed(range(len(head))):
+                carry, d = divmod(tail[i] + head[i] + carry, base)
+                if not d & 1: return 0
+            return 1
+        d_odd = not (tail[len(head)] + carry) & 1
+        start = d_odd
+        if not start and not head:
+            start = 2
+        head.append(0)
+        res = 0
+        for d in range(start, base, 2):
+            head[-1] = d
+            carry = d + tail[len(head) - 1] + carry >= base
+            res += recur(tail, head, carry=carry)
+        head.pop()
+        return res
+            
+
+    res = 0
+    for tail_num in range(1, base ** n_dig_hlf):
+        if not tail_num % base: continue
+        tail_num2 = tail_num
+        tail = []
+        for _ in range(n_dig_hlf):
+            tail_num2, d = divmod(tail_num2, base)
+            tail.append(d)
+        res += recur(tail, [], carry=False)
+    return res
+    """
+
+def reversibleNumbersCount(n_dig_max: int=9, base: int=10) -> int:
+    """
+    Solution to Project Euler #145
+
+    Calculates the number of integers which, when expressed in the
+    chosen base are no more than n_dig digits long without leading
+    zeros, do not end with a 0 and when added to the number
+    consisting of the same digits reversed (without leading zeros)
+    when expressed in the chosen base results in an integer which
+    when expressed in the chosen base contains only odd digits.
+
+    Args:
+        Required positional:
+        n_dig (int): Strictly positive integer giving the largest
+                number of digits in the integers considered when
+                expressed in the chosen base
+        
+        Optional named:
+        base (int): Integer strictly greater than 1 giving the base
+                in which the integers are expressed, in particular
+                when reversing the digits of the integer and
+                assessing whether the sum consists only of odd
+                digits.
+    
+    Returns:
+    Integer (int) giving the number of integers which when expressed
+    in the chosen base consists of at most n_dig digits without
+    leading zeros that satisfy the stated requirements.
+    """
+    since = time.time()
+    res = 0
+    for n_dig in range(1, n_dig_max + 1):
+        ans = nDigitReversibleNumbersCount(n_dig, base=base)
+        #print(f"n_dig = {n_dig}, count = {ans}")
+        res += ans
+    print(f"Time taken = {time.time() - since:.4f} seconds")
+    return res
+
+# Problem 146
 def investigatingAPrimePatternList(n_max: int=150 * 10 ** 6 - 1, add_nums: List[int]=[1, 3, 7, 9, 13, 27]) -> List[int]:
 
 
@@ -4538,7 +4769,7 @@ def investigatingAPrimePatternSum(n_max: int=150 * 10 ** 6 - 1, add_nums: List[i
     return res
 
 if __name__ == "__main__":
-    to_evaluate = {146}
+    to_evaluate = {145}
 
     if not to_evaluate or 101 in to_evaluate:
         res = optimumPolynomial(((1, -1, 1, -1, 1, -1, 1, -1, 1, -1, 1)))
@@ -4708,7 +4939,6 @@ if __name__ == "__main__":
         res = perfectSquareCollection()
         print(f"Solution to Project Euler #142 = {res}")
 
-
     if not to_evaluate or 144 in to_evaluate:
         res = laserBeamEllipseReflectionCount(
             ellipse=(4, 1, 100),
@@ -4718,6 +4948,10 @@ if __name__ == "__main__":
             use_float=True
         )
         print(f"Solution to Project Euler #144 = {res}")
+
+    if not to_evaluate or 145 in to_evaluate:
+        res = reversibleNumbersCount(n_dig_max=9, base=10)
+        print(f"Solution to Project Euler #145 = {res}")
 
     if not to_evaluate or 146 in to_evaluate:
         res = investigatingAPrimePatternSum(n_max=150 * 10 ** 6 - 1, add_nums=[1, 3, 7, 9, 13, 27])
