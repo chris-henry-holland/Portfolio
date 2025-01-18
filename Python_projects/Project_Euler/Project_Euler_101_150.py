@@ -4768,8 +4768,22 @@ def investigatingAPrimePatternSum(n_max: int=150 * 10 ** 6 - 1, add_nums: List[i
     print(f"Time taken = {time.time() - since:.4f} seconds")
     return res
 
+# Problem 147
+def rectanglesInCrossHatchedGrids(m: int=47, n: int=43) -> int:
+    """
+    Solution to Project Euler #147
+    """
+    since = time.time()
+    if n < m: m, n = n, m
+    res = math.comb(m + 2, 3) * math.comb(n + 2, 3) + 6 * math.comb(m + 5, 6)\
+            - 4 * (n + 2) * math.comb(m + 4, 5) + 2 * math.comb(n + 1, 2) * math.comb(m + 3, 4)\
+            + (4 * math.comb(n + 1, 2) + 3 * n + 2) * math.comb(m + 2, 3)\
+            - 5 * math.comb(n + 1, 2) * math.comb(m + 1, 2)
+    print(f"Time taken = {time.time() - since:.4f} seconds")
+    return res
+
 if __name__ == "__main__":
-    to_evaluate = {145}
+    to_evaluate = {147}
 
     if not to_evaluate or 101 in to_evaluate:
         res = optimumPolynomial(((1, -1, 1, -1, 1, -1, 1, -1, 1, -1, 1)))
@@ -4956,6 +4970,10 @@ if __name__ == "__main__":
     if not to_evaluate or 146 in to_evaluate:
         res = investigatingAPrimePatternSum(n_max=150 * 10 ** 6 - 1, add_nums=[1, 3, 7, 9, 13, 27])
         print(f"Solution to Project Euler #146 = {res}")
+
+    if not to_evaluate or 147 in to_evaluate:
+        res = rectanglesInCrossHatchedGrids(m=3, n=3)
+        print(f"Solution to Project Euler #147 = {res}")
     """
     for n in range(1, 100_000_001):
         num = 5 * n ** 2 + 2 * n + 1
