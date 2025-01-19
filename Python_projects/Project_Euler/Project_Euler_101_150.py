@@ -4775,10 +4775,12 @@ def rectanglesInCrossHatchedGrids(m: int=47, n: int=43) -> int:
     """
     since = time.time()
     if n < m: m, n = n, m
-    res = math.comb(m + 2, 3) * math.comb(n + 2, 3) + 6 * math.comb(m + 5, 6)\
-            - 4 * (n + 2) * math.comb(m + 4, 5) + 2 * math.comb(n + 1, 2) * math.comb(m + 3, 4)\
-            + (4 * math.comb(n + 1, 2) + 3 * n + 2) * math.comb(m + 2, 3)\
-            - 5 * math.comb(n + 1, 2) * math.comb(m + 1, 2)
+    res = math.comb(m + 2, 3) * math.comb(n + 2, 3)\
+            + 24 * math.comb(m + 5, 6)\
+            - 8 * (2 * n + 7) * math.comb(m + 4, 5)\
+            + 2 * (4 * math.comb(n + 1, 2) + 12 * n + 21) * math.comb(m + 3, 4)\
+            - (8 * math.comb(n + 1, 2) + 9 * n + 10) * math.comb(m + 2, 3)\
+            + math.comb(n + 1, 2) * math.comb(m + 1, 2)
     print(f"Time taken = {time.time() - since:.4f} seconds")
     return res
 
@@ -4972,7 +4974,7 @@ if __name__ == "__main__":
         print(f"Solution to Project Euler #146 = {res}")
 
     if not to_evaluate or 147 in to_evaluate:
-        res = rectanglesInCrossHatchedGrids(m=3, n=3)
+        res = rectanglesInCrossHatchedGrids(m=47, n=43)
         print(f"Solution to Project Euler #147 = {res}")
     """
     for n in range(1, 100_000_001):
