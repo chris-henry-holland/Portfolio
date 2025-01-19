@@ -14,7 +14,7 @@ import sympy as sym
 
 from collections import deque
 from sortedcontainers import SortedDict, SortedList
-from typing import Dict, List, Tuple, Set, Union, Generator, Callable, Optional, Any, Hashable
+from typing import Dict, List, Tuple, Set, Union, Generator, Callable, Optional, Any, Hashable, Iterable
 
 sys.path.append(os.path.join(os.path.dirname(__file__), "../Algorithms_and_Datastructures/Algorithms"))
 sys.path.append(os.path.join(os.path.dirname(__file__), "../Algorithms_and_Datastructures/Data_structures"))
@@ -4821,8 +4821,94 @@ def rectanglesInCrossHatchedGrids(m: int=47, n: int=43) -> int:
     print(f"Time taken = {time.time() - since:.4f} seconds")
     return res
 
+
+# Problem 149
+def kadane(seq: Iterable[int]) -> int:
+    #it = iter(seq)
+    curr = 0
+    res = -float("inf")
+    for num in seq:
+        #print(curr, num)
+        curr = max(curr, 0) + num
+        res = max(res, curr)
+    return res
+
+def maximumGridSumSubsequence(grid: List[List[int]]) -> int:
+    shape = (len(grid), len(grid[0]))
+    def horizontalGenerator(i1: int) -> Generator[int, None, None]:
+        #print("horiz")
+        for num in grid[i1]:
+            yield num
+        return
+
+    def verticalGenerator(i2: int) -> Generator[int, None, None]:
+        #print("vert")
+        for i1 in range(shape[0]):
+            yield grid[i1][i2]
+        return
+
+    def diagGenerator(i1_0: int, i2_0: int) -> Generator[int, None, None]:
+        #print("diag")
+        n_terms = min(shape[0] - i1_0, shape[1] - i2_0)
+        for j in range(n_terms):
+            yield grid[i1_0 + j][i2_0 + j]
+        return
+
+    def antidiagGenerator(i1_0: int, i2_0: int) -> Generator[int, None, None]:
+        #print("antidiag")
+        n_terms = min(i1_0 + 1, shape[1] - i2_0)
+        for j in range(n_terms):
+            yield grid[i1_0 - j][i2_0 + j]
+        return
+
+    res = max(kadane(verticalGenerator(0)), kadane(diagGenerator(0, 0)))
+    for i1 in range(1, shape[0]):
+        #print(f"i1 = {i1}")
+        res = max(res,
+                  kadane(horizontalGenerator(i1)),
+                  kadane(diagGenerator(i1, 0)),
+                  kadane(antidiagGenerator(i1, 0)),
+            )
+    res = max(res, kadane(verticalGenerator(i1)))
+    for i2 in range(1, shape[1]):
+        #print(f"i2 = {i2}")
+        res = max(res,
+                  kadane(verticalGenerator(i2)),
+                  kadane(diagGenerator(0, i2)),
+                  kadane(antidiagGenerator(shape[0] - 1, i2))
+            )
+    return res
+
+def laggedFibonacciGenerator() -> Generator[int, None, None]:
+    qu = deque()
+    md = 10 ** 6
+    for k in range(1, 56):
+        num = ((100003 - 200003 * k + 300007 * k ** 3) % md) - 5 * 10 ** 5
+        qu.append(num)
+        yield num
+    while True:
+        num = ((qu[-24] + qu.popleft() + 10 ** 6) % md) - 5 * 10 ** 5
+        qu.append(num)
+        yield num
+    return
+
+def maximumLaggedFibonacciGridSumSubsequence(shape: Tuple[int, int]=(2000, 2000)) -> int:
+    """
+    Solution to Project Euler # 149
+    """
+    since = time.time()
+    it = laggedFibonacciGenerator()
+    grid = []
+    for i1 in range(shape[0]):
+        grid.append([])
+        for i2 in range(shape[1]):
+            grid[-1].append(next(it))
+    res = maximumGridSumSubsequence(grid)
+    print(f"Time taken = {time.time() - since:.4f} seconds")
+    return res
+
 if __name__ == "__main__":
-    to_evaluate = {143}
+    to_evaluate = {149}
 
     if not to_evaluate or 101 in to_evaluate:
         res = optimumPolynomial(((1, -1, 1, -1, 1, -1, 1, -1, 1, -1, 1)))
@@ -5017,6 +5103,11 @@ if __name__ == "__main__":
     if not to_evaluate or 147 in to_evaluate:
         res = rectanglesInCrossHatchedGrids(m=47, n=43)
         print(f"Solution to Project Euler #147 = {res}")
+    
+    if not to_evaluate or 149 in to_evaluate:
+        res = maximumLaggedFibonacciGridSumSubsequence(shape=(2000, 2000))
+        print(f"Solution to Project Euler #149 = {res}")
+    
     """
     for n in range(1, 100_000_001):
         num = 5 * n ** 2 + 2 * n + 1
