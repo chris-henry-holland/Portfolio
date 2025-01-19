@@ -4197,6 +4197,43 @@ def perfectSquareCollection() -> int:
     return res
 
 # Problem 143
+def torricelliTriangleUniqueLengthSum(sm_max: int=12 * 10 ** 4) -> int:
+    """
+    Solution to Project Euler Problem 143
+    """
+    since = time.time()
+    m_mx = isqrt(sm_max) - 1
+    seen = {}
+    lengths = set()
+    for m in range(2, m_mx + 1):
+        n_mx = min(m - 1, (sm_max - m ** 2 - 1) // (2 * m))
+        for n in range(1, n_mx + 1):
+            if gcd(m, n) != 1: continue
+            x0, y0, z0 = n * (2 * m + n), m ** 2 - n ** 2, m ** 2 + n ** 2 + m * n
+            #print(x0, y0, z0)
+            if gcd(gcd(x0, y0), z0) != 1: continue
+            for mult in range(1, (sm_max // (x0 + y0)) + 1):
+                x, y, z = x0 * mult, y0 * mult, z0 * mult
+                if y > x: x, y = y, x
+                for y2, z2 in seen.get(x, {}).items():
+                    y1_, y2_ = sorted([y, y2])
+                    if y1_ not in seen.get(y2_, {}).keys(): continue
+                    #triangle = sorted([z, z2, seen[y2_][y1_]])
+                    #if gcd(gcd(triangle[0], triangle[1]), triangle[2]) != 1: continue
+                    #yield tuple(triangle)
+                    #print(tuple(triangle))
+                    length = x + y + y2
+                    if length <= sm_max:
+                        lengths.add(x + y + y2)
+
+                seen.setdefault(x, {})
+                seen[x][y] = z
+                seen.setdefault(y, {})
+                seen[y][x] = z
+    #print(seen)
+    res = sum(lengths)
+    print(f"Time taken = {time.time() - since:.4f} seconds")
+    return res
 
 
 # Problem 144
@@ -4785,7 +4822,7 @@ def rectanglesInCrossHatchedGrids(m: int=47, n: int=43) -> int:
     return res
 
 if __name__ == "__main__":
-    to_evaluate = {147}
+    to_evaluate = {143}
 
     if not to_evaluate or 101 in to_evaluate:
         res = optimumPolynomial(((1, -1, 1, -1, 1, -1, 1, -1, 1, -1, 1)))
@@ -4954,6 +4991,10 @@ if __name__ == "__main__":
     if not to_evaluate or 142 in to_evaluate:
         res = perfectSquareCollection()
         print(f"Solution to Project Euler #142 = {res}")
+
+    if not to_evaluate or 143 in to_evaluate:
+        res = torricelliTriangleUniqueLengthSum(sm_max=12 * 10 ** 4)
+        print(f"Solution to Project Euler #143 = {res}")
 
     if not to_evaluate or 144 in to_evaluate:
         res = laserBeamEllipseReflectionCount(
