@@ -4821,6 +4821,135 @@ def rectanglesInCrossHatchedGrids(m: int=47, n: int=43) -> int:
     print(f"Time taken = {time.time() - since:.4f} seconds")
     return res
 
+# Problem 148
+def pascalTrianglePrimeNondivisorCount(p: int=7, n_rows: int=10 ** 9) -> int:
+    """
+    Solution to Project Euler #148
+
+    For a prime p, calculates how many entries in the first n_rows
+    rows of Pascal's triangle (starting at the row with a single
+    1 entry as row 1) are not divisible by p.
+
+    Pascal's triangle is a triangle of integers constructed row
+    by row by starting with the row consisting of the number 1
+    only, and constructing each subsequent row by taking the sum
+    of each pair of adjacent numbers, placing the result
+    below and between the adjacent pair, and additionally placing
+    a 1 at the beginning and end of the new row.
+
+    The first few rows of Pascal's triangle are:
+
+            1
+          1   1
+        1   2   1
+      1   3   3   1
+    1   4   6   4   1
+
+    Args:
+        Optional named:
+        p (int): Integer specifying the prime number for which
+                divisibility of entries in Pascal's triangle are
+                to be assessed. The function is only guaranteed to
+                give the correct answer if this is a prime number.
+            Default: 7
+        n_rows (int): The number of initial rows of Pascal's
+                triangle whose entries are considered in the
+                count.
+            Default: 10 ** 9
+    
+    Returns:
+    Integer (int) giving the number of entries in the first n_rows
+    rows of Pascal's triangle that are divisible by p.
+
+    Outline of rationale:
+    For non-negative integers m and n and n < m, the (n + 1)th
+    entry from the left in the (m + 1)th row of Pascal's triangle
+    is given by (m choose n), where for non-negative integers m
+    and n:
+        (m choose n) = m! / (n! * (m - n)!) if m >= n
+                       0                    otherwise
+    We observe that for prime p, m! is only divisible by p if
+    m >= p, implying that for non-negative integers m and n with
+    m < p, (m choose n) is divisible by p if and only if n > m.
+    By Lucas' theorem, for prime p, non-negative integer m and
+    integer n where 0 <= n <= m:
+        (m choose n) = product (i = 0 to k) (m_i choose n_i) (mod p)
+    where k is the number of digits in m when expressed in base
+    p and for non-negative i, m_i and n_i are the ith digits from
+    the right (with the rightmost digit corresponding to i = 0) of
+    m and n respectively when expressed in base p, or equivalently
+    are the unique integers between 0 and p - 1 inclusive for which:
+        m = m_k * p ** k + m_(k - 1) * p ** (k - 1) + ... + m_1 * p + m_0
+        n = n_k * p ** k + n_(k - 1) * p ** (k - 1) + ... + n_1 * p + n_0
+    
+    An integer not being divisible by p is equivalent to not being
+    equal to 0 modulo p. Since for prime p, a product modulo p is
+    zero if and only if at least of the numbers being multiplied is
+    zero modulo p, (m choose n) is non-zero modulo p and so is not
+    divisible by p if and only if (m_i choose n_i) is non-zero for
+    all integers 0 <= i <= k. Given that each m_i and n_i are
+    non-negative integers and strictly less than p, as previously
+    observed (m_i choose n_i) is divisible by p and so zero modulo
+    p if and only if m_i < n_i. Thus, for each m_i there are
+    (m_i + 1) values of n_i (i.e. 0, 1, ... m_i - 1, m_i) for
+    which (m_i choose n_i) is non-zero modulo p. Given that if
+    0 <= n_i <= m_i for each integer 0 <= i <= k results in a
+    value of n between 0 and m (and so an entry in Pascal's
+    triangle) and each distinct combination of values of n_i
+    gives rise to a different value of n_i, all combinations of
+    the values of n_i for which 0 <= n_i <= m_i map injectively
+    to an entry in the mth row of Pascal's triangle. Consequently,
+    the number of entries in the mth row of Pascal's triangle
+    that are not divisible by p is given by:
+        (prod i = 0 to k) (m_i + 1)
+    
+    We now consider summing this over multiple consecutive rows.
+    For an integer a, consider the number of entries that are
+    not divisible by p in the rows with m between a * p and
+    (a + 1) * p - 1 inclusive. Using the above equation (defining
+    the a_i as for m_i and n_i to be the digits in the expression
+    of a in base p from right to left) we can find this number to
+    be:
+        ((prod i = 0 to k) (a_i + 1)) * sum(j = 0 to p - 1) (j + 1)
+        = ((prod i = 0 to k) (a_i + 1)) * p * (p + 1) / 2
+    It can straightforwardly be shown by induction that the
+    sum for the rows with m between a * p ** b and
+    (a + 1) * p ** b - 1 inclusive (for positive b) is:
+        ((prod i = 0 to k) (a_i + 1)) * (p * (p + 1) / 2) ** b
+    Similarly, it can be shown that for integer 0 <= c < p,
+    the sum for the rows with m between a * p ** b and
+    a * p ** b + c * p ** (b - 1) is:
+        ((prod i = 0 to k) (a_i + 1)) * (p * (p + 1) / 2) ** (b - 1) * (c * (c + 1) / 2)
+    From these it can be calulated that for all rows with m
+    less than a (which given that m corrseponds to the (m + 1)th
+    row of Pascal's triangle is the first a rows of Pascal's
+    triangle), the number of entries not divisible by p is:
+        (sum i = 0 to k) (p * (p + 1) / 2) ** i * (a_i * (a_i + 1))
+                * ((prod j = i + 1 to k) (a_j + 1))
+    """
+    n2 = n_rows
+    #base_p_digs = []
+    res = 0
+    i = 0
+    digs = []
+    while n2:
+        n2, r = divmod(n2, p)
+        #base_p_digs.append(r)
+        digs.append(r)
+        #term = ((p * (p + 1) // 2) ** i) * (r * (r + 1) // 2)
+        #res += term
+        #print(i, term)
+        #i += 1
+    k = len(digs) - 1
+    curr = 1
+    for i in reversed(range(k + 1)):
+        d = digs[i]
+        term = curr * ((p * (p + 1) // 2) ** i) * (d * (d + 1) // 2)
+        res += term
+        curr *= d + 1
+    return res
+    #for i, d in enumerate(base)
+
 
 # Problem 149
 def kadane(seq: Iterable[int]) -> int:
@@ -4908,7 +5037,7 @@ def maximumLaggedFibonacciGridSumSubsequence(shape: Tuple[int, int]=(2000, 2000)
     return res
 
 if __name__ == "__main__":
-    to_evaluate = {149}
+    to_evaluate = {148}
 
     if not to_evaluate or 101 in to_evaluate:
         res = optimumPolynomial(((1, -1, 1, -1, 1, -1, 1, -1, 1, -1, 1)))
@@ -5104,6 +5233,10 @@ if __name__ == "__main__":
         res = rectanglesInCrossHatchedGrids(m=47, n=43)
         print(f"Solution to Project Euler #147 = {res}")
     
+    if not to_evaluate or 148 in to_evaluate:
+        res = pascalTrianglePrimeNondivisorCount(p=7, n_rows=10 ** 9)
+        print(f"Solution to Project Euler #148 = {res}")
+
     if not to_evaluate or 149 in to_evaluate:
         res = maximumLaggedFibonacciGridSumSubsequence(shape=(2000, 2000))
         print(f"Solution to Project Euler #149 = {res}")
