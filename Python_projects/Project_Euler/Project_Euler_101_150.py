@@ -5040,7 +5040,87 @@ def maximumLaggedFibonacciGridSumSubsequence(shape: Tuple[int, int]=(2000, 2000)
 
 # Problem 150
 def subTriangleMinSum(triangle: List[List[int]]) -> int:
+    """
+    Calculates the smallest total of all possible non-empty
+    sub-triangle array in an integer triangle array.
 
+    A triangle array is a 1D array whose first element is
+    a 1D array of integers with length one, and each other
+    element is a 1D array of integers with length one
+    greater than that of the previous element.
+
+    A sub-triangle array of a triangle array is a triangle
+    array which can be constructed by taking its first element
+    as a 1D array length one, which is the same value as one
+    of the integers in one of the arrays in the the original
+    triangle array and where subsequent arrays are formed from
+    the number of elements one greater than that of the
+    previous array, starting at the next array in the original
+    triangle array at the same position from the left as the
+    position of the first element chosen in its array. The
+    sub-triangle array can contain any number of arrays from
+    one (i.e. just the original element) up to the number
+    of arrays the array containing initial element chosen in
+    the original triangle array is from the end. Note that
+    the original triange array is considered to be a
+    sub-triangle array of itself, as it can be constructed
+    in the described manner.
+
+    The sum of elements of a triangle array or sub-triangle
+    array is the sum of the totals of all the 1D arrays
+    in the triangle array.
+
+    Args:
+        Required positional:
+        triangle (list of lists of ints): The triangle array
+                in question, represented as a list of lists.
+                The first element of the outer list is
+                required to be length 1 and each subsequent
+                element is required to be length one greater
+                than that of the previous element.
+
+    Returns:
+    Integer (int) giving the smallest sum of elements
+    possible for any sub-triangle array of the given triangle
+    array.
+
+    Outline of rationale:
+    We calculate the possibile sub-triangle sums using bottom
+    up dynamic programming, starting from the bottom of the
+    triangle array going up, at each level considering the
+    sub-triangle arrays whose initial elements are in that
+    array using the corresponding results from the two rows
+    after it.
+    For each row, and each element in that row we calculate
+    the sub-triangle array sum of each size (i.e. the number
+    of arrays it contains) with that element as the initial
+    element for the sub-triangle array, storing these in a
+    list. For size 1 (i.e. the sub-triangle consisting of
+    just that element), this is just the value of that
+    element, and for size 2 this is that value plus the
+    value of the two elements in the subsequent array at
+    the corresponding position relative to the start of
+    their array and the next position. For the larger sizes,
+    it can be calculated by adding together the value for
+    the sub-triangle size one less for those two elements in
+    the subsequent array (already calculated as we are working
+    from the bottom up) and to avoid double-counting of the
+    elements shared by these two triangles, subtracting
+    the value for the sub-triangle size one less still for
+    the element in the array subsequent to those two
+    elements, at the position from the beginning of the
+    array one after the corresponding position of the
+    original element. This process is continued for
+    increasing sizes until the maximum size for that element
+    is reached (which is one greater than that of the
+    elements of the subsequent array, and corresponds to
+    the sub-triangles reaching the last array in the
+    original triangle array).
+    For each value obtained, we compare with the current
+    result and if it is smaller, we update the result.
+    This process iterates over all of the possible
+    sub-triangle arrays of the chosen triangle array.
+    """
     # TODO- look for alternative approaches to make it faster
     n = len(triangle)
     if n == 1: return triangle[0][0]
@@ -5080,6 +5160,9 @@ def subTriangleMinSum(triangle: List[List[int]]) -> int:
     return res
 
 def linearCongruentialGenerator(k: int=615949, m: int=797807, min_value: int=-(1 << 19), max_value: int=(1 << 19) - 1) -> Generator[int, None, None]:
+    """
+
+    """
     t = 0
     md = max_value - min_value + 1
     while True:
