@@ -5047,28 +5047,29 @@ def subTriangleMinSum(triangle: List[List[int]]) -> int:
     A triangle array is a 1D array whose first element is
     a 1D array of integers with length one, and each other
     element is a 1D array of integers with length one
-    greater than that of the previous element.
+    greater than that of the previous element. We refer
+    to the 1D arrays inside the main array as rows, and
+    refer to each element of these 1D arrays as an element
+    of the triangle array, and the index in that array
+    is referred to as its location in the row, and the
+    integer it contains is its value.
 
     A sub-triangle array of a triangle array is a triangle
-    array which can be constructed by taking its first element
-    as a 1D array length one, which is the same value as one
-    of the integers in one of the arrays in the the original
-    triangle array and where subsequent arrays are formed from
-    the number of elements one greater than that of the
-    previous array, starting at the next array in the original
-    triangle array at the same position from the left as the
-    position of the first element chosen in its array. The
-    sub-triangle array can contain any number of arrays from
-    one (i.e. just the original element) up to the number
-    of arrays the array containing initial element chosen in
-    the original triangle array is from the end. Note that
-    the original triange array is considered to be a
-    sub-triangle array of itself, as it can be constructed
+    array which can be constructed in the following way.
+    First, an element of the triangle array is selected.
+    The value of this element is used as the value of the
+    single element in the first row of the new triangle array.
+    At each subsequent step, either the construction is
+    complete (this is forced if the last row of the original
+    triangle array has been reached) or a new row is
+    constructed by moving one row down in the triangle array
+    and taking for the new row the contiguous subarray
+    starting at the same position in the row as the originally
+    selected element in its row, ith length one greater than
+    that of the previous row of the new triangle array.
+    Note that the original triange array is considered to be
+    a sub-triangle array of itself, as it can be constructed
     in the described manner.
-
-    The sum of elements of a triangle array or sub-triangle
-    array is the sum of the totals of all the 1D arrays
-    in the triangle array.
 
     Args:
         Required positional:
@@ -5085,7 +5086,7 @@ def subTriangleMinSum(triangle: List[List[int]]) -> int:
     array.
 
     Outline of rationale:
-    We calculate the possibile sub-triangle sums using bottom
+    We calculate the possible sub-triangle sums using bottom
     up dynamic programming, starting from the bottom of the
     triangle array going up, at each level considering the
     sub-triangle arrays whose initial elements are in that
@@ -5159,9 +5160,54 @@ def subTriangleMinSum(triangle: List[List[int]]) -> int:
                 res = min(res, curr[-1][-1])
     return res
 
-def linearCongruentialGenerator(k: int=615949, m: int=797807, min_value: int=-(1 << 19), max_value: int=(1 << 19) - 1) -> Generator[int, None, None]:
+def linearCongruentialGenerator(
+    k: int=615949,
+    m: int=797807,
+    min_value: int=-(1 << 19),
+    max_value: int=(1 << 19) - 1
+) -> Generator[int, None, None]:
     """
+    Generator iterating over the terms in a linear congruential
+    sequence for given linear and constant coefficients (k and
+    m respectively) within a given range.
 
+    A linear congruential sequence is one where the value for
+    the i:th term is (t_i - mn_value) for integer i >= 1,
+    where t_0 = 0 and:
+        t_i = (k * t + m) % md
+    where md is one greater than the difference between
+    min_value and max_value. This sequence contains integer
+    values between min_value and max_value inclusive.
+    For well chosen values of k and m for given min_value and
+    max_value, this forms a pseudo-random sequence of integers
+    between min-value and max_value inclusive.
+
+    Note that the generator never terminates and thus any
+    iterator over this generator must include provision to
+    terminate (e.g. a break or return statement), otherwise
+    it would result in an infinite loop.
+
+    Args:
+        Optional named:
+        k (int): Integer giving the value of k (the linear
+                coefficient) in the above function used
+                for calculating the terms in the sequence.
+            Default: 615949
+        m (int): Integer giving the value of m (the constant
+                coefficient) in the above function used
+                for calculating the terms in the sequence.
+        min_value (int): Integer giving the smallest value
+                possible for terms in the sequence.
+        max_value (int): Integer giving the largest value
+                possible for terms in the sequence. Must
+                be no smaller than min_value.
+    
+    Yields:
+    Integer (int) between min_value and max_value inclusive,
+    with the i:th term yielded (for strictly positive integer
+    i) representing the i:th term in the linear congruential
+    sequence for given linear and constant coefficients (k and
+    m respectively) within a given range.
     """
     t = 0
     md = max_value - min_value + 1
@@ -5171,6 +5217,62 @@ def linearCongruentialGenerator(k: int=615949, m: int=797807, min_value: int=-(1
     return
 
 def constructLinearCongruentialTriangle(n_rows: int, l_cong_k: int=615949, l_cong_m: int=797807, min_triangle_value: int=-(1 << 19), max_triangle_value: int=(1 << 19) - 1) -> List[List[int]]:
+    """
+    Constructs a triangle array of a given size whose elements
+    are generated by a linear congruential generator, where
+    elements from the linear congruential generateor fill the
+    values in the triangle generator row by row from the top
+    and from start to end of each row.
+
+    A triangle array is a 1D array whose first element is
+    a 1D array of integers with length one, and each other
+    element is a 1D array of integers with length one
+    greater than that of the previous element. We refer
+    to the 1D arrays inside the main array as rows, and
+    refer to each element of these 1D arrays as an element
+    of the triangle array, and the index in that array
+    is referred to as its location in the row, and the
+    integer it contains is its value.
+
+    For details regarding the linear congruential generator,
+    see linearCongruentialGenerator(). The parameters used
+    in this case are:
+        k = l_cong_k,
+        m = l_cong_m,
+        min_value = min_triangle_value
+        max_value = max_triangle value
+    
+    Args:
+        Required positional:
+        n_rows (int): The number of rows in the constructed
+                triangle array.
+        
+        Optional named:
+        l_cong_k (int): The value of the parameter k used in the
+                linear congruential generator.
+            Default: 615949
+        l_cong_m (int): The value of the parameter m used in the
+                linear congruential generator.
+            Default: 797807
+        min_triangle_value (int): The value of the parameter
+                min_value used in the linear congruential
+                generator, representing the smallest possible
+                value in the constructed triangle array.
+            Default: -2 ** 19
+        max_triangle_value (int): The value of the parameter
+                max_value used in the linear congruential
+                generator, representing the largest possible
+                value in the constructed triangle array.
+            Default: 2 ** 19 - 1
+    
+    Returns:
+    A list of lists of integers (int) representing the
+    constructed triangle array. The first list is length 1
+    and each other list is length one greater than the
+    length of the previous list. Every element of these
+    lists has an integer value between min_triangle_value
+    and max_triangle_value inclusive.
+    """
     it = linearCongruentialGenerator(k=l_cong_k, m=l_cong_m, min_value=min_triangle_value, max_value=max_triangle_value)
     triangle = []
     for i in range(n_rows):
@@ -5180,6 +5282,83 @@ def constructLinearCongruentialTriangle(n_rows: int, l_cong_k: int=615949, l_con
     return triangle
 
 def subLinearCongruentialTriangleSubTriangleSum(n_rows: int=1000, l_cong_k: int=615949, l_cong_m: int=797807, min_triangle_value: int=-(1 << 19), max_triangle_value: int=(1 << 19) - 1) -> int:
+    """
+    Solution to Project Euler #150
+
+    Calculates the smallest total of all possible non-empty
+    sub-triangle arrays of the triangle array constructed
+    by the function constructLinearCongruentialTriangle()
+    using the parameters n_rows, l_cong_k, l_cong_m,
+    min_triangle_value and max_triangle_value, whose values
+    are produced using a linear congruential generator (see
+    constructLinearCongruentialTriangle() and
+    linearCongruentialGenerator() for details)
+
+    A triangle array is a 1D array whose first element is
+    a 1D array of integers with length one, and each other
+    element is a 1D array of integers with length one
+    greater than that of the previous element. We refer
+    to the 1D arrays inside the main array as rows, and
+    refer to each element of these 1D arrays as an element
+    of the triangle array, and the index in that array
+    is referred to as its location in the row, and the
+    integer it contains is its value.
+
+    A sub-triangle array of a triangle array is a triangle
+    array which can be constructed in the following way.
+    First, an element of the triangle array is selected.
+    The value of this element is used as the value of the
+    single element in the first row of the new triangle array.
+    At each subsequent step, either the construction is
+    complete (this is forced if the last row of the original
+    triangle array has been reached) or a new row is
+    constructed by moving one row down in the triangle array
+    and taking for the new row the contiguous subarray
+    starting at the same position in the row as the originally
+    selected element in its row, ith length one greater than
+    that of the previous row of the new triangle array.
+    Note that the original triange array is considered to be
+    a sub-triangle array of itself, as it can be constructed
+    in the described manner.
+
+    Args:
+        Required positional:
+        n_rows (int): The number of rows in the constructed
+                triangle array.
+        
+        Optional named:
+        l_cong_k (int): The value of the parameter k used in the
+                linear congruential generator for construction
+                of the triangle by constructLinearCongruentialTriangle().
+            Default: 615949
+        l_cong_m (int): The value of the parameter m used in the
+                linear congruential generator for construction
+                of the triangle by constructLinearCongruentialTriangle().
+            Default: 797807
+        min_triangle_value (int): The value of the parameter
+                min_value used in the linear congruential
+                generator for construction of the triangle by
+                constructLinearCongruentialTriangle(), representing
+                the smallest possible value in the triangle array.
+            Default: -2 ** 19
+        max_triangle_value (int): The value of the parameter
+                max_value used in the linear congruential
+                generator for construction of the triangle by
+                constructLinearCongruentialTriangle(), representing
+                the largest possible value in the triangle array.
+            Default: 2 ** 19 - 1
+    
+    Returns:
+    Integer (int) giving the smallest sum of elements
+    possible for any sub-triangle array of the triangle
+    array constructed by constructLinearCongruentialTriangle()
+    with the specified parameters.
+
+    Outline of rationale:
+    See Outline of rationale in documentation for the function
+    subTriangleMinSum().
+    """
+    
     since = time.time()
     triangle = constructLinearCongruentialTriangle(n_rows, l_cong_k=l_cong_k, l_cong_m=l_cong_m, min_triangle_value=min_triangle_value, max_triangle_value=max_triangle_value)
     #print(triangle)
