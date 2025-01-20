@@ -4927,6 +4927,7 @@ def pascalTrianglePrimeNondivisorCount(p: int=7, n_rows: int=10 ** 9) -> int:
         (sum i = 0 to k) (p * (p + 1) / 2) ** i * (a_i * (a_i + 1))
                 * ((prod j = i + 1 to k) (a_j + 1))
     """
+    since = time.time()
     n2 = n_rows
     #base_p_digs = []
     res = 0
@@ -4947,6 +4948,7 @@ def pascalTrianglePrimeNondivisorCount(p: int=7, n_rows: int=10 ** 9) -> int:
         term = curr * ((p * (p + 1) // 2) ** i) * (d * (d + 1) // 2)
         res += term
         curr *= d + 1
+    print(f"Time taken = {time.time() - since:.4f} seconds")
     return res
     #for i, d in enumerate(base)
 
@@ -5023,7 +5025,7 @@ def laggedFibonacciGenerator() -> Generator[int, None, None]:
 
 def maximumLaggedFibonacciGridSumSubsequence(shape: Tuple[int, int]=(2000, 2000)) -> int:
     """
-    Solution to Project Euler # 149
+    Solution to Project Euler #149
     """
     since = time.time()
     it = laggedFibonacciGenerator()
@@ -5036,8 +5038,75 @@ def maximumLaggedFibonacciGridSumSubsequence(shape: Tuple[int, int]=(2000, 2000)
     print(f"Time taken = {time.time() - since:.4f} seconds")
     return res
 
+# Problem 150
+def subTriangleMinSum(triangle: List[List[int]]) -> int:
+
+    # TODO- look for alternative approaches to make it faster
+    n = len(triangle)
+    if n == 1: return triangle[0][0]
+    res = min(triangle[-1])
+    
+    
+    prev = [[x] for x in triangle[-1]]
+    curr = []
+    row = triangle[-2]
+    print(f"i = {n - 2}")
+    for j, val in enumerate(row):
+        res = min(res, val)
+        curr.append([val])
+        lst1 = prev[j]
+        lst2 = prev[j + 1]
+        for v1, v2 in zip(lst1, lst2):
+            curr[-1].append(val + v1 + v2)
+            res = min(res, curr[-1][-1])
+
+    for i in reversed(range(n - 2)):
+        print(f"i = {i}")
+        prevprev = prev
+        prev = curr
+        curr = []
+        row = triangle[i]
+        for j, val in enumerate(row):
+            res = min(res, val)
+            curr.append([val])
+            lst1 = prev[j]
+            lst2 = prev[j + 1]
+            lst3 = prevprev[j + 1]
+            curr[-1].append(val + lst1[0] + lst2[0])
+            res = min(res, curr[-1][-1])
+            for k in range(len(lst3)):
+                curr[-1].append(val + lst1[k + 1] + lst2[k + 1] - lst3[k])
+                res = min(res, curr[-1][-1])
+    return res
+
+def linearCongruentialGenerator(k: int=615949, m: int=797807, min_value: int=-(1 << 19), max_value: int=(1 << 19) - 1) -> Generator[int, None, None]:
+    t = 0
+    md = max_value - min_value + 1
+    while True:
+        t = (k * t + m) % md
+        yield t + min_value
+    return
+
+def constructLinearCongruentialTriangle(n_rows: int, l_cong_k: int=615949, l_cong_m: int=797807, min_triangle_value: int=-(1 << 19), max_triangle_value: int=(1 << 19) - 1) -> List[List[int]]:
+    it = linearCongruentialGenerator(k=l_cong_k, m=l_cong_m, min_value=min_triangle_value, max_value=max_triangle_value)
+    triangle = []
+    for i in range(n_rows):
+        triangle.append([])
+        for _ in range(i + 1):
+            triangle[-1].append(next(it))
+    return triangle
+
+def subLinearCongruentialTriangleSubTriangleSum(n_rows: int=1000, l_cong_k: int=615949, l_cong_m: int=797807, min_triangle_value: int=-(1 << 19), max_triangle_value: int=(1 << 19) - 1) -> int:
+    since = time.time()
+    triangle = constructLinearCongruentialTriangle(n_rows, l_cong_k=l_cong_k, l_cong_m=l_cong_m, min_triangle_value=min_triangle_value, max_triangle_value=max_triangle_value)
+    #print(triangle)
+    print("Generated triangle")
+    res = subTriangleMinSum(triangle)
+    print(f"Time taken = {time.time() - since:.4f} seconds")
+    return res
+
 if __name__ == "__main__":
-    to_evaluate = {148}
+    to_evaluate = {150}
 
     if not to_evaluate or 101 in to_evaluate:
         res = optimumPolynomial(((1, -1, 1, -1, 1, -1, 1, -1, 1, -1, 1)))
@@ -5240,6 +5309,11 @@ if __name__ == "__main__":
     if not to_evaluate or 149 in to_evaluate:
         res = maximumLaggedFibonacciGridSumSubsequence(shape=(2000, 2000))
         print(f"Solution to Project Euler #149 = {res}")
+    
+    if not to_evaluate or 150 in to_evaluate:
+        #res = subTriangleMinSum(triangle=[[15], [-14, -7], [20, -13, -5], [-3, 8, 23, -26], [1, -4, -5, -18, 5], [-16, 31, 2, 9, 28, 3]])
+        res = subLinearCongruentialTriangleSubTriangleSum(n_rows=1000, l_cong_k=615949, l_cong_m=797807, min_triangle_value=-(1 << 19), max_triangle_value=(1 << 19) - 1)
+        print(f"Solution to Project Euler #150 = {res}")
     
     """
     for n in range(1, 100_000_001):
