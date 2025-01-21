@@ -158,9 +158,35 @@ def nthRoot(a: Real, b: int, eps: Real=1e-5) -> Real:
     return x2
 
 def integerNthRoot(m: int, n: int) -> int:
-    # Finds the floor of the n:th root of m, using the positive
-    # root in the case that n is even.
-    # Newton-Raphson method
+    """
+    For an integer m and a strictly positive integer n,
+    finds the largest integer a such that a ** n <= m (or
+    equivalently, the floor of the largest real n:th root
+    of m. Note that for even n, m must be non-negative.
+    Uses the Newton-Raphson method.
+    
+    Args:
+        Required positional:
+        m (int): Integer giving the number whose root is
+                to be calculated. Must be non-negative
+                if n is even.
+        n (int): Strictly positive integer giving the
+                root to be calculated.
+    
+    Returns:
+    Integer (int) giving the largest integer a such that
+    m ** n <= a.
+    
+    Examples:
+    >>> integerNthRoot(4, 2)
+    2
+    >>> integerNthRoot(15, 2)
+    3
+    >>> integerNthRoot(27, 3)
+    3
+    >>> integerNthRoot(-26, 3)
+    -3
+    """
     if n < 1:
         raise ValueError("n must be strictly positive")
     if m < 0:

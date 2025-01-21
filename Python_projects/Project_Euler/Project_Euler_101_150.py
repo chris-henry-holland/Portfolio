@@ -74,7 +74,7 @@ def isqrt(n: int) -> int:
     For a non-negative integer n, finds the largest integer m
     such that m ** 2 <= n (or equivalently, the floor of the
     positive square root of n).
-    Uses Newton's method.
+    Uses the Newton-Raphson method.
     
     Args:
         Required positional:
@@ -99,6 +99,36 @@ def isqrt(n: int) -> int:
     return x2
 
 def integerNthRoot(m: int, n: int) -> int:
+    """
+    For an integer m and a strictly positive integer n,
+    finds the largest integer a such that a ** n <= m (or
+    equivalently, the floor of the largest real n:th root
+    of m. Note that for even n, m must be non-negative.
+    Uses the Newton-Raphson method.
+    
+    Args:
+        Required positional:
+        m (int): Integer giving the number whose root is
+                to be calculated. Must be non-negative
+                if n is even.
+        n (int): Strictly positive integer giving the
+                root to be calculated.
+    
+    Returns:
+    Integer (int) giving the largest integer a such that
+    m ** n <= a.
+    
+    Examples:
+    >>> integerNthRoot(4, 2)
+    2
+    >>> integerNthRoot(15, 2)
+    3
+    >>> integerNthRoot(27, 3)
+    3
+    >>> integerNthRoot(-26, 3)
+    -3
+    """
+
     # Finds the floor of the n:th root of m, using the positive
     # root in the case that n is even.
     # Newton-Raphson method
@@ -4955,6 +4985,21 @@ def pascalTrianglePrimeNondivisorCount(p: int=7, n_rows: int=10 ** 9) -> int:
 
 # Problem 149
 def kadane(seq: Iterable[int]) -> int:
+    """
+    Implementation of Kadane's algorithm for finding the
+    largest sum over all of the non-empty contiguous
+    subsequences of an integer sequence.
+
+    Args:
+        Required positional:
+        seq (finite ordered iterable object containing ints):
+                the sequence of integers whose largest sum
+                over contiguous subsequences is to be found.
+    
+    Returns:
+    Integer (int) giving the largest sum over all of the
+    non-empty contiguous subsequences of seq.
+    """
     #it = iter(seq)
     curr = 0
     res = -float("inf")
@@ -4965,6 +5010,54 @@ def kadane(seq: Iterable[int]) -> int:
     return res
 
 def maximumGridSumSubsequence(grid: List[List[int]]) -> int:
+    """
+    For a 2D array of integers, finds the largest sum elements
+    that appear in a straight line in the array, where the allowed
+    lines are vertical, horizontal, diagonal or antidiagonal and
+    if two elements on the line are included then all elements
+    between them on that line must also be included (we refer
+    to this as the line being continuous).
+
+    A horizontal line in the grid is one in which for two
+    consecutive elements the first index is the same and the
+    second index differs by exactly 1.
+
+    A vertical line in the grid is one in which for two
+    consecutive elements the second index is the same and the
+    index index differs by exactly 1.
+
+    A diagonal line in the grid is one in which for two
+    consecutive elements, if their indices are (i1, i2) and
+    (j1, j2) then i1 - j1 = i2 - j2 and equals either
+    1 or -1.
+
+    Aa antidiagonal line in the grid is one in which for two
+    consecutive elements, if their indices are (i1, i2) and
+    (j1, j2) then i1 - j1 = -(i2 - j2) and equals either
+    1 or -1.
+
+    Args:
+        Required positional:
+        grid (list of lists of ints): The 2D integer array in
+                question, represented as a list of lists, where
+                all the contained lists are the same length.
+    
+    Returns:
+    Integer (int) giving the the largest sum elements that
+    appear in a continuous straight line in the array.
+
+    Outline of rationale:
+    For each possible line that goes across the whole grid along
+    that line in each of the four line directions, identifies a start
+    point (one of the elements where a step in one direction along
+    the line goes out of the grid), and produces a generator that
+    iterates over the elements along that line in order starting with
+    that start element until all elements on the line are exhausted.
+    Kadane's algorithm is applied to the sequence this generator
+    produces (see kadane()) to find the largest sum of the contiguous
+    subsequences of this sequence. The largest such result amoung all
+    of the line direction and start point pairs is then the solution.
+    """
     shape = (len(grid), len(grid[0]))
     def horizontalGenerator(i1: int) -> Generator[int, None, None]:
         #print("horiz")
@@ -5010,30 +5103,90 @@ def maximumGridSumSubsequence(grid: List[List[int]]) -> int:
             )
     return res
 
-def laggedFibonacciGenerator() -> Generator[int, None, None]:
+def laggedFibonacciGenerator(poly_coeffs: Tuple[int]=(100003, -200003, 0, 300007), lags: Tuple[int]=(24, 55), min_val: int=-5 * 10 ** 5, max_val: int=5 * 10 ** 5 - 1) -> Generator[int, None, None]:
+    
     qu = deque()
-    md = 10 ** 6
-    for k in range(1, 56):
-        num = ((100003 - 200003 * k + 300007 * k ** 3) % md) - 5 * 10 ** 5
+    md = max_val - min_val + 1
+    #print(md)
+    lags = sorted(lags)
+    max_lag = lags[-1]
+    for k in range(1, max_lag + 1):
+        num = (sum(c * k ** i for i, c in enumerate(poly_coeffs)) % md) + min_val
+        #num = ((100003 - 200003 * k + 300007 * k ** 3) % md) - 5 * 10 ** 5
+        #print(num)
         qu.append(num)
         yield num
+    #cnt = 0
     while True:
-        num = ((qu[-24] + qu.popleft() + 10 ** 6) % md) - 5 * 10 ** 5
+        num = qu.popleft()
+        for i in range(len(lags) - 1):
+            num += qu[-lags[i]]
+        num = (num % md) + min_val
+        #if cnt < 10:
+        #    print(num)
+        #cnt += 1
+        #num = ((qu[-24] + qu.popleft() + 10 ** 6) % md) - 5 * 10 ** 5
         qu.append(num)
         yield num
     return
+    """
+    qu = deque()
+    md = 10 ** 6
+    lags = sorted(lags)
+    for k in range(1, 56):
+        num = ((100003 - 200003 * k + 300007 * k ** 3) % md) - 5 * 10 ** 5
+        print(num)
+        qu.append(num)
+        yield num
+    print("switch")
+    cnt = 0
+    while True:
+        num = ((qu[-24] + qu.popleft() + 10 ** 6) % md) - 5 * 10 ** 5
+        if cnt < 10:
+            print(num)
+        cnt += 1
+        qu.append(num)
+        yield num
+    return
+    """
 
-def maximumLaggedFibonacciGridSumSubsequence(shape: Tuple[int, int]=(2000, 2000)) -> int:
+def constructLaggedFibonacciGrid(
+    shape: Tuple[int, int],
+    l_fib_poly_coeffs: Tuple[int]=(100003, -200003, 0, 300007),
+    l_fib_lags: Tuple[int]=(24, 55),
+    min_grid_val: int=-5 * 10 ** 5,
+    max_grid_val: int=5 * 10 ** 5 - 1,
+) -> List[List[int]]:
+    
+
+    it = laggedFibonacciGenerator(poly_coeffs=l_fib_poly_coeffs, lags=l_fib_lags, min_val=min_grid_val, max_val=max_grid_val)
+    grid = []
+    for i1 in range(shape[0]):
+        grid.append([])
+        for i2 in range(shape[1]):
+            grid[-1].append(next(it))
+    return grid
+
+def maximumLaggedFibonacciGridSumSubsequence(
+    shape: Tuple[int, int]=(2000, 2000),
+    l_fib_poly_coeffs: Tuple[int]=(100003, -200003, 0, 300007),
+    l_fib_lags: Tuple[int]=(24, 55),
+    min_grid_val: int=-5 * 10 ** 5,
+    max_grid_val: int=5 * 10 ** 5 - 1,
+) -> int:
     """
     Solution to Project Euler #149
     """
     since = time.time()
+    grid = constructLaggedFibonacciGrid(shape, l_fib_poly_coeffs=l_fib_poly_coeffs, l_fib_lags=l_fib_lags, min_grid_val=min_grid_val, max_grid_val=max_grid_val)
+    """
     it = laggedFibonacciGenerator()
     grid = []
     for i1 in range(shape[0]):
         grid.append([])
         for i2 in range(shape[1]):
             grid[-1].append(next(it))
+    """
     res = maximumGridSumSubsequence(grid)
     print(f"Time taken = {time.time() - since:.4f} seconds")
     return res
@@ -5131,7 +5284,7 @@ def subTriangleMinSum(triangle: List[List[int]]) -> int:
     prev = [[x] for x in triangle[-1]]
     curr = []
     row = triangle[-2]
-    print(f"i = {n - 2}")
+    #print(f"i = {n - 2}")
     for j, val in enumerate(row):
         res = min(res, val)
         curr.append([val])
@@ -5142,7 +5295,7 @@ def subTriangleMinSum(triangle: List[List[int]]) -> int:
             res = min(res, curr[-1][-1])
 
     for i in reversed(range(n - 2)):
-        print(f"i = {i}")
+        #print(f"i = {i}")
         prevprev = prev
         prev = curr
         curr = []
@@ -5216,7 +5369,13 @@ def linearCongruentialGenerator(
         yield t + min_value
     return
 
-def constructLinearCongruentialTriangle(n_rows: int, l_cong_k: int=615949, l_cong_m: int=797807, min_triangle_value: int=-(1 << 19), max_triangle_value: int=(1 << 19) - 1) -> List[List[int]]:
+def constructLinearCongruentialTriangle(
+    n_rows: int,
+    l_cong_k: int=615949,
+    l_cong_m: int=797807,
+    min_triangle_value: int=-(1 << 19),
+    max_triangle_value: int=(1 << 19) - 1
+) -> List[List[int]]:
     """
     Constructs a triangle array of a given size whose elements
     are generated by a linear congruential generator, where
@@ -5362,13 +5521,13 @@ def subLinearCongruentialTriangleSubTriangleSum(n_rows: int=1000, l_cong_k: int=
     since = time.time()
     triangle = constructLinearCongruentialTriangle(n_rows, l_cong_k=l_cong_k, l_cong_m=l_cong_m, min_triangle_value=min_triangle_value, max_triangle_value=max_triangle_value)
     #print(triangle)
-    print("Generated triangle")
+    #print("Generated triangle")
     res = subTriangleMinSum(triangle)
     print(f"Time taken = {time.time() - since:.4f} seconds")
     return res
 
 if __name__ == "__main__":
-    to_evaluate = {150}
+    to_evaluate = {149}
 
     if not to_evaluate or 101 in to_evaluate:
         res = optimumPolynomial(((1, -1, 1, -1, 1, -1, 1, -1, 1, -1, 1)))
@@ -5576,76 +5735,3 @@ if __name__ == "__main__":
         #res = subTriangleMinSum(triangle=[[15], [-14, -7], [20, -13, -5], [-3, 8, 23, -26], [1, -4, -5, -18, 5], [-16, 31, 2, 9, 28, 3]])
         res = subLinearCongruentialTriangleSubTriangleSum(n_rows=1000, l_cong_k=615949, l_cong_m=797807, min_triangle_value=-(1 << 19), max_triangle_value=(1 << 19) - 1)
         print(f"Solution to Project Euler #150 = {res}")
-    
-    """
-    for n in range(1, 100_000_001):
-        num = 5 * n ** 2 + 2 * n + 1
-        rt = isqrt(num)
-        if rt * rt == num:
-            print(n)
-    """
-    """
-    tot = 0
-    for triple in pythagoreanTripleGeneratorByHypotenuse(primitive_only=True, max_hypotenuse=100):
-        #if triple[2] >= 100: break
-        tot += 1
-        print(triple)
-    #for triple in pythagoreanTripleGeneratorByPerimeter(primitive_only=False, max_perimeter=1000):
-    #    #if triple[2] >= 100: break
-    #    tot += 1
-    #    print(triple)
-    print(f"total = {tot}")
-    """
-    """
-    tot = 0
-    for num in range(1, isqrt(10 ** 9 - 1) + 1):
-        num_sq = num ** 2
-        for d in range(1, num + 1):
-            q, r = divmod(num_sq, d)
-            n1, n2, n3 = sorted([[d, "d"], [q, "q"], [r, "r"]])
-            if n2[0] ** 2 == n3[0] * n1[0]:
-                print(f"num = {num}, num_sq = {num_sq}, {n1[1]} = {n1[0]}, {n2[1]} = {n2[0]}, {n3[1]} = {n3[0]}")
-                tot += num_sq
-    print(f"total = {tot}")
-    """
-    """
-    since = time.time()
-    ps = PrimeSPFsieve(10 ** 6)
-    add_lst = [1, 3, 7, 9, 13, 27]
-    neg_chk_lst = [21]
-    res = 0
-    sq_cnt = 0
-    for i in range(10, 150 * 10 ** 6, 10):
-        i_sq = i ** 2
-        if i_sq % 420 != 100: continue
-        #i_rt = isqrt(i)
-        #if not i_rt ** 2 == i: continue
-        sq_cnt += 1
-        for j in add_lst:
-            if not ps.isPrime(i_sq + j, extend_sieve=False, extend_sieve_sqrt=False, use_miller_rabin_screening=True, n_miller_rabin_trials=3):
-                break
-        else:
-            for j in neg_chk_lst:
-                if ps.isPrime(i_sq + j, extend_sieve=False, extend_sieve_sqrt=False, use_miller_rabin_screening=True, n_miller_rabin_trials=3):
-                    break
-            else:
-                print(i)
-            res += i
-    print(f"Time taken = {time.time() - since:.4f} seconds")
-    print(f"square count = {sq_cnt}")
-    print(f"sum = {res}")
-    """
-    """
-        i_sq = i ** 2
-        p_i = bisect.bisect_left(ps.p_lst, i_sq)
-        for j, p_i in enumerate(range(p_i, p_i + len(add_lst))):
-            num = i_sq + add_lst[j]
-            if p_i >= len(ps.p_lst) or ps.p_lst[p_i] != num:
-                if i == 10:
-                    print(f"i = 10, 100 + {j} does not equal ps.p_lst[p_i]")
-                break
-        else:
-            print(i_rt)
-            res += i_rt
-    print(f"sum = {res}")
-    """
