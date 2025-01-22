@@ -5103,8 +5103,74 @@ def maximumGridSumSubsequence(grid: List[List[int]]) -> int:
             )
     return res
 
-def laggedFibonacciGenerator(poly_coeffs: Tuple[int]=(100003, -200003, 0, 300007), lags: Tuple[int]=(24, 55), min_val: int=-5 * 10 ** 5, max_val: int=5 * 10 ** 5 - 1) -> Generator[int, None, None]:
+def generalisedLaggedFibonacciGenerator(poly_coeffs: Tuple[int]=(100003, -200003, 0, 300007), lags: Tuple[int]=(24, 55), min_val: int=-5 * 10 ** 5, max_val: int=5 * 10 ** 5 - 1) -> Generator[int, None, None]:
+    """
+    Generator iterating over the terms in a generalisation
+    of a lagged Fibonacci generator sequence for given for a
+    given initial polynomial and given lag lengths within n a
+    given range.
+
+    The generalisation of the lagged Fibonacci generator
+    sequence for the given tuple of integers poly_coeffs, tuple
+    of strictly positive integers lags, and the integers min_val
+    and max_val is the sequence such that for integer i >= 1,
+    the i:th term in the sequence is:
+        t_i = (sum j from 0 to len(poly_coeffs) - 1) (poly_coeffs[j] * i ** j) % md + min_val
+                for i <= max(lags)
+              ((sum j fro 0 to len(lags) - 1) (t_(i - lags[i]))) % md + min_val
+                otherwise
+    where md is one greater than the difference between
+    min_value and max_value and % signifies modular division
+    (i.e. the remainder of the integer preceding that symbol
+    by the integer succeeding it). This sequence contains integer
+    values between min_value and max_value inclusive.
+
+    The terms where i <= max(lags) are referred as the polynomial
+    terms and the terms where i > max(lags) are referred to as the
+    recursive terms.
+
+    In the case that lags is length 2 with those two elements
+    distinct, this is a traditional lagged Fibonacci generator
+    sequence.
+
+    For well chosen values of poly_coeffs and lags for given
+    min_value and max_value, this can potentially be used as a
+    generator of pseudo-random integers between min-value and
+    max_value inclusive.
+
+    Note that the generator never terminates and thus any
+    iterator over this generator must include provision to
+    terminate (e.g. a break or return statement), otherwise
+    it would result in an infinite loop.
+
+    Args:
+        Optional named:
+        poly_coeffs (tuple of ints): Tuple of integers giving
+                the coefficients of the polynomial used to
+                generate the polynomial terms.
+            Default: (100003, -200003, 0, 300007)
+        lags (tuple of ints): Strictly positive integers,
+                which when generating the recursive terms,
+                indicates how many steps back in the sequence
+                the previous terms summed should each be
+                from the position of the term being generated.
+                Additionally, the maximum value determines
+                at which term the transition from the polynomial
+                terms to the recursive terms will occur.
+            Default: (24, 55)
+        min_value (int): Integer giving the smallest value
+                possible for terms in the sequence.
+        max_value (int): Integer giving the largest value
+                possible for terms in the sequence. Must
+                be no smaller than min_value.
     
+    Yields:
+    Integer (int) between min_value and max_value inclusive,
+    with the i:th term yielded (for strictly positive integer
+    i) representing the i:th term in the generalisation of
+    the lagged Fibonacci generator defined above for the
+    given parameters.
+    """
     qu = deque()
     md = max_val - min_val + 1
     #print(md)
@@ -5159,7 +5225,7 @@ def constructLaggedFibonacciGrid(
 ) -> List[List[int]]:
     
 
-    it = laggedFibonacciGenerator(poly_coeffs=l_fib_poly_coeffs, lags=l_fib_lags, min_val=min_grid_val, max_val=max_grid_val)
+    it = generalisedLaggedFibonacciGenerator(poly_coeffs=l_fib_poly_coeffs, lags=l_fib_lags, min_val=min_grid_val, max_val=max_grid_val)
     grid = []
     for i1 in range(shape[0]):
         grid.append([])
@@ -5329,11 +5395,15 @@ def linearCongruentialGenerator(
     where t_0 = 0 and:
         t_i = (k * t + m) % md
     where md is one greater than the difference between
-    min_value and max_value. This sequence contains integer
+    min_value and max_value and % signifies modular division
+    (i.e. the remainder of the integer preceding that symbol
+    by the integer succeeding it). This sequence contains integer
     values between min_value and max_value inclusive.
+
     For well chosen values of k and m for given min_value and
-    max_value, this forms a pseudo-random sequence of integers
-    between min-value and max_value inclusive.
+    max_value, this can potentially be used as a generator of
+    pseudo-random integers between min_value and max_value
+    inclusive.
 
     Note that the generator never terminates and thus any
     iterator over this generator must include provision to
@@ -5360,7 +5430,7 @@ def linearCongruentialGenerator(
     with the i:th term yielded (for strictly positive integer
     i) representing the i:th term in the linear congruential
     sequence for given linear and constant coefficients (k and
-    m respectively) within a given range.
+    m respectively).
     """
     t = 0
     md = max_value - min_value + 1
