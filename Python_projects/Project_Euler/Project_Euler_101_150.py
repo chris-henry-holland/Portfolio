@@ -4717,7 +4717,97 @@ def reversibleNumbersCount(n_dig_max: int=9, base: int=10) -> int:
 
 # Problem 146
 def investigatingAPrimePatternList(n_max: int=150 * 10 ** 6 - 1, add_nums: List[int]=[1, 3, 7, 9, 13, 27]) -> List[int]:
+    """
+    For a given list of strictly positive integers add_nums in
+    strictly increasing order finds the non-negative integers n
+    no greater than n_max such that the sequence with terms:
+        t_i = n ** 2 + a[i - 1]
+    for integers 1 <= i <= len(a) is a sequence of consecutive
+    prime numbers.
 
+    Args:
+        Optional named:
+        n_max (int): Strictly positive integer specifying the
+                largest value of n considered.
+            Default: 150 * 10 ** 6 - 1
+        add_nums (list of ints): List of strictly positive
+                integers in strictly increasing order, for which
+                an integer is included in the returned list if
+                and only if squaring that integer and adding the
+                values in this list individually in order results
+                in a sequence of consecutive prime numbers.
+            Default: [1, 3, 7, 9, 13, 27]
+
+    Returns:
+    List of integers (ints) containing all the strictly positive
+    integers no greater than n_max such that when squared and
+    added to the integers in add_nums individually in order, the
+    result is a sequence of consecutive prime numbers.
+
+    Example:
+        >>> investigatingAPrimePatternList(n_max=500000, add_nums=[1, 3, 7, 9, 13, 27])
+        [10, 315410]
+
+        This signifies that the only strictly positive integers
+        no greater than 500000 for which the integer squared plus
+        each of the numbers in the list [1, 3, 7, 9, 13, 27] in
+        order results in a sequence of consecutive primes are
+        10 and 315410. For 10, this sequence is:
+            101, 103, 107, 109, 113, 127
+        which can readily be verified to be a sequence of
+        consecutive primes, while for 315410 this sequence is:
+            99483468101, 99483468103, 99483468107, 99483468109,
+            99483468113, 99483468127
+        which can also (somewhat more arduously) be confirmed
+        as a sequence of consecutive primes.
+
+    Brief outline of rationale:
+    For smaller primes, we create a filter that restricts the
+    search, finding those values modulo the product of the
+    smaller primes considered (utilising the Chinese remainder
+    theorem) such that the number squared plus any of the values
+    in add_values is not 0 modulo any of the smalelr primes
+    considered. For each such number, integers between the
+    maximum and minimum values of add_nums not in add_nums that
+    the number squared plus that integer is not 0 modulo any
+    of the smaller primes considered, and thus may result in
+    a prime number. This reduces the search space considerably.
+    
+    A full check over values which when squared and added
+    to a value in add_nums may be equal to one of the smaller
+    primes considered in the previous step (and so potentially
+    have been erroneously filtered out by that step) is then
+    performed, appending each value for which all numbers
+    required to be prime are prime and no numbers in between
+    are prime to the final result.
+
+    Finally, all of the larger values (i.e. those not checked
+    by the previous step) that passed the filter are checked
+    to ensure that all the numbers required to be prime are
+    prime and none of the numbers in between (with candidates
+    identified in the filter stage to reduce the number of
+    checks needed) are prime, appending the values for which
+    this occurs to the final result.
+
+    The prime checks are performed using an implementation
+    of the Miller-Rabin test to identify definite non-primes
+    (see documentation of millerRabinPrimalityTest() method
+    of the PrimeSPFsieve class), with cases where none of
+    the values required to be prime have been ruled as
+    non-prime having a full check performed, using a prime
+    sieve to check divisibility by primes up to 10 ** 6 and
+    then (for numbers greater than 10 ** 12) checking
+    divisibility by odd numbers from 10 ** 6 + 1 up to
+    the square root of the candidate for those numbers
+    required to be prime, and further Miller-Rabin tests
+    followed by (if necessary) full prime checks for numbers
+    between those required to be prime not already determined
+    to be non-prime (e.g. by the filter). At each test,
+    if the test is failed (i.e. a number required to be
+    prime is definitely non-prime or vice versa), the
+    remaining tests scheduled are immediately abandoned
+    to save unnecessary calculation.
+    """
 
     # Try to make more efficient
     ps = PrimeSPFsieve(min(10 ** 6, n_max))
@@ -4749,13 +4839,13 @@ def investigatingAPrimePatternList(n_max: int=150 * 10 ** 6 - 1, add_nums: List[
                     else: continue
                     r_lst.append((r2, neg_chk_set.difference(neg_chk_rm_set)))
         #r_lst.sort()
-        print(f"p = {p}, curr_md = {curr_md}, number of remainders = {len(r_lst)}")
+        #print(f"p = {p}, curr_md = {curr_md}, number of remainders = {len(r_lst)}")
         #print(r_lst[:min(5, len(r_lst))])
         if curr_md <= n_max: curr_md *= p
     r_lst.sort()
     #print(r_lst[:5])
     #print(len(r_lst))
-    print(f"modulus = {curr_md}, number of remainders to check = {len(r_lst)}")
+    #print(f"modulus = {curr_md}, number of remainders to check = {len(r_lst)}")
     #print(r_lst)
 
     # To enusure not ruling out a number for having a number divisible
@@ -4763,7 +4853,7 @@ def investigatingAPrimePatternList(n_max: int=150 * 10 ** 6 - 1, add_nums: List[
     # prime
     res = []
     small_end = isqrt(filter_p_max - mn_add)
-    print(f"small_end = {small_end}")
+    #print(f"small_end = {small_end}")
     for num in range(small_end + 1):
         num_sq = num ** 2
         #print(f"num = {num}, num_sq = {num_sq}")
@@ -4772,7 +4862,7 @@ def investigatingAPrimePatternList(n_max: int=150 * 10 ** 6 - 1, add_nums: List[
             if ps.isPrime(num_sq + num2) != (num2 in add_nums_set): break
         else:
             res.append(num)
-            print(num)
+            #print(num)
     
     for num0 in range(0, n_max + 1, curr_md):
         #print(f"num0 = {num0}")
@@ -4794,7 +4884,7 @@ def investigatingAPrimePatternList(n_max: int=150 * 10 ** 6 - 1, add_nums: List[
                             break
                     else:
                         res.append(num)
-                        print(num)
+                        #print(num)
         else: continue
         break
     return res
@@ -4828,6 +4918,38 @@ def investigatingAPrimePatternList(n_max: int=150 * 10 ** 6 - 1, add_nums: List[
 def investigatingAPrimePatternSum(n_max: int=150 * 10 ** 6 - 1, add_nums: List[int]=[1, 3, 7, 9, 13, 27]) -> int:
     """
     Solution to Project Euler #146
+
+    For a given list of strictly positive integers add_nums in
+    strictly increasing order finds sum of the non-negative
+    integers n no greater than n_max such that the sequence with
+    terms:
+        t_i = n ** 2 + a[i - 1]
+    for integers 1 <= i <= len(a) is a sequence of consecutive
+    prime numbers.
+
+    Args:
+        Optional named:
+        n_max (int): Strictly positive integer specifying the
+                largest value of n that may be included in the
+                sum.
+            Default: 150 * 10 ** 6 - 1
+        add_nums (list of ints): List of strictly positive
+                integers in strictly increasing order, for which
+                an integer is included in the sum if and only if
+                squaring that integer and adding the values in
+                this list individually in order results
+                in a sequence of consecutive prime numbers.
+            Default: [1, 3, 7, 9, 13, 27]
+
+    Returns:
+    Integer (int) giving the sum over all the strictly positive
+    integers no greater than n_max such that when squared and
+    added to the integers in add_nums individually in order, the
+    result is a sequence of consecutive prime numbers.
+
+    Outline of rationale:
+    See Brief outline of rationale in the documentation for the
+    function investigatingAPrimePatternList().
     """
     since = time.time()
     lst = investigatingAPrimePatternList(n_max=n_max, add_nums=add_nums)
@@ -5597,7 +5719,7 @@ def subLinearCongruentialTriangleSubTriangleSum(n_rows: int=1000, l_cong_k: int=
     return res
 
 if __name__ == "__main__":
-    to_evaluate = {149}
+    to_evaluate = {151}
 
     if not to_evaluate or 101 in to_evaluate:
         res = optimumPolynomial(((1, -1, 1, -1, 1, -1, 1, -1, 1, -1, 1)))
