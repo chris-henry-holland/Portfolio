@@ -4267,10 +4267,37 @@ def torricelliTriangleUniqueLengthSum(sm_max: int=12 * 10 ** 4) -> int:
 
 
 # Problem 144
-def ellipseNorm(
+def ellipseInternalNorm(
     ellipse: Tuple[int, int, int],
     pos: Tuple[Tuple[int, int], Tuple[int, int]]
 ) -> Tuple[int, int]:
+    """
+    Given a rational ellipse in the x-y plane with its semi-major
+    axes parallel to the x and y axes giving by the equation:
+        ellipse[0] * x ** 2 + ellipse[1] * y ** 2 = ellipse[2]
+    and a point at position in Cartesian coordinates:
+        (pos[0][0] / pos[0][1], pos[1][0] / pos[1][1])
+    on the ellipse, finds a vector in Cartesian coordinates
+    with integer coefficients normal to the ellipse at that
+    point, pointing towards the interior of the ellipse.
+    Note that the returned vector is not in general normalized.
+
+    Args:
+        Required positional:
+        ellipse (3-tuple of ints): 3 integers specifying the
+                equation of the ellipse as shown above.
+        pos (2-tuple of 2-tuples of ints): Two fractions, given
+                as 2-tuples of ints (numerator then denominator)
+                specifying the point on the ellipse in Cartesian
+                coordinates.
+    
+    Returns:
+    2-tuple of integers (ints) giving a normal vector for the
+    ellipse at the given point expressed Cartesian coordinates
+    with integer coefficients, pointing to the interior of the
+    ellipse.
+    """
+    
     # Pointing into the ellipse
     return (-ellipse[0] * pos[0][0] * pos[1][1], -ellipse[1] * pos[0][1] * pos[1][0])
 
@@ -4318,7 +4345,7 @@ def nextEllipseReflectedRay(
     vec: Tuple[Tuple[int, int], Tuple[int, int]]
 ) -> Tuple[Tuple[Tuple[int, int], Tuple[int, int]], Tuple[Tuple[int, int], Tuple[int, int]]]: 
 
-    norm = ellipseNorm(ellipse, pos)
+    norm = ellipseInternalNorm(ellipse, pos)
     #print(f"norm = {norm}")
     norm_mag_sq = sum(x * x for x in norm)
     dot_prod = addFractions(*[(y * x[0], x[1]) for x, y in zip(vec, norm)])
@@ -4349,14 +4376,38 @@ def laserBeamEllipseReflectionPointGenerator(
         yield pos
     return
 
-def ellipseNormFloat(
+def ellipseInternalNormFloat(
     ellipse: Tuple[int, int, int],
     pos: Tuple[float, float]
-) -> Tuple[int, int]:
+) -> Tuple[float]:
+    """
+    Given a rational ellipse in the x-y plane with its semi-major
+    axes parallel to the x and y axes giving by the equation:
+        ellipse[0] * x ** 2 + ellipse[1] * y ** 2 = ellipse[2]
+    and a point at position in Cartesian coordinates:
+        (pos[0], pos[1])
+    on the ellipse, finds a vector in Cartesian coordinates
+    normal to the ellipse at that point, pointing towards the
+    interior of the ellipse.
+    Note that the returned vector is not in general normalized.
+
+    Args:
+        Required positional:
+        ellipse (3-tuple of ints): 3 integers specifying the
+                equation of the ellipse as shown above.
+        pos (2-tuple of 2-tuples of ifloats): The point on the
+                ellipse in Cartesian coordinates.
+    
+    Returns:
+    2-tuple of floats giving a normal vector for the ellipse at
+    the given point expressed Cartesian coordinates, pointing to
+    the interior of the ellipse.
+    """
+    
     # Pointing into the ellipse
     return (-ellipse[0] * pos[0], -ellipse[1] * pos[1])
 
-def otherRationalEllipseIntersectionFloat(
+def otherEllipseIntersectionFloat(
     ellipse: Tuple[int, int, int],
     pos: Tuple[float, float],
     vec: Tuple[float, float]
@@ -4396,7 +4447,7 @@ def nextEllipseReflectedRayFloat(
     vec: Tuple[float, float]
 ) -> Tuple[Tuple[float, float], Tuple[float, float]]: 
 
-    norm = ellipseNormFloat(ellipse, pos)
+    norm = ellipseInternalNormFloat(ellipse, pos)
     #print(f"norm = {norm}")
     norm_mag_sq = sum(x * x for x in norm)
     dot_prod = sum((y * x) for x, y in zip(vec, norm))
@@ -4404,7 +4455,7 @@ def nextEllipseReflectedRayFloat(
     add_vec = tuple((-x * mult) for x in norm)
     #print(f"add_vec = {add_vec}")
     vec2 = tuple(x + y for x, y in zip(vec, add_vec))
-    pos2 = otherRationalEllipseIntersectionFloat(ellipse, pos, vec2)
+    pos2 = otherEllipseIntersectionFloat(ellipse, pos, vec2)
     return (pos2, vec2)
 
 def laserBeamEllipseReflectionPointFloatGenerator(
