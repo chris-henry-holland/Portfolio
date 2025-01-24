@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 
 import bisect
+import gmpy2
 import heapq
 import itertools
 import math
@@ -182,6 +183,92 @@ def rootExpansionDigitSum(num: int=13, n_digs: int=1_000, base: int=10) -> int:
     print(f"Time taken = {time.time() - since:.4f} seconds")
     return res
 
+
+# Problem Heegner
+def closestCosPiSqrtInteger(abs_n_max: int=1000) -> int:
+    """
+    Solution to Project Euler Bonus Problem Heegner
+
+    For integers n with absolute value no greater than
+    abs_n_max, finds the value of n such that the value
+    of:
+        x = cos(pi * sqrt(n))
+    is closest to an integer, i.e. the value of n for
+    which (abs(x - round(x))) is smallest.
+
+    Args:
+        Optional named:
+        abs_n_max (int): The largest absolute value of the
+                integers considered.
+            Default: 1000
+    
+    Returns:
+    Integer (int) giving the value of the integer n with
+    absolute value no greater than abs_n_max such that
+    cos(pi * sqrt(n)) is closest to an integer.
+
+    Outline of rationale:
+    Given that:
+        cos(pi * sqrt(n)) = cosh(i * pi * sqrt(n))
+    for negative n, we get:
+        cos(pi * sqrt(n)) = cosh(i * pi * sqrt(abs(n)))
+    This becomes very large very quickly as n becomes
+    more negative, and with normal float operations the
+    fractional part will rapidly not be calculated accurately
+    (if at all).
+    We therefore use the gmpy2 package to perform the
+    calculations with arbitrary precision, and with each
+    caluclation we ensure that the current precision is
+    sufficient to get sufficient precision in the fractional
+    part to compare between answers, increasing the
+    precision if not.
+
+    Note that, given that for x >> 1:
+        cosh(x) approximately equals exp(x)
+    it is to be expected that for relatively small values of
+    abs_n_max the solution is the negative of a Heegner number,
+    specifically the largest Heegner number no greater than
+    n_max, as a property of these numbers m is that
+    exp(pi * sqrt(m)) is extremely close to an integer, with
+    the larger the Heeneger number the closer to an integer.
+    The Heegner numbers are:
+        1, 2, 3, 7, 11, 19, 43, 67, and 163
+    """
+    since = time.time()
+    squares = set(i ** 2 for i in range(math.isqrt(abs_n_max) + 1))
+    res = (float("inf"), -1)
+    for func, filter, mult in ((gmpy2.cos, lambda x: x not in squares, 1), (gmpy2.cosh, lambda x: True, -1)):
+        for i in range(1, abs_n_max + 1):
+            if not filter(i): continue
+            while True:
+                val = func(gmpy2.const_pi() * gmpy2.sqrt(gmpy2.mpc(i))).real
+                val_str = str(val)
+                increase_precision = False
+                if "." not in set(val_str[-10:]):
+                    zero_run = 0
+                    nine_run = 0
+                    for j in range(len(val_str)):
+                        d = val_str[~j]
+                        if d == ".":
+                            increase_precision = True
+                            break
+                        if d == "0": zero_run += 1
+                        else: zero_run = 0
+                        if d == "9": nine_run += 1
+                        else: nine_run = 0
+                        #print(j, zero_run, nine_run, j - max(zero_run, nine_run))
+                        if j - max(zero_run, nine_run) >= 10: break
+                    if not increase_precision: break
+                #print(val)
+                gmpy2.get_context().precision += 10
+            #print(i, val)
+            v2 = abs(val - round(val))
+            if v2 < res[0]:
+                res = (v2, -i)
+    print(f"Time taken = {time.time() - since:.4f} seconds")
+    return res[1]
+
+
 # Problem 18i
 def polynomialPrimeProductRemainder(p_min: int=10 ** 9, p_max: int=11 * 10 ** 8) -> int:
     since = time.time()
@@ -218,11 +305,15 @@ def polynomialPrimeProductRemainder(p_min: int=10 ** 9, p_max: int=11 * 10 ** 8)
     return res
 
 if __name__ == "__main__":
-    to_evaluate = {"18i"}
+    to_evaluate = {"heegner"}
 
     if not to_evaluate or "root_13" in to_evaluate:
         res = rootExpansionDigitSum(num=13, n_digs=1_000, base=10)
         print(f"Solution to Project Euler #root 13 = {res}")
+
+    if not to_evaluate or "heegner" in to_evaluate:
+        res = closestCosPiSqrtInteger(abs_n_max=1000)
+        print(f"Solution to Project Euler #heegner = {res}")
     
     #if not to_evaluate or "18i" in to_evaluate:
     #    res = polynomialPrimeProductRemainder(p_min=100_000, p_max=110_000)
