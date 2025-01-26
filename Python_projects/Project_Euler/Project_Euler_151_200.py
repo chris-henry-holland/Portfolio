@@ -628,8 +628,66 @@ def sumsOfSquareReciprocalsCount(target: Tuple[int, int]=(1, 2), denom_min: int=
     print(f"Time taken = {time.time() - since:.4f} seconds")
     return res
 
+# Problem 153
+def findIntegerCountGaussianIntegerDivides(a: int, b: int, n_max: int) -> int:
+    if not b: return n_max // a
+    k = gcd(a, b)
+    a_, b_ = a // k, b // k
+    res = n_max // ((a_ ** 2 + b_ ** 2) * k)
+    #print((a, b), res)
+    return res
+
+def floorHarmonicSeries(n: int) -> int:
+    k = isqrt(n)
+    return sum(n // i for i in range(1, k + 1)) - k ** 2
+
+
+
+def findRealPartSumOverGaussianIntegerDivisors(n_max: int=10 ** 8) -> int:
+    since = time.time()
+
+    memo = {}
+    def divisorSum(mag_sq: int) -> int:
+        
+        args = mag_sq
+        if args in memo.keys(): return memo[args]
+        
+        def countSum(m: int) -> int:
+            return (m * (m + 1)) >> 1
+
+        rt = isqrt(n_max // mag_sq)
+
+        res = 0
+        for i in range(1, (n_max // (mag_sq * (1 + rt))) + 1):
+            res += i * (n_max // (i * mag_sq))
+        for i in range(1, rt + 1):
+            res += i * (countSum(n_max // (i * mag_sq)) - countSum(n_max // ((i + 1) * mag_sq)))
+        """
+        j1, j2 = n_max // mag_sq, n_max // (2 * mag_sq)
+        res = ((j1 * (j1 + 1)) >> 1) - ((j2 * (j2 + 1)) >> 1)
+        for i in range(1, (n_max // (2 * mag_sq)) + 1):
+            res += (n_max // (i * mag_sq)) * i
+        """
+        memo[args] = res
+        return res
+
+    res = 0
+    for a in range(1, n_max + 1):
+        res += a * findIntegerCountGaussianIntegerDivides(a, 0, n_max)
+        a_sq = a ** 2
+        for b in range(1, a):
+            mag_sq = a_sq + b ** 2
+            if mag_sq > n_max: break
+            if gcd(a, b) != 1: continue
+            res += 2 * (a + b) * divisorSum(mag_sq)
+            
+        #print(a, res)
+    res += 2 * divisorSum(2)
+    print(f"Time taken = {time.time() - since:.4f} seconds")
+    return res
+
 if __name__ == "__main__":
-    to_evaluate = {152}
+    to_evaluate = {153}
 
     if not to_evaluate or 151 in to_evaluate:
         res = singleSheetCountExpectedValueFloat(n_halvings=4)
@@ -639,3 +697,6 @@ if __name__ == "__main__":
         res = sumsOfSquareReciprocalsCount(target=(1, 2), denom_min=2, denom_max=80)
         print(f"Solution to Project Euler #152 = {res}")
     
+    if not to_evaluate or 153 in to_evaluate:
+        res = findRealPartSumOverGaussianIntegerDivisors(n_max=10 ** 8)
+        print(f"Solution to Project Euler #153 = {res}")
