@@ -733,8 +733,49 @@ def findRealPartSumOverGaussianIntegerDivisors(n_max: int=10 ** 8) -> int:
     print(f"Time taken = {time.time() - since:.4f} seconds")
     return res
 
+
+# Problem 158
+def countAllDifferentLetterStringsWithNSmallerLeftNeighbours(n_chars: int, max_len: int, n_smaller_left_neighbours: int) -> List[int]:
+
+    # TODO- try to derive the exact formula for n_smaller_left_neighbours = 1:
+    #  (2^n - n - 1) * (26 choose n)
+    # and generalise to any n_smaller_left_neighbours- look into Eulerian
+    # numbers
+    res = [0] if n_smaller_left_neighbours else [n_chars]
+    curr = [[1] * n_chars]
+    for length in range(2, max_len + 1):
+        prev = curr
+        curr = []
+        curr.append([0] * (n_chars - length + 1))
+        curr[0][n_chars - length] = prev[0][n_chars - length + 1]
+        for i in reversed(range(n_chars - length)):
+            curr[0][i] = curr[0][i + 1] + prev[0][i + 1]
+        for j in range(1, min(n_smaller_left_neighbours, len(prev)) + 1):
+            curr.append([0] * (n_chars - length + 1))
+            if j < len(prev):
+                curr[j][n_chars - length] = prev[j][n_chars - length + 1]
+                for i in reversed(range(n_chars - length)):
+                    curr[j][i] = curr[j][i + 1] + prev[j][i + 1]
+            # Transition from the previous with one fewer smaller neighbours
+            cumu = 0
+            for i in range(n_chars - length + 1):
+                cumu += prev[j - 1][i]
+                curr[j][i] += cumu
+        #print(curr)
+        res.append(sum(curr[-1]))
+    return res
+
+def maximumDifferentLetterStringsWithNSmallerLeftNeighbours(n_chars: int=26, max_len: int=26, n_smaller_left_neighbours: int=1) -> List[int]:
+    """
+    Solution to Project Euler #158
+    """
+    since = time.time()
+    res = max(countAllDifferentLetterStringsWithNSmallerLeftNeighbours(n_chars, max_len, n_smaller_left_neighbours))
+    print(f"Time taken = {time.time() - since:.4f} seconds")
+    return res
+
 if __name__ == "__main__":
-    to_evaluate = {154}
+    to_evaluate = {158}
 
     if not to_evaluate or 151 in to_evaluate:
         res = singleSheetCountExpectedValueFloat(n_halvings=4)
@@ -748,5 +789,10 @@ if __name__ == "__main__":
         res = findRealPartSumOverGaussianIntegerDivisors(n_max=10 ** 8)
         print(f"Solution to Project Euler #153 = {res}")
     
-    print(sumsOfSquareReciprocals(target=(1, 2), denom_min=2, denom_max=45))
-    {(2, 3, 4, 6, 7, 9, 10, 20, 28, 35, 36, 45), (2, 3, 4, 6, 7, 9, 12, 15, 28, 30, 35, 36, 45), (2, 3, 4, 5, 7, 12, 15, 20, 28, 35)}
+
+    if not to_evaluate or 158 in to_evaluate:
+        res = maximumDifferentLetterStringsWithNSmallerLeftNeighbours(n_chars=26, max_len=26, n_smaller_left_neighbours=1)
+        print(f"Solution to Project Euler #158 = {res}")
+    
+    #print(sumsOfSquareReciprocals(target=(1, 2), denom_min=2, denom_max=45))
+    #{(2, 3, 4, 6, 7, 9, 10, 20, 28, 35, 36, 45), (2, 3, 4, 6, 7, 9, 12, 15, 28, 30, 35, 36, 45), (2, 3, 4, 5, 7, 12, 15, 20, 28, 35)}
