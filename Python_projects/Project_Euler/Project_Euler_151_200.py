@@ -258,8 +258,54 @@ def singleSheetCountExpectedValueFloat(n_halvings: int=5) -> float:
     return res
 
 # Problem 152
-def sumsOfSquareReciprocals(target: Tuple[int, int]=(1, 2), denom_min: int=2, denom_max: int=80) -> List[Tuple[int]]:
+def sumsOfSquareReciprocals(target: Tuple[int, int]=(1, 2), denom_min: int=2, denom_max: int=80) -> Set[Tuple[int]]:
     """
+    Finds the distinct ways the fraction target can be constructed
+    by summing recpirocals of squares of integers, where the
+    integers being squared are between denom_min and denom_max,
+    and no two integers in the sum are the same. Two such sums
+    are considered distinct if and only if there is a term that
+    is present in one sum that is not present in the other sum
+    (so two sums where the terms are simply a permutation of
+    each other are not distinct).
+
+    Args:
+        Optional named:
+        target (2-tuple of ints): Two strictly positive integers,
+                representing the numerator and denominator
+                respectively of the target fraction that the
+                sums must equal.
+            Default: (1, 2)- representing a half
+        denom_min (int): Strictly positive integer giving the
+                smallest integer for whose squared reciprocal
+                can appear in the sum.
+            Default: 2
+        denom_max (int): Strictly positive integer giving the
+                largest integer for whose squared reciprocal
+                can appear in the sum.
+            Default: 80
+    
+    Returns:
+    Set of tuples of ints, where each tuple contains a distinct
+    list of integers in strictly increasing order (each distinct
+    and between denom_min and denom_max) such that the sum of the
+    reciprocals of their squares equals target, and collectively
+    they represent all such distinct sums.
+
+    Example:
+        >>> sumsOfSquareReciprocals(target=(1, 2), denom_min=2, denom_max=45))
+        {(2, 3, 4, 6, 7, 9, 10, 20, 28, 35, 36, 45), (2, 3, 4, 6, 7, 9, 12, 15, 28, 30, 35, 36, 45), (2, 3, 4, 5, 7, 12, 15, 20, 28, 35)}
+
+        This indicates that there are exactly three distinct sums
+        of distinct integer square reciprocals equal to a half,
+        such that each integer in between 2 and 45 inclusive,
+        including:
+            1 / 2 ** 2 + 1 / 3 ** 2 + 1 / 4 ** 2 + 1 / 5 ** 2
+                + 1 / 7 ** 2 + 1 / 9 ** 2 + 1 / 10 ** 2 + 20 / 2 ** 2
+                + 1 / 28 ** 2 + 1 / 35 ** 2 + 1 / 36 ** 2 + 1 / 45 ** 2
+        which it can be verified is indeed equal to a half.
+    
+    Outline of rationale:
     TODO
     """
     # TODO- need to check that finds all solutions for any
@@ -270,6 +316,7 @@ def sumsOfSquareReciprocals(target: Tuple[int, int]=(1, 2), denom_min: int=2, de
     # term alone exceeds the target) and adjust the target
     # and other parameters accordingly
     # Try to make more efficient and rule out more combinations
+    # at an early stage
 
     g = gcd(*target)
     target = tuple(t // g for t in target)
@@ -614,7 +661,7 @@ def sumsOfSquareReciprocals(target: Tuple[int, int]=(1, 2), denom_min: int=2, de
     print(len(frac_counts))
     """
     #print(f"Time taken = {time.time() - since:.4f} seconds")
-    return res
+    return set(res)
 
 def sumsOfSquareReciprocalsCount(target: Tuple[int, int]=(1, 2), denom_min: int=2, denom_max: int=80) -> int:
     """
@@ -687,7 +734,7 @@ def findRealPartSumOverGaussianIntegerDivisors(n_max: int=10 ** 8) -> int:
     return res
 
 if __name__ == "__main__":
-    to_evaluate = {153}
+    to_evaluate = {154}
 
     if not to_evaluate or 151 in to_evaluate:
         res = singleSheetCountExpectedValueFloat(n_halvings=4)
@@ -700,3 +747,6 @@ if __name__ == "__main__":
     if not to_evaluate or 153 in to_evaluate:
         res = findRealPartSumOverGaussianIntegerDivisors(n_max=10 ** 8)
         print(f"Solution to Project Euler #153 = {res}")
+    
+    print(sumsOfSquareReciprocals(target=(1, 2), denom_min=2, denom_max=45))
+    {(2, 3, 4, 6, 7, 9, 10, 20, 28, 35, 36, 45), (2, 3, 4, 6, 7, 9, 12, 15, 28, 30, 35, 36, 45), (2, 3, 4, 5, 7, 12, 15, 20, 28, 35)}
