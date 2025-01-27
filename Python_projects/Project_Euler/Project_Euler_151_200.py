@@ -195,6 +195,28 @@ def multiplyFractions(frac1: Tuple[int, int], frac2: Tuple[int, int]) -> Tuple[i
     g = gcd(frac_prov[0], frac_prov[1])
     return (-(frac_prov[0] // g) if neg else (frac_prov[0] // g), frac_prov[1] // g)
 
+def floorHarmonicSeries(n: int) -> int:
+    """
+    Calculates the value of the sum:
+        (sum i from 1 to n) floor(n / i)
+    using the identity that:
+        (sum i from 1 to n) floor(n / i) = ((sum i from 1 to k) floor(n / i)) - k ** 2
+    where k = floor(sqrt(n))
+    
+    Args:
+        Required positional:
+        n (int): Strictly positive integer giving the value
+                for which the value of the above formula is
+                to be calculated.
+    
+    Returns:
+    Integer (int) giving the value of:
+        sum (i from 1 to n) floor(n / i)
+    for the given value of n.
+    """
+    k = isqrt(n)
+    return sum(n // i for i in range(1, k + 1)) - k ** 2
+
 # Problem 151
 def singleSheetCountExpectedValueFraction(n_halvings: int) -> Tuple[int, int]:
     #mx_counts = [1 << i for i in range(n_halvings)]
@@ -262,12 +284,12 @@ def sumsOfSquareReciprocals(target: Tuple[int, int]=(1, 2), denom_min: int=2, de
     """
     Finds the distinct ways the fraction target can be constructed
     by summing recpirocals of squares of integers, where the
-    integers being squared are between denom_min and denom_max,
-    and no two integers in the sum are the same. Two such sums
-    are considered distinct if and only if there is a term that
-    is present in one sum that is not present in the other sum
-    (so two sums where the terms are simply a permutation of
-    each other are not distinct).
+    integers being squared are between denom_min and denom_max
+    inclusive, and no two integers in the sum are the same. Two
+    such sums are considered distinct if and only if there is a
+    term that is present in one sum that is not present in the
+    other sum (so two sums where the terms are simply a permutation
+    of each other are not distinct).
 
     Args:
         Optional named:
@@ -666,6 +688,36 @@ def sumsOfSquareReciprocals(target: Tuple[int, int]=(1, 2), denom_min: int=2, de
 def sumsOfSquareReciprocalsCount(target: Tuple[int, int]=(1, 2), denom_min: int=2, denom_max: int=80) -> int:
     """
     Solution to Project Euler #152
+
+    Finds the number of distinct ways the fraction target can be
+    constructed by summing recpirocals of squares of integers,
+    where the integers being squared are between denom_min and
+    denom_max inclusive, and no two integers in the sum are the
+    same. Two such sums are considered distinct if and only if
+    there is a term that is present in one sum that is not
+    present in the other sum (so two sums where the terms are
+    simply a permutation of each other are not distinct).
+
+    Args:
+        Optional named:
+        target (2-tuple of ints): Two strictly positive integers,
+                representing the numerator and denominator
+                respectively of the target fraction that the
+                sums must equal.
+            Default: (1, 2)- representing a half
+        denom_min (int): Strictly positive integer giving the
+                smallest integer for whose squared reciprocal
+                can appear in the sum.
+            Default: 2
+        denom_max (int): Strictly positive integer giving the
+                largest integer for whose squared reciprocal
+                can appear in the sum.
+            Default: 80
+    
+    Returns:
+    Integer (int) giving the number of distinct sums of square
+    reciprocals of different integers between denom_min and denom_max
+    inclusive that are equal to target.
     """
     since = time.time()
     sols = set(sumsOfSquareReciprocals(target=target, denom_min=denom_min, denom_max=denom_max))
@@ -676,6 +728,7 @@ def sumsOfSquareReciprocalsCount(target: Tuple[int, int]=(1, 2), denom_min: int=
     return res
 
 # Problem 153
+"""
 def findIntegerCountGaussianIntegerDivides(a: int, b: int, n_max: int) -> int:
     if not b: return n_max // a
     k = gcd(a, b)
@@ -683,14 +736,81 @@ def findIntegerCountGaussianIntegerDivides(a: int, b: int, n_max: int) -> int:
     res = n_max // ((a_ ** 2 + b_ ** 2) * k)
     #print((a, b), res)
     return res
-
-def floorHarmonicSeries(n: int) -> int:
-    k = isqrt(n)
-    return sum(n // i for i in range(1, k + 1)) - k ** 2
-
-
+"""
 
 def findRealPartSumOverGaussianIntegerDivisors(n_max: int=10 ** 8) -> int:
+    """
+    Solution to Project Euler #153
+
+    Calculates the sum of the real part of all Gaussian integer
+    factors with positive real part over all strictly positive
+    integers no greater than
+    n_max.
+
+    Args:
+        Optional named:
+        n_max (int): The largest integer whose Gaussian integer
+                factors are considered in the sum
+            Default: 10 ** 8
+    
+    Returns:
+    Integer (int) representing the sum of the real part of all
+    Gaussian integer factors with positive real part over all
+    strictly positive integers no greater that n_max.
+
+    Example:
+        >>> findRealPartSumOverGaussianIntegerDivisors(n_max=5)
+        35
+
+        This indicates that the sum over the Gaussian integer
+        factors of the integers between 1 and 5 inclusive is
+        35. The Gaussian integer factors of these integers with
+        positive real part are:
+            1: 1
+            2: 1, 1 + i, 1 - i, 2
+            3: 1, 3
+            4: 1, 1 + i, 1 - i, 2, 2 + 2 * i, 2 - 2 * i, 4
+            5: 1, 1 + 2 * i, 1 - 2 * i, 2 + i, 2 - i, 5
+        The sum over the real part of all of these factors is
+        indeed 35.
+    
+    Brief outline of rationale:
+    We consider this sum from the perspective of the Gaussian
+    integer factors rather than the integers, rephrasing the
+    question into the equivalent one of, calculate the sum over
+    all Gaussian integers with positive real part of the
+    real part multiplied by the number of strictly positive
+    integers no greater than n_max for which that Gaussian
+    integer is a factor.
+    We observe that (a + bi) is a factor of an integer m if
+    and only if (a - bi), (b + ai) and (b - ai) are factors
+    of m (TODO- prove this)
+    There are three cases to consider: Gaussian integers with no
+    imaginary part (i.e. integers); Gaussian integers that are
+    positive integer multiples of (1 + i) and (1 - i); and the
+    other Gaussian integers with positive real part (i.e. those
+    with non-zero imaginary parts whose real and imaginary parts
+    are different sizes).
+    Case 1: For Gaussian integers with no imaginary parts, the
+    number of strictly positive integers no greater than n_max
+    for which this is a factor is simply the number of positive
+    integer multiples of this number that are no greater than
+    n_max, which is given by the floor of n_max divided by
+    the number. Therefore the contribution of these numbers to
+    the overall sum is simply:
+        (sum a from 1 to n_max) (a * (n_max // a))
+    Case 2: As previously noted, an integer is divisible by (1 + i)
+    if and only if it is also divisible by (1 - i). As such,
+    an integer is divisible by (1 + i) or (1 - i) if and only if
+    it is divisible by (1 + i) * (1 - i) = 2. It follows that for
+    positive integer a, the positive integer m is divisible by
+    a * (1 + i) if and only if it is divisible by a * (1 - i) and
+    is a multiple of 2 * a. Consequently, the contribution to the
+    sum of all Gaussian integers of the forms a * (1 + i) and
+    a * (1 - i) for positive integer a is:
+        2 * (sum a from 1 to n_max) a * (n_max // (2 * a))
+    Case 3: TODO
+    """
     since = time.time()
 
     memo = {}
@@ -720,7 +840,7 @@ def findRealPartSumOverGaussianIntegerDivisors(n_max: int=10 ** 8) -> int:
 
     res = 0
     for a in range(1, n_max + 1):
-        res += a * findIntegerCountGaussianIntegerDivides(a, 0, n_max)
+        res += a * (n_max // a)
         a_sq = a ** 2
         for b in range(1, a):
             mag_sq = a_sq + b ** 2
@@ -775,7 +895,7 @@ def maximumDifferentLetterStringsWithNSmallerLeftNeighbours(n_chars: int=26, max
     return res
 
 if __name__ == "__main__":
-    to_evaluate = {158}
+    to_evaluate = {153}
 
     if not to_evaluate or 151 in to_evaluate:
         res = singleSheetCountExpectedValueFloat(n_halvings=4)
@@ -786,7 +906,7 @@ if __name__ == "__main__":
         print(f"Solution to Project Euler #152 = {res}")
     
     if not to_evaluate or 153 in to_evaluate:
-        res = findRealPartSumOverGaussianIntegerDivisors(n_max=10 ** 8)
+        res = findRealPartSumOverGaussianIntegerDivisors(n_max=5)
         print(f"Solution to Project Euler #153 = {res}")
     
 
