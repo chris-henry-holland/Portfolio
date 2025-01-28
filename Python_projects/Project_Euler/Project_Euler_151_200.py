@@ -856,12 +856,38 @@ def findRealPartSumOverGaussianIntegerDivisors(n_max: int=10 ** 8) -> int:
 
 # Problem 158
 def countAllDifferentLetterStringsWithNSmallerLeftNeighbours(n_chars: int, max_len: int, n_smaller_left_neighbours: int) -> List[int]:
+    """
+    For strings constructed from an ordered alphabet consisting
+    of n_chars characters such that no character is used more
+    than once, calculates the number of such strings that can be
+    formed where exactly n_smaller_left_neighbours of the letters
+    in the string have the letter directly to its left be a
+    character that appears earlier in the alphabet, for all string
+    lengths not exceeding max_len.
 
+    Args:
+        Required positional
+        n_chars (int): The number of characters in the alphabet
+                being considered.
+        max_len (int): The largest length string considered.
+                Should be between 1 and n_chars.
+        n_smaller_left_neighbours (int): The exact number of
+                letters in the strings counted for which the
+                letter to its left in the string is a character
+                that appears earlier in the alphabet that that
+                of the letter in question.
+    
+    Returns:
+    List of integers (ints) with length max_len + 1 where for
+    non-negative integer i <= max_len, the i:th element (0-indexed)
+    of the list gives the count of strings satisfying the conditions
+    for strings with length i.
+    """
     # TODO- try to derive the exact formula for n_smaller_left_neighbours = 1:
     #  (2^n - n - 1) * (26 choose n)
     # and generalise to any n_smaller_left_neighbours- look into Eulerian
     # numbers
-    res = [0] if n_smaller_left_neighbours else [n_chars]
+    res = [0, 0] if n_smaller_left_neighbours else [1, n_chars]
     curr = [[1] * n_chars]
     for length in range(2, max_len + 1):
         prev = curr
@@ -895,7 +921,7 @@ def maximumDifferentLetterStringsWithNSmallerLeftNeighbours(n_chars: int=26, max
     return res
 
 if __name__ == "__main__":
-    to_evaluate = {153}
+    to_evaluate = {158}
 
     if not to_evaluate or 151 in to_evaluate:
         res = singleSheetCountExpectedValueFloat(n_halvings=4)
