@@ -866,11 +866,11 @@ def countAllDifferentLetterStringsWithNSmallerLeftNeighbours(n_chars: int, max_l
     lengths not exceeding max_len.
 
     Args:
-        Required positional
+        Required positional:
         n_chars (int): The number of characters in the alphabet
                 being considered.
         max_len (int): The largest length string considered.
-                Should be between 1 and n_chars.
+                Should be between 1 and n_chars inclusive.
         n_smaller_left_neighbours (int): The exact number of
                 letters in the strings counted for which the
                 letter to its left in the string is a character
@@ -914,6 +914,34 @@ def countAllDifferentLetterStringsWithNSmallerLeftNeighbours(n_chars: int, max_l
 def maximumDifferentLetterStringsWithNSmallerLeftNeighbours(n_chars: int=26, max_len: int=26, n_smaller_left_neighbours: int=1) -> List[int]:
     """
     Solution to Project Euler #158
+
+    For strings constructed from an ordered alphabet consisting
+    of n_chars characters such that no character is used more
+    than once, calculates the largest number of such strings of a 
+    given length not exceeding max_len that can be formed where
+    exactly n_smaller_left_neighbours of the letters in the string
+    have the letter directly to its left be a character that
+    appears earlier in the alphabet, for all string.
+
+    Args:
+        Optional named:
+        n_chars (int): The number of characters in the alphabet
+                being considered.
+            Default: 26
+        max_len (int): The largest length string considered.
+                Should be between 1 and n_chars inclusive.
+            Default: 26
+        n_smaller_left_neighbours (int): The exact number of
+                letters in the strings counted for which the
+                letter to its left in the string is a character
+                that appears earlier in the alphabet that that
+                of the letter in question.
+            Default: 1
+    
+    Returns:
+    Integers (int) giving the largest count of strings of a given
+    length no greater than max_len satisfying the specified
+    conditions.
     """
     since = time.time()
     res = max(countAllDifferentLetterStringsWithNSmallerLeftNeighbours(n_chars, max_len, n_smaller_left_neighbours))
