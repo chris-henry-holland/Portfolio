@@ -853,6 +853,239 @@ def findRealPartSumOverGaussianIntegerDivisors(n_max: int=10 ** 8) -> int:
     print(f"Time taken = {time.time() - since:.4f} seconds")
     return res
 
+# Problem 154
+def multinomialCoefficientMultiplesCount(n: int=2 * 10 ** 5, n_k: int=3, factor_p_factorisation: Dict[int, int]={2: 12, 5: 12}) -> int:
+    since = time.time()
+    #ps = PrimeSPFsieve(n_max=factor)
+    #factor_p_factorisation = ps.primeFactorisation(factor)
+    p_lst = sorted(factor_p_factorisation.keys())
+    n_p = len(p_lst)
+    target = [factor_p_factorisation[p] for p in p_lst]
+    print(p_lst, target)
+    #for p in p_lst:
+    #    n2 = n
+    #    target.append(-factor_p_factorisation[p])
+    #    while n2:
+    #        n2 //= p
+    #        target[-1] += n2
+    
+    
+    def createNDimensionalArray(shape: List[int]) -> list:
+        n_dims = len(shape)
+        def recur(lst: list, dim_idx: int) -> list:
+            if dim_idx == n_dims - 1:
+                for _ in range(shape[dim_idx]):
+                    lst.append(0)
+                return
+            for _ in range(shape[dim_idx]):
+                lst.append([])
+                recur(lst[-1], dim_idx + 1)
+            return lst
+        return recur([], 0)
+
+    def getNDimensionalArrayElement(arr: list, inds: Tuple[int]) -> int:
+        res = arr
+        for idx in inds:
+            res = res[idx]
+        return res
+
+    def setNDimensionalArrayElement(arr: list, inds: Tuple[int], val: int) -> None:
+        lst = arr
+        for idx in inds[:-1]:
+            lst = lst[idx]
+        lst[inds[-1]] = val
+        return
+    
+    def modifyNDimensionalArrayElement(arr: list, inds: Tuple[int], delta: int) -> None:
+        lst = arr
+        for idx in inds[:-1]:
+            lst = lst[idx]
+        lst[inds[-1]] += delta
+        return
+    
+    def findNDimensionalArrayShape(arr: list) -> Tuple[int]:
+
+        lst = arr
+        res = []
+        while not isinstance(lst, int):
+            res.append(len(lst))
+            if not lst: break
+            lst = lst[0]
+        return tuple(res)
+    
+    def deepCopyNDimensionalArray(arr: list) -> list:
+        shape = findNDimensionalArrayShape(arr)
+        res = createNDimensionalArray(shape)
+
+        def recur(inds: List[int], lst1: Union[list, int], lst2: Union[list, int]) -> None:
+            dim_idx = len(inds)
+            if dim_idx == len(shape) - 1:
+                for idx in range(shape[-1]):
+                    lst2[idx] = lst1[idx]
+                return
+            inds.append(0)
+            for idx in range(shape[dim_idx]):
+                recur(inds, lst1[idx], lst2[idx])
+            inds.pop()
+            return
+        recur([], arr, res)
+        return res
+    
+    def addDisplacedNDimensionalArray(arr1: list, arr2: list, displacement: Tuple[int]) -> None:
+        shape1 = findNDimensionalArrayShape(arr1)
+        shape2 = findNDimensionalArrayShape(arr2)
+
+        def recur(inds: List[int], lst1: Union[list, int], lst2: Union[list, int]) -> None:
+            dim_idx = len(inds)
+            if dim_idx == len(shape1) - 1:
+                for idx2 in range(shape2[-1], shape1[-1] - displacement[-1]):
+                    lst1[idx2 + displacement[-1]] += lst2[idx2]
+                return
+            inds.append(0)
+            for idx2 in range(shape2[dim_idx], shape1[dim_idx] - displacement[dim_idx]):
+                recur(inds, lst1[idx2 + displacement[dim_idx]], lst2[dim_idx])
+            inds.pop()
+            return
+        recur([], arr1, arr2)
+        return
+
+    def convertSumAllIndicesNoLessThanArray(arr: list) -> list:
+        shape = findNDimensionalArrayShape(arr)
+        #print(arr)
+        #print(shape)
+        def recur(inds: Tuple[int], lst: Union[list, int], lst2: Union[list, int], dim_idx: int, add_cnt_parity: bool=False, any_add: bool=False) -> None:
+            idx = inds[dim_idx]
+            if dim_idx == len(shape) - 1:
+                if any_add:
+                    lst[idx] += (lst2[idx] if add_cnt_parity else -lst2[idx])
+                    if idx + 1 < shape[dim_idx]:
+                        lst[idx] += (-lst2[idx + 1] if add_cnt_parity else lst2[idx + 1])
+                    return
+                    #lst[shape[-1] - 1] += -lst2[shape[-1] - 1] if add_cnt_parity else lst2[shape[-1] - 1]
+                    #for idx in reversed(range(shape[-1] - 1)):
+                    #    lst[idx] += (lst2[idx] if add_cnt_parity else -lst2[idx]) - (lst2[idx + 1] if add_cnt_parity else -lst2[idx + 1])
+                    #return
+                #for idx in reversed(range(shape[-1] - 1)):
+                #    lst[idx] += lst2[idx + 1]
+                if idx + 1 < shape[dim_idx]:
+                    lst[idx] += lst2[idx + 1]
+                return
+                #return lst2 if add_cnt_parity else -lst2
+            #print(dim_idx)
+            recur(inds, lst[idx], lst2[idx], dim_idx + 1, add_cnt_parity=add_cnt_parity, any_add=any_add)
+            if idx + 1 < shape[dim_idx]:
+                recur(inds, lst[idx], lst2[idx + 1], dim_idx + 1, add_cnt_parity=not add_cnt_parity, any_add=True)
+            #recur(lst[shape[dim_idx] - 1], lst2[shape[dim_idx] - 1], dim_idx + 1, add_cnt_parity=add_cnt_parity, any_add=any_add)
+            #for idx in reversed(range(shape[dim_idx] - 1)):
+            #    recur(lst[idx], lst2[idx], dim_idx + 1, add_cnt_parity=add_cnt_parity, any_add=any_add)
+            #    recur(lst[idx], lst2[idx + 1], dim_idx + 1, add_cnt_parity=add_cnt_parity, any_add=True)
+            return
+        
+        def recur2(inds: List[int]) -> None:
+            #print(f"recur2(): {inds}")
+            dim_idx = len(inds)
+            if dim_idx == len(shape):
+                #print(inds)
+                recur(inds, arr, arr, 0, add_cnt_parity=False, any_add=False)
+                #print(arr)
+                return
+            inds.append(0)
+            for idx in reversed(range(shape[dim_idx])):
+                inds[-1] = idx
+                recur2(inds)
+            inds.pop()
+            return
+        #recur(arr, arr, 0, add_cnt_parity=False, any_add=False)
+        recur2([])
+        return arr
+        """
+        def inclExcl(inds: Tuple[int]) -> int:
+            
+            def recur2(lst: Union[list, int], dim_idx: int, add_cnt_parity: bool=False) -> int:
+                if dim_idx == len(shape):
+                    return lst if add_cnt_parity else -lst
+                res = recur2(lst[inds[dim_idx]], dim_idx + 1, add_cnt_parity=add_cnt_parity)
+                if inds[dim_idx] < shape[dim_idx] - 1:
+                    res += recur2(lst[inds[dim_idx] + 1], dim_idx + 1, add_cnt_parity=not add_cnt_parity)
+                return res
+            return recur2(arr, 0, add_cnt_parity=False)
+        
+        def recur(inds: List[int], lst: Union[list, int]) -> None:
+            if len(inds) == len(shape):
+                val = inclExcl(inds)
+
+                return
+            inds.append(0)
+            for idx in reversed(range(len(inds))):
+                inds[-1] = idx
+            return
+        """
+    
+    
+    shape = tuple(x + 1 for x in target)
+    curr = [createNDimensionalArray(shape) for _ in range(2)]
+    setNDimensionalArrayElement(curr[0], [0] * len(shape), 1)
+    setNDimensionalArrayElement(curr[1], [0] * len(shape), 2)
+    counts = [tuple([0] * n_p)] * 2
+    counts_curr = [0] * n_p
+    for n2 in range(2, n + 1):
+        print(f"n2 = {n2}")
+        for i, p in enumerate(p_lst):
+            n3 = n2
+            while True:
+                n3, r = divmod(n3, p)
+                if r: break
+                counts_curr[i] += 1
+        counts.append(tuple(counts_curr))
+        curr.append(createNDimensionalArray(shape))
+        for k in range(n2 - (n2 >> 1)):
+            #print(f"k = {k}")
+            inds = tuple(min(t, x - y - z) for t, x, y, z in zip(target, counts[n2], counts[k], counts[n2 - k]))
+            #print(inds)
+            modifyNDimensionalArrayElement(curr[-1], inds, 2)
+        if not n2 & 1:
+            #print(f"k = {n2 >> 1}")
+            inds = tuple(min(t, x - 2 * y) for t, x, y in zip(target, counts[n2], counts[n2 >> 1]))
+            #print(inds)
+            modifyNDimensionalArrayElement(curr[-1], inds, 1)
+        #print(f"n2 = {n2}:")
+        #print(curr[-1])
+        convertSumAllIndicesNoLessThanArray(curr[-1])
+        #print(curr[-1])
+    
+    #print(curr[n])
+
+    if n_k == 2:
+        return getNDimensionalArrayElement(curr[n], target)
+
+    for _ in range(3, n_k):
+        for n2 in reversed(range(n + 1)):
+            arr = createNDimensionalArray(shape)
+            for k in reversed(range(n2 + 1)):
+                delta = tuple(x - y - z for x, y, z in zip(counts[n2], counts[k], counts[n2 - k]))
+                addDisplacedNDimensionalArray(arr, curr[k], delta)
+            curr[n2] = arr
+    
+    res = 0
+    for k in range(n + 1):
+        print(f"k = {k}")
+        inds = tuple(max(t - (x - y - z), 0) for t, x, y, z in zip(target, counts[n], counts[k], counts[n - k]))
+        #print(inds, target)
+        res += getNDimensionalArrayElement(curr[k], inds)
+    print(f"Time taken = {time.time() - since:.4f} seconds")
+    return res
+    """
+    arr = createNDimensionalArray((2, 2, 2))
+    setNDimensionalArrayElement(arr, (1, 1, 1), 3)
+    setNDimensionalArrayElement(arr, (0, 1, 0), 4)
+    setNDimensionalArrayElement(arr, (0, 0, 1), 5)
+    print(arr)
+    convertSumAllIndicesNoLessThanArray(arr)
+    print(arr)
+    """
+
+
+
 
 # Problem 158
 def countAllDifferentLetterStringsWithNSmallerLeftNeighbours(n_chars: int, max_len: int, n_smaller_left_neighbours: int) -> List[int]:
@@ -949,7 +1182,7 @@ def maximumDifferentLetterStringsWithNSmallerLeftNeighbours(n_chars: int=26, max
     return res
 
 if __name__ == "__main__":
-    to_evaluate = {158}
+    to_evaluate = {154}
 
     if not to_evaluate or 151 in to_evaluate:
         res = singleSheetCountExpectedValueFloat(n_halvings=4)
@@ -963,6 +1196,11 @@ if __name__ == "__main__":
         res = findRealPartSumOverGaussianIntegerDivisors(n_max=5)
         print(f"Solution to Project Euler #153 = {res}")
     
+    if not to_evaluate or 154 in to_evaluate:
+        res = multinomialCoefficientMultiplesCount(n=2 * 10 ** 5, n_k=3, factor_p_factorisation={2: 12, 5: 12})
+        print(f"Solution to Project Euler #154 = {res}")
+
+
 
     if not to_evaluate or 158 in to_evaluate:
         res = maximumDifferentLetterStringsWithNSmallerLeftNeighbours(n_chars=26, max_len=26, n_smaller_left_neighbours=1)
