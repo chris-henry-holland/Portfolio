@@ -1084,7 +1084,288 @@ def multinomialCoefficientMultiplesCount(n: int=2 * 10 ** 5, n_k: int=3, factor_
     print(arr)
     """
 
+def multinomialCoefficientMultiplesCount2(n: int=2 * 10 ** 5, n_k: int=3, factor_p_factorisation: Dict[int, int]={2: 12, 5: 12}) -> int:
+    """
+    Solution to Project Euler #154
+    """
+    since = time.time()
+    p_lst = sorted(factor_p_factorisation.keys())
+    n_p = len(p_lst)
+    target = [factor_p_factorisation[p] for p in p_lst]
+    #print(p_lst, target)
 
+    counts_n = []
+    for p in p_lst:
+        counts_n.append(0)
+        n_ = n
+        while n_:
+            n_ //= p
+            counts_n[-1] += n_
+    #print(f"counts_n = {counts_n}")
+    counts = [tuple([0] * n_p)] * 2
+    counts_curr = [0] * n_p
+    k1_mn = ((n - 1) // n_k) + 1
+
+    def recur(k_num_remain: int, k_sum_remain: int, last_k: int, repeat_streak: int, mult: int, facts_remain: List[int]) -> int:
+        #print(facts_remain, target)
+        if any(x < y for x, y in zip(facts_remain, target)): return 0
+        k1_mn = ((k_sum_remain - 1) // k_num_remain) + 1
+        #print(f"k_num_remain = {k_num_remain}, k_sum_remain = {k_sum_remain}, last_k = {last_k}, k1_mn = {k1_mn}")
+        if k_num_remain == 2:
+            #print("hi")
+            res = 0
+            if not k_sum_remain & 1:
+                k1 = k_sum_remain >> 1
+                #print(f"k2 = {k1}, {[x - 2 * y for x, y in zip(facts_remain, counts[k1])]}")
+                if all(x - 2 * y >= t for t, x, y in zip(target, facts_remain, counts[k1])):
+                    #print("hello1")
+                    r_streak = (repeat_streak if k1 == last_k else 0) + 1
+                    ans = mult * r_streak * (r_streak + 1)
+                    #print(f"k2 = {k1}, k3 = {}, a")
+                    res +=  mult // (r_streak * (r_streak + 1))
+            k1_mn2 = k1_mn + (k1_mn << 1 == k_sum_remain)
+            if last_k >= k1_mn2 and last_k <= k_sum_remain and all(x - y - z >= t for t, x, y, z in zip(target, facts_remain, counts[last_k], counts[k_sum_remain - last_k])):
+                res += mult // (repeat_streak + 1)
+                
+            for k1 in range(k1_mn2, min(last_k, k_sum_remain + 1)):
+                #print(f"k2 = {k1}, {[x - y - z for x, y, z in zip(facts_remain, counts[k1], counts[k_sum_remain - k1])]}")
+                if all(x - y - z >= t for t, x, y, z in zip(target, facts_remain, counts[k1], counts[k_sum_remain - k1])):
+                    #print("hello2")
+                    r_streak = (repeat_streak if k1 == last_k else 0) + 1
+                    res += mult // r_streak
+            return res
+        if last_k >= k1_mn and last_k <= k_sum_remain:
+            k1 = last_k
+            k_num_remain2 = k_num_remain - 1
+            k_sum_remain2 = k_sum_remain - k1
+            last_k2 = last_k
+            repeat_streak2 = repeat_streak + 1
+            mult2 //= repeat_streak2
+            facts_remain2 = [x - y for x, y in zip(facts_remain, counts[k1])]
+            res += recur(k_num_remain2, k_sum_remain2, last_k2, repeat_streak2, mult2, facts_remain2)
+        for k1 in range(k1_mn, min(last_k, k_sum_remain + 1)):
+            k_num_remain2 = k_num_remain - 1
+            k_sum_remain2 = k_sum_remain - k1
+            last_k2 = last_k
+            facts_remain2 = [x - y for x, y in zip(facts_remain, counts[k1])]
+            res += recur(k_num_remain2, k_sum_remain2, last_k2, 1, mult, facts_remain2)
+        return res
+    res = 0
+    #print(f"k1_mn = {k1_mn}")
+    for k1 in range(2, n + 1):
+        print(f"k1 = {k1}")
+        for i, p in enumerate(p_lst):
+            k1_ = k1
+            while True:
+                k1_, r = divmod(k1_, p)
+                if r: break
+                counts_curr[i] += 1
+        counts.append(tuple(counts_curr))
+        if k1 < k1_mn: continue
+        #print("hello", n_k - 1, n - k1, facts_remain)
+        res += recur(n_k - 1, n - k1, k1, 1, math.factorial(n_k), [x - y for x, y in zip(counts_n, counts_curr)])
+    print(f"Time taken = {time.time() - since:.4f} seconds")
+    return res
+
+# Problem 155
+def findNewCapacitorCombinationValuesNoLessThanOne(max_n_capacitors: int) -> List[Set[Tuple[int, int]]]:
+    seen = {(1, 1)}
+    curr = [set(), {(1, 1)}]
+    for i in range(2, max_n_capacitors + 1):
+        st = set()
+        for j in range(1, (i >> 1) + 1):
+            for frac1 in curr[j]:
+                for frac2 in curr[i - j]:
+                    for frac3 in (addFractions(frac1, frac2), addFractions(frac1, (frac2[1], frac2[0])), addFractions((frac1[1], frac1[0]), frac2)):
+                        if frac3 not in seen:
+                            st.add(frac3)
+                            seen.add(frac3)
+                    frac3 = addFractions((frac1[1], frac1[0]), (frac2[1], frac2[0]))
+                    if frac3 not in seen and frac3[0] >= frac3[1]:
+                        st.add(frac3)
+                        seen.add(frac3)
+                    frac3 = addFractions((frac1[1], frac1[0]), (frac2[1], frac2[0]))
+                    frac3 = (frac3[1], frac3[0])
+                    if frac3 not in seen and frac3[0] >= frac3[1]:
+                        st.add(frac3)
+                        seen.add(frac3)
+        curr.append(st)
+        print(f"n = {i}, number of new capacitances no less than one = {len(st)}")
+        #print(i, st)
+        #tot_set |= st
+        print(f"n_capacitors = {i}, number of new capacitances no less than one = {len(st)}, cumulative n_combinations = {2 * sum(len(x) for x in curr) - 1}")
+    return curr
+
+
+def possibleCapacitorCombinationValuesNoLessThanOne(n_capacitors: int) -> List[Set[Tuple[int, int]]]:
+    curr = [set(), {(1, 1)}]
+    cumu = 1
+    tot_set = {(1, 1)}
+    for i in range(2, n_capacitors + 1):
+        st = set()
+        for j in range(1, (i >> 1) + 1):
+            for frac1 in curr[j]:
+                for frac2 in curr[i - j]:
+                    st.add(addFractions(frac1, frac2))
+                    st.add(addFractions(frac1, (frac2[1], frac2[0])))
+                    st.add(addFractions((frac1[1], frac1[0]), frac2))
+                    frac3 = addFractions((frac1[1], frac1[0]), (frac2[1], frac2[0]))
+                    if frac3[0] >= frac3[1]:
+                        st.add(frac3)
+                    frac3 = addFractions((frac1[1], frac1[0]), (frac2[1], frac2[0]))
+                    if frac3[1] >= frac3[0]:
+                        st.add((frac3[1], frac3[0]))
+        curr.append(st)
+        tot_set |= st
+        print(f"n_capacitors = {i}, n_combinations = {2 * len(st) - ((1, 1) in st)}, cumulative n_combinations = {2 * len(tot_set) - ((1, 1) in tot_set)}")
+    return curr
+
+def countDistinctCapacitorCombinationValues(max_n_capacitors: int=18) -> int:
+    """
+    Solution to Project Euler #155
+
+    OEIS A153588
+    """
+    since = time.time()
+    new_combs_lst = findNewCapacitorCombinationValuesNoLessThanOne(max_n_capacitors)
+    res = 2 * sum(len(x) for x in new_combs_lst) - 1
+    """
+    combs_lst = possibleCapacitorCombinationValuesNoLessThanOne(max_n_capacitors)
+    tot_combs = combs_lst[0]
+    for comb in combs_lst[1:]:
+        tot_combs |= comb
+    res = 2 * len(tot_combs) - ((1, 1) in tot_combs)
+    """
+    print(f"Time taken = {time.time() - since:.4f} seconds")
+    return res
+
+# Problem 156
+def cumulativeDigitCount(d: int, n_max: int, base: int=10) -> int:
+
+    def countNumsLTBasePow(base_exponent: int) -> int:
+        #if base_exponent == 0: return 0
+        #return countNumsLTBasePow(base_exponent - 1) + base ** (base_exponent - 1)
+        return 0 if base_exponent <= 0 else base_exponent * base ** (base_exponent - 1)
+    
+    res = 0
+    n2 = n_max + 1
+    base_exp = 0
+    num2 = 0
+    while n2:
+        n2, d2 = divmod(n2, base)
+        #print(base_exp, countNumsLTBasePow(base_exp))
+        res += countNumsLTBasePow(base_exp) * d2
+        if d2 > d:
+            res += base ** (base_exp)
+        elif d2 == d:
+            res += num2
+        num2 += d2 * base ** base_exp
+        base_exp += 1
+        #print(num2, res)
+    
+    return res
+
+def cumulativeNonZeroDigitCountEqualsNumber(d: int, base: int=10) -> List[int]:
+
+    exp_max = base
+    res = []
+
+    def recur(exp: int, pref: int=0, pref_d_count: int=0) -> None:
+        #print(f"exp = {exp}, pref = {pref}, pref_d_count = {pref_d_count}")
+        num = -1
+        num2 = pref * base# + (not pref)
+        while num2 > num and num2 < (pref + 1) * base:
+            num = num2
+            num2 = cumulativeDigitCount(d, num * base ** exp, base=base) // (base ** exp)
+        if num2 >= (pref + 1) * base: return
+        mn = num
+        pref2 = num * base ** exp
+        num = float("inf")
+        num2 = (pref + 1) * base - 1
+        while num2 < num and num2 >= mn:
+            num = num2
+            num2 = cumulativeDigitCount(d, (num + 1) * base ** exp - 1, base=base) // (base ** exp)
+        if num2 < mn: return
+        pref3 = num * base ** exp
+
+        """
+        lft, rgt = pref * base + (not pref), (pref + 1) * base
+        while lft < rgt:
+            mid = lft + ((rgt - lft) >> 1)
+            cnt = cumulativeDigitCount(d, (mid + 1) * base ** exp - 1, base=base)
+            if cnt < mid * base ** exp:
+                lft = mid + 1
+            else: rgt = mid
+        if lft == (pref + 1) * base: return
+        print("hi")
+        pref2 = lft * base ** exp
+        lft, rgt = lft, (pref + 1) * base - 1
+        while lft < rgt:
+            mid = rgt - ((rgt - lft) >> 1)
+            cnt = cumulativeDigitCount(d, (mid) * base ** exp, base=base)
+            print(f"exp = {exp}, mid = {mid}, num = {(mid + 1) * base ** exp - 1}, cnt = {cnt}")
+            if cnt > (mid + 1) * base ** exp:
+                rgt = mid - 1
+            else: lft = mid
+        pref3 = lft * base ** exp
+        """
+        rng = [pref2, pref3]
+        #print(rng)
+        #pref2 = (pref * base + (not pref)) * base ** exp
+        #pref3 = ((pref + 1) * base ** (exp + 1)) - 1
+        pref2_cnt = cumulativeDigitCount(d, pref2, base=base)
+        #pref3_cnt = cumulativeDigitCount(d, pref3, base=base)
+        #rng = [max(pref2, pref2_cnt), min(pref3, pref3_cnt)]
+        #print(rng)
+        #if rng[0] > rng[1]: return
+        #print(rng, pref2, pref2_cnt, pref3, pref3_cnt)
+        #pref0 = (pref // base) * base
+        if not exp:
+            # Review- optimise (consider cases pref_d_count = 0, pref_d_count > 1
+            # and pref_d_count = 1 separately, with the latter being the most
+            # complicated)
+            #d0 = max(rng[0], int(pref == 0))
+            #print(f"pref2_cnt = {pref2_cnt}")
+            d0 = rng[0] % base
+            d1 = rng[1] % base
+            cnt = pref2_cnt + d0 * pref_d_count + (d < d0)
+            #cnt_start = cumulativeDigitCount(d, start, base=base)
+            num = pref2
+            if num == cnt:
+                #print("found!")
+                #print(num, cumulativeDigitCount(d, num, base=10))
+                res.append(num)
+            #print(f"num = {num}, cnt = {cnt}")
+            #print(d0, rng[1] + 1)
+            for d2 in range(d0 + 1, d1 + 1):
+                num += 1
+                cnt += pref_d_count + (d2 == d)
+                #print(d2, cnt, num)
+                if cnt == num:
+                    #print("found!")
+                    #print(num, cumulativeDigitCount(d, num, base=10))
+                    res.append(num)
+            return
+        rng2 = (rng[0] // base ** (exp), rng[1] // base ** (exp))
+        #print(rng2[0], rng2[1] + 1)
+        for pref4 in range(rng2[0], rng2[1] + 1):
+            recur(exp=exp - 1, pref=pref4, pref_d_count=pref_d_count + (pref4 % base == d))
+        return
+    
+    #for exp in range(0, exp_max + 1):
+    #    recur(exp, pref=0, pref_d_count=0)
+    recur(exp_max, pref=0, pref_d_count=0)
+    #print(d, res)
+    #print(sum(res))
+    return res
+
+def cumulativeNonZeroDigitCountEqualsNumberSum(base: int=10) -> int:
+    since = time.time()
+    res = 0
+    for d in range(1, base):
+        res += sum(cumulativeNonZeroDigitCountEqualsNumber(d, base=base))
+    print(f"Time taken = {time.time() - since:.4f} seconds")
+    return res
 
 
 # Problem 158
@@ -1182,7 +1463,7 @@ def maximumDifferentLetterStringsWithNSmallerLeftNeighbours(n_chars: int=26, max
     return res
 
 if __name__ == "__main__":
-    to_evaluate = {154}
+    to_evaluate = {156}
 
     if not to_evaluate or 151 in to_evaluate:
         res = singleSheetCountExpectedValueFloat(n_halvings=4)
@@ -1197,10 +1478,16 @@ if __name__ == "__main__":
         print(f"Solution to Project Euler #153 = {res}")
     
     if not to_evaluate or 154 in to_evaluate:
-        res = multinomialCoefficientMultiplesCount(n=2 * 10 ** 5, n_k=3, factor_p_factorisation={2: 12, 5: 12})
+        res = multinomialCoefficientMultiplesCount2(n=2 * 10 ** 5, n_k=3, factor_p_factorisation={2: 12, 5: 12})
         print(f"Solution to Project Euler #154 = {res}")
 
+    if not to_evaluate or 155 in to_evaluate:
+        res = countDistinctCapacitorCombinationValues(max_n_capacitors=18)
+        print(f"Solution to Project Euler #155 = {res}")
 
+    if not to_evaluate or 156 in to_evaluate:
+        res = cumulativeNonZeroDigitCountEqualsNumberSum(base=10)
+        print(f"Solution to Project Euler #156 = {res}")
 
     if not to_evaluate or 158 in to_evaluate:
         res = maximumDifferentLetterStringsWithNSmallerLeftNeighbours(n_chars=26, max_len=26, n_smaller_left_neighbours=1)
@@ -1208,3 +1495,16 @@ if __name__ == "__main__":
     
     #print(sumsOfSquareReciprocals(target=(1, 2), denom_min=2, denom_max=45))
     #{(2, 3, 4, 6, 7, 9, 10, 20, 28, 35, 36, 45), (2, 3, 4, 6, 7, 9, 12, 15, 28, 30, 35, 36, 45), (2, 3, 4, 5, 7, 12, 15, 20, 28, 35)}
+    """
+    res = 0
+    for i in range(10 ** 8 + 1):
+        if cumulativeDigitCount(1, i, base=10) == i:
+            res += i
+            print(f"num = {i}, tot = {res}")
+        #print(i, cumulativeDigitCount(1, i, base=10))
+    #print(cumulativeDigitCount(1, 199981, base=10))
+    print(f"total = {res}")
+    """
+    #num = 10 ** 10
+    #res = cumulativeDigitCountEqualsNumber(num: int, d: int, base: int=10)
+    #print(num, res, res - num)
