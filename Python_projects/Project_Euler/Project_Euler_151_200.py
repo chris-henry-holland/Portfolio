@@ -1241,6 +1241,32 @@ def countDistinctCapacitorCombinationValues(max_n_capacitors: int=18) -> int:
 
 # Problem 156
 def cumulativeDigitCount(d: int, n_max: int, base: int=10) -> int:
+    """
+    For a given base and the value of a non-zero digit in that base (i.e.
+    an integer between 1 and (base - 1) inclusive), finds the number of
+    times the digit appears in the collective representations in the chosen
+    base of all the strictly positive integers no greater than a chosen
+    integer.
+
+    Args:
+        Required positional:
+        d (int): Non-zero integer between 1 and (base - 1) inclusive
+                giving the value of the digit of interest in the chosen
+                base.
+        n_max (int): Integer giving the largest number considered when
+                counting the occurrences of the digit d.
+        
+        Optional named:
+        base (int): Integer strictly greater than 1 giving the base
+                in which d is a digit and in which all numbers are
+                to be expressed when counting the number of
+                occurrences of the digit d.
+    
+    Returns:
+    Integer (int) giving the number of occurrences of the digit with
+    value d in the collective representations in the base base of all
+    the strictly positive integers no greater than n_max.
+    """
 
     def countNumsLTBasePow(base_exponent: int) -> int:
         #if base_exponent == 0: return 0
@@ -1266,7 +1292,35 @@ def cumulativeDigitCount(d: int, n_max: int, base: int=10) -> int:
     return res
 
 def cumulativeNonZeroDigitCountEqualsNumber(d: int, base: int=10) -> List[int]:
+    """
+    For a given base and the value of a non-zero digit in that base (i.e.
+    an integer between 1 and (base - 1) inclusive), finds the all the
+    integers such that the total of the number of occurrences of the digit
+    d over the collective representations of all the strictly positive
+    integers no greater than that integer in the chosen base is equal to
+    that number.
 
+    Args:
+        Required positional:
+        d (int): Non-zero integer between 1 and (base - 1) inclusive
+                giving the value of the digit of interest in the chosen
+                base.
+        
+        Optional named:
+        base (int): Integer strictly greater than 1 giving the base
+                in which d is a digit and in which all numbers are
+                to be expressed when counting the number of
+                occurrences of the digit d.
+            Default: 10
+    
+    Returns:
+    List of integers (ints) giving the value of all the integers with
+    the described property for the chosen base and digit in that base
+    in strictly increasing order.
+
+    Outline of rationale:
+    TODO- particularly the justification of exp_max
+    """
     exp_max = base
     res = []
 
@@ -1360,6 +1414,40 @@ def cumulativeNonZeroDigitCountEqualsNumber(d: int, base: int=10) -> List[int]:
     return res
 
 def cumulativeNonZeroDigitCountEqualsNumberSum(base: int=10) -> int:
+    """
+    Solution to Project Euler #156
+
+    Finds the sum of the following sums for all non-zero digit values
+    in the chosen base (i.e. the integers between 1 and (base - 1)
+    inclusive:
+    
+    For each non-zero digit value in the chosen base (i.e. an integer
+    between 1 and (base - 1) inclusive), calculates the sum of all the
+    integers such that the total of the number of occurrences of the digit
+    d over the collective representations of all the strictly positive
+    integers no greater than that integer in the chosen base is equal to
+    that number. These sums are then added together to produce the final
+    result.
+
+    Note that if an integer has the described property for more than
+    one digit, it will be included in the final sum a number of times
+    equal to the number of digits for which it has that property.
+
+    Args:
+        Optional named:
+        base (int): Integer strictly greater than 1 giving the base
+                in which d is a digit and in which all numbers are
+                to be expressed when counting the number of
+                occurrences of the digit d.
+            Default: 10
+    
+    Returns:
+    Integer (int) giving the sum of sums described.
+
+    Outline of rationale:
+    See Outline of rationale in the documentation for the function
+    cumulativeNonZeroDigitCountEqualsNumber().
+    """
     since = time.time()
     res = 0
     for d in range(1, base):
@@ -1367,6 +1455,30 @@ def cumulativeNonZeroDigitCountEqualsNumberSum(base: int=10) -> int:
     print(f"Time taken = {time.time() - since:.4f} seconds")
     return res
 
+# Problem 157
+def reciprocalPartnerSumsEqualToMultipleOfReciprocal(a: int, reciprocal: int) -> List[int]:
+    mult_min = (reciprocal) // a + 1
+    b_max = (a * reciprocal) // (mult_min * a - reciprocal)
+    b_step = a // gcd(a, reciprocal)
+    b_min = b_step * (((a - 1) // b_step) + 1)
+    #print(b_step, b_min, b_max)
+    
+    res = []
+    for b in range(b_min, b_max + 1, b_step):
+        if not reciprocal % addFractions((1, a), (1, b))[1]:
+            res.append(b)
+    return res
+
+def reciprocalPairSumsEqualToMultipleOfReciprocal(reciprocal: int) -> List[Tuple[int]]:
+    a_step = 1
+    a_max = reciprocal * 2
+    a_min = 1
+    
+    res = []
+    for a in range(a_min, a_max + 1, a_step):
+        for b in reciprocalPartnerSumsEqualToMultipleOfReciprocal(a, reciprocal):
+            res.append((a, b))
+    return res
 
 # Problem 158
 def countAllDifferentLetterStringsWithNSmallerLeftNeighbours(n_chars: int, max_len: int, n_smaller_left_neighbours: int) -> List[int]:
@@ -1463,7 +1575,7 @@ def maximumDifferentLetterStringsWithNSmallerLeftNeighbours(n_chars: int=26, max
     return res
 
 if __name__ == "__main__":
-    to_evaluate = {156}
+    to_evaluate = {157}
 
     if not to_evaluate or 151 in to_evaluate:
         res = singleSheetCountExpectedValueFloat(n_halvings=4)
@@ -1508,3 +1620,10 @@ if __name__ == "__main__":
     #num = 10 ** 10
     #res = cumulativeDigitCountEqualsNumber(num: int, d: int, base: int=10)
     #print(num, res, res - num)
+
+    #for n in range(1, 6):
+    #    num = 10 ** n
+    #    lst = reciprocalPairSumsEqualToMultipleOfReciprocal(num)
+    #    print(num, len(lst))
+    #    a_set = {x[0] for x in lst if x[0] % 10}
+    #    print(sorted(a_set))
