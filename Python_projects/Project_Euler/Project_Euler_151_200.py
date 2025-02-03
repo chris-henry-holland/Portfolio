@@ -1169,6 +1169,23 @@ def multinomialCoefficientMultiplesCount2(n: int=2 * 10 ** 5, n_k: int=3, factor
 
 # Problem 155
 def findNewCapacitorCombinationValuesNoLessThanOne(max_n_capacitors: int) -> List[Set[Tuple[int, int]]]:
+    """
+    Finds the values of capacitances that are possible for
+    combinations of a number of capacitors with unit capacitance
+    for each number of capacitors up to max_n_capacitors, only
+    including values that are not possible for any smaller
+    number of capacitors.
+
+    Args:
+        Required positional:
+        max_n_capacitors (int): The largest number of capacitors
+                considered.
+    
+    Returns:
+    List of sets of 2-tuples of ints, where the i:th element in
+    the list is the set of fractions representing the new capacitances
+    possible for i capacitors.
+    """
     seen = {(1, 1)}
     curr = [set(), {(1, 1)}]
     for i in range(2, max_n_capacitors + 1):
