@@ -1241,7 +1241,23 @@ def countDistinctCapacitorCombinationValues(max_n_capacitors: int=18) -> int:
     """
     Solution to Project Euler #155
 
-    OEIS A153588
+    Finds the number of distinct values of capacitances that are
+    possible from at most max_n_capacitors combinations of capacitors
+    with unit capacitance when connecting them in parallel or
+    series.
+
+    Args:
+        Required positional:
+        max_n_capacitors (int): The largest number of capacitors
+                in any combination considered.
+    
+    Returns:
+    Integer (int) giving the number of distinct capacitance values
+    possible from combining up to max_n_capacitors in the manners
+    described.
+    
+    The solution to this problem is equivalent to the sequence given
+    by OEIS A153588.
     """
     since = time.time()
     new_combs_lst = findNewCapacitorCombinationValuesNoLessThanOne(max_n_capacitors)
