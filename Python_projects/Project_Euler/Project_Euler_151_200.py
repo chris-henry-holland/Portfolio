@@ -1176,6 +1176,23 @@ def findNewCapacitorCombinationValuesNoLessThanOne(max_n_capacitors: int) -> Lis
     including values that are not possible for any smaller
     number of capacitors.
 
+    Two capacitor combinations with a certain number of capacitors
+    can be combined to form a third by connecting the two either
+    in series or in parallel. If the two capacitor combinations
+    being combined together have capacitances C1 and C2, and
+    then if they are combined in parallel then the resultant
+    overall capacitance is (C1 + C2), while if they are combined
+    in series then the resultant capacitance is 1 / (1 / C1 + 1 / C2).
+    The combinations are built up from individual capacitors with
+    unit capacitors.
+
+    For example, if we consider the combinations that contain no
+    more than two unit capacitors, the possible capacitances result
+    from a single capacitor, with capacitance of 1 (trivially),
+    a combination of two capacitors in parallel with capacitance
+    (1 + 1) = 2, and a combination of two capacitors in series
+    with capacitance 1 / (1 / 1 + 1 / 1) = 1 / 2.
+
     Args:
         Required positional:
         max_n_capacitors (int): The largest number of capacitors
@@ -1214,11 +1231,43 @@ def findNewCapacitorCombinationValuesNoLessThanOne(max_n_capacitors: int) -> Lis
     return curr
 
 
-def possibleCapacitorCombinationValuesNoLessThanOne(n_capacitors: int) -> List[Set[Tuple[int, int]]]:
+def possibleCapacitorCombinationValuesNoLessThanOne(max_n_capacitors: int) -> List[Set[Tuple[int, int]]]:
+    """
+    Finds the values of capacitances that are possible for
+    combinations of a number of capacitors with unit capacitance
+    for each exact number of capacitors up to max_n_capacitors.
+
+    Two capacitor combinations with a certain number of capacitors
+    can be combined to form a third by connecting the two either
+    in series or in parallel. If the two capacitor combinations
+    being combined together have capacitances C1 and C2, and
+    then if they are combined in parallel then the resultant
+    overall capacitance is (C1 + C2), while if they are combined
+    in series then the resultant capacitance is 1 / (1 / C1 + 1 / C2).
+    The combinations are built up from individual capacitors with
+    unit capacitors.
+
+    For example, if we consider the combinations that contain no
+    more than two unit capacitors, the possible capacitances result
+    from a single capacitor, with capacitance of 1 (trivially),
+    a combination of two capacitors in parallel with capacitance
+    (1 + 1) = 2, and a combination of two capacitors in series
+    with capacitance 1 / (1 / 1 + 1 / 1) = 1 / 2.
+
+    Args:
+        Required positional:
+        max_n_capacitors (int): The largest number of capacitors
+                considered.
+    
+    Returns:
+    List of sets of 2-tuples of ints, where the i:th element in
+    the list is the set of fractions representing the capacitances
+    possible for combinations of exactly i unit capacitors.
+    """
     curr = [set(), {(1, 1)}]
     cumu = 1
     tot_set = {(1, 1)}
-    for i in range(2, n_capacitors + 1):
+    for i in range(2, max_n_capacitors + 1):
         st = set()
         for j in range(1, (i >> 1) + 1):
             for frac1 in curr[j]:
@@ -1246,15 +1295,36 @@ def countDistinctCapacitorCombinationValues(max_n_capacitors: int=18) -> int:
     with unit capacitance when connecting them in parallel or
     series.
 
+    Two capacitor combinations with a certain number of capacitors
+    can be combined to form a third by connecting the two either
+    in series or in parallel. If the two capacitor combinations
+    being combined together have capacitances C1 and C2, and
+    then if they are combined in parallel then the resultant
+    overall capacitance is (C1 + C2), while if they are combined
+    in series then the resultant capacitance is 1 / (1 / C1 + 1 / C2).
+    The combinations are built up from individual capacitors with
+    unit capacitors.
+
+    For example, if we consider the combinations that contain no
+    more than two unit capacitors, the possible capacitances result
+    from a single capacitor, with capacitance of 1 (trivially),
+    a combination of two capacitors in parallel with capacitance
+    (1 + 1) = 2, and a combination of two capacitors in series
+    with capacitance 1 / (1 / 1 + 1 / 1) = 1 / 2.
+
+    The solution to this problem is equivalent to the sequence given
+    by OEIS A153588.
+
     Args:
-        Required positional:
+        Optional named:
         max_n_capacitors (int): The largest number of capacitors
                 in any combination considered.
+            Default: 18
     
     Returns:
     Integer (int) giving the number of distinct capacitance values
-    possible from combining up to max_n_capacitors in the manners
-    described.
+    possible from combining up to max_n_capacitors capacitors with unit
+    capacitors by combinating them in parallel and in series.
     
     The solution to this problem is equivalent to the sequence given
     by OEIS A153588.
