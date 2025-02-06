@@ -1583,6 +1583,131 @@ def reciprocalPairSumsEqualToMultipleOfReciprocal(reciprocal: int) -> List[Tuple
             res.append((a, b))
     return res
 
+def reciprocalPairSumsEqualToFraction(frac: Tuple[int]) -> List[Tuple[int]]:
+    g = gcd(*frac)
+    frac = tuple(x // g for x in frac)
+
+    if frac[0] > frac[1]:
+        return [(1, frac[1])] if frac[0] == frac[1] + 1 else []
+    res = []
+    for q in range((frac[1] // frac[0]) + 1, (2 * frac[1] // frac[0]) + 1):
+        frac2 = addFractions(frac, (-1, q))
+        if frac2[0] == 1:
+            res.append((q, frac2[1]))
+    return res
+
+def countReciprocalPairSumsEqualToFraction(frac: Tuple[int]) -> int:
+    g = gcd(*frac)
+    frac = tuple(x // g for x in frac)
+
+    if frac[0] > frac[1]:
+        return int(frac[0] == frac[1] + 1)
+    res = 0
+    for q in range((frac[1] // frac[0]) + 1, (2 * frac[1] // frac[0]) + 1):
+        frac2 = addFractions(frac, (-1, q))
+        res += (frac2[0] == 1)
+    return res
+
+def reciprocalPairSumsMultipleOfReciprocal(q_factorisation: Dict[int, int]) -> List[Tuple[int, int]]:
+    q = 1
+    for k, v in q_factorisation.items():
+        q *= k ** v
+    #print(f"q = {q}")
+    res = []
+    for p in range(1, (5 * q) // 6 + 1):
+        ans = reciprocalPairSumsEqualToFraction((p, q))
+        #print(f"{p} / {q}: {ans}")
+        res.extend(ans)
+    res.append((2, 2))
+    p_lst = list(q_factorisation.keys())
+    def factorGenerator(idx: int, val: int) -> Generator[int, None, None]:
+        if idx == len(p_lst):
+            yield val
+            return
+        val2 = val
+        for exp in range(q_factorisation[p_lst[idx]] + 1):
+            yield from factorGenerator(idx + 1, val2)
+            val2 *= p_lst[idx]
+        return
+
+    for factor in factorGenerator(0, 1):
+        res.append((1, factor))
+    #res += 1 + sum(v + 1 for v in q_factorisation.values())
+    return res
+
+def countReciprocalPairSumsMultipleOfReciprocal(q_factorisation: Dict[int, int]) -> int:
+    q = 1
+    for k, v in q_factorisation.items():
+        q *= k ** v
+    #print(f"q = {q}")
+    res = 0
+    for p in range(1, (5 * q) // 6 + 1):
+        ans = reciprocalPairSumsEqualToFraction((p, q))
+        #print(f"{p} / {q}: {ans}")
+        res += len(ans)
+    print(res)
+    term = 1
+    for v in q_factorisation.values():
+        term *= v + 1
+    #res += 1 + sum(v + 1 for v in q_factorisation.values())
+    return res + term + 1
+
+def countReciprocalPairSumsMultipleOfReciprocalPower(reciprocal_factorisation: Dict[int, int], min_power: int=1, max_power: int=9) -> int:
+    """
+    Solution to Project Euler #157
+    """
+    since = time.time()
+    b = 1
+    b2 = 1
+    for k, v in reciprocal_factorisation.items():
+        b *= k ** (v * max_power)
+        b2 *= k ** v
+    #print(f"b = {b}, b2 = {b2}")
+    res = 0
+    for a in range(1, (5 * b) // 6 + 1):
+        if not a % 1000:
+            print(f"a = {a}, b = {b}")
+        g = gcd(a, b)
+        (a_, b_) = (a // g, b // g)
+        ans = countReciprocalPairSumsEqualToFraction((a_, b_))
+        if not ans: continue
+        mx = (max_power - min_power)
+        
+        for p, v in reciprocal_factorisation.items():
+            curr = g
+            num = p ** v
+            for i in range(mx + 1):
+                curr, r = divmod(curr, num)
+                if r: break
+            else: continue
+            mx = i
+        #print(f"{p} / {q}: {ans}")
+        res += ans * (mx + 1)
+    #print(res)
+    res += (max_power - min_power + 1)
+    p_lst = list(reciprocal_factorisation.keys())
+    def factorGenerator(idx: int, val: int) -> Generator[int, None, None]:
+        if idx == len(p_lst):
+            yield val
+            return
+        val2 = val
+        for exp in range(reciprocal_factorisation[p_lst[idx]] * max_power + 1):
+            yield from factorGenerator(idx + 1, val2)
+            val2 *= p_lst[idx]
+        return
+
+    for factor in factorGenerator(0, 1):
+        curr = factor
+        r = 0
+        ans = 0
+        while not r and ans < (max_power - min_power + 1):
+            ans += 1
+            curr, r = divmod(curr, b2)
+        res += ans
+    #res += 1 + sum(v + 1 for v in q_factorisation.values())
+    print(f"Time taken = {time.time() - since:.4f} seconds")
+    return res
+
 # Problem 158
 def countAllDifferentLetterStringsWithNSmallerLeftNeighbours(n_chars: int, max_len: int, n_smaller_left_neighbours: int) -> List[int]:
     """
@@ -1704,6 +1829,10 @@ if __name__ == "__main__":
         res = cumulativeNonZeroDigitCountEqualsNumberSum(base=10)
         print(f"Solution to Project Euler #156 = {res}")
 
+    if not to_evaluate or 157 in to_evaluate:
+        res = countReciprocalPairSumsMultipleOfReciprocalPower(reciprocal_factorisation={2: 1, 5: 1}, min_power=1, max_power=9)
+        print(f"Solution to Project Euler #157 = {res}")
+
     if not to_evaluate or 158 in to_evaluate:
         res = maximumDifferentLetterStringsWithNSmallerLeftNeighbours(n_chars=26, max_len=26, n_smaller_left_neighbours=1)
         print(f"Solution to Project Euler #158 = {res}")
@@ -1724,9 +1853,38 @@ if __name__ == "__main__":
     #res = cumulativeDigitCountEqualsNumber(num: int, d: int, base: int=10)
     #print(num, res, res - num)
 
-    #for n in range(1, 6):
-    #    num = 10 ** n
-    #    lst = reciprocalPairSumsEqualToMultipleOfReciprocal(num)
-    #    print(num, len(lst))
-    #    a_set = {x[0] for x in lst if x[0] % 10}
-    #    print(sorted(a_set))
+    """
+    for n in range(1, 5):
+        num = 10 ** n
+        #lst = reciprocalPairSumsEqualToMultipleOfReciprocal(num)
+        print(n, countReciprocalPairSumsMultipleOfReciprocal({2: n, 5: n}))
+        #print(n, set(lst) - set(lst2), set(lst2) - set(lst))
+        #print(lst)
+        #print(lst2)
+        #print(lst)
+        #print(num, len(set(lst)))
+        #a_set = {x[0] for x in lst if x[0] % 10}
+        #print(sorted(a_set))
+    """
+    #res = 0
+    #for n in range(1, 7):
+    #    ans = countReciprocalPairSumsMultipleOfReciprocalPower(reciprocal_factorisation={2: 1, 5: 1}, min_power=1, max_power=n)#countReciprocalPairSumsMultipleOfReciprocal({2: n, 5: n})
+    #    print(f"n = {n}, ans = {ans}")
+    #print(res)
+    """
+    res = []
+    for exp in range(0, 21):
+        pow2 = 1 << exp
+        print(f"pow2 = {pow2}")
+        ans = 0
+        for numerator in range(1, 2 * pow2 + 1):
+            for q in range((pow2 // numerator) + 1, (2 * pow2 // numerator) + 1):
+                frac = addFractions((numerator, pow2), (-1, q))
+                if frac[0] == 1:
+                    print(f"numerator = {numerator}, denom1 = {q}, denom2 = {frac[1]}")
+                    ans += 1
+        print(pow2, ans)
+        res.append(ans)
+    print(res)
+    print([res[i] - res[i - 1] for i in range(1, len(res))])
+    """
