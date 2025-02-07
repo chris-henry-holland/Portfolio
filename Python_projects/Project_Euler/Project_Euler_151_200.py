@@ -1635,7 +1635,7 @@ def reciprocalPairSumsMultipleOfReciprocal(q_factorisation: Dict[int, int]) -> L
     #res += 1 + sum(v + 1 for v in q_factorisation.values())
     return res
 
-def countReciprocalPairSumsMultipleOfReciprocal(q_factorisation: Dict[int, int]) -> int:
+def countReciprocalPairSumsMultipleOfReciprocal2(q_factorisation: Dict[int, int]) -> int:
     q = 1
     for k, v in q_factorisation.items():
         q *= k ** v
@@ -1652,10 +1652,84 @@ def countReciprocalPairSumsMultipleOfReciprocal(q_factorisation: Dict[int, int])
     #res += 1 + sum(v + 1 for v in q_factorisation.values())
     return res + term + 1
 
-def countReciprocalPairSumsMultipleOfReciprocalPower(reciprocal_factorisation: Dict[int, int], min_power: int=1, max_power: int=9) -> int:
-    """
-    Solution to Project Euler #157
-    """
+def factorFactorisationsGenerator(num_p_factorisation: Dict[int, int]) -> Generator[Dict[int, int], None, None]:
+        
+    p_lst = list(num_p_factorisation.keys())
+    curr = {}
+    def recur(idx: int) -> Generator[int, None, None]:
+        if idx == len(p_lst):
+            yield dict(curr)
+            return
+        p = p_lst[idx]
+        for exp in range(num_p_factorisation[p] + 1):
+            yield from recur(idx + 1)
+            curr[p] = curr.get(p, 0) + 1
+        if p in curr.keys(): curr.pop(p)
+        return
+    
+    yield from recur(0)
+    return
+
+def calculatePrimeFactorisation(num: int) -> Dict[int, int]:
+    exp = 0
+    while not num & 1:
+        num >>= 1
+        exp += 1
+    res = {2: exp} if exp else {}
+    for p in range(3, num, 2):
+        if p ** 2 > num: break
+        exp = 0
+        while not num % p:
+            num //= p
+            exp += 1
+        if exp: res[p] = exp
+    if num > 1:
+        res[num] = 1
+    return res
+
+def countReciprocalPairSumsMultipleOfReciprocal(q_factorisation: Dict[int, int]) -> int:
+    q = 1
+    for k, v in q_factorisation.items():
+        q *= k ** v
+    res = 0
+    #print(f"q = {q}")
+    for d_fact in factorFactorisationsGenerator({k: 2 * v for k, v in q_factorisation.items()}):
+        d = 1
+        for k, v in d_fact.items():
+            d *= k ** v
+        if d > q: continue
+        #print(d)
+        #d_inv_fact = {k: 2 * v - d_fact.get(k, 0) for k, v in q_factorisation.items()}
+        p_mult_fact = {k: min(v, 2 * q_factorisation[k] - v) for k, v in d_fact.items()}
+        q_div = 1
+        for k, v in q_factorisation.items(): q_div *= k ** (v - p_mult_fact.get(k, 0))
+
+        numer1 = 1
+        numer2 = 1
+        for k, v in q_factorisation.items():
+            numer1 *= k ** (d_fact.get(k, 0) - p_mult_fact.get(k, 0))
+            numer2 *= k ** (2 * v - d_fact.get(k, 0) - p_mult_fact.get(k, 0))
+        numer1 += q_div
+        numer2 += q_div
+        g = gcd(numer1, numer2)
+        #print(f"d = {d}, g = {g}")
+        #pf = ps.factorCount(g)
+        #for p_fact in factorFactorisationsGenerator(p_mult_fact):
+        #    p = 1
+        #    for k, v in p_fact.items(): p *= k ** v
+        #    print(p, d, ((q + d) // p, (q + q ** 2 // d) // p), ((q - d) // p, (q - q ** 2 // d) // p))
+        pf = calculatePrimeFactorisation(g)
+        for k, v in pf.items():
+            p_mult_fact[k] = p_mult_fact.get(k, 0) + v
+        ans = 1
+        for v in p_mult_fact.values():
+            ans *= v + 1
+        res += ans
+    print(f"result for q = {q}: {res}")
+    return res
+
+
+def countReciprocalPairSumsMultipleOfReciprocalPower2(reciprocal_factorisation: Dict[int, int], min_power: int=1, max_power: int=9) -> int:
     since = time.time()
     b = 1
     b2 = 1
@@ -1705,6 +1779,18 @@ def countReciprocalPairSumsMultipleOfReciprocalPower(reciprocal_factorisation: D
             curr, r = divmod(curr, b2)
         res += ans
     #res += 1 + sum(v + 1 for v in q_factorisation.values())
+    print(f"Time taken = {time.time() - since:.4f} seconds")
+    return res
+
+def countReciprocalPairSumsMultipleOfReciprocalPower(reciprocal_factorisation: Dict[int, int], min_power: int=1, max_power: int=9) -> int:
+    """
+    Solution to Project Euler #157
+    """
+    since = time.time()
+    res = 0
+    for exp in range(min_power, max_power + 1):
+        q_factorisation = {k: v * exp for k, v in reciprocal_factorisation.items()}
+        res += countReciprocalPairSumsMultipleOfReciprocal(q_factorisation)
     print(f"Time taken = {time.time() - since:.4f} seconds")
     return res
 
