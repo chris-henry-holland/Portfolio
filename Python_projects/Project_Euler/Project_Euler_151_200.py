@@ -1888,8 +1888,249 @@ def maximumDifferentLetterStringsWithNSmallerLeftNeighbours(n_chars: int=26, max
     print(f"Time taken = {time.time() - since:.4f} seconds")
     return res
 
+# Problem 159
+def digitalRoot(num: int, base: int=10) -> int:
+    """
+    For a non-negative integer num, finds the digital
+    root of that integer in a chosen base.
+
+    The digital root of a non-negative integer in a
+    given base is defined recursively as follows:
+     1) If the integer is strictly less than base, then
+        it is equal to the value of that integer.
+     2) Otherwise, it is equal to the digital root of the
+        integer calculated by summing the value of the
+        digits of the representation of the intger in the
+        given base.
+    For any base greater than 1, this definition uniquely
+    defines the digital root, given that for any integer
+    no less than base, the sum of its digits in the chosen
+    base has an integer value no less than 1 and strictly
+    less than the value of the integer. This guarantees
+    that step 2 will only need to be applied a finite number
+    of times before reaching a number between 1 and
+    (base - 1) inclusive for any integer (with an upper
+    bound on the number of applications being the value of
+    the integer itself).
+
+    Args:
+        Required positional:
+        num (int): The strictly positive integer whose
+                digital root is to be calculated.
+        
+        Optional named:
+        base (int): Integer strictly greater than 1 giving the
+                base in which the integers are to be represented
+                when finding the sum of digits.
+            Default: 10
+    
+    Returns:
+    Integer (int) between 1 and (base - 1) inclusive giving
+    the digital root of num in the chosen base, as defined
+    above.
+    """
+    #num0 = num
+    while num >= base:
+        num2 = 0
+        while num:
+            num, r = divmod(num, base)
+            num2 += r
+        num = num2
+    #print(num0, num)
+    return num
+
+def maximalDigitalRootFactorisations(n_max: int, base: int=10) -> List[int]:
+    """
+    Calculates the maximal digital root sum in the chosen
+    base for every non-negative integer no greater than
+    n_max.
+
+    The digital root of a strictly positive integer in a
+    chosen base is defined recursively as follows:
+     1) If the integer is strictly less than base, then
+        it is equal to the value of that integer.
+     2) Otherwise, it is equal to the digital root of the
+        integer calculated by summing the value of the
+        digits of the representation of the intger in the
+        chosen base.
+    For any base greater than 1, this definition uniquely
+    defines the digital root, given that for any integer
+    no less than base, the sum of its digits in the chosen
+    base has an integer value no less than 1 and strictly
+    less than the value of the integer. This guarantees
+    that step 2 will only need to be applied a finite number
+    of times before reaching a number between 1 and
+    (base - 1) inclusive for any integer (with an upper
+    bound on the number of applications being the value of
+    the integer itself).
+
+    The digital root sum of a postive integer factorisation is
+    the sum of the digital roots of the terms in the
+    factorisation, where repeated factors are included in the
+    sum as many times as they appear in the factorisation.
+
+    The maximal digital root sum of a non-negative integer is
+    defined to be 0 for the integers 0 and 1 and the largest
+    digital root sum of its possible integer factorisations
+    in which 1 does not appear as a factor.
+
+    Args:
+        Required positional:
+        n_max (int): The largest non-negative integer for
+                which the maximal digit root sum is to be
+                calculated.
+        
+        Optional named:
+        base (int): Integer strictly greater than 1 giving the
+                base in which the integers are to be represented
+                when finding the digital roots.
+            Default: 10
+    
+    Returns:
+    List of integers (int) with length (n_max + 1), for which
+    the i:th index (using 0-indexing) gives the maximal digit
+    root sum of the integer i in the chosen base.
+    
+    Outline of rationale:
+    For any integer strictly greater than 1, all possible
+    positive integer factorisations with no 1 factors except
+    for the factorisation consisting of the integer itself
+    (with no other factors and the integer appearing only once)
+    include an integer between 1 and the original integer
+    exclusive. For any of the latter factorisations, consider
+    the result obtained by partitioning the factors into two
+    non-empty partitions. The result is two factorisations of 
+    positive integers greater than 1 and strictly less than the
+    original integer.
+    Suppose the original factorisation gives rise to a maximal
+    digital root sum for the original integer. By the definition
+    of the digital root sum of a positive integer factorisation,
+    the value of this maximal digital root sum is equal to the
+    sum of the digital root sums of the two new factorisations.
+    Suppose the digital root sum of one of these new factorisations
+    is not a maximal digital root sum for the integer for which it
+    is a factorisation (which, as previously observed, is strictly
+    smaller than the original integer). If we now consider a
+    positive integer factorisation of this integer with no 1 factors
+    whose digital root sum is a maximal digital root sum for that
+    integer, its digital root sum is by definition larger than that
+    of the previous factorisation. Re-inserting the integers in the
+    other partition into this factorisation, we obtain a new
+    factorisation of the original integer, whose digital root
+    sum is equal to that digital root sum plus the digital root sum
+    of the factorisation in the other partition, giving a digital
+    root sum strictly greater than the original factorisation of the
+    original integer, which we supposed was the maximal digital root
+    sum of the integer. Given that this new factorisation contains
+    only positive integers and no 1s, by the definition of the
+    maximal digital root sum of the integer its digital root sum
+    cannot exceed that of the maximal digital root sum, so we have a
+    contradiction.
+    Consequently, the maximal digital root sum of an integer strictly
+    greater than 1 is either the digital sum of the integer itself
+    or the sum of the maximal digit sum of two smaller integers
+    whose product is equal to that integer.
+    Thus, once all the maximal digital root sums of smaller integers
+    strictly greater than 1 are known, we can calculate the maximal
+    digit root sum of an integer by taking the maximum values of
+    the digit sum of the integer itself and for each non-unit factor
+    pair (i.e. pairs of integers strictly greater than 1 whose product
+    is the integer in question), the sum of the two factors' maximal
+    digital root sums. This enables iterative calculation of all the
+    maximal digital root sums up to an arbitrarily large value.
+    We further optimise this process by using a sieve approach
+    (similar to the sieve of Eratosthenes in prime searching)
+    to circumvent the need to find factors (which would involve the
+    expensive integer division operation), whereby after each maximal
+    digital root sum is calculated, the multiples up to the maximum
+    value or the square of the current integer (whichever is smaller)
+    are updated to take the maximum value of their current value
+    and the sum of the maximal digital root sum just calculated and
+    that of the integer being multiplied by (which, given that it
+    is no larger than the integer being considered will have already
+    been calculated). Thus, when reaching a new integer, all that
+    needs to be calculated to find the maximal digital root sum is
+    the digital sum of that integer, to check whether that exceeds
+    the existing maximum value.
+    TODO- revise wording of rationale for clarity
+    """
+    res = [0] * (n_max + 1)
+    for n in range(2, n_max + 1):
+        res[n] = max(res[n], digitalRoot(n, base=base))
+        for n2 in range(2, min(n, n_max // n) + 1):
+            m = n2 * n
+            res[m] = max(res[m], res[n] + res[n2])
+    return res
+
+def maximalDigitalRootFactorisationsSum(n_min: int=2, n_max: int=10 ** 6 - 1, base: int=10) -> int:
+    """
+    Solution to Project Euler #159
+
+    Calculates the sum of the maximal digital root sums in
+    the chosen base over every non-negative integer between
+    n_min and n_max inclusive.
+
+    The digital root of a strictly positive integer in a
+    chosen base is defined recursively as follows:
+     1) If the integer is strictly less than base, then
+        it is equal to the value of that integer.
+     2) Otherwise, it is equal to the digital root of the
+        integer calculated by summing the value of the
+        digits of the representation of the intger in the
+        chosen base.
+    For any base greater than 1, this definition uniquely
+    defines the digital root, given that for any integer
+    no less than base, the sum of its digits in the chosen
+    base has an integer value no less than 1 and strictly
+    less than the value of the integer. This guarantees
+    that step 2 will only need to be applied a finite number
+    of times before reaching a number between 1 and
+    (base - 1) inclusive for any integer (with an upper
+    bound on the number of applications being the value of
+    the integer itself).
+
+    The digital root sum of a postive integer factorisation is
+    the sum of the digital roots of the terms in the
+    factorisation, where repeated factors are included in the
+    sum as many times as they appear in the factorisation.
+
+    The maximal digital root sum of a non-negative integer is
+    defined to be 0 for the integers 0 and 1 and the largest
+    digital root sum of its possible integer factorisations
+    in which 1 does not appear as a factor.
+
+    Args:
+        Optional named:
+        n_min (int): The smallest strictly positive integer for
+                which the maximal digit root sum is to be
+                included in the sum.
+            Default: 2
+        n_max (int): The largest strictly positive integer for
+                which the maximal digit root sum is to be
+                included in the sum.
+            Default: 10 ** 6 - 1
+        base (int): Integer strictly greater than 1 giving the
+                base in which the integers are to be represented
+                when finding the digital roots.
+            Default: 10
+    
+    Returns:
+    Integer (int) giving the sum of the maximal digital root sums
+    in the chosen base over every non-negative integer between
+    n_min and n_max inclusive.
+
+    Outline of rationale:
+    See documentation for maximalDigitalRootFactorisations().
+    """
+    since = time.time()
+    arr = maximalDigitalRootFactorisations(n_max, base=10)
+    #print(arr)
+    res = sum(arr[n_min:])
+    print(f"Time taken = {time.time() - since:.4f} seconds")
+    return res
+
 if __name__ == "__main__":
-    to_evaluate = {157}
+    to_evaluate = {159}
 
     if not to_evaluate or 151 in to_evaluate:
         res = singleSheetCountExpectedValueFloat(n_halvings=4)
@@ -1922,6 +2163,10 @@ if __name__ == "__main__":
     if not to_evaluate or 158 in to_evaluate:
         res = maximumDifferentLetterStringsWithNSmallerLeftNeighbours(n_chars=26, max_len=26, n_smaller_left_neighbours=1)
         print(f"Solution to Project Euler #158 = {res}")
+
+    if not to_evaluate or 159 in to_evaluate:
+        res = maximalDigitalRootFactorisationsSum(n_min=2, n_max=10 ** 6 - 1, base=10)
+        print(f"Solution to Project Euler #159 = {res}")
     
     #print(sumsOfSquareReciprocals(target=(1, 2), denom_min=2, denom_max=45))
     #{(2, 3, 4, 6, 7, 9, 10, 20, 28, 35, 36, 45), (2, 3, 4, 6, 7, 9, 12, 15, 28, 30, 35, 36, 45), (2, 3, 4, 5, 7, 12, 15, 20, 28, 35)}
