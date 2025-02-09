@@ -1560,6 +1560,28 @@ def cumulativeNonZeroDigitCountEqualsNumberSum(base: int=10) -> int:
 
 # Problem 157
 def reciprocalPartnerSumsEqualToMultipleOfReciprocal(a: int, reciprocal: int) -> List[int]:
+    """
+    Given the strictly positive integers a and reciprocal, identifies
+    all strictly positive integers b such that:
+        1 / a + 1 / b = p / reciprocal
+    for some strictly positive integer p.
+
+    Args:
+        Required positional:
+        a (int): Strictly positive integer giving the value of a in
+                the above equation for which the possible values of
+                b should be found.
+        reciprocal (int): Strictly positive integer giving the value
+                of reciprocal in the above equation for which the
+                possible values of b are to be found.
+    
+    Returns:
+    List of strictly positive integers (int) giving all strictly
+    positive b for which there exists strictly positive integer
+    p for which the above equation holds for the given values
+    of a and reciprocal. The list is sorted in increasing size
+    of the identified values of b.
+    """
     mult_min = (reciprocal) // a + 1
     b_max = (a * reciprocal) // (mult_min * a - reciprocal)
     b_step = a // gcd(a, reciprocal)
@@ -1573,6 +1595,28 @@ def reciprocalPartnerSumsEqualToMultipleOfReciprocal(a: int, reciprocal: int) ->
     return res
 
 def reciprocalPairSumsEqualToMultipleOfReciprocal(reciprocal: int) -> List[Tuple[int]]:
+    """
+    Given the strictly positive integer reciprocal, identifies all
+    pairs of strictly positive integers (a, b) such that b is no
+    less than a and:
+        1 / a + 1 / b = p / reciprocal
+    for some strictly positive integer p.
+
+    Args:
+        Required positional:
+        reciprocal (int): Strictly positive integer giving the value
+                of reciprocal in the above equation for which the
+                possible strictly positive integer pairs (a, b) are
+                to be found.
+    
+    Returns:
+    List of 2-tuples of strictly positive integers (int) giving all
+    ordered pairs of strictly positive integers (a, b) such that b is
+    no less than a and there exists strictly positive integer p for
+    which the above equation holds for the given value of reciprocal.
+    The list is sorted in increasing size of a, and pairs with the
+    same value of a these are sorted in increasing size of b.
+    """
     a_step = 1
     a_max = reciprocal * 2
     a_min = 1
@@ -1584,6 +1628,27 @@ def reciprocalPairSumsEqualToMultipleOfReciprocal(reciprocal: int) -> List[Tuple
     return res
 
 def reciprocalPairSumsEqualToFraction(frac: Tuple[int]) -> List[Tuple[int]]:
+    """
+    For a strictly positive rational number frac, finds all ordered
+    pairs of strictly positive integers (a, b) such that b is no
+    less than a and:
+        1 / a + 1 / b = frac
+    
+    Args:
+        Required positional:
+        frac (2-tuple of ints): The strictly positive rational number
+                for which the ordered pairs (a, b) satisfying the
+                above equation are to be sought, represented as a
+                fraction with the strictly positive integers at
+                indices 0 and 1 represent the numerator and denominator
+                of the fraction respectively.
+
+    Returns: 
+    List of 2-tuples of strictly positive integers (int) giving all
+    ordered pairs of strictly positive integers (a, b) such that b is
+    no less than a and the above equation holds for the given value
+    of frac. The list is sorted in increasing size of a.
+    """
     g = gcd(*frac)
     frac = tuple(x // g for x in frac)
 
@@ -1597,6 +1662,26 @@ def reciprocalPairSumsEqualToFraction(frac: Tuple[int]) -> List[Tuple[int]]:
     return res
 
 def countReciprocalPairSumsEqualToFraction(frac: Tuple[int]) -> int:
+    """
+    For a strictly positive rational number frac, finds the number
+    of distinct ordered pairs of strictly positive integers (a, b)
+    that exist such that b is no less than a and:
+        1 / a + 1 / b = frac
+    
+    Args:
+        Required positional:
+        frac (2-tuple of ints): The strictly positive rational number
+                for which the number of ordered pairs (a, b) satisfying
+                the above equation is to be sought, represented as a
+                fraction with the strictly positive integers at
+                indices 0 and 1 represent the numerator and denominator
+                of the fraction respectively.
+
+    Returns: 
+    Integer (int) giving the number of distinct ordered pairs of
+    strictly positive integers (a, b) that exists such tha b is no less
+    than a and the above equation holds for the given value of frac.
+    """
     g = gcd(*frac)
     frac = tuple(x // g for x in frac)
 
@@ -2129,8 +2214,11 @@ def maximalDigitalRootFactorisationsSum(n_min: int=2, n_max: int=10 ** 6 - 1, ba
     print(f"Time taken = {time.time() - since:.4f} seconds")
     return res
 
+# Problem 160
+
+
 if __name__ == "__main__":
-    to_evaluate = {159}
+    to_evaluate = {160}
 
     if not to_evaluate or 151 in to_evaluate:
         res = singleSheetCountExpectedValueFloat(n_halvings=4)
