@@ -1693,7 +1693,37 @@ def countReciprocalPairSumsEqualToFraction(frac: Tuple[int]) -> int:
         res += (frac2[0] == 1)
     return res
 
-def reciprocalPairSumsMultipleOfReciprocal(q_factorisation: Dict[int, int]) -> List[Tuple[int, int]]:
+def reciprocalPairSumsMultipleOfReciprocal2(q_factorisation: Dict[int, int]) -> List[Tuple[int, int]]:
+    """
+    Given the prime factorisation of a strictly positive integer
+    q_factorisation, identifies all distinct ordered pairs of
+    strictly positive integers (a, b) such that b is no less than
+    a and:
+        1 / a + 1 / b = p / q
+    for some strictly positive integer p, where q is the integer
+    whose prime factorisation is q_factorisation.
+
+    Args:
+        Required positional:
+        q_factorisation (dict): Dictionary representing a prime
+                factorisation of the strictly positive integer q
+                in the above equation, whose keys are the prime
+                numbers that appear in the prime actorisation of
+                the q, with the corresponding value being the
+                number of times that prime appears in the
+                factorisation (i.e. the power of that prime in the
+                prime factorisation of q). An empty dictionary
+                corresponds to the multiplicative identity (i.e. 1).
+    
+    Returns:
+    List of 2-tuples of strictly positive integers (int) giving all
+    ordered pairs of strictly positive integers (a, b) such that b is
+    no less than a and there exists strictly positive integer p for
+    which the above equation holds for the positive integer q having
+    the prime factorisation represented by q_factorisation.
+    The list is sorted in increasing size of a, and pairs with the
+    same value of a these are sorted in increasing size of b.
+    """
     q = 1
     for k, v in q_factorisation.items():
         q *= k ** v
@@ -1721,6 +1751,34 @@ def reciprocalPairSumsMultipleOfReciprocal(q_factorisation: Dict[int, int]) -> L
     return res
 
 def countReciprocalPairSumsMultipleOfReciprocal2(q_factorisation: Dict[int, int]) -> int:
+    """
+    Given the prime factorisation of a strictly positive integer
+    q_factorisation, finds the number of distinct ordered pairs
+    of strictly positive integers (a, b) such that b is no less
+    than a and:
+        1 / a + 1 / b = p / q
+    for some strictly positive integer p, where q is the integer
+    whose prime factorisation is q_factorisation.
+
+    Args:
+        Required positional:
+        q_factorisation (dict): Dictionary representing a prime
+                factorisation of the strictly positive integer q
+                in the above equation, whose keys are the prime
+                numbers that appear in the prime actorisation of
+                the q, with the corresponding value being the
+                number of times that prime appears in the
+                factorisation (i.e. the power of that prime in the
+                prime factorisation of q). An empty dictionary
+                corresponds to the multiplicative identity (i.e. 1).
+    
+    Returns:
+    Integer (int) giving the number of distinct ordered pairs of
+    strictly positive integers (a, b) that exists such tha b is no less
+    than a and the above equation holds for some strictly positive
+    integer p with the positive integer q having the prime factorisation
+    represented by q_factorisation.
+    """
     q = 1
     for k, v in q_factorisation.items():
         q *= k ** v
@@ -1738,7 +1796,52 @@ def countReciprocalPairSumsMultipleOfReciprocal2(q_factorisation: Dict[int, int]
     return res + term + 1
 
 def factorFactorisationsGenerator(num_p_factorisation: Dict[int, int]) -> Generator[Dict[int, int], None, None]:
-        
+    """
+    Generator yielding the prime factorisations of each
+    distinct positive integer factor of the strictly positive
+    integer with the prime factorisation num_p_factorisation,
+    with each factor being represented by exactly one yielded.
+    value.
+
+    Args:
+        Required positional:
+        num_p_factorisation (dict): Dictionary representing a prime
+                factorisation of the strictly positive integer for
+                which the prime factorisations of its factors are
+                to be generated, whose keys are the prime numbers
+                that appear in the prime factorisation of the integer
+                in question, with the corresponding value being the
+                number of times that prime appears in the factorisation
+                (i.e. the power of that prime in the prime
+                factorisation of the integer in question). An empty
+                dictionary corresponds to the multiplicative identity
+                (i.e. 1).
+    
+    Yields:
+    Dictionary (dict) giving the prime factorisation of a positive
+    integer factor of the positive integer with prime factorisation
+    num_p_factorisation, whose keys are strictly positive integers
+    (int) giving the prime numbers that appear in the prime
+    factorisation of the factor in question, with the corresponding
+    value being a strictly positive integer (int) giving the number
+    of times that prime appears in the factorisation (i.e. the power
+    of that prime in the prime factorisation of the factor in
+    question). An empty dictionary corresponds to the multiplicative
+    identity (i.e. 1).
+    The prime factorisation of each distinct positive integer factor
+    is yielded exactly once. As such, the number of values yielded
+    is equal to the number of positive integer factors of the integer
+    (for instance, for prime numbers, exactly two factorisations
+    are yielded, represenging to the multiplicative identity and
+    the number itself).
+    Note that while generally later values yielded tend to represent
+    larger integers than those of earlier values yielded (with the
+    multiplicative identity factorisation guaranteed to be yielded
+    first and the original factorisation last), it is possible for
+    factorisations of integers to be yielded after factorisations
+    of larger integers, and as such, this ordering should not be
+    relied on.
+    """
     p_lst = list(num_p_factorisation.keys())
     curr = {}
     def recur(idx: int) -> Generator[int, None, None]:
@@ -1756,6 +1859,28 @@ def factorFactorisationsGenerator(num_p_factorisation: Dict[int, int]) -> Genera
     return
 
 def calculatePrimeFactorisation(num: int) -> Dict[int, int]:
+    """
+    For a strictly positive integer, calculates its prime
+    factorisation.
+
+    This is performed using direct division.
+
+    Args:
+        Required positional:
+        num (int): The strictly positive integer whose prime
+                factorisation is to be calculated.
+    
+    Returns:
+    Dictionary (dict) giving the prime factorisation of num, whose
+    keys are strictly positive integers (int) giving the prime
+    numbers that appear in the prime factorisation of num, with the
+    corresponding value being a strictly positive integer (int)
+    giving the number of times that prime appears in the
+    factorisation (i.e. the power of that prime in the prime
+    factorisation of the factor num). An empty dictionary is
+    returned if and only if num is the multiplicative identity
+    (i.e. 1).
+    """
     exp = 0
     while not num & 1:
         num >>= 1
@@ -1773,6 +1898,34 @@ def calculatePrimeFactorisation(num: int) -> Dict[int, int]:
     return res
 
 def countReciprocalPairSumsMultipleOfReciprocal(q_factorisation: Dict[int, int]) -> int:
+    """
+    Given the prime factorisation of a strictly positive integer
+    q_factorisation, finds the number of distinct ordered pairs
+    of strictly positive integers (a, b) such that b is no less
+    than a and:
+        1 / a + 1 / b = p / q
+    for some strictly positive integer p, where q is the integer
+    whose prime factorisation is q_factorisation.
+
+    Args:
+        Required positional:
+        q_factorisation (dict): Dictionary representing a prime
+                factorisation of the strictly positive integer q
+                in the above equation, whose keys are the prime
+                numbers that appear in the prime actorisation of
+                the q, with the corresponding value being the
+                number of times that prime appears in the
+                factorisation (i.e. the power of that prime in the
+                prime factorisation of q). An empty dictionary
+                corresponds to the multiplicative identity (i.e. 1).
+    
+    Returns:
+    Integer (int) giving the number of distinct ordered pairs of
+    strictly positive integers (a, b) that exists such tha b is no less
+    than a and the above equation holds for some strictly positive
+    integer p with the positive integer q having the prime factorisation
+    represented by q_factorisation.
+    """
     q = 1
     for k, v in q_factorisation.items():
         q *= k ** v
@@ -1814,7 +1967,45 @@ def countReciprocalPairSumsMultipleOfReciprocal(q_factorisation: Dict[int, int])
     return res
 
 
-def countReciprocalPairSumsMultipleOfReciprocalPower2(reciprocal_factorisation: Dict[int, int], min_power: int=1, max_power: int=9) -> int:
+def countReciprocalPairSumsMultipleOfReciprocalPower2(reciprocal_factorisation: Dict[int, int]={2: 1, 5: 1}, min_power: int=1, max_power: int=9) -> int:
+    """
+    Given the prime factorisation of a strictly positive integer
+    reciprocal_factorisation, finds the number of distinct ordered
+    triples (a, b, n) such that a and b are strictly positive
+    integers, b is no less than a, n is a non-negative integer
+    between min_power and max_power inclusive and:
+        1 / a + 1 / b = p / q ^ n
+    for some strictly positive integer p, where q is the integer
+    whose prime factorisation is reciprocal_factorisation.
+
+    Args:
+        Optional named:
+        reciprocal_factorisation (dict): Dictionary representing a
+                prime factorisation of the strictly positive integer
+                q in the above equation, whose keys are the prime
+                numbers that appear in the prime actorisation of
+                the q, with the corresponding value being the
+                number of times that prime appears in the
+                factorisation (i.e. the power of that prime in the
+                prime factorisation of q). An empty dictionary
+                corresponds to the multiplicative identity (i.e. 1).
+            Default: {2: 1, 5: 1} (the prime factorisation of 10)
+        min_power (int): Non-negative integer giving the smallest
+                value of n considered for counted solutions.
+            Default: 1
+        max_power (int): Non-negative integer giving the largest
+                value of n considered for counted solutions.
+            Default: 9
+    
+    Returns:
+    Integer (int) giving the number of distinct ordered triples
+    (a, b, n) such that a and b are strictly positive integers,
+    b is no less than a, n is a non-negative integer between
+    min_power and max_power inclusive and the above equation holds
+    for some strictly positive integer p with the positive integer
+    q having the prime factorisation represented by
+    reciprocal_factorisation.
+    """
     since = time.time()
     b = 1
     b2 = 1
@@ -1867,9 +2058,46 @@ def countReciprocalPairSumsMultipleOfReciprocalPower2(reciprocal_factorisation: 
     print(f"Time taken = {time.time() - since:.4f} seconds")
     return res
 
-def countReciprocalPairSumsMultipleOfReciprocalPower(reciprocal_factorisation: Dict[int, int], min_power: int=1, max_power: int=9) -> int:
+def countReciprocalPairSumsMultipleOfReciprocalPower(reciprocal_factorisation: Dict[int, int]={2: 1, 5: 1}, min_power: int=1, max_power: int=9) -> int:
     """
     Solution to Project Euler #157
+
+    Given the prime factorisation of a strictly positive integer
+    reciprocal_factorisation, finds the number of distinct ordered
+    triples (a, b, n) such that a and b are strictly positive
+    integers, b is no less than a, n is a non-negative integer
+    between min_power and max_power inclusive and:
+        1 / a + 1 / b = p / q ^ n
+    for some strictly positive integer p, where q is the integer
+    whose prime factorisation is reciprocal_factorisation.
+
+    Args:
+        Optional named:
+        reciprocal_factorisation (dict): Dictionary representing a
+                prime factorisation of the strictly positive integer
+                q in the above equation, whose keys are the prime
+                numbers that appear in the prime actorisation of
+                the q, with the corresponding value being the
+                number of times that prime appears in the
+                factorisation (i.e. the power of that prime in the
+                prime factorisation of q). An empty dictionary
+                corresponds to the multiplicative identity (i.e. 1).
+            Default: {2: 1, 5: 1} (the prime factorisation of 10)
+        min_power (int): Non-negative integer giving the smallest
+                value of n considered for counted solutions.
+            Default: 1
+        max_power (int): Non-negative integer giving the largest
+                value of n considered for counted solutions.
+            Default: 9
+    
+    Returns:
+    Integer (int) giving the number of distinct ordered triples
+    (a, b, n) such that a and b are strictly positive integers,
+    b is no less than a, n is a non-negative integer between
+    min_power and max_power inclusive and the above equation holds
+    for some strictly positive integer p with the positive integer
+    q having the prime factorisation represented by
+    reciprocal_factorisation.
     """
     since = time.time()
     res = 0
