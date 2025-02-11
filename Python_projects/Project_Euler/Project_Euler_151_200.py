@@ -219,6 +219,77 @@ def floorHarmonicSeries(n: int) -> int:
 
 # Problem 151
 def singleSheetCountExpectedValueFraction(n_halvings: int) -> Tuple[int, int]:
+    """
+    Consider a sheet of paper in an envelope. This sheet should
+    produce 2 ** n_halvings sheets of paper, each 1 / 2 ** n_halvings
+    the size of the original sheet (by area) by repeatedly cutting a
+    sheet derived from the original in half.
+
+    This is achieved in multiple stages. Each stage consists of
+    randomly selecting a sheet currently in the envelope (where
+    all sheets in the envelope have equal probability of being
+    selected), and termed as the current sheet. The following
+    process is then followed until completion:
+        1) If the current sheet is the desired size (i.e.
+           1 / 2 ** n_halvings the size of the original sheet)
+           then the process is complete. Otherwise, go to step
+           2.
+        2) Cut the current sheet in half. One half is placed
+           back in the envelope, the other half is now the
+           current sheet. Go to step 1.
+    
+    This process is repeated until the envelope is empty.
+    Regardless of the order in which the sheets are selected,
+    the process is guaranteed to be completed in exactly
+    2 ** (n_halvings + 1) - 1 steps.
+
+    This function calculates the expected number of stages in
+    this process excluding the first and last stage that start
+    with exactly one sheet in the envelope, giving the value
+    as a fraction.
+    
+    Args:
+        Required positional:
+        n_halvings (int): Non-negative integer giving the
+                relative size (in terms of area) of the desired
+                sheet size compared to the original sheet size,
+                expressed as the number of repeated halvings of
+                the original sheet are required to achieve the
+                desired size.
+    
+    Returns:
+    2-tuple of integers (ints), giving the expected value for
+    the number of stages in the described process excluding the
+    first and last stage that start with exactly one sheet in
+    the envelope, expressed as a fraction in lowest terms (i.e.
+    numerator and denominator are coprime), where index 0 is
+    a non-negative integer giving the numerator and index 1
+    is a strictly positive integer giving the denominator.
+
+    Outline of rationale:
+    We define a state as (where the number of each size sheet
+    of paper in the envelope.
+    We then observe that given that in any given run through
+    of the process, the total area of paper is strictly
+    decreasing with every stage (as no paper is added and a
+    sheet of the desired size is always removed at the end
+    of the stage), a state cannot occur more than once in
+    the same process.
+    Consequently the solution is then simply the sum of the
+    probabilities of encountering each state where there is
+    only one sheet of paper that is not the original size or
+    the desired size.
+    These probabilities are calculated with top-down dynamic
+    programming with memoisation, working backwards from each
+    chosen state  to a state containing only a single sheet
+    of the original size to calculate the proportion of the
+    possible applications of the process encounter that state
+    at some stage. Given that sheets are selected uniform
+    randomly is equal to the probability that that state is
+    encountered in a single run through of the process, the
+    number required.
+    TODO- revise for clarity
+    """
     #mx_counts = [1 << i for i in range(n_halvings)]
     mx_tot = 1 << n_halvings
 
@@ -272,6 +343,51 @@ def singleSheetCountExpectedValueFraction(n_halvings: int) -> Tuple[int, int]:
 def singleSheetCountExpectedValueFloat(n_halvings: int=5) -> float:
     """
     Solution to Project Euler #151
+
+    Consider a sheet of paper in an envelope. This sheet should
+    produce 2 ** n_halvings sheets of paper, each 1 / 2 ** n_halvings
+    the size of the original sheet (by area) by repeatedly cutting a
+    sheet derived from the original in half.
+
+    This is achieved in multiple stages. Each stage consists of
+    randomly selecting a sheet currently in the envelope (where
+    all sheets in the envelope have equal probability of being
+    selected), and termed as the current sheet. The following
+    process is then followed until completion:
+        1) If the current sheet is the desired size (i.e.
+           1 / 2 ** n_halvings the size of the original sheet)
+           then the process is complete. Otherwise, go to step
+           2.
+        2) Cut the current sheet in half. One half is placed
+           back in the envelope, the other half is now the
+           current sheet. Go to step 1.
+    
+    This process is repeated until the envelope is empty.
+    Regardless of the order in which the sheets are selected,
+    the process is guaranteed to be completed in exactly
+    2 ** (n_halvings + 1) - 1 steps.
+
+    This function calculates the expected number of stages in
+    this process excluding the first and last stage that start
+    with exactly one sheet in the envelope, giving the value
+    as a float.
+    
+    Args:
+        Required positional:
+        n_halvings (int): Non-negative integer giving the
+                relative size (in terms of area) of the desired
+                sheet size compared to the original sheet size,
+                expressed as the number of repeated halvings of
+                the original sheet are required to achieve the
+                desired size.
+    
+    Returns:
+    Float, giving the expected value for the number of stages in
+    the described process excluding the first and last stage that
+    start with exactly one sheet in the envelope.
+
+    Outline of rationale:
+    See doumentation for singleSheetCountExpectedValueFraction().
     """
     since = time.time()
     frac = singleSheetCountExpectedValueFraction(n_halvings=n_halvings)
