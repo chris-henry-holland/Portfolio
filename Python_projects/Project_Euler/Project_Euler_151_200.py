@@ -971,6 +971,64 @@ def findRealPartSumOverGaussianIntegerDivisors(n_max: int=10 ** 8) -> int:
 
 # Problem 154
 def multinomialCoefficientMultiplesCount(n: int=2 * 10 ** 5, n_k: int=3, factor_p_factorisation: Dict[int, int]={2: 12, 5: 12}) -> int:
+    """
+    For integers n and n_k and a prime factorisation
+    factor_p_factorisation, finds the number of non-zero n_k-nomial
+    coefficients with n as the number chosen from that are divisible
+    by the integer with the prime factorisation factor_p_factorisation.
+
+    For any list of n_k integers:
+        (k_1, k_2, ..., k_(n_k))
+    the n_k-nomial coefficient (also termed n_k multinomial coefficient)
+    is the number of ways n items can be partitioned into n_k sets with
+    sizes corresponding to the integers in the above list, where n is
+    the number chosen from, given by the sum of the list of integers,
+    the ordering within the sets does not matter and the sets themselves
+    are considered to be distinguishable (so that if two of the list of
+    n_k integers have the same value, the partitionings created by
+    swapping the items from one of the corresponding sets to the
+    other results in a different partitioning, despite each item
+    being grouped with the same items in both partitionings). If
+    any of the n_k integers in the list are negative, then the
+    corresponding n_k-nomial coefficient is defined to be zero.
+    
+    The value of this coefficient for non-negative k_1, k_2, ...,
+    k_(n_k) and n being the sum of these integers is given by:
+        n! / (k_1! * k_2! * ... * k_(n_k)!)
+
+    Args:
+        Optional named:
+        n (int): Non-negative integer giving the number chosen from
+                for the n_k-nomial coefficients considered, i.e. the
+                sum of the partition sizes in the n_k-nomial
+                coefficients considered.
+            Default: 2 * 10 ** 5
+        n_k (int): Strictly positive integer giving the number of
+                partitions in the multinomial coefficients considered.
+            Default: 3
+        factor_p_factorisation (dict): Dictionary representing a
+                prime factorisation of the strictly positive integer
+                by which the n_k-nomial coefficients for given n
+                and n_k counted are to be divisible, whose keys are
+                the prime numbers that appear in the prime
+                factorisation of the integer in question, with the
+                corresponding value being the number of times that
+                prime appears in the factorisation (i.e. the power
+                of that prime in the prime factorisation of the
+                integer). An empty dictionary corresponds to the
+                multiplicative identity (i.e. 1).
+            Default: {2: 12, 5: 12} (the prime factorisation of 10 ** 12)
+
+    Returns:
+    Integer (int) giving the number of non-zero n_k-nomial coefficients
+    with n as the number chosen from that are divisible by the integer with
+    the prime factorisation factor_p_factorisation.
+
+    TODO- reword for clarity
+
+    Outline of rationale:
+    TODO
+    """
     since = time.time()
     #ps = PrimeSPFsieve(n_max=factor)
     #factor_p_factorisation = ps.primeFactorisation(factor)
@@ -1203,7 +1261,65 @@ def multinomialCoefficientMultiplesCount(n: int=2 * 10 ** 5, n_k: int=3, factor_
 def multinomialCoefficientMultiplesCount2(n: int=2 * 10 ** 5, n_k: int=3, factor_p_factorisation: Dict[int, int]={2: 12, 5: 12}) -> int:
     """
     Solution to Project Euler #154
+
+    For integers n and n_k and a prime factorisation
+    factor_p_factorisation, finds the number of non-zero n_k-nomial
+    coefficients with n as the number chosen from that are divisible
+    by the integer with the prime factorisation factor_p_factorisation.
+
+    For any list of n_k integers:
+        (k_1, k_2, ..., k_(n_k))
+    the n_k-nomial coefficient (also termed n_k multinomial coefficient)
+    is the number of ways n items can be partitioned into n_k sets with
+    sizes corresponding to the integers in the above list, where n is
+    the number chosen from, given by the sum of the list of integers,
+    the ordering within the sets does not matter and the sets themselves
+    are considered to be distinguishable (so that if two of the list of
+    n_k integers have the same value, the partitionings created by
+    swapping the items from one of the corresponding sets to the
+    other results in a different partitioning, despite each item
+    being grouped with the same items in both partitionings). If
+    any of the n_k integers in the list are negative, then the
+    corresponding n_k-nomial coefficient is defined to be zero.
+    
+    The value of this coefficient for non-negative k_1, k_2, ...,
+    k_(n_k) and n being the sum of these integers is given by:
+        n! / (k_1! * k_2! * ... * k_(n_k)!)
+
+    Args:
+        Optional named:
+        n (int): Non-negative integer giving the number chosen from
+                for the n_k-nomial coefficients considered, i.e. the
+                sum of the partition sizes in the n_k-nomial
+                coefficients considered.
+            Default: 2 * 10 ** 5
+        n_k (int): Strictly positive integer giving the number of
+                partitions in the multinomial coefficients considered.
+            Default: 3
+        factor_p_factorisation (dict): Dictionary representing a
+                prime factorisation of the strictly positive integer
+                by which the n_k-nomial coefficients for given n
+                and n_k counted are to be divisible, whose keys are
+                the prime numbers that appear in the prime
+                factorisation of the integer in question, with the
+                corresponding value being the number of times that
+                prime appears in the factorisation (i.e. the power
+                of that prime in the prime factorisation of the
+                integer). An empty dictionary corresponds to the
+                multiplicative identity (i.e. 1).
+            Default: {2: 12, 5: 12} (the prime factorisation of 10 ** 12)
+
+    Returns:
+    Integer (int) giving the number of non-zero n_k-nomial coefficients
+    with n as the number chosen from that are divisible by the integer with
+    the prime factorisation factor_p_factorisation.
+
+    TODO- reword for clarity
+
+    Outline of rationale:
+    TODO
     """
+    # TODO- try to make faster
     since = time.time()
     p_lst = sorted(factor_p_factorisation.keys())
     n_p = len(p_lst)
@@ -1824,8 +1940,8 @@ def reciprocalPairSumsMultipleOfReciprocal2(q_factorisation: Dict[int, int]) -> 
         q_factorisation (dict): Dictionary representing a prime
                 factorisation of the strictly positive integer q
                 in the above equation, whose keys are the prime
-                numbers that appear in the prime actorisation of
-                the q, with the corresponding value being the
+                numbers that appear in the prime factorisation of
+                q, with the corresponding value being the
                 number of times that prime appears in the
                 factorisation (i.e. the power of that prime in the
                 prime factorisation of q). An empty dictionary
@@ -1881,8 +1997,8 @@ def countReciprocalPairSumsMultipleOfReciprocal2(q_factorisation: Dict[int, int]
         q_factorisation (dict): Dictionary representing a prime
                 factorisation of the strictly positive integer q
                 in the above equation, whose keys are the prime
-                numbers that appear in the prime actorisation of
-                the q, with the corresponding value being the
+                numbers that appear in the prime factorisation of
+                q, with the corresponding value being the
                 number of times that prime appears in the
                 factorisation (i.e. the power of that prime in the
                 prime factorisation of q). An empty dictionary
@@ -2028,8 +2144,8 @@ def countReciprocalPairSumsMultipleOfReciprocal(q_factorisation: Dict[int, int])
         q_factorisation (dict): Dictionary representing a prime
                 factorisation of the strictly positive integer q
                 in the above equation, whose keys are the prime
-                numbers that appear in the prime actorisation of
-                the q, with the corresponding value being the
+                numbers that appear in the prime factorisation of
+                q, with the corresponding value being the
                 number of times that prime appears in the
                 factorisation (i.e. the power of that prime in the
                 prime factorisation of q). An empty dictionary
@@ -2099,8 +2215,8 @@ def countReciprocalPairSumsMultipleOfReciprocalPower2(reciprocal_factorisation: 
         reciprocal_factorisation (dict): Dictionary representing a
                 prime factorisation of the strictly positive integer
                 q in the above equation, whose keys are the prime
-                numbers that appear in the prime actorisation of
-                the q, with the corresponding value being the
+                numbers that appear in the prime factorisation of
+                q, with the corresponding value being the
                 number of times that prime appears in the
                 factorisation (i.e. the power of that prime in the
                 prime factorisation of q). An empty dictionary
@@ -2192,8 +2308,8 @@ def countReciprocalPairSumsMultipleOfReciprocalPower(reciprocal_factorisation: D
         reciprocal_factorisation (dict): Dictionary representing a
                 prime factorisation of the strictly positive integer
                 q in the above equation, whose keys are the prime
-                numbers that appear in the prime actorisation of
-                the q, with the corresponding value being the
+                numbers that appear in the prime factorisation of
+                q, with the corresponding value being the
                 number of times that prime appears in the
                 factorisation (i.e. the power of that prime in the
                 prime factorisation of q). An empty dictionary
