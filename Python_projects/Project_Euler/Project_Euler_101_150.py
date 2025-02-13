@@ -4230,6 +4230,64 @@ def perfectSquareCollection() -> int:
 def torricelliTriangleUniqueLengthSum(sm_max: int=12 * 10 ** 4) -> int:
     """
     Solution to Project Euler Problem 143
+
+    For triangles whose angles are all strictly less than 120 degrees,
+    the Fermat-Toricelli point is the point on the interior of the
+    triangle for which the sum of the distances to each of the vertices
+    of the triangle is minimised.
+
+    We define a Toricelli triangle to be a triangle whose angles are
+    all strictly less than 120 degrees, whose sides are all integer
+    lengths for which all of the distances from the Fermat-Toricelli
+    point are integers.
+
+    This function considers all distinct Toricelli triangles for which
+    the sum of the distances from the Fermat-Toricelli point to the
+    three vertices of the triangle is no greater than sm_max and
+    returns the sum over these sums of distances for all such
+    Toricelli triangles.
+
+    Two Toricelli triangles are considered distinct if and only if
+    the sorted lists of their respective side lengths are distinct
+    (so for instance a Toricelli triangle constructed by reflecting
+    another Toricelli triangle is not considered to be distinct
+    from the Toricelli triangle from which it was reflected).
+
+    Args:
+        Optional named:
+        sm_max (int): Non-negative integer giving the largest sum
+                of distances from the Fermat-Toricelli point to the
+                three triangle vertices for the Toricelli triangles
+                considered.
+            Default: 12 * 10 ** 4
+    
+    Returns:
+    Integer (int) giving the total of all sums of distances from the
+    Fermat-Toricelli point to the three vertices of the triangle for
+    all distinct Toricelli triangles considered (that being all such
+    triangles for which this distance does not exceed sm_max).
+
+    Outline of rationale:
+    It can be shown that for any triangle with all angles strictly
+    less than 120 degrees, the triangle whose vertices are two
+    vertices of the triangle and the third is the Fermat-Toricelli
+    point of the triangle, the angle at the Fermat-Toricelli point
+    is equal to 120 degrees.
+    Consider the following construction and labelling based on such
+    a triangle. Label the sides a, b and c, and add straight lines
+    from the Fermat-Toricelli point to each of the three vertices,
+    giving the lines to the vertex opposite a, b and c with the
+    labels p, q and r respectively.
+    We are interested in Toricelli triangles, which are precisely
+    those triangles with all angles strictly less than 120 degrees
+    for which this construction yields integer lengths of the
+    sides labelled a, b, c, p, q and r are all integers.
+    Using our initial observation, by the cosine rule (given that
+    cos(120 degrees) is minus one half), we find:
+        a ** 2 = q ** 2 + r ** 2 + q * r
+        b ** 2 = p ** 2 + r ** 2 + p * r
+        c ** 2 = p ** 2 + q ** 2 + p * q
+    TODO- complete outline of rationale
     """
     since = time.time()
     m_mx = isqrt(sm_max) - 1

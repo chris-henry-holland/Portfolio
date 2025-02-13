@@ -979,7 +979,7 @@ def multinomialCoefficientMultiplesCount(n: int=2 * 10 ** 5, n_k: int=3, factor_
 
     For any list of n_k integers:
         (k_1, k_2, ..., k_(n_k))
-    the n_k-nomial coefficient (also termed n_k multinomial coefficient)
+    the n_k-nomial coefficient (also termed n_k multinomial coefficients)
     is the number of ways n items can be partitioned into n_k sets with
     sizes corresponding to the integers in the above list, where n is
     the number chosen from, given by the sum of the list of integers,
@@ -1269,7 +1269,7 @@ def multinomialCoefficientMultiplesCount2(n: int=2 * 10 ** 5, n_k: int=3, factor
 
     For any list of n_k integers:
         (k_1, k_2, ..., k_(n_k))
-    the n_k-nomial coefficient (also termed n_k multinomial coefficient)
+    the n_k-nomial coefficient (also termed n_k multinomial coefficients)
     is the number of ways n items can be partitioned into n_k sets with
     sizes corresponding to the integers in the above list, where n is
     the number chosen from, given by the sum of the list of integers,
