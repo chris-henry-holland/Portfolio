@@ -2677,8 +2677,121 @@ def maximalDigitalRootFactorisationsSum(n_min: int=2, n_max: int=10 ** 6 - 1, ba
 # Problem 160
 
 
+# Problem 169
+def sumOfPowersOfTwo(num: int=10 ** 25, max_rpt: int=2) -> int:
+    """
+    Solution to Project Euler #169
+
+    For a non-negative integer, finds the number of ways that number
+    can be expressed as the sum of powers of two, where each power
+    of two can appear in the sum at most max_rpt times.
+
+    Args:
+        Optional named:
+        num (int): The non-negative integer for which the number of
+                ways it can be expressed as the sum of powers of two
+                as described above is to be found.
+            Default: 10 ** 25
+        max_rpt (int): The maximum number of times each power of two
+                can appear in any of the sums counted.
+            Default: 2
+    
+    Returns:
+    Integer (int) giving the number of ways that num can be expressed
+    as the sum of powers of two, where each power of two can appear in
+    the sum at most max_rpt times.
+
+    Outline of rationale:
+    We use top-down dynamic programming with memoisation going through
+    the digits of num when expressed in binary from left to right (i.e.
+    from most to least significant), with the parameters idx,
+    representing position of the digit in question when read from right
+    to left starting at 0 (i.e. the power to which 2 is taken for that
+    digit) and higher_req, representing the number of multiples of the
+    next higher power of 2 that needs to be accounted for by the current
+    and smaller powers of 2.
+    The recurrence consists of adding together the results when accounting
+    for the quantity passed to the current stage (multiplied by 2 as the
+    current power  of 2 is half the size of that from which it was passed
+    on), plus one in the case that the current digit is 1 with the
+    different possible multiples of the current power of 2 (the multiples
+    being in the integer range 0 to max_rpt inclusive) and passing the
+    remainder to the smaller powers of 2. The base case is after the units
+    digit (from which no value can be passed on but also has no
+    corresponding digit meaning it does not add any value to be accounted
+    for), so this gives 1 (representing the empty sum) if higher_req is
+    0, otherwise 0.
+    We exclude some unnecessary calls by noting that the sum of
+    all powers of 2 up to but not including a given power of 2
+    is exactly one less than that power of 2. Therefore, an upper
+    bound on the number of multiples of a higher power that can
+    be accounted for by the smaller powers of 2 is:
+        floor((max_rpt * (2 ** idx - 1)) / 2 ** idx)
+    """
+    # Review- Try to implement bottom up dynamic programming solution
+    since = time.time()
+    digs = []
+    while num:
+        digs.append(num & 1)
+        num >>= 1
+    n_dig = len(digs)
+    memo = {}
+    def recur(idx: int, higher_req: int=0) -> int:
+        if idx == -1:
+            # This cannot contribute anything, so is only non-zero
+            # if higher_req is zero, in which case there is only
+            # one option, no powers of 2 (giving an empty sum with
+            # value 0).
+            return 1 if not higher_req else 0
+        
+        #if (max_rpt * (exp - 1)) // exp < higher_req: return 0
+        args = (idx, higher_req)
+        if args in memo.keys(): return memo[args]
+        #res = 0
+        exp = 1 << (idx)
+        higher_req_min = max(0, 2 * higher_req + digs[idx] - max_rpt)
+        higher_req_max = min(2 * higher_req + digs[idx], (max_rpt * (exp - 1)) // exp)
+        #for i in range(min(2 * higher_req + digs[idx], max_rpt) + 1):
+        #    res += recur(idx - 1, higher_req=2 * higher_req + digs[idx] - i)
+        res = sum(recur(idx - 1, higher_req=i) for i in range(higher_req_min, higher_req_max + 1))
+
+        """
+        if digs[idx]:
+            #res = recur(idx - 1, higher_req=True) if higher_req else recur(idx - 1, higher_req=False) + recur(idx - 1, higher_req=True)
+            res = recur(idx - 1, higher_req=higher_req * 2) + 
+            if not higher_req: res = recur(idx - 1, higher_req=0) + recur(idx - 1, higher_req=2)
+            elif higher_req == 1: res = recur(idx - 1, higher_req=0) + recur(idx - 1, higher_req=3)
+            #print(f"hi1")
+        else:
+            #if not higher_req: res = recur(idx - 1, higher_req=0)
+            #elif higher_req == 1: res = recur(idx - 1, higher_req=0) + recur(idx - 1, higher_req=2)
+            #else: res = recur(idx - 1, higher_req=2)
+            #print(f"hi2")
+            #res = recur(idx - 1, higher_req=False) + recur(idx - 1, higher_req=True) if higher_req else recur(idx - 1, higher_req=False) + recur(idx - 1, higher_req=True)
+        """
+        memo[args] = res
+        return res
+    
+    res = recur(n_dig - 1, higher_req=0)
+    #print(memo)
+    print(f"Time taken = {time.time() - since:.4f} seconds")
+    return res
+    """
+    print(format(num, "b"))
+    dp = [[0, 1]]
+    while num:
+        if not num & 1:
+            curr.append(curr[-1])
+        else:
+            curr.append(sum(curr))
+        #curr = [curr[0], sum(curr)] if num & 1 else [sum(curr), 0]
+        num >>= 1
+        print(curr)
+    return curr[-1]
+    """
+
 if __name__ == "__main__":
-    to_evaluate = {160}
+    to_evaluate = {169}
 
     if not to_evaluate or 151 in to_evaluate:
         res = singleSheetCountExpectedValueFloat(n_halvings=4)
@@ -2716,54 +2829,7 @@ if __name__ == "__main__":
         res = maximalDigitalRootFactorisationsSum(n_min=2, n_max=10 ** 6 - 1, base=10)
         print(f"Solution to Project Euler #159 = {res}")
     
-    #print(sumsOfSquareReciprocals(target=(1, 2), denom_min=2, denom_max=45))
-    #{(2, 3, 4, 6, 7, 9, 10, 20, 28, 35, 36, 45), (2, 3, 4, 6, 7, 9, 12, 15, 28, 30, 35, 36, 45), (2, 3, 4, 5, 7, 12, 15, 20, 28, 35)}
-    """
-    res = 0
-    for i in range(10 ** 8 + 1):
-        if cumulativeDigitCount(1, i, base=10) == i:
-            res += i
-            print(f"num = {i}, tot = {res}")
-        #print(i, cumulativeDigitCount(1, i, base=10))
-    #print(cumulativeDigitCount(1, 199981, base=10))
-    print(f"total = {res}")
-    """
-    #num = 10 ** 10
-    #res = cumulativeDigitCountEqualsNumber(num: int, d: int, base: int=10)
-    #print(num, res, res - num)
 
-    """
-    for n in range(1, 5):
-        num = 10 ** n
-        #lst = reciprocalPairSumsEqualToMultipleOfReciprocal(num)
-        print(n, countReciprocalPairSumsMultipleOfReciprocal({2: n, 5: n}))
-        #print(n, set(lst) - set(lst2), set(lst2) - set(lst))
-        #print(lst)
-        #print(lst2)
-        #print(lst)
-        #print(num, len(set(lst)))
-        #a_set = {x[0] for x in lst if x[0] % 10}
-        #print(sorted(a_set))
-    """
-    #res = 0
-    #for n in range(1, 7):
-    #    ans = countReciprocalPairSumsMultipleOfReciprocalPower(reciprocal_factorisation={2: 1, 5: 1}, min_power=1, max_power=n)#countReciprocalPairSumsMultipleOfReciprocal({2: n, 5: n})
-    #    print(f"n = {n}, ans = {ans}")
-    #print(res)
-    """
-    res = []
-    for exp in range(0, 21):
-        pow2 = 1 << exp
-        print(f"pow2 = {pow2}")
-        ans = 0
-        for numerator in range(1, 2 * pow2 + 1):
-            for q in range((pow2 // numerator) + 1, (2 * pow2 // numerator) + 1):
-                frac = addFractions((numerator, pow2), (-1, q))
-                if frac[0] == 1:
-                    print(f"numerator = {numerator}, denom1 = {q}, denom2 = {frac[1]}")
-                    ans += 1
-        print(pow2, ans)
-        res.append(ans)
-    print(res)
-    print([res[i] - res[i - 1] for i in range(1, len(res))])
-    """
+    if not to_evaluate or 169 in to_evaluate:
+        res = sumOfPowersOfTwo(num=10 ** 25, max_rpt=2)
+        print(f"Solution to Project Euler #169 = {res}")
