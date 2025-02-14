@@ -2677,6 +2677,133 @@ def maximalDigitalRootFactorisationsSum(n_min: int=2, n_max: int=10 ** 6 - 1, ba
 # Problem 160
 
 
+# Problem 162
+def intAsHexadecimal(num: int) -> str:
+    """
+    For a non-negative integer, finds its representation as a
+    hexadecimal number, where the digits with value between 10
+    and 15 inclusive are represented by "A", "B", "C", "D", "E"
+    and "F" in that order. The answer is given without leading
+    zeros (except in the case of zero itself which is returned
+    as "0").
+
+    Args:
+        Required positional:
+        num (int): Non-negative integer giving the integer whose
+                representation as a hexadecimal number is being
+                sought.
+    
+    Returns:
+    String (str) giving the hexadecimal representation of num
+    without leading zeros.
+    """
+    conv_dict = {x: str(x) for x in range(10)}
+    for i, l in enumerate("ABCDEF", start=10):
+        conv_dict[i] = l
+    res = []
+    while num:
+        num, d = divmod(num, 16)
+        res.append(conv_dict[d])
+    res = res[::-1]
+    return "".join(res) if res else "0"
+
+def countIntegersContainGivenDigits(max_n_dig: int, n_contained_digs: int, contained_includes_zero: bool, base: int=10) -> int:
+    """
+    For a given base, calculates the number of strictly positive
+    integers which when expressed in the chosen base with no
+    leading zeros contain at most max_n_dig digits and contain each
+    of n_contained_digs selected, distinct digits (with zero one of
+    these digits if and only if contained_includes_zero is given
+    as True) at least once.
+
+    Args:
+        Required positional:
+        max_n_dig (int): Strictly positive integer giving the
+                maximum number of digits the numbers considered
+                can have when expressed in the chosen base
+                without leading zeros.
+        n_contained_digs (int): Non-negative integer giving the
+                number of selected  distinct digits that must each
+                be present in the representation in the chosen
+                base of the integers counted without leading zeros.
+        contained_includes_zero (bool): If given as True then
+                zero is one of the digits in the n_contained_digs
+                selected that must be present at least once in each
+                number counted when expressed in the chosen base,
+                otherwise zero is not one of these digits.
+        
+        Optional named:
+        base (int): The base in which integers are to be expressed
+                when judging how many digits it has and whether it
+                contains all of the selected distinct digits.
+    
+    Returns:
+    Integer (int) giving the number of strictly positive integers
+    satisfying the requirements described above.
+    """
+
+    if n_contained_digs > base - (not contained_includes_zero):
+        return 0
+    memo = {}
+    def recur(n_dig: int, n_contained_digs: int, contained_includes_zero: bool, first: bool=True) -> int:
+        if n_contained_digs > n_dig or (not n_contained_digs and contained_includes_zero): return 0
+        elif not n_dig: return 1
+        args = (n_dig, n_contained_digs, contained_includes_zero, first)
+        if args in memo.keys(): return memo[args]
+        n_opts = base - first
+        n_other_opts = n_opts - n_contained_digs + (first and contained_includes_zero)
+        n_nonzero_contained_opts = n_contained_digs - contained_includes_zero
+        res = n_other_opts * recur(n_dig - 1, n_contained_digs, contained_includes_zero, first=False)
+        res += n_nonzero_contained_opts * recur(n_dig - 1, n_contained_digs - 1, contained_includes_zero, first=False)
+        if not first and contained_includes_zero:
+            res += recur(n_dig - 1, n_contained_digs - 1, False, first=False)
+        memo[args] = res
+        return res
+
+    res = sum(recur(n_dig, n_contained_digs, contained_includes_zero, first=True) for n_dig in range(n_contained_digs, max_n_dig + 1))
+    return res
+    
+def countHexadecimalIntegersContainGivenDigits(max_n_dig: int=16, n_contained_digs: int=3, contained_includes_zero: bool=True) -> str:
+    """
+    Solution to Project Euler #162
+
+    Calculates the number of strictly positive integers which when
+    represented as a hexadecimal number with no leading zeros contain
+    at most max_n_dig digits and contain each of n_contained_digs
+    selected, distinct digits (with zero one of these digits if and
+    only if contained_includes_zero is given as True) at least once.
+    The answer is given as a string giving the hexadecimal
+    representation of this total (see documentation of
+    intAsHexadecimal() for more detail about this representation).
+
+    Args:
+        Required positional:
+        max_n_dig (int): Strictly positive integer giving the
+                maximum number of digits the numbers considered
+                can have when represented as a h
+                without leading zeros.
+        n_contained_digs (int): Non-negative integer giving the
+                number of selected  distinct digits that must each
+                be present in the hexadecimal representation of the
+                integers counted without leading zeros.
+        contained_includes_zero (bool): If given as True then
+                zero is one of the digits in the n_contained_digs
+                selected that must be present at least once in each
+                number counted when expressed as a hexadecimal
+                number, otherwise zero is not one of these digits.
+    
+    Returns:
+    String (str) giving hexadecimal representation of the number of
+    strictly positive integers satisfying the requirements described
+    above.
+    """
+    since = time.time()
+    res1 = countIntegersContainGivenDigits(max_n_dig, n_contained_digs, contained_includes_zero, base=16)
+    print(res1)
+    res2 = intAsHexadecimal(res1)
+    print(f"Time taken = {time.time() - since:.4f} seconds")
+    return res2
+
 # Problem 169
 def sumOfPowersOfTwo(num: int=10 ** 25, max_rpt: int=2) -> int:
     """
@@ -2791,7 +2918,7 @@ def sumOfPowersOfTwo(num: int=10 ** 25, max_rpt: int=2) -> int:
     """
 
 if __name__ == "__main__":
-    to_evaluate = {169}
+    to_evaluate = {162}
 
     if not to_evaluate or 151 in to_evaluate:
         res = singleSheetCountExpectedValueFloat(n_halvings=4)
@@ -2830,6 +2957,10 @@ if __name__ == "__main__":
         print(f"Solution to Project Euler #159 = {res}")
     
 
+    if not to_evaluate or 162 in to_evaluate:
+        res = countHexadecimalIntegersContainGivenDigits(max_n_dig=16, n_contained_digs=3, contained_includes_zero=True)
+        print(f"Solution to Project Euler #162 = {res}")
+
     if not to_evaluate or 169 in to_evaluate:
-        res = sumOfPowersOfTwo(num=10 ** 25, max_rpt=2)
+        res = sumOfPowersOfTwo(num=10 ** 25, max_rpt=1)
         print(f"Solution to Project Euler #169 = {res}")
