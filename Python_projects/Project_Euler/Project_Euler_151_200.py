@@ -2677,6 +2677,190 @@ def maximalDigitalRootFactorisationsSum(n_min: int=2, n_max: int=10 ** 6 - 1, ba
 # Problem 160
 
 
+# Problem 161
+def nextTriominoStates(state: Tuple[Tuple[int, bool]], rows_remain: int=-1, nxt_insert: Optional[int]=None) -> List[Tuple[List[Tuple[int, bool]], int, int]]:
+    # Boolean represents whether there is an overhang caused by
+    # an L-piece
+    if rows_remain < 0:
+        rows_remain = float("inf")
+    n = len(state)
+    lvl_delta0 = 0
+    if nxt_insert is None or state[nxt_insert][0]:
+        mn_state = min(x[0] for x in state)
+        if mn_state:
+            lvl_delta0 = mn_state
+            state = [(x[0] - mn_state, x[1]) for x in state]
+        for i in range(n):
+            if not state[i][0]:
+                nxt_insert = i
+                break
+    
+    res = []
+    def addState(state2: List[Tuple[int, bool]], piece_mn: Tuple[int, int], piece_rng: Tuple[int, int]) -> None:
+        
+        mn = piece_mn
+        for i in range(piece_rng[1] + 1, n):
+            mn = min(mn, (state2[i][0], i))
+            if not mn: break
+        if mn[0] >= 1:
+            for i in range(piece_rng[0]):
+                mn = min(mn, (state2[i][0], i))
+                if state2[i][0] <= 1: break
+        state2 = tuple((x[0] - mn[0], x[1]) for x in state2)
+        #if state2 == ((1, False), (1, False), (0, False), (0, False), (0, False), (1, False)):
+        #    print(piece_rng, piece_mn, mn)
+        res.append((state2, lvl_delta0 + mn[0], mn[1]))
+    
+    # Pieces that can fill in an overhang space
+    #if state == ((1, False), (1, False), (0, False), (0, False), (0, False), (1, False)):
+    #    print("hello", nxt_insert)
+    # Flat line piece
+    if rows_remain >= 1 and nxt_insert + 2 < n and not state[nxt_insert + 1][0] and not state[nxt_insert + 2][0] and\
+            not (nxt_insert + 3 < n and state[nxt_insert + 3] == (0, True)):
+        state2 = list(state)
+        mn = (float("inf"), 0)
+        for i in range(nxt_insert, nxt_insert + 3):
+            state2[i] = (1 + state[i][1], False)
+            mn = min(mn, (state2[i][0], i))
+        addState(state2, mn, (nxt_insert, nxt_insert + 2))
+        #print(state)
+        """
+        for i in range(nxt_insert + 3, n):
+            mn = min(mn, state2[i][0])
+            if not mn: break
+        if mn > 1:
+            for i in range(nxt_insert):
+                mn = min(mn, state2[i][0])
+                if mn <= 1: break
+        if mn: state2 = [(x[0] - mn, x[1]) for x in state2]
+        res.append((state2, lvl_delta0 + mn))
+        """
+    if rows_remain <= 1: return res
+
+    # Backward R-piece
+    if nxt_insert + 1 < n and not state[nxt_insert + 1][0] and not state[nxt_insert + 1][1] and\
+            not (nxt_insert + 2 < n and state[nxt_insert + 2] == (0, True)):
+        state2 = list(state)
+        state2[nxt_insert] = (1 + state[nxt_insert][1], False)
+        state2[nxt_insert + 1] = (2, False)
+        mn = min((state2[nxt_insert][0], nxt_insert), (2, nxt_insert + 1))
+        addState(state2, mn, (nxt_insert, nxt_insert + 1))
+
+    if state[nxt_insert][1]: return res
+
+    # The other pieces
+
+    # Upright line piece
+    if rows_remain >= 3 and not (nxt_insert + 1 < n and state[nxt_insert + 1] == (0, True)):
+        state2 = list(state)
+        state2[nxt_insert] = (3, False)
+        mn = (3, nxt_insert)
+        addState(state2, mn, (nxt_insert, nxt_insert))
+    
+    # R piece
+    if nxt_insert + 1 < n and not state[nxt_insert + 1][0] and\
+            not (nxt_insert + 2 < n and state[nxt_insert + 2] == (0, True)):
+        state2 = list(state)
+        state2[nxt_insert] = (2, False)
+        state2[nxt_insert + 1] = (1 + state[nxt_insert + 1][1], False)
+        mn = min((2, nxt_insert), (state2[nxt_insert + 1][0], nxt_insert + 1))
+        addState(state2, mn, (nxt_insert, nxt_insert + 1))
+    
+    # L piece
+    if nxt_insert + 1 < n and (state[nxt_insert + 1][0] <= 1 and state[nxt_insert + 1] != (0, True)) and\
+            not (nxt_insert + 2 < n and state[nxt_insert + 2] == (0, True)) and\
+            (state[nxt_insert + 1][0] == 1 or (nxt_insert + 2 < n and state[nxt_insert + 2] == (0, False))):
+        state2 = list(state)
+        state2[nxt_insert] = (2, False)
+        state2[nxt_insert + 1] = (2, False) if state[nxt_insert + 1][0] == 1 else (0, True)
+        mn = min((2, nxt_insert), (state2[nxt_insert + 1][0], nxt_insert + 1))
+        addState(state2, mn, (nxt_insert, nxt_insert + 1))
+    
+    # Backwards L piece
+    if nxt_insert > 0 and (state[nxt_insert - 1][0] == 1):
+        state2 = list(state)
+        state2[nxt_insert - 1] = (2, False)
+        state2[nxt_insert] = (2, False)
+        mn = (2, nxt_insert - 1)
+        addState(state2, mn, (nxt_insert - 1, nxt_insert))
+    
+    return res
+
+def triominoStateComplementRotated(state: Tuple[Tuple[int, bool]]) -> Tuple[Tuple[Tuple[int, bool]], int]:
+    # Assumes state1 has at least one entry at level 0
+    h = max(x[0] for x in state)
+    state2 = []
+    for x, b in state:
+        if not b: state2.append((h - x, False))
+        else: state2.append((h - x - 2, True))
+    return (tuple(state2[::-1]), h)
+
+def triominoAreaFillCombinations(n_rows: int=9, n_cols: int=12) -> int:
+    """
+    Solution to Project Euler #161
+    """
+    since = time.time()
+    n_triominos, r = divmod(n_rows * n_cols, 3)
+    if r: return 0
+    #print(n_triominos)
+    n_cols, n_rows = sorted([n_rows, n_cols])
+    #n_crow, n_rows = sorted([n_rows, n_cols])
+    states_counts = {(tuple((0, False) for _ in range(n_cols)), 0, 0): 1}
+    
+    for _ in range(n_triominos):#(n_triominos) >> 1):
+        new_states_counts = {}
+        for (state, lvl, nxt_insert), cnt in states_counts.items():
+            if lvl > n_rows - 3 and lvl + max(x[0] + 2 * x[1] for x in state) > n_rows:
+                continue
+            for (state2, lvl_delta, nxt_insert2) in nextTriominoStates(state, n_rows - lvl, nxt_insert=nxt_insert):
+                lvl2 = lvl + lvl_delta
+                x = (state2, lvl2, nxt_insert2)
+                new_states_counts[x] = new_states_counts.get(x, 0) + cnt
+        states_counts = new_states_counts
+        #print(states_counts)
+    res = sum(states_counts.values())
+    """
+    print("states:")
+    for (state, lvl, nxt_insert), cnt in states_counts.items():
+        print(state, lvl, nxt_insert, cnt)
+    #print(states_counts)
+    res = 0
+    if n_triominos & 1:
+        states_complement_counts = {}
+        complements_map = {}
+        for (state, lvl, nxt_insert), cnt in states_counts.items():
+            state_c, h = triominoStateComplementRotated(state)
+            complements_map[state] = state_c
+            print(f"state = {state}")
+            print(f"state_c = {state_c}")
+            #states_complement_counts[(state_c, n_rows - lvl - h)] = cnt
+            states_complement_counts[state_c] = cnt
+        for (state, lvl, nxt_insert), cnt in states_counts.items():
+            #state_c = complements_map[state]
+            for (state2, lvl_delta, nxt_insert2) in nextTriominoStates(state, nxt_insert=nxt_insert):
+                print(f"centre state = {state}")
+                #if states_complement_counts.get(state2, 0) != cnt or state_c != state2:
+                res += states_complement_counts.get(state2, 0) * cnt
+                #else: res += cnt * (cnt - 1)
+    else:
+        #print("middle states:")
+        #states_complement_counts = {}
+        for (state, lvl, nxt_insert), cnt in states_counts.items():
+            state_c, h = triominoStateComplementRotated(state)
+            print(state, state_c)
+            if state_c == state:
+                print(f"self-match: {state}, {cnt}")
+                res += cnt ** 2
+            elif state_c in states_counts.keys():
+                print(f"match: {state}, {cnt}, {state_c}, {states_counts.get(state_c, 0)}")
+                res += states_counts.get(state_c, 0) * cnt
+    """
+    print(f"Time taken = {time.time() - since:.4f} seconds")
+    return res
+
+
+
+
 # Problem 162
 def intAsHexadecimal(num: int) -> str:
     """
@@ -2918,7 +3102,7 @@ def sumOfPowersOfTwo(num: int=10 ** 25, max_rpt: int=2) -> int:
     """
 
 if __name__ == "__main__":
-    to_evaluate = {162}
+    to_evaluate = {161}
 
     if not to_evaluate or 151 in to_evaluate:
         res = singleSheetCountExpectedValueFloat(n_halvings=4)
@@ -2956,6 +3140,10 @@ if __name__ == "__main__":
         res = maximalDigitalRootFactorisationsSum(n_min=2, n_max=10 ** 6 - 1, base=10)
         print(f"Solution to Project Euler #159 = {res}")
     
+
+    if not to_evaluate or 161 in to_evaluate:
+        res = triominoAreaFillCombinations(n_rows=9, n_cols=12)
+        print(f"Solution to Project Euler #161 = {res}")
 
     if not to_evaluate or 162 in to_evaluate:
         res = countHexadecimalIntegersContainGivenDigits(max_n_dig=16, n_contained_digs=3, contained_includes_zero=True)
