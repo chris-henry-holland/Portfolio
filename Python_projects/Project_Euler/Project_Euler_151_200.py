@@ -2858,9 +2858,6 @@ def triominoAreaFillCombinations(n_rows: int=9, n_cols: int=12) -> int:
     print(f"Time taken = {time.time() - since:.4f} seconds")
     return res
 
-
-
-
 # Problem 162
 def intAsHexadecimal(num: int) -> str:
     """
@@ -2988,6 +2985,188 @@ def countHexadecimalIntegersContainGivenDigits(max_n_dig: int=16, n_contained_di
     print(f"Time taken = {time.time() - since:.4f} seconds")
     return res2
 
+# Problem 164
+def countIntegersConsecutiveDigitSumCapped(
+        n_digs: int=20,
+        n_consec: int=3,
+        consec_sum_cap: int=9,
+        base: int=10,
+) -> int:
+    """
+    Solution to Project Euler #164
+
+    For a given base, finds the number of strictly positive integers
+    which when represented in that base, contains exactly n_digs digits
+    and the sum of any n_consec consecutive digits in that representation
+    has a sum no greater than consec_sum_cap.
+
+    Args:
+        Optional named:
+        n_digs (int): The number of digits (without leading zeros) in
+                the representation in the chosen base of integers
+                considered.
+            Default: 20
+        n_consec (int): The number of consecutive digits in the
+                representation in the chosen base of any of the
+                integers considered that must never exceed consec_sum_cap
+                in order for the integer to be counted.
+            Default: 3
+        consec_sum_cap (int): The maximum value any n_consec consecutive
+                digits in the representation in the chosen base of
+                any of the integers considered can have in order for the
+                integer to be counted.
+            Default: 9
+        base (int): Integer strictly greater than 1 giving the base
+                in which the integers are to be represented when selecting
+                which integers to be considered and which of these are
+                to be counted.
+            Default: 10
+
+    Returns:
+    Integer (int) giving the number of strictly positive integers which
+    when represented in that base, contains exactly n_digs digits and the
+    sum of any n_consec consecutive digits in that representation has a sum
+    no greater than consec_sum_cap.
+            
+    Brief outline of rationale:
+    This is calculated using bottom-up dynamic programming over the
+    digits in the representation of the integer in the chosen base from
+    left to right, keeping and updating the record of the number of valid
+    integers with each combination of the latest (n_consec - 2) digits
+    (including the digit under current consideration) and whose digit
+    (n_consec - 2) places to the left of the current digit is no greater
+    than each possible digit, as we consider each digit in turn from left
+    to right.
+    """
+    since = time.time()
+    if consec_sum_cap >= (base - 1) * n_consec:
+        return (base - 1) * base ** (n_digs - 1)
+    if n_consec == 1:
+        return consec_sum_cap * (consec_sum_cap + 1) ** (n_digs - 1)
+
+    def buildNDimensionalArrayIndexSumCapped(n_dim: int, index_max: int, index_sum_max: int) -> list:
+        index_max = min(index_max, index_sum_max)
+        #if n_dim == 1:
+        #    return [0] * (min(index_max, index_sum_max) + 1)
+
+        def recur(dim_idx: int, idx_sum: int) -> Union[list, int]:
+            if dim_idx == n_dim - 1:
+                return [0] * (min(index_max, index_sum_max - idx_sum) + 1)
+            res = []
+            for idx in range(min(index_max, index_sum_max - idx_sum) + 1):
+                res.append(recur(dim_idx + 1, idx_sum + idx))
+            return res
+        return recur(0, 0)
+    
+    def arraySliceGenerator(arr: list, max_n_indices: Optional[int]) -> Generator[Tuple[Union[list, int], Tuple[int]], None, None]:
+        #print("hi")
+        if max_n_indices is None: max_n_indices = float("inf")
+        #print(max_n_indices)
+        curr = []
+        def recur(arr_slice: Union[int, list], dim_idx: int) -> Generator[Tuple[Union[list, int], Tuple[int]], None, None]:
+            #print("hello")
+            #print(arr_slice, dim_idx)
+            if isinstance(arr_slice, int) or dim_idx == max_n_indices:
+                yield (arr_slice, tuple(curr))
+                return
+            res = []
+            curr.append(0)
+            for idx in range(len(arr_slice)):
+                #print(f"idx = {idx}")
+                curr[-1] = idx
+                yield from recur(arr_slice[idx], dim_idx + 1)
+            curr.pop()
+            return
+        yield from recur(arr, 0)
+    
+    def getNDimensionalArraySlice(arr: list, inds: Tuple[int]) -> Union[list, int]:
+        arr2 = arr
+        for idx in inds:
+            arr2 = arr2[idx]
+        return arr2
+    
+    def accumulateLastDimension(arr: list, n_dim: int) -> None:
+        for arr_slice, _ in arraySliceGenerator(arr, n_dim - 1):
+            for idx in range(1, len(arr_slice)):
+                arr_slice[idx] += arr_slice[idx - 1]
+        return
+    
+    arr = buildNDimensionalArrayIndexSumCapped(n_consec - 1, base - 1, consec_sum_cap)
+    #print(arr)
+    #for arr_slice, idx in arraySliceGenerator(arr, n_consec - 1):
+    #    print(idx, arr_slice)
+    base_eff = min(base, consec_sum_cap + 1)
+    curr = buildNDimensionalArrayIndexSumCapped(n_consec - 1, base - 1, consec_sum_cap)#[[0] * min(base_eff, consec_sum_cap - d1 + 1) for d1 in range(base_eff)]
+    if n_consec == 2:
+        for d in range(len(curr)):
+            curr[d] = d
+    else:
+        inds = [0] * (n_consec - 2)
+        #for curr_slice, curr_inds in arraySliceGenerator(curr, n_consec - 2):
+        #arr_slice = getNDimensionalArraySlice(curr, inds)
+        for d1 in range(1, len(curr)):
+            inds[0] = d1
+            arr_slice = getNDimensionalArraySlice(curr, inds)
+            for d2 in range(len(arr_slice)):
+                arr_slice[d2] = 1
+    #for curr_slice, curr_inds in arraySliceGenerator(curr, n_consec - 2):
+        #inds[0] = d1
+        #arr_slice = getNDimensionalArraySlice(curr, inds)
+        #for d2 in range(1, len(curr_slice)):
+        #    curr_slice[d2] = 1
+    #for d1 in range(1, base_eff):
+    #    for d2 in range(len(curr[d1])):
+    #        curr[d1][d2] = 1
+    #print(curr)
+    for _ in range(n_digs - 1):
+        prev = curr
+        curr = buildNDimensionalArrayIndexSumCapped(n_consec - 1, base - 1, consec_sum_cap)#[[0] * min(base_eff, consec_sum_cap - d1 + 1) for d1 in range(base_eff)]
+        for curr_slice, curr_inds in arraySliceGenerator(curr, n_consec - 2):
+            curr_inds_sum = sum(curr_inds)
+            for d2 in range(min(base_eff, consec_sum_cap - curr_inds_sum + 1)):
+                prev_inds = (*curr_inds[1:], d2) if n_consec > 2 else ()
+                prev_slice = getNDimensionalArraySlice(prev, prev_inds)
+                curr_slice[d2] += prev_slice[consec_sum_cap - curr_inds_sum - d2]
+        #for d1 in range(base_eff):
+        #    for d2 in range(min(base_eff, consec_sum_cap - d1 + 1)):
+        #        curr[d1][d2] += prev[d2][consec_sum_cap - d1 - d2]
+        #print(curr)
+        accumulateLastDimension(curr, n_consec - 1)
+        #for d1 in range(base_eff):
+        #    for d2 in range(1, len(curr[d1])):
+        #        curr[d1][d2] += curr[d1][d2 - 1]
+        #print(curr)
+    #res = sum(curr[d][-1] for d in range(base_eff))
+    res = sum(x[0][-1] for x in arraySliceGenerator(curr, n_consec - 2))
+    print(f"Time taken = {time.time() - since:.4f} seconds")
+    return res
+
+
+    """
+    consec_sum_counts = [[0] * (min((base - 1) * (i + 1), consec_sum_cap) + 1) for i in range(n_consec - 1)]
+    for d in range(1, min(consec_sum_cap + 1, base)):
+        consec_sum_counts[0][d] = 1
+    res = 0
+    for _ in range(n_digs - 1):
+        #prev_consec_sum_counts = consec_sum_counts
+        #consec_sum_counts = [[0] * (min((base - 1) * i, consec_sum_cap) + 1) for i in range(n_consec - 1)]
+        for j in range(len(consec_sum_counts[n_consec - 2])):
+            res += min(base, consec_sum_cap) * consec_sum_counts[n_consec - 2][j]
+        #for d in range(min(consec_sum_cap + 1, base)):
+        #    res += consec_sum_counts[n_consec - 1][consec_sum_cap - d]
+        for i in reversed(range(1, n_consec - 1)):
+            consec_sum_counts[i] = [0] * (min((base - 1) * (i + 1), consec_sum_cap) + 1)
+            for j in range(len(consec_sum_counts[i])):
+                for d in range(min(base, j + 1)):
+                    consec_sum_counts[i][j] += consec_sum_counts[i - 1][j - d]
+        consec_sum_counts[0][0] = 1
+        print(consec_sum_counts, res)
+    print(f"Time taken = {time.time() - since:.4f} seconds")
+    
+    return res
+    """
+
+
 # Problem 169
 def sumOfPowersOfTwo(num: int=10 ** 25, max_rpt: int=2) -> int:
     """
@@ -3102,7 +3281,7 @@ def sumOfPowersOfTwo(num: int=10 ** 25, max_rpt: int=2) -> int:
     """
 
 if __name__ == "__main__":
-    to_evaluate = {161}
+    to_evaluate = {164}
 
     if not to_evaluate or 151 in to_evaluate:
         res = singleSheetCountExpectedValueFloat(n_halvings=4)
@@ -3148,6 +3327,10 @@ if __name__ == "__main__":
     if not to_evaluate or 162 in to_evaluate:
         res = countHexadecimalIntegersContainGivenDigits(max_n_dig=16, n_contained_digs=3, contained_includes_zero=True)
         print(f"Solution to Project Euler #162 = {res}")
+
+    if not to_evaluate or 164 in to_evaluate:
+        res = countIntegersConsecutiveDigitSumCapped(n_digs=20, n_consec=3, consec_sum_cap=9, base=10)
+        print(f"Solution to Project Euler #164 = {res}")
 
     if not to_evaluate or 169 in to_evaluate:
         res = sumOfPowersOfTwo(num=10 ** 25, max_rpt=1)
