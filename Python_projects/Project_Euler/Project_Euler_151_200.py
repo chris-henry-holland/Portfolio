@@ -3166,6 +3166,224 @@ def countIntegersConsecutiveDigitSumCapped(
     return res
     """
 
+# Problem 166
+def crissCross(square_side_length: int=4, val_max: int=9) -> int:
+    """
+    Solution to Problem 166
+    """
+    # TODO- generalise to arbitrary size grids
+    base = val_max + 1
+    n = square_side_length
+    m = n ** 2
+
+    def idx2Grid(idx: int) -> Tuple[int, int]:
+        res = []
+        while idx:
+            idx, r = divmod(idx, n)
+            res.append(r)
+        res.extend([0] * (2 - len(res)))
+        return tuple(reversed(res))
+    
+    def grid2Idx(pos: Tuple[int]) -> int:
+        res = 0
+        for i in pos:
+            res = res * n + i
+        return res
+    
+    idx_lines_map = [set() for _ in range(m)]
+    lines = []
+    for i1 in range(n):
+        j = len(lines)
+        lines.append(set())
+        for i2 in range(n):
+            idx = grid2Idx((i1, i2))
+            lines[j].add(idx)
+            idx_lines_map[idx].add(j)
+    for i2 in range(n):
+        j = len(lines)
+        lines.append(set())
+        for i1 in range(n):
+            idx = grid2Idx((i1, i2))
+            lines[j].add(idx)
+            idx_lines_map[idx].add(j)
+    j = len(lines)
+    lines.extend([set(), set()])
+    remain_idx = set(range(m))
+    lead_diag_idx_lst = []
+    lead_diag_line = j
+    for i1 in range(n):
+        idx = grid2Idx((i1, i1))
+        lines[j].add(idx)
+        idx_lines_map[idx].add(j)
+        remain_idx.remove(idx)
+        lead_diag_idx_lst.append(idx)
+        idx = grid2Idx((i1, n - i1 - 1))
+        lines[j + 1].add(idx)
+        idx_lines_map[idx].add(j + 1)
+    print(lines)
+    print(idx_lines_map)
+
+    res = 0
+    def updateRanges(idx_ranges: Dict[int, Tuple[int]], line_deficits: Dict[int, int], updated_inds: Set[int]) -> bool:
+        #, set_idx_vals: Dict[int, int],
+        print(updated_inds)
+        line_update_inds = {}
+        update_lines = set()
+        for idx in updated_inds:
+            for line in idx_lines_map[idx]:
+                line_update_inds.setdefault(line, set())
+                line_update_inds[line].add(idx)
+                update_lines.add(line)
+        update_qu = deque(update_lines)
+        print(update_qu, line_deficits)
+        while update_qu:
+            line = update_qu.popleft()
+            update_lines.remove(line)
+            #inds = line_update_inds.get(line, set())
+            unset_line_min = 0
+            unset_line_max = 0
+            unset_line_count = 0
+            update_inds = []
+            neg_rng_sz_lst = SortedList()
+            for idx in lines[line]:
+                if idx not in idx_ranges.keys(): continue
+                update_inds.append(idx)
+                unset_line_count += 1
+                unset_line_min += idx_ranges[idx][0]
+                unset_line_max += idx_ranges[idx][1]
+                neg_rng_sz_lst.add((idx_ranges[idx][0] - idx_ranges[idx][1], idx))
+            if unset_line_min > line_deficits[line]: return False
+            if unset_line_max < line_deficits[line]: return False
+            slacks = [line_deficits[line] - unset_line_min, unset_line_max - line_deficits[line]]
+            zero_slack = False
+            for i, slack in enumerate(slacks):
+                if slack: continue
+                line_deficits.pop(line)
+                new_line_el_vals = {}
+                func = min if i else max
+                for idx2 in update_inds:
+                    print(f"idx2 = {idx2}, {idx_lines_map[idx2]}")
+                    for line2 in idx_lines_map[idx2].intersection(line_deficits):
+                        print(f"line2 = {line2}")
+                        new_line_el_vals[line2] = func(new_line_el_vals.get(line2, 0), idx_ranges[idx2][i])
+                    idx_ranges.pop(idx2)
+                for line2, val in new_line_el_vals.items():
+                    line_deficits[line2] -= val
+                    if line2 not in update_lines:
+                        update_lines.add(line2)
+                        update_qu.append(line2)
+                zero_slack = True
+                break
+            if zero_slack: continue
+            updated = False
+            first = True
+            updated_idx = set()
+            while first or updated:
+                updated = False
+                while neg_rng_sz_lst:
+                    neg_rng_sz, idx2 = neg_rng_sz_lst[0]
+                    #rng_sz = -neg_rng_sz
+                    xs = slacks[0] + neg_rng_sz
+                    if xs <= 0: break
+                    neg_rng_sz_lst.pop(0)
+                    updated = True
+                    updated_idx.add(idx2)
+                    idx_ranges[idx2] = (idx_ranges[idx2][0], idx_ranges[idx2][0] + slacks[0])
+                if not first and not updated: break
+                first = False
+                updated = False
+                while neg_rng_sz_lst:
+                    neg_rng_sz, idx = neg_rng_sz_lst[0]
+                    #rng_sz = -neg_rng_sz
+                    xs = slacks[1] + neg_rng_sz
+                    if xs <= 0: break
+                    neg_rng_sz_lst.pop(0)
+                    updated = True
+                    updated_idx.add(idx2)
+                    idx_ranges[idx] = (idx_ranges[idx2][1] - slacks[1], idx_ranges[idx2][1])
+            new_updated_lines = set()
+            for idx2 in updated_idx:
+                new_updated_lines |= idx_lines_map[idx2].intersection(line_deficits.keys()) - update_lines
+            new_updated_lines.discard(line)
+            for line2 in new_updated_lines:
+                update_lines.add(line2)
+                update_qu.append(line2)
+        return True
+
+    idx_order = sorted(remain_idx, key=lambda x: -len(idx_lines_map[x]))
+
+    def backtrack(j: int, idx_ranges: Dict[int, Tuple[int]], line_deficits: Dict[int, int]) -> int:
+        if not idx_ranges:
+            print("hi")
+            return 1
+        elif j == len(idx_order): return 0
+        idx = idx_order[j]
+        if idx not in idx_ranges.keys():
+            return backtrack(j + 1, idx_ranges, line_deficits)
+        
+        res = 0
+        for val in range(idx_ranges[idx][0], idx_ranges[idx][1] + 1):
+            idx_ranges2 = dict(idx_ranges)
+            line_deficits2 = dict(line_deficits)
+            #for line in idx_lines_map[idx]:
+            #    if line in line_deficits2.keys():
+            #        line_deficits2[line] -= val
+            idx_ranges2[idx] = (val, val)
+            updateRanges(idx_ranges2, line_deficits2, {idx})
+            res += backtrack(j + 1, idx_ranges2, line_deficits2)
+        return res
+    
+    
+    lead_diag_idx_st = set(lead_diag_idx_lst)
+    print(lead_diag_idx_lst)
+    print(idx_order)
+
+    # Iterating over the possible number combinations in the leading diagonal
+    res = 0
+    for num in range(base ** n):
+        diag1 = []
+        while num:
+            num, r = divmod(num, base)
+            diag1.append(r)
+        # Utilise 180 degree rotational symmetry
+        hlf1 = diag1[:(n >> 1)]
+        hlf2 = diag1[::-1][:(n >> 1)]
+        if hlf1 > hlf2: continue
+        mult = 1 + (hlf1 != hlf2)
+        tot = sum(diag1)
+        diag_inds = {}
+        
+        mn = max(0, tot - n * val_max)
+        mx = min(val_max, tot)
+        
+        idx_ranges = {idx: (mn, mx) for idx in range(m)}
+        line_deficits = {i: tot for i in range(len(lines))}
+        for val, idx in zip(diag1, lead_diag_idx_lst):
+            idx_ranges[idx] = (val, val)
+        updated_inds = set(lead_diag_idx_lst)
+        print(diag1)
+        print("pre:")
+        print(idx_ranges, line_deficits)
+        updateRanges(idx_ranges, line_deficits, updated_inds)
+        print("post:")
+        print(idx_ranges, line_deficits)
+        res += mult * backtrack(0, idx_ranges, line_deficits)
+        #break
+
+    return res
+    """
+    base = val_max + 1
+    res = 0
+    for num in range(base ** 4):
+        row1 = []
+        while num:
+            num, r = divmod(num, base)
+            row1.append(r)
+        tot = sum(row1)
+        row2 = [None] * 4
+        for r2_0 in range(max(0, tot - 3 * ))
+    """
+
 
 # Problem 169
 def sumOfPowersOfTwo(num: int=10 ** 25, max_rpt: int=2) -> int:
@@ -3281,7 +3499,7 @@ def sumOfPowersOfTwo(num: int=10 ** 25, max_rpt: int=2) -> int:
     """
 
 if __name__ == "__main__":
-    to_evaluate = {164}
+    to_evaluate = {166}
 
     if not to_evaluate or 151 in to_evaluate:
         res = singleSheetCountExpectedValueFloat(n_halvings=4)
@@ -3331,6 +3549,10 @@ if __name__ == "__main__":
     if not to_evaluate or 164 in to_evaluate:
         res = countIntegersConsecutiveDigitSumCapped(n_digs=20, n_consec=3, consec_sum_cap=9, base=10)
         print(f"Solution to Project Euler #164 = {res}")
+
+    if not to_evaluate or 166 in to_evaluate:
+        res = crissCross(square_side_length=2, val_max=9)
+        print(f"Solution to Project Euler #166 = {res}")
 
     if not to_evaluate or 169 in to_evaluate:
         res = sumOfPowersOfTwo(num=10 ** 25, max_rpt=1)

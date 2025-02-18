@@ -3735,7 +3735,23 @@ def singletonDifferences(n_max: int=49_999_999) -> int:
 
 # Problem 137
 def modifiedFibonacciGoldenNuggetsList(n_nuggets: int, G0: int=0, G1: int=1) -> List[int]:
+    """
+    Identifies the smallest n_nuggets modified Fibonacci nuggets for initial
+    Fibonacci-like sequence terms of G0 and G1.
 
+    A Fibonacci-like sequence is a sequence for which:
+        t_0 = G0,
+        t_1 = G1,
+        t_n = t_(n - 2) + t_(n - 1) for integer n >= 2
+    
+    A modified Fibonacci nugget for a Fibonacci-like sequence with intial terms
+    G0 and G1 are the strictly positive integers such that there exists a real
+    number x for which the chosen integer equals the series:
+        A(x) = (sum n from 1 to inf) x ** n * t_n
+    
+    Args:
+        n_nuggets (int)
+    """
     # x ** 2 - D * y ** 2 = n
     res = []
     r = G1 + 2 * G0
