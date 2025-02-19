@@ -3170,7 +3170,11 @@ def countIntegersConsecutiveDigitSumCapped(
 def crissCross(square_side_length: int=4, val_max: int=9) -> int:
     """
     Solution to Problem 166
+    
+    TODO
     """
+    # Review- try to make faster by utilising more symmetries
+    since = time.time()
     # TODO- generalise to arbitrary size grids
     base = val_max + 1
     n = square_side_length
@@ -3220,25 +3224,66 @@ def crissCross(square_side_length: int=4, val_max: int=9) -> int:
         idx = grid2Idx((i1, n - i1 - 1))
         lines[j + 1].add(idx)
         idx_lines_map[idx].add(j + 1)
-    print(lines)
-    print(idx_lines_map)
+    #print(lines)
+    #print(idx_lines_map)
 
     res = 0
     def updateRanges(idx_ranges: Dict[int, Tuple[int]], line_deficits: Dict[int, int], updated_inds: Set[int]) -> bool:
         #, set_idx_vals: Dict[int, int],
-        print(updated_inds)
+        #print(updated_inds)
+        lines_remain = {i: 0 for i in line_deficits.keys()}
+        for idx in idx_ranges.keys():
+            for line in idx_lines_map[idx]:
+                lines_remain[line] += 1
+        for line in list(lines_remain.keys()):
+            cnt = lines_remain[line]
+            if cnt: continue
+            if line_deficits[line]: return False
+            line_deficits.pop(line)
+            lines_remain.pop(line)
+
+
+        def setIndex(idx: int, val: int) -> bool:
+            #print(f"setting index {idx} to {val}")
+            idx_ranges.pop(idx)
+            for line in idx_lines_map[idx].intersection(lines_remain.keys()):
+                lines_remain[line] -= 1
+                
+                line_deficits[line] -= val
+                if line_deficits[line] < 0: return False
+                #print(line, lines_remain, line_deficits)
+                if not lines_remain[line]:
+                    r = line_deficits.pop(line, 0)
+                    if r:
+                        #print("nonzero line deficit in empty line")
+                        #print(line, r)
+                        #print(idx, line, idx_ranges, line_deficits, lines_remain)
+                        return False
+                    lines_remain.pop(line)
+            return True
+        #print(idx_ranges)
         line_update_inds = {}
         update_lines = set()
         for idx in updated_inds:
             for line in idx_lines_map[idx]:
-                line_update_inds.setdefault(line, set())
-                line_update_inds[line].add(idx)
+                #line_update_inds.setdefault(line, set())
+                #line_update_inds[line].add(idx)
                 update_lines.add(line)
+            if idx_ranges[idx][0] == idx_ranges[idx][1]:
+                #for line in idx_lines_map[idx]:
+                #    line_deficits[line] -= idx_ranges[idx][0]
+                #    if line_deficits[line] < 0: return False
+                #print(f"index {idx} set to {idx_ranges[idx][0]}")
+                if not setIndex(idx, idx_ranges[idx][0]): return False
+                
         update_qu = deque(update_lines)
-        print(update_qu, line_deficits)
+        #print(update_qu, line_deficits)
         while update_qu:
+            #print(update_qu)
+            #print(idx_ranges, line_deficits, updated_inds)
             line = update_qu.popleft()
             update_lines.remove(line)
+            if line not in line_deficits.keys(): continue
             #inds = line_update_inds.get(line, set())
             unset_line_min = 0
             unset_line_max = 0
@@ -3254,21 +3299,42 @@ def crissCross(square_side_length: int=4, val_max: int=9) -> int:
                 neg_rng_sz_lst.add((idx_ranges[idx][0] - idx_ranges[idx][1], idx))
             if unset_line_min > line_deficits[line]: return False
             if unset_line_max < line_deficits[line]: return False
+            if not update_inds:
+                if line_deficits.pop(line): return False
+                continue
+            elif len(update_inds) == 1:
+                val = line_deficits[line]
+                idx2 = update_inds[0]
+                rng = idx_ranges[idx2]
+                #print(f"index {idx2} set to {val}")
+                if rng[0] > val or rng[1] < val:
+                    return False
+                if not setIndex(idx2, val): return False
+                #for line2 in idx_lines_map[idx2].intersection(line_deficits.keys()):
+                #    line_deficits[line2] -= val
+                #    if line_deficits[line2] < 0: return False
+                continue
             slacks = [line_deficits[line] - unset_line_min, unset_line_max - line_deficits[line]]
             zero_slack = False
             for i, slack in enumerate(slacks):
                 if slack: continue
-                line_deficits.pop(line)
+                #line_deficits.pop(line)
                 new_line_el_vals = {}
                 func = min if i else max
                 for idx2 in update_inds:
-                    print(f"idx2 = {idx2}, {idx_lines_map[idx2]}")
+                    #print(f"idx2 = {idx2}, {idx_lines_map[idx2]}")
                     for line2 in idx_lines_map[idx2].intersection(line_deficits):
-                        print(f"line2 = {line2}")
-                        new_line_el_vals[line2] = func(new_line_el_vals.get(line2, 0), idx_ranges[idx2][i])
-                    idx_ranges.pop(idx2)
+                        #print(f"line2 = {line2}")
+                        new_line_el_vals[line2] = max(new_line_el_vals.get(line2, 0), idx_ranges[idx2][i]) if i else min(new_line_el_vals.get(line2, float("inf")), idx_ranges[idx2][i]) 
+                    #print(f"index {idx2} set to {idx_ranges[idx2][i]}")
+                    #idx_ranges.pop(idx2)
+                    if not setIndex(idx2, idx_ranges[idx2][i]): return False
+                    
                 for line2, val in new_line_el_vals.items():
-                    line_deficits[line2] -= val
+                    #if line2 not in line_deficits.keys(): continue
+                    #print(f"subtracting {val} from line {line2}")
+                    #line_deficits[line2] -= val
+                    #if line_deficits[line2] < 0: return False
                     if line2 not in update_lines:
                         update_lines.add(line2)
                         update_qu.append(line2)
@@ -3278,12 +3344,13 @@ def crissCross(square_side_length: int=4, val_max: int=9) -> int:
             updated = False
             first = True
             updated_idx = set()
+            #print(slacks, neg_rng_sz_lst)
             while first or updated:
                 updated = False
                 while neg_rng_sz_lst:
                     neg_rng_sz, idx2 = neg_rng_sz_lst[0]
                     #rng_sz = -neg_rng_sz
-                    xs = slacks[0] + neg_rng_sz
+                    xs = -neg_rng_sz - slacks[0]
                     if xs <= 0: break
                     neg_rng_sz_lst.pop(0)
                     updated = True
@@ -3293,14 +3360,19 @@ def crissCross(square_side_length: int=4, val_max: int=9) -> int:
                 first = False
                 updated = False
                 while neg_rng_sz_lst:
-                    neg_rng_sz, idx = neg_rng_sz_lst[0]
+                    neg_rng_sz, idx2 = neg_rng_sz_lst[0]
                     #rng_sz = -neg_rng_sz
-                    xs = slacks[1] + neg_rng_sz
+                    xs = -neg_rng_sz - slacks[1]
                     if xs <= 0: break
+                    #print("hi2")
                     neg_rng_sz_lst.pop(0)
                     updated = True
                     updated_idx.add(idx2)
-                    idx_ranges[idx] = (idx_ranges[idx2][1] - slacks[1], idx_ranges[idx2][1])
+                    orig = idx_ranges[idx2]
+                    idx_ranges[idx2] = (idx_ranges[idx2][1] - slacks[1], idx_ranges[idx2][1])
+                    #if (orig[0] >= 0 and idx_ranges[idx2][0] < 0):
+                    #    print("error")
+                    #    print(orig, idx_ranges[idx2], slacks, neg_rng_sz, xs)
             new_updated_lines = set()
             for idx2 in updated_idx:
                 new_updated_lines |= idx_lines_map[idx2].intersection(line_deficits.keys()) - update_lines
@@ -3313,8 +3385,9 @@ def crissCross(square_side_length: int=4, val_max: int=9) -> int:
     idx_order = sorted(remain_idx, key=lambda x: -len(idx_lines_map[x]))
 
     def backtrack(j: int, idx_ranges: Dict[int, Tuple[int]], line_deficits: Dict[int, int]) -> int:
+        #print("backtrack", j, idx_order[j] if j < len(idx_order) else -1, idx_ranges, line_deficits)
         if not idx_ranges:
-            print("hi")
+            #print("solution found")
             return 1
         elif j == len(idx_order): return 0
         idx = idx_order[j]
@@ -3322,6 +3395,7 @@ def crissCross(square_side_length: int=4, val_max: int=9) -> int:
             return backtrack(j + 1, idx_ranges, line_deficits)
         
         res = 0
+        #print(f"j = {j}, idx = {idx}, range = {idx_ranges[idx]}")
         for val in range(idx_ranges[idx][0], idx_ranges[idx][1] + 1):
             idx_ranges2 = dict(idx_ranges)
             line_deficits2 = dict(line_deficits)
@@ -3329,47 +3403,201 @@ def crissCross(square_side_length: int=4, val_max: int=9) -> int:
             #    if line in line_deficits2.keys():
             #        line_deficits2[line] -= val
             idx_ranges2[idx] = (val, val)
-            updateRanges(idx_ranges2, line_deficits2, {idx})
+            if not updateRanges(idx_ranges2, line_deficits2, {idx}):
+                #print("setting value:", idx, val)
+                continue
+            #print("set value:", idx, val)
             res += backtrack(j + 1, idx_ranges2, line_deficits2)
         return res
     
-    
-    lead_diag_idx_st = set(lead_diag_idx_lst)
-    print(lead_diag_idx_lst)
-    print(idx_order)
+    def diagGenerator() -> Generator[Tuple[Tuple[int], int], None, None]:
 
+        hlf1_curr = [0] * (n >> 1)
+        hlf1_rpt_cnt = [0]
+        mult0 = math.factorial(n >> 1)
+        def hlf1_recur(idx: int, mult: int=mult0):
+            if idx == len(hlf1_curr):
+                print(hlf1_curr, mult, hlf1_rpt_cnt[0])
+                yield (hlf1_curr, mult // math.factorial(hlf1_rpt_cnt[0]))
+                return
+            if not idx:
+                hlf1_rpt_cnt[0] = 1
+                for i in range(val_max):
+                    hlf1_curr[0] = i
+                    yield from hlf1_recur(idx + 1, mult)
+                return
+            for i in range(hlf1_curr[idx - 1]):
+                print(mult, hlf1_curr, hlf1_rpt_cnt[0])
+                mult2 = mult // math.factorial(hlf1_rpt_cnt[0])
+                hlf1_rpt_cnt[0] = 1
+                hlf1_curr[idx] = i
+                yield from hlf1_recur(idx + 1, mult2)
+            hlf1_rpt_cnt[0] += 1
+            hlf1_curr[idx] = hlf1_curr[idx - 1]
+            yield from hlf1_recur(idx + 1, mult)
+            return
+
+        hlf2_curr = [0] * (n >> 1)
+        hlf2_rpt_cnt = [0]
+        def hlf2_recur(idx: int, hlf1: List[int], mult: int=1, lt_hlf1: bool=False):
+            #print(idx, hlf1, mult, lt_hlf1)
+            if idx == len(hlf2_curr):
+                print(hlf2_curr, mult, hlf2_rpt_cnt[0])
+                for hlf2 in set(itertools.permutations(hlf2_curr)):
+                    yield (hlf2, (1 + lt_hlf1))
+                return
+            if not idx:
+                hlf2_rpt_cnt[0] = 1
+                for i in range(hlf2_curr[0]):
+                    hlf2_curr[0] = i
+                    yield from hlf2_recur(idx + 1, hlf1, mult=mult, lt_hlf1=True)
+                hlf2_curr[0] = hlf1[0]
+                yield from hlf2_recur(idx + 1, hlf1, mult=mult, lt_hlf1=False)
+                return
+            if lt_hlf1:
+                for i in range(hlf2_curr[idx - 1]):
+                    mult //= math.factorial(hlf2_rpt_cnt[0])
+                    hlf2_rpt_cnt[0] = 1
+                    hlf2_curr[idx] = i
+                    yield from hlf2_recur(idx + 1, hlf1, mult=mult, lt_hlf1=True)
+                hlf2_rpt_cnt[0] += 1
+                hlf2_curr[idx] = hlf2_curr[idx - 1]
+                yield from hlf2_recur(idx + 1, hlf1, mult, lt_hlf1=True)
+            else:
+                #print(idx, hlf2_curr)
+                for i in range(min(hlf1[idx] + 1, hlf2_curr[idx - 1])):
+                    print(mult, hlf2_curr, hlf2_rpt_cnt[0])
+                    mult2 = mult // math.factorial(hlf2_rpt_cnt[0])
+                    hlf2_rpt_cnt[0] = 1
+                    hlf2_curr[idx] = i
+                    yield from hlf2_recur(idx + 1, hlf1, mult2, lt_hlf1=(hlf2_curr[idx] < hlf1[idx]))
+                if hlf2_curr[idx - 1] <= hlf1[idx]:
+                    hlf2_rpt_cnt[0] += 1
+                    hlf2_curr[idx] = hlf2_curr[idx - 1]
+                    yield from hlf2_recur(idx + 1, hlf1, mult, lt_hlf1=(hlf2_curr[idx] < hlf1[idx]))
+            return
+        
+        if not n & 1:
+            for hlf1, mult1 in hlf1_recur(0, mult=mult0):
+                print(hlf1, mult1)
+                for hlf2, mult2 in hlf2_recur(0, hlf1, mult=mult0, lt_hlf1=0):
+                    print(hlf2, mult2)
+                    yield ((*hlf1, *hlf2), mult1 * mult2)
+        else:
+            for hlf1, mult1 in hlf1_recur(0, mult=mult0):
+                print(hlf1, mult1)
+                for hlf2, mult2 in hlf2_recur(0, hlf1, mult=mult0, lt_hlf1=0):
+                    print(hlf2, mult2)
+                    for i in range((val_max + 1) >> 1):
+                        yield ((*hlf1, i, *hlf2), mult1 * mult2 * 2)
+                    if not val_max & 1:
+                        yield ((*hlf1, (val_max >> 1), *hlf2), mult1 * mult2)
+        print(f"mult0 = {mult0}")
+        return
+    
+    
+    #lead_diag_idx_st = set(lead_diag_idx_lst)
+    #print(lead_diag_idx_lst)
+    #print(idx_order)
+    #print(lead_diag_line)
     # Iterating over the possible number combinations in the leading diagonal
     res = 0
-    for num in range(base ** n):
+    tot_dict = {}
+    mx_sm = val_max * n
+    for num in range(base ** n):#diag1, mult in diagGenerator():
+        #print(diag1, mult)
+        
         diag1 = []
         while num:
             num, r = divmod(num, base)
             diag1.append(r)
+        diag1.extend([0] * (n - len(diag1)))
+        #print(diag1)
+        #if diag1 != [2, 2, 2]: continue
         # Utilise 180 degree rotational symmetry
+        
         hlf1 = diag1[:(n >> 1)]
         hlf2 = diag1[::-1][:(n >> 1)]
-        if hlf1 > hlf2: continue
-        mult = 1 + (hlf1 != hlf2)
-        tot = sum(diag1)
-        diag_inds = {}
+        #if hlf1 > hlf2: continue
+        #mult = 1 + (hlf1 != hlf2)
+        # Using the symmetry on permuting the rows and
+        # columns in the same way such that each permutation
+        # is symetrical about the midline in that direction
+        mult = math.factorial(len(hlf1))
+        cont = False
+        cnt = 1
+        for i in range(1, len(hlf1)):
+            if hlf1[i] > hlf1[i - 1]:
+                cont = True
+                break
+            elif hlf1[i] == hlf1[i - 1]:
+                cnt += 1
+                mult //= cnt
+            else: cnt = 1
+        # Using the symmtery on swapping any row and column
+        # pair (where the row and column have the same index)
+        # with the ones opposite in the grid and reversing
+        # their orders
+        if cont: continue
+        for x1, x2 in zip(hlf1, hlf2):
+            if x1 > x2:
+                cont = True
+                break
+            elif x1 != x2: mult <<= 1
+        if cont: continue
+
+        """
+        mult2 = math.factorial(len(hlf1))
+        cont = True
+        cnt = 1
+        for i in range(1, len(hlf1)):
+            if hlf1[i] > hlf1[i - 1]:
+                cont = False
+                break
+            if hlf1[i] == hlf1[i - 1]:
+                cnt += 1
+                mult2 //= cnt
+            else: cnt = 1
+        if not cont: continue
+        mult *= mult2
+        """
+        #if n >= 2:
+        #    mid = n - (n >> 1)
+        #    if hlf1[0] > mid: continue
+        #    for lst in (hlf1, hlf2):
+        #        parts = []
+        #        curr = lst[0]
         
-        mn = max(0, tot - n * val_max)
+        tot = sum(diag1)
+        tot2 = tot * 2
+        if tot2 > mx_sm: continue
+        elif tot2 < mx_sm: mult *= 2
+
+        mn = max(0, tot - (n - 1) * val_max)
         mx = min(val_max, tot)
         
         idx_ranges = {idx: (mn, mx) for idx in range(m)}
         line_deficits = {i: tot for i in range(len(lines))}
         for val, idx in zip(diag1, lead_diag_idx_lst):
             idx_ranges[idx] = (val, val)
+        #print(idx_ranges)
         updated_inds = set(lead_diag_idx_lst)
-        print(diag1)
-        print("pre:")
-        print(idx_ranges, line_deficits)
-        updateRanges(idx_ranges, line_deficits, updated_inds)
-        print("post:")
-        print(idx_ranges, line_deficits)
-        res += mult * backtrack(0, idx_ranges, line_deficits)
+        #print(updated_inds)
+        #print("pre:")
+        #print(idx_ranges, line_deficits)#, updated_inds)
+        #print(diag1)
+        if not updateRanges(idx_ranges, line_deficits, updated_inds): continue
+        #print(diag1)
+        #print("post:")
+        #print(idx_ranges, line_deficits)
+        ans = backtrack(0, idx_ranges, line_deficits)
+        if ans:
+            tot_dict[tot] = tot_dict.get(tot, 0) + ans
+            print("nonzero answer:", diag1, ans, mult)
+        res += mult * ans
         #break
-
+    print(tot_dict)
+    print(f"Time taken = {time.time() - since:.4f} seconds")
     return res
     """
     base = val_max + 1
@@ -3551,7 +3779,7 @@ if __name__ == "__main__":
         print(f"Solution to Project Euler #164 = {res}")
 
     if not to_evaluate or 166 in to_evaluate:
-        res = crissCross(square_side_length=2, val_max=9)
+        res = crissCross(square_side_length=4, val_max=9)
         print(f"Solution to Project Euler #166 = {res}")
 
     if not to_evaluate or 169 in to_evaluate:
