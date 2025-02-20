@@ -3167,11 +3167,57 @@ def countIntegersConsecutiveDigitSumCapped(
     """
 
 # Problem 166
-def crissCross(square_side_length: int=4, val_max: int=9) -> int:
+def magicSquareWithRepeatsCount(square_side_length: int=4, val_max: int=9) -> int:
     """
     Solution to Problem 166
     
-    TODO
+    Calculates the number of magic squares with a given side length
+    that can use the integers between 0 and val_max inclusive, when
+    there is no restriction on repeated values in the magic square.
+
+    A magic square with a given side length is a square array of
+    integers where the sum of elements in each column, in each row
+    and in both long diagonals (i.e. the diagonals from one corner
+    to the opposite corner, including every element directly in
+    between the corners) are all the same.
+
+    Args:
+        Optional named:
+        square_side_length (int): Strictly positive integer giving
+                the side length of the magic squares in question.
+            Default: 4
+        val_max (int): Non-negative integer giving the largest
+                possible values in the magic squares that can
+                be counted.
+            Default: 9
+    
+    Returns:
+    Integer (int) giving the number of magic squares with side length
+    square_side_length containing only the integers between 0 and
+    val_max inclusive where there is no restriction on repeated
+    values in the square.
+
+    Brief outline of rationale:
+    Possible values along the leading diagonal are iterated over,
+    reducing the search space using the properties of magic squares
+    to deduce certain functions on the square arrays that map to
+    magic squares and only magic squares to other magic squares
+    which we term symmetries. The types of symmetries used are
+    certain permutations of row and column orders and the
+    replacement of the numbers by val_max minus the original number.
+    These are used to partition combinations of leading diagonal
+    entries related by these symmetries together (i.e. partitioning
+    into equivalence classes), multiplying the count found for one
+    in each partition by the size of the partition.
+    For the chosen entry of each partition, the number of
+    magic squares with that leading diagonal is found using a
+    backtracking algorithm, along with a function to simplify
+    the current state of the incomplete magic square (finding the
+    current restrictions on the ranges of values each incomplete
+    square can take).
+
+    TODO- add more detail to the outline of rationale, particularly
+    about the symmetries used and why they can be used.
     """
     # Review- try to make faster by utilising more symmetries
     since = time.time()
@@ -3779,7 +3825,7 @@ if __name__ == "__main__":
         print(f"Solution to Project Euler #164 = {res}")
 
     if not to_evaluate or 166 in to_evaluate:
-        res = crissCross(square_side_length=4, val_max=9)
+        res = magicSquareWithRepeatsCount(square_side_length=4, val_max=9)
         print(f"Solution to Project Euler #166 = {res}")
 
     if not to_evaluate or 169 in to_evaluate:
