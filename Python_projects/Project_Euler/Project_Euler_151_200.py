@@ -2675,7 +2675,159 @@ def maximalDigitalRootFactorisationsSum(n_min: int=2, n_max: int=10 ** 6 - 1, ba
     return res
 
 # Problem 160
+def factorialPrimeFactorCount(n: int, p: int) -> int:
+    """
+    For a strictly positive integer n and a prime number p, calculates
+    the number of times p occurs in the prime factorisation of n!
+    (n factorial).
 
+    Args:
+        Required positional
+        n (int): Strictly positive integer whose factorial is being
+                assesed for the number of times p occurs in its
+                prime factorisation.
+        p (int): Strictly positive integer giving the prime number
+                whose number of occurrences in n! is to be calculated.
+    
+    Returns:
+    Integer (int) giving the number of times the prime p occurs in
+    the prime factorisation of n!.
+    """
+    res = 0
+    while n:
+        n //= p
+        res += n
+    return res
+
+def factorialFinalDigitsBeforeTrailingZeros(n: int=10 ** 12, n_digs: int=5, base: int=10) -> int:
+    """
+    Solution to Project Euler #160
+
+    Calculates the value of the final n_digs digits of n! before the
+    trailing zeros when expressed in the chosen base, giving this
+    as the value of these digits in the same order when interpreted
+    in the chosen base.
+
+    Args:
+        Optional named:
+        n (int): Strictly positive integer for which the final n_digs
+                digits before the trailing zeros of its factorial when
+                represented in the chosen base are to be found.
+            Default: 10 ** 12
+        n_digs (int): Strictly positive integer giving the number of
+                digits before the trailing zeros of n! expressed in
+                the chosen base are to be found.
+            Default: 5
+        base (int): Integer strictly greater than 1 giving the base
+                in n! to be represented when finding its last n_digs
+                digits before the trailing zeros of n!.
+            Default: 10
+    
+    Returns:
+    Integer (int) giving the value when interpreted in the chosen
+    base of the last n_digs digits before the trailing zeros of
+    n! when expressed in the chosen base.
+
+    Outline of rationale:
+    We are essentially looking for:
+        n! / (base ** n_zeros) (mod base ** n_digs)
+    where n_zeros is the number of trailing zeros in the prime
+    factorisation of n! when represented in the chosen base.
+    The prime factorisation of the base is first calculated. The
+    primes in this factorisation account for the trailing zeros
+    and so are handled separately. We can calculate the number
+    of times these occur in the prime factorisation of n! using
+    the function factorialPrimeFactorCount(). The number of
+    trailing zeros is then the minimum value among all of those
+    prime factors of the floor of the number of times it occurs
+    in the prime factorisation of n! divided by the number of
+    times it occurs in the prime factorisation of base. For each
+    prime, the remainder of occurrences in the prime factorisation
+    of n! not accounted for by the trailing zeros can then be used
+    to contribute to the result by taking the product of the powers
+    of each prime to its remainder occurrence count, all modulo
+    (base ** n_digs).
+    All that remains is to calculate the contribution of all integers
+    between 1 and n inclusive, where for each integer all prime
+    factors of base are removed (i.e. for the given integer and each
+    of those primes successively, the integer is repeatedly divided by
+    the prime until it is no longer divisible by that prime), all
+    modulo (base ** n_digs). These are then all multiplied together
+    with the value for the contribution of those primes found previously
+    and taken modulo (base ** n_digs) to give the final answer.
+    
+    To calculate the overall result of doing this for all integers
+    from 1 to n inclusive, we work backwards from each integer from
+    1 to (base ** n_digs - 1) inclusive that do not divide any of the
+    prime factors of base and work out for how many of the integers
+    from 1 to n inclusive give a contribution which modulo
+    (base ** n_digs) is equal to that number. The result is then the
+    product of these numbers, each to the power of the count of integers
+    for which it represents the contribution, again all modulo
+    (base ** n_digs).
+    There are two interlinked considerations when doing this. The first
+    is that each number represents not only itself but all of the
+    positive integers equal to it modulo (base ** n_digs) that are
+    no greater than n (which we refer to as the number's associates).
+    The second is that each number and its associates also represent
+    the contribution of all of the integers no greater than n found by
+    multiplying the number or associate by a product of powers of the
+    prime factors of base.
+    TODO
+    """
+    since = time.time()
+    base_pf = calculatePrimeFactorisation(base)
+    #print(base_pf)
+    fact_cnts = {}
+    md = base ** n_digs
+        
+    n_zeros = float("inf")
+    for p, cnt1 in base_pf.items():
+        cnt2 = factorialPrimeFactorCount(n, p)
+        #print(p, cnt2)
+        fact_cnts[p] = cnt2
+        n_zeros = min(n_zeros, cnt2 // cnt1)
+    res = 1
+    #print(f"n zeros = {n_zeros}")
+    for p, cnt1 in base_pf.items():
+        num = fact_cnts[p] - cnt1 * n_zeros
+        if num: res *= pow(p, fact_cnts[p] - cnt1 * n_zeros, md)
+        #print(p, num)
+    #print(res)
+    base_p_prods = [1]
+    for p in base_pf.keys():
+        i = 0
+        while i < len(base_p_prods):
+            num = base_p_prods[i] * p
+            if num <= n:
+                base_p_prods.append(num)
+            i += 1
+        base_p_prods.sort()
+    #base_p_prods = list(base_p_prods)
+    #print(base_p_prods)
+    avoid_heap = list((p, p) for p in base_pf.keys())
+    heapq.heapify(avoid_heap)
+    for i in range(1, md):
+        if i == avoid_heap[0][0]:
+            while i == avoid_heap[0][0]:
+                tup = avoid_heap[0]
+                heapq.heappushpop(avoid_heap, (tup[0] + tup[1], tup[1]))
+            continue
+        j = 0
+        exp = 0
+        k = 0
+        for j in reversed(range(len(base_p_prods))):
+            k2 = ((n // base_p_prods[j]) - i) // md
+            
+            exp += (j + 1) * (k2 - k)
+            k = k2
+            
+            #print(f"k = {k}")
+        res = (res * pow(i, exp, md)) % md
+    #print(res)
+    #print(math.factorial(n))
+    print(f"Time taken = {time.time() - since:.4f} seconds")
+    return res
 
 # Problem 161
 def nextTriominoStates(state: Tuple[Tuple[int, bool]], rows_remain: int=-1, nxt_insert: Optional[int]=None) -> List[Tuple[List[Tuple[int, bool]], int, int]]:
@@ -3773,7 +3925,7 @@ def sumOfPowersOfTwo(num: int=10 ** 25, max_rpt: int=2) -> int:
     """
 
 if __name__ == "__main__":
-    to_evaluate = {166}
+    to_evaluate = {160}
 
     if not to_evaluate or 151 in to_evaluate:
         res = singleSheetCountExpectedValueFloat(n_halvings=4)
@@ -3811,6 +3963,9 @@ if __name__ == "__main__":
         res = maximalDigitalRootFactorisationsSum(n_min=2, n_max=10 ** 6 - 1, base=10)
         print(f"Solution to Project Euler #159 = {res}")
     
+    if not to_evaluate or 160 in to_evaluate:
+        res = factorialFinalDigitsBeforeTrailingZeros(n=10 ** 12, n_digs=5, base=10)
+        print(f"Solution to Project Euler #160 = {res}")
 
     if not to_evaluate or 161 in to_evaluate:
         res = triominoAreaFillCombinations(n_rows=9, n_cols=12)
