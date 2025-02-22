@@ -3318,6 +3318,132 @@ def countIntegersConsecutiveDigitSumCapped(
     return res
     """
 
+# Problem 165
+def blumBlumShubPseudoRandomGenerator(s_0: int=290797, s_mod: int=50515093, t_min: int=0, t_max: int=499) -> Generator[int, None, None]:
+    """
+    """
+    s = s_0
+    t_mod = t_max - t_min + 1
+    while True:
+        s = s ** 2 % s_mod
+        yield (s % t_mod) + t_min
+    return
+
+def blumBlueShubPseudoRandomLineSegmentGenerator(
+        n_dim: int=2,
+        s_0: int=290797,
+        s_mod: int=50515093,
+        t_min: int=0,
+        t_max: int=499,
+) -> Generator[Tuple[Tuple[int, int], Tuple[int, int]], None, None]:
+    
+    it = iter(blumBlumShubPseudoRandomGenerator(s_0=s_0, s_mod=s_mod, t_min=t_min, t_max=t_max))
+    while True:
+        ans = []
+        for i in range(2):
+            ans.append(tuple(next(it) for _ in range(n_dim)))
+        yield tuple(ans)
+    return
+
+def twoDimensionalLineSegmentEquation(
+        seg: Tuple[Tuple[int, int], Tuple[int, int]],
+) -> Tuple[int, int, int]:
+    
+    a, b, c = ((seg[0][1] - seg[1][1]), (seg[1][0] - seg[0][0]), (seg[1][0] * seg[0][1] - seg[0][0] * seg[1][1]))
+    if a < 0 or a == 0 and b < 0:
+        a, b, c = -a, -b, -c
+    g = gcd(a, b)
+    #if g == 1: return (a, b, c)
+    return (a // g, b // g, c // g)
+
+def twoDimensionalLineSegmentPairCrossInternally(
+        seg1: Tuple[Tuple[int, int], Tuple[int, int]],
+        seg2: Tuple[Tuple[int, int], Tuple[int, int]],
+) -> Optional[Tuple[Tuple[int, int], Tuple[int, int]]]:
+    failed_screen = False
+    for i in range(2):
+        if min(seg1[0][i], seg1[1][i]) >= max(seg2[0][i], seg2[1][i]) or min(seg2[0][i], seg2[1][i]) >= max(seg1[0][i], seg1[1][i]):
+            #failed_screen = True
+            return None
+    """
+    #ans1 = True
+    pt_lst = [seg1[0], seg2[0], seg1[1], seg2[1]]
+    vec_lst = [[y - x for x, y in zip(pt1, pt_lst[(i + 1) % len(pt_lst)])] for i, pt1 in enumerate(pt_lst)]
+    angle_direction_set = set()
+    for i, v1 in enumerate(vec_lst):
+        v2 = vec_lst[(i + 1) % len(vec_lst)]
+        num1, num2 = v1[0] * v2[1], v1[1] * v2[0]
+        if num1 == num2: return None
+        angle_direction_set.add(num1 > num2)
+        if len(angle_direction_set) > 1: return None
+    #if failed_screen: print(seg1, seg2, vec_lst, angle_direction_set)
+    #return True
+    a1, b1, c1 = twoDimensionalLineSegmentEquation(seg1)
+    a2, b2, c2 = twoDimensionalLineSegmentEquation(seg2)
+    denom = a1 * b2 - a2 * b1
+    x, y = (b2 * c1 - b1 * c2, denom), (a2 * c1 - a1 * c2, denom)
+    if denom > 0: y = y = tuple(-a for a in y)
+    else: x = tuple(-a for a in x)
+    g1, g2 = gcd(abs(x[0]), x[1]), gcd(abs(y[0]), y[1])
+    #ans1 = True
+    return (tuple(a // g1 for a in x), tuple(a // g2 for a in y))
+    """
+    
+    ans2 = True
+    a1, b1, c1 = twoDimensionalLineSegmentEquation(seg1)
+    a2, b2, c2 = twoDimensionalLineSegmentEquation(seg2)
+
+    if a1 == a2 and b1 == b2: ans2 = False#return False # Parallel
+
+    denom = a1 * b2 - a2 * b1
+    x, y = (b2 * c1 - b1 * c2, denom), (a2 * c1 - a1 * c2, denom)
+    if denom > 0: y = y = tuple(-a for a in y)
+    else: x = tuple(-a for a in x)
+    for seg in (seg1, seg2):
+        x1, x2 = sorted([seg[0][0], seg[1][0]])
+        y1, y2 = sorted([seg[0][1], seg[1][1]])
+        if (x[0] <= x1 * x[1] or x[0] >= x2 * x[1]) and (y[0] <= y1 * y[1] or y[0] >= y2 * y[1]): return None
+    g1, g2 = gcd(*x), gcd(*y)
+    return (tuple(a // g1 for a in x), tuple(a // g2 for a in x))
+
+def twoDimensionalLineSegmentsCountInternalCrossings(
+        line_segments: List[Tuple[Tuple[int, int], Tuple[int, int]]]
+) -> int:
+    line_segments_sorted = sorted([sorted(x) for x  in line_segments])
+    x_ends = SortedList()
+    
+    res = set()
+    for i, seg in enumerate(line_segments_sorted):
+        seg_sort = tuple(sorted(seg))
+        for x2, i2 in reversed(x_ends):
+            if x2 < seg_sort[0][0]: break
+            intersect = twoDimensionalLineSegmentPairCrossInternally(seg_sort, line_segments_sorted[i2])
+            if intersect is not None:
+                res.add(intersect)
+            #res += twoDimensionalLineSegmentPairCrossInternally(seg_sort, line_segments_sorted[i2])
+        x_ends.add((seg[1][0], i))
+    return len(res)
+
+def blumBlumShubPseudoRandomTwoDimensionalLineSegmentsCountInternalCrossings(
+        n_line_segments: int=5000,
+        blumblumshub_s_0: int=290797,
+        blumblumshub_s_mod: int=50515093,
+        coord_min: int=0,
+        coord_max: int=499,
+) -> int:
+    since = time.time()
+    it = iter(blumBlueShubPseudoRandomLineSegmentGenerator(
+        n_dim=2,
+        s_0=blumblumshub_s_0,
+        s_mod=blumblumshub_s_mod,
+        t_min=coord_min,
+        t_max=coord_max,
+    ))
+    line_segments = [next(it) for _ in range(n_line_segments)]
+    res = twoDimensionalLineSegmentsCountInternalCrossings(line_segments)
+    print(f"Time taken = {time.time() - since:.4f} seconds")
+    return res
+
 # Problem 166
 def magicSquareWithRepeatsCount(square_side_length: int=4, val_max: int=9) -> int:
     """
@@ -3924,8 +4050,69 @@ def sumOfPowersOfTwo(num: int=10 ** 25, max_rpt: int=2) -> int:
     return curr[-1]
     """
 
+# Problem 173
+def hollowSquareLaminaCount(max_n_squares: int=10 ** 6) -> int:
+    """
+    Solution to Project Euler #173
+    """
+    # Review- try to make more efficient
+    since = time.time()
+    i0 = isqrt(max_n_squares)
+    i0_hlf = i0 >> 1
+    res = (i0_hlf * (i0_hlf - 1))
+    #print(res)
+    i = i0 + 1
+    while True:
+        j = isqrt(i ** 2 - max_n_squares - 1)
+        if j >= i - 2: break
+        ans = (i - j - 1) >> 1
+        #print(i, j, ans)
+        res += ans
+        i += 1
+    print(f"Time taken = {time.time() - since:.4f} seconds")
+    return res
+
+def hollowSquareLaminaCount2(max_n_squares: int=10 ** 6) -> int:
+    """
+    Solution to Project Euler #173
+    """
+    # Review- try to make more efficient
+    since = time.time()
+    # Use the difference of squares formula a ** 2 - b ** 2 = (a + b) * (a - b)
+    # The two values of (a + b) and (a - b) give integer a and b if and only
+    # if a and b have the same parity
+    res = 0
+    max_prod = max_n_squares >> 2
+    for i in range(1, isqrt(max_prod)):
+        j = max_prod // i
+        res += j - i
+    print(f"Time taken = {time.time() - since:.4f} seconds")
+    return res
+
+# Problem 174
+def hollowSquareLaminaTypeCount(max_n_squares: int=10 ** 6) -> Dict[int, int]:
+    # Review- try to make more efficient
+    since = time.time()
+    max_prod = max_n_squares >> 2
+    ps = PrimeSPFsieve(max_prod)
+    res = {}
+    for i in range(1, max_prod + 1):
+        pf = ps.primeFactorisation(i)
+        n_facts = 1
+        if 2 in pf.keys():
+            n_facts *= pf[2] - 1
+        for p in set(pf.keys()).difference({2}):
+            n_facts *= pf[p] + 1
+        n_pairs = n_facts >> 1
+        #if n_pairs > max_type:
+        #print(i, pf, n_facts, n_pairs)
+        if n_pairs:
+            res[n_pairs] = res.get(n_pairs, 0) + 1
+    print(f"Time taken = {time.time() - since:.4f} seconds")
+    return res
+
 if __name__ == "__main__":
-    to_evaluate = {160}
+    to_evaluate = {174}
 
     if not to_evaluate or 151 in to_evaluate:
         res = singleSheetCountExpectedValueFloat(n_halvings=4)
@@ -3974,10 +4161,21 @@ if __name__ == "__main__":
     if not to_evaluate or 162 in to_evaluate:
         res = countHexadecimalIntegersContainGivenDigits(max_n_dig=16, n_contained_digs=3, contained_includes_zero=True)
         print(f"Solution to Project Euler #162 = {res}")
+        
 
     if not to_evaluate or 164 in to_evaluate:
         res = countIntegersConsecutiveDigitSumCapped(n_digs=20, n_consec=3, consec_sum_cap=9, base=10)
         print(f"Solution to Project Euler #164 = {res}")
+
+    if not to_evaluate or 165 in to_evaluate:
+        res = blumBlumShubPseudoRandomTwoDimensionalLineSegmentsCountInternalCrossings(
+            n_line_segments=5000,
+            blumblumshub_s_0=290797,
+            blumblumshub_s_mod=50515093,
+            coord_min=0,
+            coord_max=499,
+        )
+        print(f"Solution to Project Euler #165 = {res}")
 
     if not to_evaluate or 166 in to_evaluate:
         res = magicSquareWithRepeatsCount(square_side_length=4, val_max=9)
@@ -3986,3 +4184,14 @@ if __name__ == "__main__":
     if not to_evaluate or 169 in to_evaluate:
         res = sumOfPowersOfTwo(num=10 ** 25, max_rpt=1)
         print(f"Solution to Project Euler #169 = {res}")
+    
+    if not to_evaluate or 173 in to_evaluate:
+        res = hollowSquareLaminaCount2(max_n_squares=10 ** 6)
+        print(f"Solution to Project Euler #173 = {res}")
+
+    if not to_evaluate or 174 in to_evaluate:
+        res = hollowSquareLaminaTypeCount(max_n_squares=100)
+        print(f"Solution to Project Euler #174 = {res}")
+
+    ans = hollowSquareLaminaTypeCount(max_n_squares=10 ** 6)
+    print(ans, ans.get(15, 0))
