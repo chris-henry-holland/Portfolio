@@ -4050,6 +4050,80 @@ def sumOfPowersOfTwo(num: int=10 ** 25, max_rpt: int=2) -> int:
     return curr[-1]
     """
 
+# Problem 171
+def sumSquareOfTheDigitalSquares(max_n_dig: int=20, n_tail_digs: int=9, base: int=10) -> int:
+    """
+    Solution to Project Euler #171
+    """
+    since = time.time()
+    md = base ** n_tail_digs
+
+    curr = [0] * (base - 1)
+    def digitalSquaresNonZeroDigitCountsGenerator(d: int=1, remain: int=max_n_dig, curr_dig_sq_sum: int=0) -> Generator[Tuple[int], None, None]:
+        if d == base or not remain:
+            rt = isqrt(curr_dig_sq_sum)
+            if rt ** 2 != curr_dig_sq_sum: return
+            yield tuple(curr)
+            return
+        
+        sq = d ** 2
+        dig_sq_sum = curr_dig_sq_sum
+        for cnt in range(remain + 1):
+            yield from digitalSquaresNonZeroDigitCountsGenerator(d=d + 1, remain=remain - cnt, curr_dig_sq_sum=dig_sq_sum)
+            curr[d - 1] += 1
+            dig_sq_sum += sq
+        curr[d - 1] = 0
+        return
+    
+    res = 0
+    mult = ((base ** min(max_n_dig, n_tail_digs) - 1) // (base - 1))
+    for nz_dig_counts in digitalSquaresNonZeroDigitCountsGenerator(d=1, remain=max_n_dig, curr_dig_sq_sum=0):
+        nz_cnt = sum(nz_dig_counts)
+        if not nz_cnt: continue
+        z_cnt = max_n_dig - sum(nz_dig_counts)
+        multinom = math.factorial(max_n_dig) // math.factorial(z_cnt)
+        for num in nz_dig_counts:
+            multinom //= math.factorial(num)
+        
+        for d in range(1, base):
+            cnt = nz_dig_counts[d - 1]
+            if not cnt: continue
+            res = (res + mult * d * ((multinom * cnt) // max_n_dig)) % md
+    print(f"Time taken = {time.time() - since:.4f} seconds")
+    return res
+        
+
+# Problem 172
+def countNumbersWithDigitRepeatCap(n_dig: int=18, max_dig_rpt: int=3, base: int=10) -> int:
+    """
+    Solution to Project Euler #172
+    """
+    since = time.time()
+    if max_dig_rpt * base < n_dig: return 0
+    f_lst = [0] * (max_dig_rpt + 1)
+    f_lst[0] = base - 1
+    f_lst[1] = 1
+
+    curr = {tuple(f_lst): base - 1}
+    for _ in range(n_dig - 1):
+        prev = curr
+        curr = {}
+        for f_tup, cnt in prev.items():
+            f_lst = list(f_tup)
+            for f in range(len(f_tup) - 1):
+                if not f_tup[f]: continue
+                cnt2 = f_lst[f] * cnt
+                f_lst[f] -= 1
+                f_lst[f + 1] += 1
+                f_tup2 = tuple(f_lst)
+                curr[f_tup2] = curr.get(f_tup2, 0) + cnt2
+                f_lst[f] += 1
+                f_lst[f + 1] -= 1
+        #print(curr)
+    res = sum(curr.values())
+    print(f"Time taken = {time.time() - since:.4f} seconds")
+    return res
+
 # Problem 173
 def hollowSquareLaminaCount(max_n_squares: int=10 ** 6) -> int:
     """
@@ -4113,7 +4187,7 @@ def hollowSquareLaminaTypeCountSum(max_n_squares: int=10 ** 6, min_type: int=1, 
     return res
 
 if __name__ == "__main__":
-    to_evaluate = {174}
+    to_evaluate = {171}
 
     if not to_evaluate or 151 in to_evaluate:
         res = singleSheetCountExpectedValueFloat(n_halvings=4)
@@ -4185,6 +4259,14 @@ if __name__ == "__main__":
     if not to_evaluate or 169 in to_evaluate:
         res = sumOfPowersOfTwo(num=10 ** 25, max_rpt=1)
         print(f"Solution to Project Euler #169 = {res}")
+
+    if not to_evaluate or 171 in to_evaluate:
+        res = sumSquareOfTheDigitalSquares(max_n_dig=20, n_tail_digs=9, base=10)
+        print(f"Solution to Project Euler #171 = {res}")
+
+    if not to_evaluate or 172 in to_evaluate:
+        res = countNumbersWithDigitRepeatCap(n_dig=18, max_dig_rpt=3, base=10)
+        print(f"Solution to Project Euler #172 = {res}")
     
     if not to_evaluate or 173 in to_evaluate:
         res = hollowSquareLaminaCount2(max_n_squares=10 ** 6)
