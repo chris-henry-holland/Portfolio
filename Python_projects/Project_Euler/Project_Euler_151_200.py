@@ -4078,9 +4078,6 @@ def hollowSquareLaminaCount2(max_n_squares: int=10 ** 6) -> int:
     """
     # Review- try to make more efficient
     since = time.time()
-    # Use the difference of squares formula a ** 2 - b ** 2 = (a + b) * (a - b)
-    # The two values of (a + b) and (a - b) give integer a and b if and only
-    # if a and b have the same parity
     res = 0
     max_prod = max_n_squares >> 2
     for i in range(1, isqrt(max_prod)):
@@ -4090,24 +4087,28 @@ def hollowSquareLaminaCount2(max_n_squares: int=10 ** 6) -> int:
     return res
 
 # Problem 174
-def hollowSquareLaminaTypeCount(max_n_squares: int=10 ** 6) -> Dict[int, int]:
+def hollowSquareLaminaTypeCounts(max_n_squares: int) -> Dict[int, int]:
     # Review- try to make more efficient
-    since = time.time()
+    
     max_prod = max_n_squares >> 2
     ps = PrimeSPFsieve(max_prod)
     res = {}
     for i in range(1, max_prod + 1):
-        pf = ps.primeFactorisation(i)
-        n_facts = 1
-        if 2 in pf.keys():
-            n_facts *= pf[2] - 1
-        for p in set(pf.keys()).difference({2}):
-            n_facts *= pf[p] + 1
+        n_facts = ps.factorCount(i)
         n_pairs = n_facts >> 1
         #if n_pairs > max_type:
         #print(i, pf, n_facts, n_pairs)
-        if n_pairs:
-            res[n_pairs] = res.get(n_pairs, 0) + 1
+        res[n_pairs] = res.get(n_pairs, 0) + 1
+    
+    return res
+
+def hollowSquareLaminaTypeCountSum(max_n_squares: int=10 ** 6, min_type: int=1, max_type: int=10) -> int:
+    """
+    Solution to Project Euler #174
+    """
+    since = time.time()
+    cnts = hollowSquareLaminaTypeCounts(max_n_squares)
+    res = sum(cnts.get(i, 0) for i in range(min_type, max_type + 1))
     print(f"Time taken = {time.time() - since:.4f} seconds")
     return res
 
@@ -4190,8 +4191,5 @@ if __name__ == "__main__":
         print(f"Solution to Project Euler #173 = {res}")
 
     if not to_evaluate or 174 in to_evaluate:
-        res = hollowSquareLaminaTypeCount(max_n_squares=100)
+        res = hollowSquareLaminaTypeCountSum(max_n_squares=10 ** 6, min_type=1, max_type=10)
         print(f"Solution to Project Euler #174 = {res}")
-
-    ans = hollowSquareLaminaTypeCount(max_n_squares=10 ** 6)
-    print(ans, ans.get(15, 0))
