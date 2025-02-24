@@ -3936,6 +3936,69 @@ def magicSquareWithRepeatsCount(square_side_length: int=4, val_max: int=9) -> in
         for r2_0 in range(max(0, tot - 3 * ))
     """
 
+# Problem 168
+def rightRotationMultiplesSum(min_n_digs: int=2, max_n_digs: int=100, n_tail_digs: Optional[int]=5, base: int=10) -> int:
+    """
+    Solution to Project Euler #168
+    """
+    since = time.time()
+    md = None if n_tail_digs is None else base ** n_tail_digs
+
+    def recur(mult: int, carry: int=0) -> Optional[Tuple[int]]:
+        if len(curr) > 1 and not carry and curr[-1] == curr[0] and curr[-2]:
+            return tuple(curr[-2::-1])
+        if len(curr) > max_n_digs: return None
+        
+        num = curr[-1] * mult + carry
+        q, r = divmod(num, base)
+        curr.append(r)
+        return recur(mult, carry=q)
+
+    res = 0
+    for num0 in range(1, base):
+        curr = [num0]
+        for m in range(1, base):
+            curr = [num0]
+            ans = recur(m, carry=0)
+            if ans is None: continue
+            #print(m, ans)
+            n_dig = len(ans)
+            max_n_incl = max(0, max_n_digs // n_dig)
+            min_n_incl = max(0, (min_n_digs - 1) // n_dig + 1)
+            if min_n_incl > max_n_incl or not max_n_incl: continue
+            #n_incl_rng = max_n_incl - min_n_incl + 1
+            mult0 = base ** n_dig
+            mult = 1
+            if n_tail_digs is None:
+                num = 0
+                for d in ans:
+                    num = num * base + d
+                mult = 1#mult0 ** min_n_incl
+                for i in range(max_n_incl):
+                    res += num * mult * (max_n_incl - max(i, min_n_incl - 1))
+                    mult *= mult0
+                continue
+            q, r = divmod(max_n_digs, n_dig)
+            #print(q, r)
+            if q:
+                a = 0
+                for d in ans:
+                    a = a * base + d
+                #print(f"a = {a}")
+                #res = (res + a * (mult ** (q + 1) - 1) // (mult - 1)) % md
+                for i in range(q):
+                    res = (res + a * mult * (max_n_incl - max(i, min_n_incl - 1))) % md
+                    mult *= mult0
+            if r:
+                a = 0
+                for i in reversed(range(r)):
+                    a = a * base + ans[-i]
+                res = (res + a * mult * (max_n_incl - max(q, min_n_incl - 1))) % md
+            #print(res)
+    print(f"Time taken = {time.time() - since:.4f} seconds")
+    return res
+
+
 
 # Problem 169
 def sumOfPowersOfTwo(num: int=10 ** 25, max_rpt: int=2) -> int:
@@ -4187,7 +4250,7 @@ def hollowSquareLaminaTypeCountSum(max_n_squares: int=10 ** 6, min_type: int=1, 
     return res
 
 if __name__ == "__main__":
-    to_evaluate = {171}
+    to_evaluate = {168}
 
     if not to_evaluate or 151 in to_evaluate:
         res = singleSheetCountExpectedValueFloat(n_halvings=4)
@@ -4255,6 +4318,10 @@ if __name__ == "__main__":
     if not to_evaluate or 166 in to_evaluate:
         res = magicSquareWithRepeatsCount(square_side_length=4, val_max=9)
         print(f"Solution to Project Euler #166 = {res}")
+
+    if not to_evaluate or 168 in to_evaluate:
+        res = rightRotationMultiplesSum(min_n_digs=2, max_n_digs=100, n_tail_digs=5, base=10)
+        print(f"Solution to Project Euler #168 = {res}")
 
     if not to_evaluate or 169 in to_evaluate:
         res = sumOfPowersOfTwo(num=10 ** 25, max_rpt=1)
