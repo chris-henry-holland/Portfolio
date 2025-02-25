@@ -3137,6 +3137,141 @@ def countHexadecimalIntegersContainGivenDigits(max_n_dig: int=16, n_contained_di
     print(f"Time taken = {time.time() - since:.4f} seconds")
     return res2
 
+# Problem 163
+def countCrossHatchedTrianglesUsingBottomLayer(n_layers: int) -> int:
+    n = n_layers
+    res = 0
+    # Bottom corners to bottom edges
+    ans = 0
+    #for i in range(1, n + 1):
+    #    ans += i - 1 - ((i - 1) // 4) # Acute angle
+    #    ans += (i + 1) // 2 # 60 deg angle
+    for i in range(n):
+        ans += min(3 * i + 2, n - i)#i - 1 - ((i - 1) // 4) # Acute angle
+        ans += min(i + 1, n - i)#(i + 1) // 2 # 60 deg angle
+    res += 2 * ans
+    #res += 2 * n * (n + 1)
+    print(2 * ans, res)
+    # Bottom corners to bottom corners
+    ans = (n * (n + 1)) # Two angles no greater than 60 degrees
+    res += 2 * ans
+    print(2 * ans, res)
+    ans = 0
+    #for i in range(n + 1):
+    #    ans += i - ((i + 1) // 4) # Acute and right angle
+    #    ans += min(i, n - i) # 60 degrees and right angle
+    #    ans += (n - i) >> 1 # Acute and 120 degrees
+    for i in range(n):
+        ans += min(3 * i, n - i) # Acute and right angle
+        ans += min(i, n - i) # 60 degrees and right angle
+        ans += min(i, n - i) # Acute and 120 degrees
+    res += 2 * ans
+    print(2 * ans, res)
+
+    # Bottom corners with both edges from that corner going up, one edge going acutely
+    ans = 0
+    for i in range(1, n + 1):
+        # Other edge from bottom at 60 degrees in same direction
+        ans += i >> 1 # last edge is horizontal
+        ans += ((3 * i) >> 1) # last edge is acute
+        ans += i # last edge is 60 degrees
+        ans += i # last edge is vertical
+        #ans += ((9 * (i + 1)) >> 1) - 1 # Other edge from bottom at 60 degrees in same direction
+    res += 2 * ans
+    print(2 * ans, res)
+    ans = 0
+    for i in range(1, n):
+        # Other edge from bottom is vertical
+        ans += min(i, n - i) # last edge is 60 degrees
+        ans += min(3 * i, ((3 * (n - i)) >> 1)) # last edge is acute
+        ans += min(i, (n - i) >> 1) # last edge is horizontal
+        #ans += min(i, n - i) # last edge is 60 degrees
+        #ans += min() # last edge is acute
+        #for j in range(1, i + 1):
+        #    ans += min(3 * j, ((3 * (n - i)) >> 1)) # last edge is acute
+    res += 2 * ans
+    print(2 * ans, res)
+    ans = 0
+    for i in range(1, n):
+        # Other edge from bottom is 60 degrees in other direction
+        ans += min(i, (n - i) >> 1) # last edge is horizontal
+        ans += min(i, ((3 * (n - i)) >> 1)) # last edge is acute
+    res += 2 * ans
+    print(2 * ans, res)
+    ans = 0
+    for i in range(1, n):
+        # Other edge from bottom is acute in other direction
+        ans += min(i >> 1, (n - i) >> 1) # last edge is horizontal
+    res += ans
+    print(ans, res)
+
+    # Bottom corners with both edges from that corner going upwards, one edge going 60 degrees the other at least 60 degrees
+    ans = 0
+    for i in range(1, n):
+        ans += min(i, n - i) # Upside down equilateral (i.e. last edge is horizontal)
+    res += ans
+    print(ans, res)
+    ans = 0
+    for i in range(1, n):
+        ans += min(2 * i, n - i) # other edge is 60 degrees, last edge is acute
+        ans += min(2 * i, 3 * (n - i)) # other edge is vertical, last edge is acute from the 60 edge
+        ans += min(i, 3 * (n - i)) # other edge is vertical, last edge is acute from the vertical edge
+        ans += min(i, (n - i)) # other edge is vertical, last edge is 60 degrees
+        ans += min(2 * i, (n - i)) # other edge is vertical, last edge is horizontal
+    res += 2 * ans
+    print(2 * ans, res)
+
+    # Upright triangle centre with both edges from that corner going upwards
+    ans = 0
+    for i in range(1, n - 1):
+        # both edges from triangle middle corner acute
+        ans += min((i + 1) >> 1, (n - i) >> 1) 
+    res += ans
+    print(ans, res)
+    ans = 0
+    for i in range(n):
+        # one edge from triangle middle corner acute, the other vertical
+        ans += min(2 * i + 1, (n - i) >> 1) # last edge is horizontal
+        ans += min(3 * i + 1, ((3 * (n - i)) >> 1) - 1) # last edge is acute
+        ans += min(i + 1, n - i) # last edge is 60 degrees
+    res += 2 * ans
+    print(2 * ans, res)
+
+    # Middle upside down triangle centre with both edges from that corner going upwards
+    ans = 0
+    for i in range(1, n):
+        ans += min((i + 1) >> 1, (n - i + 1) >> 1) # both edges from triangle middle corner acute
+    res += ans
+    print(ans, res)
+    ans = 0
+    for i in range(1, n):
+        # one edge from triangle middle corner acute, the other vertical
+        ans += min(2 * i, (n - i + 1) >> 1) # last edge is horizontal
+        ans += min(3 * i - 1, ((3 * (n - i - 1)) >> 1) + 1) # last edge is acute
+        ans += min(i, n - i) # last edge is 60 degrees
+    res += 2 * ans
+    print(2 * ans, res)
+    
+    # Edge between layer triangle centre with both edges from that corner going upwards
+    ans = 0
+    for i in range(1, n):
+        ans += min(i, (n - i + 1) >> 1) # last edge horizontal
+        ans += min(i, ((3 * (n - i - 1)) >> 1) + 2) # last edge acute
+    res += 2 * ans
+    print(2 * ans, res)
+
+    print(f"n_layers = {n_layers}, ans = {res}")
+    return res
+
+def countCrossHatchedTriangles(n_layers: int=36) -> int:
+    """
+    Solution to Project Euler #162
+    """
+    since = time.time()
+    res = sum(countCrossHatchedTrianglesUsingBottomLayer(i) for i in range(1, n_layers + 1))
+    print(f"Time taken = {time.time() - since:.4f} seconds")
+    return res
+
 # Problem 164
 def countIntegersConsecutiveDigitSumCapped(
         n_digs: int=20,
@@ -4250,7 +4385,7 @@ def hollowSquareLaminaTypeCountSum(max_n_squares: int=10 ** 6, min_type: int=1, 
     return res
 
 if __name__ == "__main__":
-    to_evaluate = {168}
+    to_evaluate = {163}
 
     if not to_evaluate or 151 in to_evaluate:
         res = singleSheetCountExpectedValueFloat(n_halvings=4)
@@ -4299,7 +4434,10 @@ if __name__ == "__main__":
     if not to_evaluate or 162 in to_evaluate:
         res = countHexadecimalIntegersContainGivenDigits(max_n_dig=16, n_contained_digs=3, contained_includes_zero=True)
         print(f"Solution to Project Euler #162 = {res}")
-        
+
+    if not to_evaluate or 163 in to_evaluate:
+        res = countCrossHatchedTriangles(n_layers=36)
+        print(f"Solution to Project Euler #163 = {res}")
 
     if not to_evaluate or 164 in to_evaluate:
         res = countIntegersConsecutiveDigitSumCapped(n_digs=20, n_consec=3, consec_sum_cap=9, base=10)
