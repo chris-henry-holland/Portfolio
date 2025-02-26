@@ -3139,6 +3139,9 @@ def countHexadecimalIntegersContainGivenDigits(max_n_dig: int=16, n_contained_di
 
 # Problem 163
 def countCrossHatchedTrianglesUsingBottomLayer(n_layers: int) -> int:
+    # Doesn't work for n_layers >= 4- have not been able to find error.
+    # Most likely a possible triangle type that has not been accounted
+    # for
     n = n_layers
     res = 0
     # Bottom corners to bottom edges
@@ -3162,8 +3165,8 @@ def countCrossHatchedTrianglesUsingBottomLayer(n_layers: int) -> int:
     #    ans += min(i, n - i) # 60 degrees and right angle
     #    ans += (n - i) >> 1 # Acute and 120 degrees
     for i in range(n):
-        ans += min(3 * i, n - i) # Acute and right angle
-        ans += min(i, n - i) # 60 degrees and right angle
+        ans += min(3 * i, n - i) # Acute and vertical
+        ans += min(i, n - i) # 60 degrees and vertical
         ans += min(i, n - i) # Acute and 120 degrees
     res += 2 * ans
     print(2 * ans, res)
@@ -3263,12 +3266,117 @@ def countCrossHatchedTrianglesUsingBottomLayer(n_layers: int) -> int:
     print(f"n_layers = {n_layers}, ans = {res}")
     return res
 
-def countCrossHatchedTriangles(n_layers: int=36) -> int:
+def countCrossHatchedTriangles2(n_layers: int=36) -> int:
     """
-    Solution to Project Euler #162
+    Alternative solution attempt for Project Euler #163. Does not
+    give correct answer for n_layers >= 4 (unclear where the mistake
+    is)
     """
     since = time.time()
     res = sum(countCrossHatchedTrianglesUsingBottomLayer(i) for i in range(1, n_layers + 1))
+    print(f"Time taken = {time.time() - since:.4f} seconds")
+    return res
+
+def countCrossHatchedTriangles(n_layers: int=36) -> int:
+    """
+    Solution to Project Euler #163
+    """
+    since = time.time()
+    n = n_layers
+    
+    hs1_crossings = []
+    hs2_crossings = []
+    ha1_crossings = []
+    ha2_crossings = []
+    hv_crossings = []
+    for i in range(n):
+        hs1_crossings.append(set(range(min(i + 2, n))))
+        hs2_crossings.append(set(range(min(i + 2, n))))
+        ha1_crossings.append(set(range(i, min(2 * i + 1, 2 * n - 2) + 1)))
+        ha2_crossings.append(set(range(i, min(2 * i + 1, 2 * n - 2) + 1)))
+        hv_crossings.append(set(range(-min(n - 1, i + 1), min(n, i + 2))))
+    #print(hs1_crossings)
+    #print(hs2_crossings)
+    #print(ha1_crossings)
+    #print(ha2_crossings)
+    #print(hv_crossings)
+    s1s2_crossings = []
+    s1a1_crossings = []
+    s1a2_crossings = []
+    s1v_crossings = []
+    for i in range(n):
+        s1s2_crossings.append(set(range(min(n + 1 - i, n))))
+        s1a1_crossings.append(set(range(max(2 * i - 1, 0), min(n + i - 1, 2 * n - 2) + 1)))
+        s1a2_crossings.append(set(range(max(i - 1, 0), min(2 * n - i - 1, 2 * n - 2) + 1)))
+        s1v_crossings.append(set(range(-i, min(n - 2 * i, n - 1) + 1)))
+    #print(s1s2_crossings)
+    #print(s1a1_crossings)
+    #print(s1a2_crossings)
+    #print(s1v_crossings)
+    s2a1_crossings = []
+    s2a2_crossings = []
+    s2v_crossings = []
+    for i in range(n):
+        s2a1_crossings.append(set(range(max(i - 1, 0), min(2 * n - i - 1, 2 * n - 2) + 1)))
+        s2a2_crossings.append(set(range(max(2 * i - 1, 0), min(n + i - 1, 2 * n - 2) + 1)))
+        s2v_crossings.append(set(range(-min(n - 2 * i, n - 1), i + 1)))
+    #print(s2a1_crossings)
+    #print(s2a2_crossings)
+    #print(s2v_crossings)
+    a1a2_crossings = []
+    a1v_crossings = []
+    for i in range(2 * n - 1):
+        a1a2_crossings.append(set(range(i >> 1, min(2 * i + 1, 3 * n - 2 - i, 2 * n - 2) + 1)))
+        a1v_crossings.append(set(range(-min((i + 1) >> 1, n - 1), min(i + 1, 3 * n - 2 * i - 2, n - 1) + 1)))
+    #print(a1a2_crossings)
+    #print(a1v_crossings)
+    a2v_crossings = []
+    for i in range(2 * n - 1):
+        a2v_crossings.append(set(range(-min(i + 1, 3 * n - 2 * i - 2, n - 1), min((i + 1) >> 1, n - 1) + 1)))
+    #print(a2v_crossings)
+
+    xings = [[],
+        [a2v_crossings],
+        [a1v_crossings, a1a2_crossings],
+        [s2v_crossings, s2a2_crossings, s2a1_crossings],
+        [s1v_crossings, s1a2_crossings, s1a1_crossings, s1s2_crossings],
+        [hv_crossings, ha2_crossings, ha1_crossings, hs2_crossings, hs1_crossings],
+    ]
+
+    res = 0
+    
+    for i1 in reversed(range(len(xings))):
+        for i2 in reversed(range(i1)):
+            for i3 in reversed(range(i2)):
+                ans2 = 0
+                for j1, j2_set in enumerate(xings[i1][i2]):
+                    for j2 in j2_set:
+                        
+                        ans = len(xings[i1][i3][j1].intersection(xings[i2][i3][j2]))
+                        ans2 += ans
+                        #print(i1, i2, i3, j2, j2_set, xings[i1][i2], xings[i1][i3], xings[i2][i3], ans)
+                        res += ans
+                #print(i1, i2, i3, ans2)
+    
+    # Subtract the cases where all three edges intersect at a single point
+
+    # Triangle centres
+    ans = n ** 2 * math.comb(3, 3)
+    #print(ans)
+    res -= ans
+
+    # Triangle corners (excluding the corners of the large traingle)
+    #if n >= 2:
+    ans = ((((n + 1) * (n + 2)) >> 1) - 3) * math.comb(6, 3)
+    #print(ans)
+    res -= ans
+
+    # Large triangle corners
+    res -= 3 * math.comb(3, 3)
+
+    # Triangle edges (included for completeness, gives answer zero as only 2 lines intersect here)
+    res -= (3 * ((n * (n - 1)) >> 1)) * math.comb(2, 3)
+
     print(f"Time taken = {time.time() - since:.4f} seconds")
     return res
 
