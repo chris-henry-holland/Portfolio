@@ -20,6 +20,7 @@ sys.path.append(os.path.join(os.path.dirname(__file__), "../Algorithms_and_Datas
 sys.path.append(os.path.join(os.path.dirname(__file__), "../Algorithms_and_Datastructures/Data_structures"))
 from prime_sieves import PrimeSPFsieve
 from addition_chains import AdditionChainCalculator
+from string_searching_algorithms import rollingHashWithValue
 
 def gcd(a: int, b: int) -> int:
     """
@@ -4179,6 +4180,112 @@ def magicSquareWithRepeatsCount(square_side_length: int=4, val_max: int=9) -> in
         for r2_0 in range(max(0, tot - 3 * ))
     """
 
+# Problem 167
+def ulamSequenceGenerator(a1: int, a2: int) -> Generator[int, None, None]:
+    seq = [a1, a2]
+    yield a1
+    yield a2
+    seen_once = {a1 + a2}
+    seen_multiple = set()
+    candidates = SortedList([a1 + a2])
+    while candidates:
+        num = candidates.pop(0)
+        yield num
+        for num2 in seq:
+            num3 = num + num2
+            if num3 in seen_multiple: continue
+            elif num3 in seen_once:
+                seen_once.remove(num3)
+                candidates.remove(num3)
+                seen_multiple.add(num3)
+            else:
+                seen_once.add(num3)
+                candidates.add(num3)
+        seq.append(num)
+        print(seq, seen_once, candidates, )
+    return
+
+def ulamSequenceTwoOddPattern(num2: int) -> Tuple[List[int], List[int]]:
+    even_pair = [2, 2 * (num2 + 1)]
+    last_even_idx = (even_pair[-1] >> 1) + 3
+    rh_length = even_pair[-1] >> 1
+
+    def diffSequence() -> Generator[int, None, None]:
+        #idx0 = last_even_idx + 1
+        latest_odd = deque(range(num2, even_pair[1] + 2, 2))
+        #print(latest_odd)
+        for num in itertools.count(latest_odd[-1] + 2, step=2):
+            if latest_odd[0] < num - even_pair[1]:
+                latest_odd.popleft()
+            if not latest_odd: break
+            if not (latest_odd[0] + even_pair[1] == num) ^ (latest_odd[-1] + even_pair[0] == num):
+                continue
+            #print(num)
+            yield (num - latest_odd[-1])
+            latest_odd.append(num)
+        return
+
+    rh = rollingHashWithValue(diffSequence(), length=rh_length, p_lst=(37, 53),
+            md=10 ** 9 + 7, func=(lambda x: x >> 1))
+
+    seen_hsh = {}
+    diffs = []
+    rpt_start_idx = -1
+    for i, (diff, hsh) in enumerate(rh):
+        #print(i, diff, hsh)
+        diffs.append(diff)
+        if hsh is None: continue
+        seen_hsh.setdefault(hsh, [])
+        for i2 in seen_hsh[hsh]:
+            for j in range(rh_length):
+                if diffs[i - rh_length + j + 1] != diffs[i2 - rh_length + j + 1]:
+                    break
+            else:
+                rpt_start_idx = i2 - rh_length + 1
+                break
+        else:
+            seen_hsh[hsh].append(i)
+            continue
+        break
+    #print(rpt_start_idx)
+    for _ in range(rh_length):
+        diffs.pop()
+    
+    initial = [2]
+    for num in range(num2, even_pair[1], 2):
+        initial.append(num)
+    initial.append(even_pair[1])
+    initial.append(even_pair[1] + 1)
+    for i in range(rpt_start_idx):
+        initial.append(initial[-1] + diffs[i])
+    return (initial, diffs[rpt_start_idx:])
+
+def ulamSequenceTwoOddTermValue(num2: int, term_number: int) -> int:
+    idx = term_number - 1
+    initial, rpt_diffs = ulamSequenceTwoOddPattern(num2)
+    #print(initial, rpt_diffs)
+    if idx < len(initial):
+        return initial[idx]
+    idx2 = idx - len(initial) + 1
+    q, r = divmod(idx2, len(rpt_diffs))
+    #print(q, r)
+    res = initial[-1]
+    if q:
+        res += q * sum(rpt_diffs)
+    if r:
+        res += sum(rpt_diffs[:r])
+    #print(res)
+    return res
+
+def ulamSequenceTwoOddTermValueSum(num2_min: int=5, num2_max: int=21, term_number: int=10 ** 11) -> int:
+    
+    since = time.time()
+    res = 0
+    for num2 in range(num2_min + (not num2_min & 1), num2_max + 1, 2):
+        res += ulamSequenceTwoOddTermValue(num2, term_number)
+    print(f"Time taken = {time.time() - since:.4f} seconds")
+    return res
+
 # Problem 168
 def rightRotationMultiplesSum(min_n_digs: int=2, max_n_digs: int=100, n_tail_digs: Optional[int]=5, base: int=10) -> int:
     """
@@ -4356,6 +4463,9 @@ def sumOfPowersOfTwo(num: int=10 ** 25, max_rpt: int=2) -> int:
     return curr[-1]
     """
 
+# Problem 170
+
+
 # Problem 171
 def sumSquareOfTheDigitalSquares(max_n_dig: int=20, n_tail_digs: int=9, base: int=10) -> int:
     """
@@ -4493,7 +4603,7 @@ def hollowSquareLaminaTypeCountSum(max_n_squares: int=10 ** 6, min_type: int=1, 
     return res
 
 if __name__ == "__main__":
-    to_evaluate = {163}
+    to_evaluate = {167}
 
     if not to_evaluate or 151 in to_evaluate:
         res = singleSheetCountExpectedValueFloat(n_halvings=4)
@@ -4565,6 +4675,10 @@ if __name__ == "__main__":
         res = magicSquareWithRepeatsCount(square_side_length=4, val_max=9)
         print(f"Solution to Project Euler #166 = {res}")
 
+    if not to_evaluate or 167 in to_evaluate:
+        res = ulamSequenceTwoOddTermValueSum(num2_min=5, num2_max=21, term_number=10 ** 11)
+        print(f"Solution to Project Euler #167 = {res}")
+
     if not to_evaluate or 168 in to_evaluate:
         res = rightRotationMultiplesSum(min_n_digs=2, max_n_digs=100, n_tail_digs=5, base=10)
         print(f"Solution to Project Euler #168 = {res}")
@@ -4588,3 +4702,17 @@ if __name__ == "__main__":
     if not to_evaluate or 174 in to_evaluate:
         res = hollowSquareLaminaTypeCountSum(max_n_squares=10 ** 6, min_type=1, max_type=10)
         print(f"Solution to Project Euler #174 = {res}")
+
+    #for n in range(2, 11):
+    #    usg = iter(ulamSequenceGenerator(2, 2 * n + 1))
+    #    even_pair = []
+    #    for num in usg:
+    #        if num & 1: continue
+    #        even_pair.append(num)
+    #        if len(even_pair) == 2: break
+    #    print(2 * n + 1, even_pair)
+    #usg = iter(ulamSequenceGenerator(2, 11))
+    #res = [next(usg) for _ in range(100)]
+    #print(res)
+    #for n in range(5, 20, 2):
+    #    ulamSequenceTwoOddDifferences(num2=n)

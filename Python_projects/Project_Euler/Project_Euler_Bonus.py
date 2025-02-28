@@ -6,6 +6,7 @@ import heapq
 import itertools
 import math
 import os
+from PIL import Image
 import sys
 import time
 
@@ -304,8 +305,31 @@ def polynomialPrimeProductRemainder(p_min: int=10 ** 9, p_max: int=11 * 10 ** 8)
     print(f"Time taken = {time.time() - since:.4f} seconds")
     return res
 
+# Problem Secret
+def loadBlackAndWhitePNGImage(filename: str, relative_to_program_file_directory: bool=False) -> List[Tuple[int]]:
+    """
+        Optional named:
+        relative_to_program_file_directory (bool): If True then
+                if doc is specified as a relative path, that
+                path is relative to the directory containing
+                the program file, otherwise relative to the
+                current working directory.
+            Default: False
+    """
+    if relative_to_program_file_directory and not filename.startswith("/"):
+        filename = os.path.join(os.path.dirname(__file__), filename)
+    image_np = np.array(Image.open(filename))
+    #shape = image_np.shape[:2]
+    res = image_np[:, :, 0]
+
+    print(res)
+    print(res.shape)
+    return res
+
+#def 
+
 if __name__ == "__main__":
-    to_evaluate = {"heegner"}
+    to_evaluate = {"secret"}
 
     if not to_evaluate or "root_13" in to_evaluate:
         res = rootExpansionDigitSum(num=13, n_digs=1_000, base=10)
@@ -318,3 +342,7 @@ if __name__ == "__main__":
     #if not to_evaluate or "18i" in to_evaluate:
     #    res = polynomialPrimeProductRemainder(p_min=100_000, p_max=110_000)
     #    print(f"Solution to Project Euler #18i = {res}")
+
+    #if not to_evaluate or "secret" in to_evaluate:
+    #    res = loadBlackAndWhitePNGImage(filename="bonus_secret_statement.png", relative_to_program_file_directory=True)
+    #    print(f"Solution to Project Euler #secret = {res}")

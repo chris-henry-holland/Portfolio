@@ -451,6 +451,120 @@ def rollingHash(s: Iterable[Any], length: int, p_lst: Union[Tuple[int], List[int
         yield tuple(hsh)
     return
 
+def rollingHashWithValue(s: Iterable[Any], length: int, p_lst: Union[Tuple[int], List[int]]=(37, 53),
+        md: int=10 ** 9 + 7, func: Optional[Callable[[Any], int]]=None) -> Generator[Tuple[Any, Tuple[int]], None, None]:
+    """
+    Generator that yields the rolling hash values of each contiguous subsequence of
+    the iterable s with length elements in order of their first element. The hash
+    is polynomial-based around prime numbers as specified in p_lst modulo md.
+    The elements of s are passed through the function func which transforms
+    each possible input value into a distinct integer (by default, the identity
+    if the elements of s are integers, and the ord() function if they are
+    string characters).
+
+    For a given length l, a prime p and a modulus md, the hash value of a
+    0-indexed integer sequence of length l, arr, is calculated by the following
+    formula:
+        (arr[0] * p^(l - 1) + arr[1] * p^(l - 2) + ... + arr[l - 2] * p1 + arr[i + l - 1]) % md
+
+    Thus, for strictly positive integer l, non-negative integer i, prime md,
+    prime list of length n (p1, p2, ..., pn) and a 0-indexed string s with length
+    of no less than (i + l), the (i + 1)th value yielded by the evaluation
+    of:
+        rollingHash(s, l, p_lst=(p1, p2), md=md, func=ord)
+    is equal to the n-tuple of integers:
+        ((ord(s[i]) * p1^(l - 1) + ord(s[i + 1]) * p1^(l - 2) + ... + ord(s[i + l - 2]) * p1 + ord(s[i + l - 1])) % md,
+        (ord(s[i]) * p2^(l - 1) + ord(s[i + 1]) * p2^(l - 2) + ... + ord(s[i + l - 2]) * p2 + ord(s[i + l - 1])) % md,
+        ...,
+        (ord(s[i]) * pn^(l - 1) + ord(s[i + 1]) * pn^(l - 2) + ... + ord(s[i + l - 2]) * pn + ord(s[i + l - 1])) % md)
+    
+    Args:
+        Required positional:
+        s (iterable object): A finite ordered iterable object (e.g. a
+                string) for which the rolling hash is to be generated.
+        length (int): Strictly positive integer giving the lengths
+                of the contiguous subsequences over which the rolling
+                has is to be generated.
+        
+        Optional named:
+        p_lst (List/tuple of ints): A collection of prime numbers for
+                which the polynomial-based hashes are to be evaluated.
+                The larger and more numerous the primes given, the
+                less likely hash collisions are to occur (i.e. that
+                two different sequences give rise to the same hash
+                value), though each additional prime proportionally
+                increases the evaluation time.
+            Default: (37, 53)
+        md (int): Strictly positive integer giving the modulus the hash
+                values are to be taken (i.e. each hash is returned as
+                its remainder to this modulus). For best results, this
+                should be a prime number, and the larger the number
+                the less likely hash collisions are to occur (see p_lst).
+        func (callable): A function taking in an element of s and
+                returning an integer, or for integer or string sequences
+                None can be given (for integer sequences, the value is
+                used directly, and for strings, the ASCII code number is
+                used). To avoid hash collisions, this function should be
+                injective (i.e. there should be no two distinct elements
+                for which the result of applying the function is the
+                same).
+            Default: None
+    
+    Yields:
+    An len(p_lst)-tuple of integers (int), each between 0 and (md - 1)
+    inclusive, where index j (0 <= j < len(p_lst)) of the (i + 1)th yielded
+    tuple is the rolling hash value for the input length, the prime
+    p_lst[j] and the modulus md, as calculated above, for the contiguous
+    subsequence of s between indices i and (i + length - 1) inclusive,
+    where each element has been converted into an integer by the function
+    func.
+    The number of results yielded by the generator is one more than the
+    number of elements in s minus length as long as this is positive,
+    otherwise there are no yielded results
+            
+    Modified version of rolling hash can be used to solve Leetcode #1554
+    (Premium).
+    """
+    if hasattr(s, "__len__") and len(s) < length:
+        return
+    if func is None:
+        try: val = func(next(iter_obj))
+        except StopIteration: return
+        if isinstance(next(iter(s), str)):
+            func = ord#lambda x: ord(x)
+        else: func = lambda x: x
+    iter_obj = iter(s)
+    n_p = len(p_lst)
+    hsh = [0] * n_p
+    val_qu = deque()
+    for i in range(length - 1):
+        try: l = next(iter_obj)
+        except StopIteration: return
+        val = func(l)
+        val_qu.append(val)
+        for j, p in enumerate(p_lst):
+            hsh[j] = (hsh[j] * p + val) % md
+        yield (l, None)
+    try: l = next(iter_obj)
+    except StopIteration: return
+    val = func(l)
+    val_qu.append(val)
+    for j, p in enumerate(p_lst):
+        hsh[j] = (hsh[j] * p + val) % md
+    yield (l, tuple(hsh))
+    mults = [pow(p, length - 1, md) for p in p_lst]
+    for i in itertools.count(length):
+        try: l = next(iter_obj)
+        except StopIteration: return
+        val = func(l)
+        val_qu.append(val)
+        val2 = val_qu.popleft()
+        for j, p in enumerate(p_lst):
+            hsh[j] = ((hsh[j] - mults[j] * val2) * p + val) % md
+        yield (l, tuple(hsh))
+    return
+
+
 def rollingHashSearch(s: str, patterns: List[str],
         p_lst: Optional[Union[List[int], Tuple[int]]]=(31, 37),
         md: int=10 ** 9 + 7,
