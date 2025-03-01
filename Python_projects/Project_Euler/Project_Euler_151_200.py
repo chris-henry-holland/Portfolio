@@ -4464,6 +4464,184 @@ def sumOfPowersOfTwo(num: int=10 ** 25, max_rpt: int=2) -> int:
     """
 
 # Problem 170
+def largestPandigitalConcatenatingProduct(min_n_prods: int=2, incl_zero: bool=True,  base: int=10) -> int:
+    """
+    Solution to Project Euler #170
+    """
+
+    # Review- consider optimising by ensuring each separate
+    # number in the concatenation is smaller than the previous
+    # one by making the first digit be less than the first
+    # digit in the previous number.
+    since = time.time()
+
+    if min_n_prods == 1:
+        mult_max_n_digs = base >> 1
+    elif min_n_prods == 2:
+        mult_max_n_digs = 2
+    else:
+        mult_max_n_digs = 1
+    print(mult_max_n_digs)
+    #num2_digs = []
+    curr = []
+    res_digs = [None]
+    num1_digs_remain = SortedList(range(1 - incl_zero, base))
+    num2_digs_remain = SortedList(list(range(1 - incl_zero, base)))
+    tot_n_digs = base + incl_zero - 1
+
+    def orderedUniqueListGenerator(n_select: int, nums: Set[int], first_not_zero: bool=False) -> Generator[Tuple[int], None, None]:
+        if n_select > len(nums): return
+        remain = set(nums)
+        curr = []
+        def recur(idx: int) -> int:
+            if idx == n_select:
+                yield tuple(curr)
+                return
+            curr.append(0)
+            rmn = set(remain) if idx or not first_not_zero else set(remain) - {0}
+            for num in rmn:
+                curr[-1] = num
+                remain.remove(num)
+                yield from recur(idx + 1)
+                remain.add(num)
+            curr.pop()
+            return
+        yield from recur(0)
+        return
+
+    def recur1(idx: int=0, num2: int=0, num2_n_digs: int=0, prec_digs_eq_best: bool=False) -> bool:
+        if idx >= tot_n_digs - min_n_prods + 1: return False
+        #print(idx, curr)
+        #res = ()
+        min_dig = max(res[0][idx], not num2) if prec_digs_eq_best else 0 + (not incl_zero or not num2)
+        #print(f"min_dig = {min_dig}")
+        curr.append(0)
+        num2_n_digs2 = num2_n_digs + 1
+        b = False
+        lst = list(num2_digs_remain)# if num2 else [num2_digs_remain[-1]]
+        for d in reversed(lst):
+            if d < min_dig: break
+            #print(curr, lst, d, num2_digs_remain)
+            num2_digs_remain.remove(d)
+            num2_2 = num2 * base + d
+            curr[-1] = d
+            b = recur1(idx=idx + 1, num2=num2_2, num2_n_digs=num2_n_digs2, prec_digs_eq_best=prec_digs_eq_best and d == min_dig)
+            for mult_n_dig in range(1, mult_max_n_digs + 1):
+                for mult_digs in orderedUniqueListGenerator(mult_n_dig, set(num1_digs_remain), first_not_zero=True):
+                    #if not mult_digs[0]: continue
+                    mult = 0
+                    for d1 in mult_digs:
+                        mult = mult * base + d1
+                        
+                    if mult < 2: continue
+                    #print(mult, mult_n_dig)
+                    num1, r = divmod(num2_2, mult)
+                    #if curr == [7, 6, 3, 8]:
+                    #    print(curr, mult, num2_2, num1, r)
+                    if r: continue
+                    #print(mult_digs)
+                    for d1 in mult_digs:
+                        num1_digs_remain.remove(d1)
+                    #num1_digs_remain.remove(mult)
+                    num1_digs = []
+                    num1_2 = num1
+                    while num1_2:
+                        num1_2, d1 = divmod(num1_2, base)
+                        if d1 not in num1_digs_remain:
+                            break
+                        num1_digs_remain.remove(d1)
+                        num1_digs.append(d1)
+                    else:
+                        num1_n_digs = len(num1_digs)
+                        slack2 = mult_n_dig - (num2_n_digs2 - num1_n_digs)
+                        #if num1_n_digs >= num2_n_digs2 - 1:
+                        if slack2 >= (idx < tot_n_digs - 1) * (mult_n_dig - 1):
+                        #ans = ()
+                        
+                            #if mult == 6:
+                            #    print(num2, mult)
+                            b2 = recur2(1, idx + 1, 0, num2_n_digs=0, mult=mult, mult_n_dig=mult_n_dig, slack=slack2, prec_digs_eq_best=(b or (prec_digs_eq_best and d == min_dig)))
+                            if b2:
+                                #print(num2_2)
+                                b = b2
+                    for d1 in num1_digs:
+                        num1_digs_remain.add(d1)
+                    
+                    #num1_digs_remain.add(mult)
+                    for d1 in mult_digs:
+                        num1_digs_remain.add(d1)
+            num2_digs_remain.add(d)
+            if b: break
+        curr.pop()
+        return b
+
+    
+    def recur2(prod_idx: int, idx: int, num2: int, num2_n_digs: int, mult: int, mult_n_dig: int, slack: int, prec_digs_eq_best: bool=False) -> bool:
+        #if num2 == 0:
+        #    print(idx, curr, res_digs[0], prec_digs_eq_best, mult, num2_digs_remain)
+        if idx == tot_n_digs:
+            if not num2 and not slack and prod_idx >= min_n_prods:
+                print("solution:", curr, mult, num2, slack)
+                res_digs[0] = tuple(curr)
+                return True
+            return False
+        elif min_n_prods - prod_idx > tot_n_digs - idx:
+            return False
+        #res = ()
+        min_dig = max(res_digs[0][idx], not num2) if prec_digs_eq_best else 0 + (not incl_zero or not num2)
+        curr.append(0)
+        num2_n_digs2 = num2_n_digs + 1
+        b = False
+        lst = list(num2_digs_remain)# if num2 else [num2_digs_remain[-1]]
+        for d in reversed(lst):
+            if d < min_dig: break
+            num2_digs_remain.remove(d)
+            num2_2 = num2 * base + d
+            curr[-1] = d
+            
+            b = recur2(prod_idx=prod_idx, idx=idx + 1, num2=num2_2, num2_n_digs=num2_n_digs2, mult=mult, mult_n_dig=mult_n_dig, slack=slack, prec_digs_eq_best=(prec_digs_eq_best and d == min_dig))
+            num1, r = divmod(num2_2, mult)
+            if r:
+                num2_digs_remain.add(d)
+                if b: break
+                continue
+            num1_digs = []
+            num1_2 = num1
+            while num1_2:
+                num1_2, d1 = divmod(num1_2, base)
+                if d1 not in num1_digs_remain:
+                    break
+                num1_digs_remain.remove(d1)
+                num1_digs.append(d1)
+            else:
+                num1_n_digs = len(num1_digs)
+                #ans = ()
+                b2 = False
+                slack2 = slack - (num2_n_digs2 - num1_n_digs)
+                #if num1_n_digs >= num2_n_digs2 - 1:
+                if slack2 >= max(0, idx < tot_n_digs - 1, (min_n_prods - prod_idx - 1)) * (mult_n_dig - 1):#(idx < tot_n_digs - 1) * (mult_n_dig - 1):
+                    b2 = recur2(prod_idx=prod_idx + 1, idx=idx + 1, num2=0, num2_n_digs=0, mult=mult, mult_n_dig=mult_n_dig, slack=slack2, prec_digs_eq_best=(b or (prec_digs_eq_best and d == min_dig)))
+                #if n_digs_reduced:
+                #    if num1_n_digs == num2_n_digs2:
+                #        b2 = recur2(idx + 1, 0, num2_n_digs=0, mult=mult, n_digs_reduced=True, prec_digs_eq_best=(b or (prec_digs_eq_best and d == min_dig)))
+                #elif num1_n_digs >= num2_n_digs2 - 1:
+                #    b2 = recur2(idx + 1, 0, num2_n_digs=0, mult=mult, n_digs_reduced=(num1_n_digs == num2_n_digs2 - 1), prec_digs_eq_best=(b or (prec_digs_eq_best and d == min_dig)))
+                if b2:
+                    #print(num2_2)
+                    b = b2
+            for d1 in num1_digs:
+                num1_digs_remain.add(d1)
+            num2_digs_remain.add(d)
+            if b: break
+        curr.pop()
+        return b
+
+    if not recur1(): return -1
+    res = 0
+    for d in res_digs[0]:
+        res = res * base + d
+    print(f"Time taken = {time.time() - since:.4f} seconds")
+    return res
 
 
 # Problem 171
@@ -4603,7 +4781,7 @@ def hollowSquareLaminaTypeCountSum(max_n_squares: int=10 ** 6, min_type: int=1, 
     return res
 
 if __name__ == "__main__":
-    to_evaluate = {167}
+    to_evaluate = {170}
 
     if not to_evaluate or 151 in to_evaluate:
         res = singleSheetCountExpectedValueFloat(n_halvings=4)
@@ -4686,6 +4864,10 @@ if __name__ == "__main__":
     if not to_evaluate or 169 in to_evaluate:
         res = sumOfPowersOfTwo(num=10 ** 25, max_rpt=1)
         print(f"Solution to Project Euler #169 = {res}")
+
+    if not to_evaluate or 170 in to_evaluate:
+        res = largestPandigitalConcatenatingProduct(min_n_prods=3, incl_zero=True, base=10)
+        print(f"Solution to Project Euler #170 = {res}")
 
     if not to_evaluate or 171 in to_evaluate:
         res = sumSquareOfTheDigitalSquares(max_n_dig=20, n_tail_digs=9, base=10)
