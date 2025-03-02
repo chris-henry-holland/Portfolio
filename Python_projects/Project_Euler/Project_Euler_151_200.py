@@ -4351,10 +4351,8 @@ def rightRotationMultiplesSum(min_n_digs: int=2, max_n_digs: int=100, n_tail_dig
 
 
 # Problem 169
-def sumOfPowersOfTwo(num: int=10 ** 25, max_rpt: int=2) -> int:
+def sumOfPowersOfTwoWithMaxRepeats(num: int=10 ** 25, max_rpt: int=2) -> int:
     """
-    Solution to Project Euler #169
-
     For a non-negative integer, finds the number of ways that number
     can be expressed as the sum of powers of two, where each power
     of two can appear in the sum at most max_rpt times.
@@ -4402,7 +4400,6 @@ def sumOfPowersOfTwo(num: int=10 ** 25, max_rpt: int=2) -> int:
         floor((max_rpt * (2 ** idx - 1)) / 2 ** idx)
     """
     # Review- Try to implement bottom up dynamic programming solution
-    since = time.time()
     digs = []
     while num:
         digs.append(num & 1)
@@ -4446,7 +4443,33 @@ def sumOfPowersOfTwo(num: int=10 ** 25, max_rpt: int=2) -> int:
         return res
     
     res = recur(n_dig - 1, higher_req=0)
-    #print(memo)
+    return res
+
+def sumOfPowersOfTwoEachMaxTwice(num: int=10 ** 25) -> int:
+    """
+    Solution to Project Euler #169
+
+    For a non-negative integer, finds the number of ways that number
+    can be expressed as the sum of powers of two, where each power
+    of two can appear in the sum at most 2 times.
+
+    Args:
+        Optional named:
+        num (int): The non-negative integer for which the number of
+                ways it can be expressed as the sum of powers of two
+                as described above is to be found.
+            Default: 10 ** 25
+    
+    Returns:
+    Integer (int) giving the number of ways that num can be expressed
+    as the sum of powers of two, where each power of two can appear in
+    the sum at most twice.
+
+    Outline of rationale:
+    See documentation for sumOfPowersOfTwoWithMaxRepeats().
+    """
+    since = time.time()
+    res = sumOfPowersOfTwoWithMaxRepeats(num=num, max_rpt=2)
     print(f"Time taken = {time.time() - since:.4f} seconds")
     return res
     """
@@ -4780,8 +4803,52 @@ def hollowSquareLaminaTypeCountSum(max_n_squares: int=10 ** 6, min_type: int=1, 
     print(f"Time taken = {time.time() - since:.4f} seconds")
     return res
 
+# Problem 175
+def fractionsAndSumOfPowersOfTwo(numerator: int, denominator: int) -> int:
+    
+    def recur(p: int, q: int) -> int:
+        #print(p, q)
+        if not q: return 0
+        elif p > q:
+            p2 = (p - 1) % q + 1
+            res = recur(p2, q)
+            n_zeros = (p - p2) // q
+            res <<= n_zeros
+        else:
+            q2 = q % p
+            res = recur(p, q2)
+            n_ones = (q - q2) // p
+            res <<= n_ones
+            res |= (1 << n_ones) - 1
+        return res
+    return recur(numerator, denominator)
+
+def fractionsAndSumOfPowersOfTwoShortenedBinary(numerator: int=123456789, denominator: int=987654321) -> List[int]:
+    """
+    Solution to Project Euler #175
+
+    Calkin-Wilf Tree
+    """
+    
+    def recur(p: int, q: int) -> List[int]:
+        #print(p, q)
+        if not q: return []
+        elif p > q:
+            p2 = (p - 1) % q + 1
+            res = recur(p2, q)
+            n_zeros = (p - p2) // q
+            res.append(n_zeros)
+        else:
+            q2 = q % p
+            res = recur(p, q2)
+            n_ones = (q - q2) // p
+            res.append(n_ones)
+        return res
+    return recur(numerator, denominator)
+
+
 if __name__ == "__main__":
-    to_evaluate = {170}
+    to_evaluate = {175}
 
     if not to_evaluate or 151 in to_evaluate:
         res = singleSheetCountExpectedValueFloat(n_halvings=4)
@@ -4862,7 +4929,7 @@ if __name__ == "__main__":
         print(f"Solution to Project Euler #168 = {res}")
 
     if not to_evaluate or 169 in to_evaluate:
-        res = sumOfPowersOfTwo(num=10 ** 25, max_rpt=1)
+        res = sumOfPowersOfTwoEachMaxTwice(num=10 ** 25)
         print(f"Solution to Project Euler #169 = {res}")
 
     if not to_evaluate or 170 in to_evaluate:
@@ -4885,6 +4952,10 @@ if __name__ == "__main__":
         res = hollowSquareLaminaTypeCountSum(max_n_squares=10 ** 6, min_type=1, max_type=10)
         print(f"Solution to Project Euler #174 = {res}")
 
+    if not to_evaluate or 175 in to_evaluate:
+        res = fractionsAndSumOfPowersOfTwoShortenedBinary(numerator=123456789, denominator=987654321)
+        print(f"Solution to Project Euler #175 = {res}")
+
     #for n in range(2, 11):
     #    usg = iter(ulamSequenceGenerator(2, 2 * n + 1))
     #    even_pair = []
@@ -4898,3 +4969,13 @@ if __name__ == "__main__":
     #print(res)
     #for n in range(5, 20, 2):
     #    ulamSequenceTwoOddDifferences(num2=n)
+
+
+    #for i in range(1, 251):
+    #    print(i, format(i, "b"), sumOfPowersOfTwoWithMaxRepeats(num=i, max_rpt=2))
+    #num = 23
+    #for _ in range(10):
+    #    print(num, format(num, "b"), sumOfPowersOfTwoWithMaxRepeats(num=num, max_rpt=2))
+    #    num <<= 1
+
+    #print(fractionsAndSumOfPowersOfTwo(13, 17))
