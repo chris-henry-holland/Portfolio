@@ -4829,6 +4829,7 @@ def fractionsAndSumOfPowersOfTwoShortenedBinary(numerator: int=123456789, denomi
 
     Calkin-Wilf Tree
     """
+    since = time.time()
     
     def recur(p: int, q: int) -> List[int]:
         #print(p, q)
@@ -4844,11 +4845,55 @@ def fractionsAndSumOfPowersOfTwoShortenedBinary(numerator: int=123456789, denomi
             n_ones = (q - q2) // p
             res.append(n_ones)
         return res
-    return recur(numerator, denominator)
+    res = recur(numerator, denominator)
+    print(f"Time taken = {time.time() - since:.4f} seconds")
+    return res
 
+# Problem 179
+def countConsecutiveNumberPositiveDivisorsMatch(n_max: int=10 ** 7) -> int:
+    """
+    Solution to Project Euler #179
+
+    Finds the number of integers between 1 and n_max inclusive for
+    which the number of positive integer factors is equal to that
+    of the next integer (i.e. the one exactly one greater).
+
+    Args:
+        Optional named:
+        n_max (int): The largest number considered in the count.
+            Default: 10 ** 7
+    
+    Returns:
+    Integer (int) giving the number of integers between 1 and
+    n_max inclusive for which the number of positive integer factors
+    is equal to that of the next integer.
+
+    Outline of rationale:
+    A prime sieve recording the largest prime factor and its
+    power in the prime factorisation of each positive integer up
+    to (n_max + 1) is used to efficiently calculate the number
+    of factors. Then each integer from 1 to n_max is iterated
+    over, using that prime sieve to calculate the number of
+    factors and compare this with that of the next integer to
+    see whether it should contribute to the count.
+    """
+    since = time.time()
+    print(f"n_max = {n_max}")
+    ps = PrimeSPFsieve(n_max + 1)
+    print("created prime sieve")
+    prev = 1
+    res = 0
+    for num in range(2, n_max + 2):
+        cnt = ps.factorCount(num)
+        res += (cnt == prev)
+        #if cnt == prev:
+        #    print(num - 1)
+        prev = cnt
+    print(f"Time taken = {time.time() - since:.4f} seconds")
+    return res
 
 if __name__ == "__main__":
-    to_evaluate = {175}
+    to_evaluate = {179}
 
     if not to_evaluate or 151 in to_evaluate:
         res = singleSheetCountExpectedValueFloat(n_halvings=4)
@@ -4956,6 +5001,10 @@ if __name__ == "__main__":
         res = fractionsAndSumOfPowersOfTwoShortenedBinary(numerator=123456789, denominator=987654321)
         print(f"Solution to Project Euler #175 = {res}")
 
+
+    if not to_evaluate or 179 in to_evaluate:
+        res = countConsecutiveNumberPositiveDivisorsMatch(n_max=10 ** 7)
+        print(f"Solution to Project Euler #179 = {res}")
     #for n in range(2, 11):
     #    usg = iter(ulamSequenceGenerator(2, 2 * n + 1))
     #    even_pair = []
