@@ -4849,6 +4849,112 @@ def fractionsAndSumOfPowersOfTwoShortenedBinary(numerator: int=123456789, denomi
     print(f"Time taken = {time.time() - since:.4f} seconds")
     return res
 
+# Problem 178
+def countPandigitalStepNumbers(max_n_digs: int=40, incl_zero: bool=True, base: int=10) -> int:
+    """
+    Solution to Project Euler #178
+
+    For a given base, finds the number of integers that whose
+    representation in the chosen base contains at most max_n_digs
+    and is simultaneously 0-(base - 1) (if incl_zero is True) or
+    1-(base - 1) (if incl_zero is False) pandigital and a step
+    number.
+
+    An integer is a 0-(base - 1) pandigital number in a given base if
+    and only if it is non-negative and when represented in that base
+    without leading zeros it contains each of the digits from 0 to
+    (base - 1) at least once.
+
+    An integer is a 1-(base - 1) pandigital number in a given base if
+    and only if it is non-negative and when represented in that base
+    without leading zeros it contains each of the digits from 1 to
+    (base - 1) at least once and contains no zeros.
+
+    An integer is a step number in a given base if and only if it is
+    non-negative and when represented in that base without leading
+    zeros, any neighbouring digits differ by exactly one. Note that
+    we are not using modular arithmethic, so 0 and (base - 1) are
+    not considered to differ by 1 unless base is 2.
+
+    Args:
+        Optional named:
+        max_n_digs (int): The maximum number of digits of non-negative
+                integers considered when represented in the chosen
+                base without leading zeros.
+            Default: 40
+        incl_zero (bool): If True then 0-(base - 1) pandigital numbers
+                are considered, otherwise 1-(base - 1) pandigital
+                numbers are considered
+            Default: True
+        base (int): Integer strictly greater than 1 giving the base
+                in which the integers are to be represented when
+                assessing whether an integer contains no more than
+                max_n_digs digits, is 0-(base - 1) or 1-(base - 1)
+                pandigital and whether it is a step number.
+            Default: 10
+    
+    Returns:
+    Integer (int) giving the number of integers that whose
+    representation in the chosen base contains at most max_n_digs
+    and is simultaneously 0-(base - 1) (if incl_zero is True) or
+    1-(base - 1) (if incl_zero is False) pandigital and a step
+    number.
+
+    Outline of rationale:
+    Top-down dynamic programming with memoisation is used, going one
+    digit at a time from left to right, keeping track of the index
+    of the current digit (where the leftmost is index 0 and each
+    step to the right increments the index by 1), the last digit
+    encountered, and whether or not the digit 0 (if incl_zero is True)
+    or 1 (if incl_zero is False) is present in the number so far
+    and whether or not the digit (base - 1) is present in the number
+    so far.
+    Note that since the numbers are step numbers, if both of those
+    digits are present then all digits in between must also be present,
+    guaranteeing that the current number is 0-(base - 1) pandigital
+    (if incl_zero is True) or, as long as 0 has not been included,
+    1-(base - 1) pandigital.
+    """
+
+    since = time.time()
+    lower = int(not incl_zero)
+    upper = base - 1
+    #print(max_n_digs, lower, upper)
+    curr = []
+    memo = {}
+    def recur(idx: int, last_dig: int, incl_lower: bool=False, incl_upper: bool=False) -> int:
+        if last_dig == lower: incl_lower = True
+        if last_dig == upper: incl_upper = True
+        if not incl_lower and max_n_digs - idx - 1 < last_dig - lower: return 0
+        if not incl_upper and max_n_digs - idx - 1 < upper - last_dig: return 0
+        curr.append(last_dig)
+        res = int(incl_lower and incl_upper)
+        if idx == max_n_digs - 1:
+            #if res:
+            #    print(curr)
+            #    print(res)
+            curr.pop()
+            return res
+        args = (idx, last_dig, incl_lower, incl_upper)
+        if args in memo.keys():
+            curr.pop()
+            return memo[args]
+        if last_dig > lower:
+            res += recur(idx + 1, last_dig - 1, incl_lower=incl_lower, incl_upper=incl_upper)
+        if last_dig < upper:
+            res += recur(idx + 1, last_dig + 1, incl_lower=incl_lower, incl_upper=incl_upper)
+        memo[args] = res
+        curr.pop()
+        return res
+    #res = 0
+    #for i in range(max(lower, 1), upper + 1):
+    #    ans = recur(0, i, incl_lower=False, incl_upper=False)
+    #    print(i, ans)
+    #    res += ans
+    res = sum(recur(0, i, incl_lower=False, incl_upper=False) for i in range(max(lower, 1), upper + 1))
+    print(f"Time taken = {time.time() - since:.4f} seconds")
+    return res
+
 # Problem 179
 def countConsecutiveNumberPositiveDivisorsMatch(n_max: int=10 ** 7) -> int:
     """
@@ -4893,7 +4999,7 @@ def countConsecutiveNumberPositiveDivisorsMatch(n_max: int=10 ** 7) -> int:
     return res
 
 if __name__ == "__main__":
-    to_evaluate = {179}
+    to_evaluate = {178}
 
     if not to_evaluate or 151 in to_evaluate:
         res = singleSheetCountExpectedValueFloat(n_halvings=4)
@@ -5001,6 +5107,10 @@ if __name__ == "__main__":
         res = fractionsAndSumOfPowersOfTwoShortenedBinary(numerator=123456789, denominator=987654321)
         print(f"Solution to Project Euler #175 = {res}")
 
+
+    if not to_evaluate or 178 in to_evaluate:
+        res = countPandigitalStepNumbers(max_n_digs=40, incl_zero=True, base=10)
+        print(f"Solution to Project Euler #178 = {res}")
 
     if not to_evaluate or 179 in to_evaluate:
         res = countConsecutiveNumberPositiveDivisorsMatch(n_max=10 ** 7)
