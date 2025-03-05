@@ -4998,8 +4998,60 @@ def countConsecutiveNumberPositiveDivisorsMatch(n_max: int=10 ** 7) -> int:
     print(f"Time taken = {time.time() - since:.4f} seconds")
     return res
 
+# Problem 183
+def partsCountMaximisingProductOfParts(n: int) -> int:
+    """
+    num1 = isqrt(n)
+    if num1 * num1 == n: return num1
+    if (n / (num1 + 1)) ** (num1 + 1) > (n / (num1)) ** (num1):
+        return num1 + 1
+    return num1
+    """
+    lft, rgt = 1, n
+    while lft < rgt:
+        mid = rgt - ((rgt - lft) >> 1)
+        num1 = (mid - 1) * math.log(n / (mid - 1)) 
+        num2 = mid * math.log(n / mid)
+        #print(mid, num1, num2)
+        if num1 > num2:
+            rgt = mid - 1
+            continue
+        num3 = (mid + 1) * math.log(n / (mid + 1))
+        #print(num3)
+        if num3 > num2:
+            lft = mid + 1
+            continue
+        return mid
+    return lft
+
+def maximumProductOfPartsTerminatingSum(n_min: int=5, n_max: int=10 ** 4, base: int=10) -> int:
+    """
+    Solution to Problem 183
+    """
+    since = time.time()
+    base_pf = calculatePrimeFactorisation(base)
+    base_p_facts = set(base_pf.keys())
+    res = 0
+    for num in range(n_min, n_max + 1):
+        n_parts = partsCountMaximisingProductOfParts(num)
+        #print(num, n_parts)
+        n_parts2 = n_parts // gcd(num, n_parts)
+        for p in base_p_facts:
+            q = n_parts2
+            r = 0
+            while not r:
+                n_parts2 = q
+                q, r = divmod(n_parts2, p)
+            if n_parts2 == 1: break
+        else:
+            res += num
+            continue
+        res -= num
+    print(f"Time taken = {time.time() - since:.4f} seconds")
+    return res
+
 if __name__ == "__main__":
-    to_evaluate = {178}
+    to_evaluate = {183}
 
     if not to_evaluate or 151 in to_evaluate:
         res = singleSheetCountExpectedValueFloat(n_halvings=4)
@@ -5115,6 +5167,11 @@ if __name__ == "__main__":
     if not to_evaluate or 179 in to_evaluate:
         res = countConsecutiveNumberPositiveDivisorsMatch(n_max=10 ** 7)
         print(f"Solution to Project Euler #179 = {res}")
+
+
+    if not to_evaluate or 183 in to_evaluate:
+        res = maximumProductOfPartsTerminatingSum(n_min=5, n_max=10 ** 4, base=10)
+        print(f"Solution to Project Euler #183 = {res}")
     #for n in range(2, 11):
     #    usg = iter(ulamSequenceGenerator(2, 2 * n + 1))
     #    even_pair = []
@@ -5138,3 +5195,6 @@ if __name__ == "__main__":
     #    num <<= 1
 
     #print(fractionsAndSumOfPowersOfTwo(13, 17))
+
+    #num = 9
+    #print(num, partsCountMaximisingProductOfParts(num))
