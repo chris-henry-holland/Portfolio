@@ -4849,6 +4849,38 @@ def fractionsAndSumOfPowersOfTwoShortenedBinary(numerator: int=123456789, denomi
     print(f"Time taken = {time.time() - since:.4f} seconds")
     return res
 
+# Problem 176
+def smallestCathetusCommonToNRightAngledTriangles(n_common: int=47547) -> int:
+    """
+    Solution to Project Euler #176
+
+    Outline of rationale:
+    Use difference of squares formula, which implies that for
+    give a, the number of positive integer solutions (x, y) to:
+        (x ** 2 - y ** 2) = (x + y) * (x - y) = a ** 2
+    is the number of ways of expressing a ** 2 as the product
+    of two strictly positive integers of the same parity (where
+    the order does not matter).
+    We consider the cases of odd and even a separately.
+    For odd a ...
+    For even a ...
+    TODO
+    """
+    since = time.time()
+    pf = calculatePrimeFactorisation((n_common << 1) + 1)
+    ps = PrimeSPFsieve()
+    pg = iter(ps.endlessPrimeGenerator())
+    p_facts = sorted(pf.keys(), reverse=True)
+    res = next(pg) ** ((p_facts[0] + 1) >> 1)
+    for _ in range(pf[p_facts[0]] - 1):
+        res *= next(pg) ** ((p_facts[0] - 1) >> 1)
+    for i in range(1, len(p_facts)):
+        for _ in range(pf[p_facts[i]]):
+            res *= next(pg) ** ((p_facts[i] - 1) >> 1)
+    print(f"Time taken = {time.time() - since:.4f} seconds")
+    return res
+
+
 # Problem 178
 def countPandigitalStepNumbers(max_n_digs: int=40, incl_zero: bool=True, base: int=10) -> int:
     """
@@ -5051,7 +5083,7 @@ def maximumProductOfPartsTerminatingSum(n_min: int=5, n_max: int=10 ** 4, base: 
     return res
 
 if __name__ == "__main__":
-    to_evaluate = {183}
+    to_evaluate = {176}
 
     if not to_evaluate or 151 in to_evaluate:
         res = singleSheetCountExpectedValueFloat(n_halvings=4)
@@ -5159,6 +5191,9 @@ if __name__ == "__main__":
         res = fractionsAndSumOfPowersOfTwoShortenedBinary(numerator=123456789, denominator=987654321)
         print(f"Solution to Project Euler #175 = {res}")
 
+    if not to_evaluate or 176 in to_evaluate:
+        res = smallestCathetusCommonToNRightAngledTriangles(n_common=47547)
+        print(f"Solution to Project Euler #176 = {res}")
 
     if not to_evaluate or 178 in to_evaluate:
         res = countPandigitalStepNumbers(max_n_digs=40, incl_zero=True, base=10)
