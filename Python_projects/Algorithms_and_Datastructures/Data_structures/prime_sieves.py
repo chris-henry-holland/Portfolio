@@ -33,6 +33,155 @@ def largestLEpowN(num: Union[int, float], base: int=10) -> int:
         res |= 1 << i
     return res
     
+class SimplePrimeSieve:
+    """
+    Simple prime sieve
+    """
+    def __init__(self, n_max: Optional[int]=None, use_p_lst: bool=True):
+        if n_max is None: n_max = 2
+        self.sieve = [False, False, True, True]
+        self.use_p_lst = use_p_lst
+        if use_p_lst:
+            self.p_lst = [2, 3]
+        self.extendSieve(n_max)
+    
+    def extendSieve(self, n_max: int) -> None:
+        if not self.use_p_lst:
+            return self.extendSieveNoPLst(n_max)
+        #since = time.time()
+        n_orig = len(self.sieve) - 1
+        if n_orig >= n_max: return
+        sieve = self.sieve
+        p_lst = self.p_lst
+        sieve.extend([True for x in range(n_orig + 1, n_max + 1)])
+        for p in p_lst:
+            if p * p > n_max: break
+            for i in range(max(p, (n_orig // p) + 1), (n_max // p) + 1):
+                i2 = p * i
+                sieve[i2] = False
+        
+        def incorporatePrime(p: int) -> None:
+            #print(f"p = {p}")
+            if sieve[p]: p_lst.append(p)
+            else: return
+            for i in range(max(p, (n_orig // p) + 1), (n_max // p) + 1):
+                i2 = p * i
+                sieve[i2] = False
+            return
+        
+        # Using the fact that primes greater than 2 are 1 modulo 2
+        start = n_orig + 1 + (n_orig & 1)
+        end = isqrt(n_max)
+        #print(start, end)
+        p = start - 2
+        for p in range(start, end + 1, 2):
+            incorporatePrime(p)
+        for p in range(p + 2, n_max + 1, 2):
+            if sieve[p]: p_lst.append(p)
+        return
+
+    def extendSieveNoPLst(self, n_max: int):
+        n_orig = len(self.sieve) - 1
+        if n_orig >= n_max: return
+        sieve = self.sieve
+        sieve.extend([True for x in range(n_orig + 1, n_max + 1)])
+        for i in range(max(2, (n_orig >> 1) + 1), (n_max >> 1) + 1):
+            sieve[i << 1] = False
+        for p in range(3, n_max + 1, 2):
+            if p * p > n_max: break
+            if not sieve[p]: continue
+            for i in range(max(p, (n_orig // p) + 1), (n_max // p) + 1):
+                i2 = p * i
+                sieve[i2] = False
+        return
+    
+    def millerRabinPrimalityTest(self, n: int, n_trials: int=3) -> bool:
+        seen = {0}
+        s = 1
+        d = (n - 1) >> 1
+        while not d & 1:
+            d >>= 1
+            s += 1
+        for _ in range(n_trials):
+            a = 0
+            while a in seen:
+                a = random.randrange(2, n - 1)
+            seen.add(a)
+            x = pow(a, d, n)
+            for _ in range(s):
+                y = pow(x, 2, n)
+                if y == 1 and x != 1 and x != n - 1:
+                    return False
+                x = y
+            if y != 1: return False
+        return True
+    
+    def isPrime(self, n: int, extend_sieve: bool=False,\
+            extend_sieve_sqrt: bool=False,\
+            use_miller_rabin_screening: bool=False,\
+            n_miller_rabin_trials: int=3) -> bool:
+        """
+        Checks if the strictly positive integer n is prime.
+        
+        Args:
+            Required positional:
+            n (int): The strictly positive integer whose status as a
+                    prime number is to be assessed
+            
+            Optional named:
+            extend_sieve (bool): Whether the prime sieve should be extended
+                    up to n (if it currently does not extend that far) to
+                    check for the prime.
+                    Note that in general, in checking a single prime this
+                    option makes the search significantly slower and uses
+                    more memory, but is more efficient if checking multiple
+                    primes of similar size.
+                Default: False
+            extend_sieve_sqrt (bool): If extend_sieve is given as False and
+                    the sieve currently does not extend that far, whether
+                    to extend the sieve up to the square root of n.
+                    This is a compormise between fully extending the sieve
+                    and not extending the sieve at all.
+                Default: False
+            use_miller_rabin_screening (bool): Uses Miller-Rabin primality
+                    test to see if this test shows that n is definitely
+                    composite before performing the full primality check.
+                Default: False
+            n_miller_rabin_trials (int): If use_miller_rabin_screening
+                    is set to True, how many different trials of the
+                    Miller-Rabin primality test (with different bases each
+                    time) each return that n may be prime before performing
+                    the full primality test.
+                Default: 3
+        
+        Returns:
+        Boolean (bool) giving whether or not n is a prime number.
+        """
+        if extend_sieve or len(self.sieve) > n:
+            self.extendSieve(n)
+            return self.sieve[n]
+        if use_miller_rabin_screening and not\
+                self.millerRabinPrimalityTest(n, n_trials=n_miller_rabin_trials):
+            return False
+        sqrt = isqrt(n)
+        if extend_sieve_sqrt:
+            self.extendSieve(sqrt)
+        if self.use_p_lst:
+            for p in self.p_lst:
+                if p > sqrt: return True
+                elif not n % p:
+                    return False
+        else:
+            if not n & 1: return False
+            for p in range(3, min(len(self.sieve), sqrt + 1), 2):
+                if self.sieve[p] and not n % p:
+                    return False
+        p = len(self.sieve)
+        p += not p & 1
+        for p in range(p, sqrt + 1, 2):
+            if not n % p:
+                return False
+        return True
 
 class PrimeSPFsieve:
     """

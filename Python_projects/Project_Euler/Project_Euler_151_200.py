@@ -18,7 +18,7 @@ from typing import Dict, List, Tuple, Set, Union, Generator, Callable, Optional,
 
 sys.path.append(os.path.join(os.path.dirname(__file__), "../Algorithms_and_Datastructures/Algorithms"))
 sys.path.append(os.path.join(os.path.dirname(__file__), "../Algorithms_and_Datastructures/Data_structures"))
-from prime_sieves import PrimeSPFsieve
+from prime_sieves import PrimeSPFsieve, SimplePrimeSieve
 from addition_chains import AdditionChainCalculator
 from string_searching_algorithms import rollingHashWithValue
 
@@ -5082,8 +5082,29 @@ def maximumProductOfPartsTerminatingSum(n_min: int=5, n_max: int=10 ** 4, base: 
     print(f"Time taken = {time.time() - since:.4f} seconds")
     return res
 
+# Problem 187
+def semiPrimeCount(n_max: int=10 ** 8 - 1) -> int:
+
+    since = time.time()
+    pf = SimplePrimeSieve(n_max >> 1)
+    p_mx = isqrt(n_max)
+    i2 = len(pf.p_lst) - 1
+    #print(pf.p_lst)
+    res = 0
+    for i1, p1 in enumerate(pf.p_lst):
+        if p1 > p_mx: break
+        for i2 in reversed(range(i1, i2 + 1)):
+            p2 = pf.p_lst[i2]
+            if p1 * p2 <= n_max:
+                res += i2 - i1 + 1
+                break
+        else: break
+        #print(p1, res)
+    print(f"Time taken = {time.time() - since:.4f} seconds")
+    return res
+
 if __name__ == "__main__":
-    to_evaluate = {176}
+    to_evaluate = {187}
 
     if not to_evaluate or 151 in to_evaluate:
         res = singleSheetCountExpectedValueFloat(n_halvings=4)
@@ -5207,6 +5228,10 @@ if __name__ == "__main__":
     if not to_evaluate or 183 in to_evaluate:
         res = maximumProductOfPartsTerminatingSum(n_min=5, n_max=10 ** 4, base=10)
         print(f"Solution to Project Euler #183 = {res}")
+
+    if not to_evaluate or 187 in to_evaluate:
+        res = semiPrimeCount(n_max=10 ** 8 - 1)
+        print(f"Solution to Project Euler #187 = {res}")
     #for n in range(2, 11):
     #    usg = iter(ulamSequenceGenerator(2, 2 * n + 1))
     #    even_pair = []
