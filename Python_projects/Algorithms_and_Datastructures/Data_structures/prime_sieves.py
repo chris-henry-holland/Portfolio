@@ -183,6 +183,55 @@ class SimplePrimeSieve:
                 return False
         return True
 
+    def endlessPrimeGenerator(self) -> Generator[int, None, None]:
+        """
+        Generates the primes in order of increasing size. Given that
+        there are infinitely many prime numbers, this generator does
+        not terminate by itself, so any loop utilising this generator
+        must contain a break or return statement.
+        Note that this generator can only be used if on instatiation
+        of the PrimeSPFsieve object the option use_p_lst was set
+        to True.
+        
+        Yields:
+        Integer (int), with (for integer i) the ith item yielded
+        being the ith prime
+        """
+        if not self.use_p_lst:
+            return NotImplementedError("This method requires the PrimeSPFsieve "
+                    "object to have use_p_lst set to True.")
+        for i, p in enumerate(self.p_lst): yield p
+        n_mx = 10 ** (largestLEpowN(len(self.sieve) - 1, base=10) + 1)
+        #n_mx = 10 ** (math.ceil(math.log(len(self.sieve) - 1, 10)) + 1)
+        while True:
+            self.extendSieve(n_mx)
+            for i in range(i + 1, len(self.p_lst)):
+                yield self.p_lst[i]
+            n_mx *= 10
+        return
+    
+    def primeCountingFunction(self, n: Union[int, float]) -> int:
+        """
+        Gives the number of prime numbers less than or equal to a given
+        number
+        
+        Args:
+            Required positional:
+            n (int/float): The number up to which the prime numbers are
+                    to be counted
+        
+        Returns:
+        Integer (int) giving the number of prime numbers no greater
+        than n.
+        """
+        if n < 2: return 0
+        if not self.use_p_lst:
+            return NotImplementedError("This method requires the SimplePrimeSieve "
+                    "object to have use_p_lst set to True.")
+        n = int(n)
+        self.extendSieve(n)
+        return bisect.bisect_right(self.p_lst, n)
+
 class PrimeSPFsieve:
     """
     Finds the smallest prime factor for each number and the number of times
