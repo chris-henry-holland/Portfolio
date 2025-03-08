@@ -5084,7 +5084,24 @@ def maximumProductOfPartsTerminatingSum(n_min: int=5, n_max: int=10 ** 4, base: 
 
 # Problem 187
 def semiPrimeCount(n_max: int=10 ** 8 - 1) -> int:
+    """
+    Finds the number of strictly positive integers no greater
+    than n_max that are semi-prime.
 
+    A semi-prime is a strictly positive integer that is the
+    product of exactly two prime numbers, where the two
+    primes are not necessarily distinct.
+
+    Args:
+        Optional named:
+        n_max (int): The largest integer whose status as
+                a semi-prime is considered in the count.
+            Default: 10 ** 8 - 1
+    
+    Returns:
+    Integer (int) giving the number of strictly positive
+    integers no greater than n_max that are semi-prime.
+    """
     since = time.time()
     pf = SimplePrimeSieve(n_max >> 1)
     p_mx = isqrt(n_max)

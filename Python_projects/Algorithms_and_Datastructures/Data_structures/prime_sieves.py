@@ -190,7 +190,7 @@ class SimplePrimeSieve:
         not terminate by itself, so any loop utilising this generator
         must contain a break or return statement.
         Note that this generator can only be used if on instatiation
-        of the PrimeSPFsieve object the option use_p_lst was set
+        of the SimplePrimeSieve object the option use_p_lst was set
         to True.
         
         Yields:
@@ -198,7 +198,7 @@ class SimplePrimeSieve:
         being the ith prime
         """
         if not self.use_p_lst:
-            return NotImplementedError("This method requires the PrimeSPFsieve "
+            return NotImplementedError("This method requires the SimplePrimeSieve "
                     "object to have use_p_lst set to True.")
         for i, p in enumerate(self.p_lst): yield p
         n_mx = 10 ** (largestLEpowN(len(self.sieve) - 1, base=10) + 1)
