@@ -4880,6 +4880,76 @@ def smallestCathetusCommonToNRightAngledTriangles(n_common: int=47547) -> int:
     print(f"Time taken = {time.time() - since:.4f} seconds")
     return res
 
+# Problem 177
+def integerAngledQuadrilaterals(tol: float=10 ** -9):
+    """
+    Solution to Project Euler #177
+    """
+    since = time.time()
+    #res = 0
+    seen = set()
+    for a1 in range(45, 179):
+        print(f"a1 = {a1}")
+        for a2 in range(1, min(a1 + 1, 180 - a1)):
+            #print(if a1 == 80 and a2 == 50): print("hi1")
+            for b1 in range(1, min(180 - (a1 + a2), a1 + 1)):
+                #print(if a1 == 80 and a2 == 50 and b1 == ): print("hi1")
+                b2_rng = min(180 - (a1 + a2), a1 + 1)
+                if a1 == a2:
+                    b2_rng = min(b2_rng, b1 + 1)
+                for b2 in range(1, b2_rng):
+                    #sin_angle = math.sin(math.radians(a1 + a2)) * math.sin(math.radians(a1 + a2 + b1)) * math.sin(math.radians(a1 + a2 + b2)) / \
+                    #        (math.sin(math.radians(a2)) * math.sin(math.radians(a2 + b1)))
+                    phi = math.radians(a1 + a2 + b1)
+                    cot_angle = -(math.sin(math.radians(a1)) * math.sin(math.radians(b2)) + math.cos(phi) * math.sin(math.radians(b1)) * math.sin(math.radians(a2 + b2))) / \
+                            (math.sin(math.radians(b1)) * math.sin(math.radians(a2 + b2)) * math.sin(phi))
+                    #if abs(sin_angle) > 1: continue
+                    #print(a1, a2, b1, b2, sin_angle)
+                    angle = 90 if cot_angle == 0 else math.degrees(math.atan(1 / cot_angle))
+                    
+                    #if a1 == 80 and a2 == 30 and b1 == 50 and b2 == 40:
+                    #    print(cot_angle, angle)
+                    #if a1 == 45 and a2 == 45 and b1 == 45 and b2 == 45:
+                    #    print(math.sin(math.radians(a1)) * math.sin(math.radians(b2)), math.cos(phi) * math.sin(math.radians(b1)) * math.sin(math.radians(a2 + b2)), (math.sin(math.radians(b1)) * math.sin(math.radians(a2 + b2)) * math.sin(phi))) 
+                    #    print(cot_angle, angle)
+                    theta = round(angle)
+                    if abs(angle - theta) >= tol:
+                        continue
+                        #res += 1
+                        #print((a1, a2, b1, b2, angle))
+                    if theta < 0:
+                        #print(theta)
+                        theta += 180
+                    if theta < 0:
+                        print(theta)
+                    c1 = 180 - (a1 + a2 + b1)
+                    if c1 > a1: continue
+                    c2 = 180 - (a1 + a2 + b2)
+                    if c2 > a1: continue
+                    d1 = theta - c1
+                    if d1 > a1: continue
+                    d2 = 360 - (a1 + a2 + b1 + b2 + c1 + c2 + d1)
+                    if d2 > a1: continue
+                    mx = a1
+                    angles = (a1, a2, b2, c2, d2, d1, c1, b1)
+                    angles_final = angles
+                    for i in range(2, len(angles), 2):
+                        if angles[i] < mx: continue
+                        angles2 = (*angles[i:], *angles[:i])
+                        angles_final = max(angles_final, angles2)
+                    for i in range(1, len(angles), 2):
+                        if angles[i] < mx: continue
+                        angles2 = (*angles[:i + 1][::-1], *angles[i + 1:][::-1])
+                        angles_final = max(angles_final, angles2)
+                    #if (max(angles) != a1):
+                    #    print("error")
+                    if a1 == 80 and a2 == 30 and b1 == 50 and b2 == 40:
+                        print(angles_final)
+                    #print(angles)
+                    seen.add(angles_final)
+    res = len(seen)
+    print(f"Time taken = {time.time() - since:.4f} seconds")
+    return res
 
 # Problem 178
 def countPandigitalStepNumbers(max_n_digs: int=40, incl_zero: bool=True, base: int=10) -> int:
@@ -5121,7 +5191,7 @@ def semiPrimeCount(n_max: int=10 ** 8 - 1) -> int:
     return res
 
 if __name__ == "__main__":
-    to_evaluate = {187}
+    to_evaluate = {177}
 
     if not to_evaluate or 151 in to_evaluate:
         res = singleSheetCountExpectedValueFloat(n_halvings=4)
@@ -5232,6 +5302,10 @@ if __name__ == "__main__":
     if not to_evaluate or 176 in to_evaluate:
         res = smallestCathetusCommonToNRightAngledTriangles(n_common=47547)
         print(f"Solution to Project Euler #176 = {res}")
+
+    if not to_evaluate or 177 in to_evaluate:
+        res = integerAngledQuadrilaterals(tol=10 ** -9)
+        print(f"Solution to Project Euler #177 = {res}")
 
     if not to_evaluate or 178 in to_evaluate:
         res = countPandigitalStepNumbers(max_n_digs=40, incl_zero=True, base=10)
