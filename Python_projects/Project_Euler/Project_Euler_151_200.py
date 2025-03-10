@@ -4884,6 +4884,24 @@ def smallestCathetusCommonToNRightAngledTriangles(n_common: int=47547) -> int:
 def integerAngledQuadrilaterals(tol: float=10 ** -9):
     """
     Solution to Project Euler #177
+
+    Finds the number of convex quadrilaterals whose angles between
+    edges and diagonals are all integer degrees, to within a
+    tolerance of tol.
+
+    Args:
+        Optional named:
+        tol (float): The tolerance for numbers to be considered
+                integers (i.e. a number is considered to be
+                an integer if the absolute difference between it
+                and the nearest integer is strictly less than
+                this number).
+            Default: 10 ** -9
+    
+    Returns:
+    Integer (int) giving the number of convex quadrilaterals whose
+    angles between edges and diagonals are all integer degrees to
+    within the tolerance tol.
     """
     since = time.time()
     #res = 0
