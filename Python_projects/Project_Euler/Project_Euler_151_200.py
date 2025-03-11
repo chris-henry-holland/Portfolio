@@ -5121,6 +5121,22 @@ def countConsecutiveNumberPositiveDivisorsMatch(n_max: int=10 ** 7) -> int:
 # Problem 183
 def partsCountMaximisingProductOfParts(n: int) -> int:
     """
+    For a given strictly positive integer, identifies the number of
+    equal parts that integer can be divided into that maximises
+    the size of the parts to the power of the number of parts.
+
+    Args:
+        Required positional:
+        n (int): Strictly positive integer for which the number
+                of parts maximising the part size to the power
+                of the number of parts is to be found.
+    
+    Returns:
+    Integer (int) giving the number of equal parts n is divided
+    into that maximises the size of the parts to the power of the
+    number of parts.
+    """
+    """
     num1 = isqrt(n)
     if num1 * num1 == n: return num1
     if (n / (num1 + 1)) ** (num1 + 1) > (n / (num1)) ** (num1):
