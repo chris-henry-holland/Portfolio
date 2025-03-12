@@ -4854,6 +4854,25 @@ def smallestCathetusCommonToNRightAngledTriangles(n_common: int=47547) -> int:
     """
     Solution to Project Euler #176
 
+    Finds the smallest strictly positive integer that is the length
+    of a cathetus of exactly n_common different right-angled triangles
+    whose side lengths are all integers.
+
+    A cathetus of a right-angled triangle is one of its shorter sides
+    (i.e. a side that is not the hypotenuse).
+
+    Args:
+        Optional named:
+        n_common (int): Strictly positive integer giving the exact
+                number of catheti for different right-angled triangles
+                to which the returned value must be equal.
+            Default: 47547
+    
+    Returns:
+    Integer (int) giving the smallest strictly positive integer that
+    is equal to the length of a cathetus of exactly n_common different
+    right-angled triangles whose side lengths are all integers.
+
     Outline of rationale:
     Use difference of squares formula, which implies that for
     give a, the number of positive integer solutions (x, y) to:
