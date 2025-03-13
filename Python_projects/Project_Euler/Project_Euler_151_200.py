@@ -4745,6 +4745,17 @@ def countNumbersWithDigitRepeatCap(n_dig: int=18, max_dig_rpt: int=3, base: int=
 def hollowSquareLaminaCount(max_n_squares: int=10 ** 6) -> int:
     """
     Solution to Project Euler #173
+
+    Finds the number of different square laminae that can be
+    constructed by placing at most max_n_squares edge to edge.
+
+    A square lamina is a shape completely enclosing a single
+    square region, whose outer border is also a square, such
+    that the two squares are aligned and share a center.
+
+    Args:
+
+    TODO
     """
     # Review- try to make more efficient
     since = time.time()
