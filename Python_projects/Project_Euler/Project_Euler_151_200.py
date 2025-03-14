@@ -4742,21 +4742,85 @@ def countNumbersWithDigitRepeatCap(n_dig: int=18, max_dig_rpt: int=3, base: int=
     return res
 
 # Problem 173
+
 def hollowSquareLaminaCount(max_n_squares: int=10 ** 6) -> int:
     """
     Solution to Project Euler #173
 
-    Finds the number of different square laminae that can be
-    constructed by placing at most max_n_squares edge to edge.
 
-    A square lamina is a shape completely enclosing a single
-    square region, whose outer border is also a square, such
-    that the two squares are aligned and share a center.
+    Finds the number of different square laminae that can be
+    constructed by placing at most max_n_squares in a
+    non-overlapping arrangement.
+
+    A square lamina is a shape completely enclosing exactly
+    on single square region, whose outer border is also a square,
+    such that each of the diagonals of the outer border square
+    pass through two corners of the empty inner square region
+    (so the outer square border and the inner square empty
+    region are aligned and have the same center).
 
     Args:
+        Optional named:
+        max_n_squares (int): The maximum number of squares that
+                can be used to form a square lamina arrangement.
+            Default: 10 ** 6
 
-    TODO
+    Returns:
+    Integer (int) giving the number of distinct square lamina
+    patterns that can be constructed by placing at most
+    max_n_squares squares in a non-overlapping arrangement.
+
+
+    Outline of rationale:
+    By splitting the square lamina into four rectangular sections
+    with edges equal to the thickness of the lamina (i.e. the
+    perpendicular distance from the border of the empty region to
+    the outer border) and length of the outer square border minus
+    the thickness of the lamina, and considering without loss of
+    generality the squares used to construct the pattern to be
+    unit squares, it is apparent that this problem is equivalent
+    to finding the number of non-similar non-square rectangles
+    with integer side lengths and area no greater than a quarter
+    of max_n_squares. In other words, we wish to find the number
+    of ordered pairs of strictly positive integers (a, b) such
+    that a > b and 4 * a * b <= max_n_squares.
     """
+    since = time.time()
+    res = 0
+    max_prod = max_n_squares >> 2
+    for b in range(1, isqrt(max_prod)):
+        a = max_prod // b
+        res += a - b
+    print(f"Time taken = {time.time() - since:.4f} seconds")
+    return res
+
+def hollowSquareLaminaCount2(max_n_squares: int=10 ** 6) -> int:
+    """
+    Alternative (less efficient) solution to Project Euler #173.
+
+    Finds the number of different square laminae that can be
+    constructed by placing at most max_n_squares in a
+    non-overlapping arrangement.
+
+    A square lamina is a shape completely enclosing exactly
+    on single square region, whose outer border is also a square,
+    such that each of the diagonals of the outer border square
+    pass through two corners of the empty inner square region
+    (so the outer square border and the inner square empty
+    region are aligned and have the same center).
+
+    Args:
+        Optional named:
+        max_n_squares (int): The maximum number of squares that
+                can be used to form a square lamina arrangement.
+            Default: 10 ** 6
+
+    Returns:
+    Integer (int) giving the number of distinct square lamina
+    patterns that can be constructed by placing at most
+    max_n_squares squares in a non-overlapping arrangement.
+    """
+
     # Review- try to make more efficient
     since = time.time()
     i0 = isqrt(max_n_squares)
@@ -4771,20 +4835,6 @@ def hollowSquareLaminaCount(max_n_squares: int=10 ** 6) -> int:
         #print(i, j, ans)
         res += ans
         i += 1
-    print(f"Time taken = {time.time() - since:.4f} seconds")
-    return res
-
-def hollowSquareLaminaCount2(max_n_squares: int=10 ** 6) -> int:
-    """
-    Solution to Project Euler #173
-    """
-    # Review- try to make more efficient
-    since = time.time()
-    res = 0
-    max_prod = max_n_squares >> 2
-    for i in range(1, isqrt(max_prod)):
-        j = max_prod // i
-        res += j - i
     print(f"Time taken = {time.time() - since:.4f} seconds")
     return res
 
@@ -5255,7 +5305,7 @@ def semiPrimeCount(n_max: int=10 ** 8 - 1) -> int:
     return res
 
 if __name__ == "__main__":
-    to_evaluate = {177}
+    to_evaluate = {173}
 
     if not to_evaluate or 151 in to_evaluate:
         res = singleSheetCountExpectedValueFloat(n_halvings=4)
@@ -5352,7 +5402,7 @@ if __name__ == "__main__":
         print(f"Solution to Project Euler #172 = {res}")
     
     if not to_evaluate or 173 in to_evaluate:
-        res = hollowSquareLaminaCount2(max_n_squares=10 ** 6)
+        res = hollowSquareLaminaCount(max_n_squares=10 ** 6)
         print(f"Solution to Project Euler #173 = {res}")
 
     if not to_evaluate or 174 in to_evaluate:
