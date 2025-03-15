@@ -4747,7 +4747,6 @@ def hollowSquareLaminaCount(max_n_squares: int=10 ** 6) -> int:
     """
     Solution to Project Euler #173
 
-
     Finds the number of different square laminae that can be
     constructed by placing at most max_n_squares in a
     non-overlapping arrangement.
@@ -4840,6 +4839,66 @@ def hollowSquareLaminaCount2(max_n_squares: int=10 ** 6) -> int:
 
 # Problem 174
 def hollowSquareLaminaTypeCounts(max_n_squares: int) -> Dict[int, int]:
+    """
+    Solution to Project Euler #173
+
+    Finds the number of distinct square laminae that can be
+    constructed by placing exactly a given number of squares in
+    a non-overlapping arrangement for all numbers of squares
+    between 1 and max_n_squares inclusive.
+
+    A square lamina is a shape completely enclosing exactly
+    on single square region, whose outer border is also a square,
+    such that each of the diagonals of the outer border square
+    pass through two corners of the empty inner square region
+    (so the outer square border and the inner square empty
+    region are aligned and have the same center).
+
+    Args:
+        Required positional:
+        max_n_squares (int): The maximum number of squares considered
+                when counting the number of ways of creating a distinct
+                square lamina arrangement with a given number of
+                squares.
+
+    Returns:
+    Dictionary (dict) whose keys are integers (int) between 1 and
+    max_n_squares inclusive for which that number of squares
+    can be placed into at least one non-overlapping arrangement
+    forming a square lamina, and whose corresponding value
+    is a strictly positive integer (int) giving the number of
+    distinct square laminae exactly that number of squares
+    can so form.
+
+    Outline of rationale:
+    Similarly to the outline of rationale in the documentation
+    of the function, hollowSquareLaminaCount() by splitting the
+    square lamina into four rectangular sections with edges equal
+    to the thickness of the lamina (i.e. the perpendicular distance
+    from the border of the empty region to the outer border) and
+    length of the outer square border minus the thickness of the
+    lamina, and considering without loss of generality the squares
+    used to construct the pattern to be unit squares, it is apparent
+    that the number of distinct square laminae with exactly a given
+    number of squares is the number of non-similar and non-square
+    rectangles with integer side length and area equal to exactly
+    a quarter of the number of squares.
+    As such, we need only consider multiples of four. Furthermore,
+    the number of such rectangles for a given multiple of four
+    squares will be the floor of half the number of positive
+    integer factors of that number divided by four (note that
+    taking the floor of half accounts for the possibility of
+    perfect squares as they will be the only unpaired factor
+    and therefore not be counted).
+    We therefore use a prime sieve and the properties of the
+    divisor function (i.e. powers of primes have exactly one
+    plus that power divisors and the number of divisors of two
+    coprime positive integers is the product of the number of
+    divisors of each of the integers) to find the divisor count
+    of all integers up to max_n_squares divided by four, and
+    assign the floor of half that number to four times the
+    original integer.
+    """
     # Review- try to make more efficient
     
     max_prod = max_n_squares >> 2
@@ -4857,10 +4916,53 @@ def hollowSquareLaminaTypeCounts(max_n_squares: int) -> Dict[int, int]:
 def hollowSquareLaminaTypeCountSum(max_n_squares: int=10 ** 6, min_type: int=1, max_type: int=10) -> int:
     """
     Solution to Project Euler #174
+
+    Finds the number of integers between 1 and max_n_squares
+    inclusive for which exactly that number of squares can be
+    placed in a non-overlapping arrangement forming a square
+    lamina in no less than min_type and no more than max_type
+    distinct ways.
+
+    A square lamina is a shape completely enclosing exactly
+    on single square region, whose outer border is also a square,
+    such that each of the diagonals of the outer border square
+    pass through two corners of the empty inner square region
+    (so the outer square border and the inner square empty
+    region are aligned and have the same center).
+
+    Args:
+        Optional named:
+        max_n_squares (int): The maximum number of squares considered
+                when counting the number of ways of creating a distinct
+                square lamina arrangement with a given number of
+                squares.
+            Default: 10 ** 6
+        min_type (int): Strictly positive integer giving the smallest
+                number of distinct ways a given number of squares
+                should be able to form a square lamina to be counted
+                in the sum.
+            Default: 1
+        max_type (int): Strictly positive integer no less than min_type
+                giving the largest number of distinct ways a given
+                number of squares should be able to form a square lamina
+                to be counted in the sum.
+
+    Returns:
+    Integer (int) giving the number of integers between 1 and
+    max_n_squares inclusive for which exactly that number of squares can
+    be placed in a non-overlapping arrangement forming a square
+    lamina in no less than min_type and no more than max_type distinct
+    ways.
+
+    Outline of rationale:
+    See outline of rationale section of documentation for function
+    hollowSquareLaminaTypeCounts().
     """
     since = time.time()
     cnts = hollowSquareLaminaTypeCounts(max_n_squares)
     res = sum(cnts.get(i, 0) for i in range(min_type, max_type + 1))
+    if min_type < 1 and max_type >= 1:
+        res += max_n_squares - sum(cnts.values())
     print(f"Time taken = {time.time() - since:.4f} seconds")
     return res
 
@@ -5305,7 +5407,7 @@ def semiPrimeCount(n_max: int=10 ** 8 - 1) -> int:
     return res
 
 if __name__ == "__main__":
-    to_evaluate = {173}
+    to_evaluate = {174}
 
     if not to_evaluate or 151 in to_evaluate:
         res = singleSheetCountExpectedValueFloat(n_halvings=4)
