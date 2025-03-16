@@ -5300,6 +5300,74 @@ def countConsecutiveNumberPositiveDivisorsMatch(n_max: int=10 ** 7) -> int:
     print(f"Time taken = {time.time() - since:.4f} seconds")
     return res
 
+# Problem 181
+def groupingNDifferentColouredObjects(colour_counts: List[int]=[40, 60]) -> int:
+    """
+    Solution to Project Euler Problem #181
+
+    Currently incorrect
+    """
+    since = time.time()
+    remain = sorted(colour_counts, reverse=True)
+    while remain and not remain[-1]: remain.pop()
+    #print(remain)
+    n_colours = len(remain)
+    if not n_colours: return 1
+    
+    def lexicographicallySmallerGroupingGenerator(remain: List[int], lex_max: List[int]) -> Generator[Tuple[Tuple[int], int], None, None]:
+        curr = []
+        for idx_mx in reversed(range(n_colours)):
+            if colour_counts[idx_mx]: break
+        else: return
+        def recur(idx: int, pref_eq: bool=True, max_mult: Union[int, float]=float("inf"), seen_nonzero: bool=False) -> Generator[Tuple[Tuple[int], int], None, None]:
+            if idx == idx_mx + 1:
+                yield (tuple(curr), max_mult)
+                return
+            mn = 1 - bool(seen_nonzero or (idx < idx_mx))
+            #print(f"mn = {mn}", (seen_nonzero or (idx < idx_mx)))
+            mx = min(remain[idx], lex_max[idx] - (idx == idx_mx)) if pref_eq else remain[idx]
+            curr.append(0)
+            for cnt in range(mn, mx + 1):
+                curr[-1] = cnt
+                max_mult2 = min(max_mult, remain[idx] // curr[-1]) if curr[-1] else max_mult
+                #print(f"max_mult2 = {max_mult2}, remain[idx] = {remain[idx]}, max_mult = {max_mult}, curr[-1] = {curr[-1]}, mn = {mn}, mx = {mx}")
+                if not max_mult2: break
+                yield from recur(idx + 1, pref_eq=(pref_eq and mx == lex_max[idx]), max_mult=max_mult2, seen_nonzero=(seen_nonzero or bool(cnt)))
+            curr.pop()
+            return
+        
+        yield from recur(0)
+        return
+
+    #nonzero_set = set(range(n_colours))
+    memo = {}
+    def recur(prev_group: Tuple[int]) -> int:
+        #if not nonzero_set: return 1
+        if not any(remain):
+            #print("found")
+            return 1
+        args = (prev_group, tuple(remain))
+        if args in memo.keys(): return memo[args]
+        res = 0
+        for grp, max_mult in lexicographicallySmallerGroupingGenerator(remain, prev_group):
+            for mult in range(1, max_mult + 1):
+                for i in range(n_colours):
+                    remain[i] -= grp[i]
+                #print(prev_group, grp, mult, remain)
+                res += recur(grp)
+            
+            if max_mult > 0:
+                for i in range(n_colours):
+                    remain[i] += grp[i] * max_mult
+            #print(remain)
+
+        memo[args] = res
+        return res
+
+    res = recur(tuple(float("inf") for _ in range(n_colours)))
+    print(f"Time taken = {time.time() - since:.4f} seconds")
+    return res
+
 # Problem 183
 def partsCountMaximisingProductOfParts(n: int) -> int:
     """
@@ -5407,7 +5475,7 @@ def semiPrimeCount(n_max: int=10 ** 8 - 1) -> int:
     return res
 
 if __name__ == "__main__":
-    to_evaluate = {174}
+    to_evaluate = {181}
 
     if not to_evaluate or 151 in to_evaluate:
         res = singleSheetCountExpectedValueFloat(n_halvings=4)
@@ -5531,6 +5599,9 @@ if __name__ == "__main__":
         res = countConsecutiveNumberPositiveDivisorsMatch(n_max=10 ** 7)
         print(f"Solution to Project Euler #179 = {res}")
 
+    if not to_evaluate or 181 in to_evaluate:
+        res = groupingNDifferentColouredObjects(colour_counts=[4, 2])
+        print(f"Solution to Project Euler #181 = {res}")
 
     if not to_evaluate or 183 in to_evaluate:
         res = maximumProductOfPartsTerminatingSum(n_min=5, n_max=10 ** 4, base=10)
