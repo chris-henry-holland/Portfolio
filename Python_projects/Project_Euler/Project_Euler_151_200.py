@@ -5314,28 +5314,41 @@ def groupingNDifferentColouredObjects(colour_counts: List[int]=[40, 60]) -> int:
     n_colours = len(remain)
     if not n_colours: return 1
     
-    def lexicographicallySmallerGroupingGenerator(remain: List[int], lex_max: List[int]) -> Generator[Tuple[Tuple[int], int], None, None]:
-        curr = []
+    def lexicographicallySmallerGroupingGenerator(remain: List[int], lex_max: List[int], first_remain_nonzero: bool=False) -> Generator[Tuple[Tuple[int], int], None, None]:
+        curr = [0] * n_colours
         for idx_mx in reversed(range(n_colours)):
-            if colour_counts[idx_mx]: break
+            if remain[idx_mx]: break
         else: return
-        def recur(idx: int, pref_eq: bool=True, max_mult: Union[int, float]=float("inf"), seen_nonzero: bool=False) -> Generator[Tuple[Tuple[int], int], None, None]:
+        for idx_mx2 in reversed(range(idx_mx, n_colours)):
+            if lex_max[idx_mx2]: break
+        #print(f"idx_mx = {idx_mx}")
+        #n_tail_zeros = n_colours - idx_mx - 1
+        def recur(idx: int, pref_eq: bool=True, seen_remain: bool=False, max_mult: Union[int, float]=float("inf"), seen_nonzero: bool=False) -> Generator[Tuple[Tuple[int], int], None, None]:
             if idx == idx_mx + 1:
+                #print(curr)
                 yield (tuple(curr), max_mult)
                 return
-            mn = 1 - bool(seen_nonzero or (idx < idx_mx))
+            curr[idx] = 0
+            if not remain[idx]:
+                if seen_nonzero or (idx < idx_mx):
+                    yield from recur(idx + 1, pref_eq=pref_eq and (not lex_max[idx]), seen_remain=seen_remain, max_mult=max_mult, seen_nonzero=seen_nonzero)
+                return
+            mn = 1 - bool((seen_nonzero or (idx < idx_mx)) and (not first_remain_nonzero or seen_remain))
+            #seen_remain = True
             #print(f"mn = {mn}", (seen_nonzero or (idx < idx_mx)))
-            mx = min(remain[idx], lex_max[idx] - (idx == idx_mx)) if pref_eq else remain[idx]
-            curr.append(0)
+            mx = min(remain[idx], lex_max[idx] - (idx == idx_mx2)) if pref_eq else remain[idx]
+            #print(f"idx = {idx}, curr = {curr}, pref_eq = {pref_eq}, max_mult = {max_mult}, mn = {mn}, mx = {mx}, lex_max = {lex_max}, remain = {remain}")
+            #seen_remain2 = seen_remain or (remain[idx] != 0)
+            
             for cnt in range(mn, mx + 1):
-                curr[-1] = cnt
-                max_mult2 = min(max_mult, remain[idx] // curr[-1]) if curr[-1] else max_mult
+                curr[idx] = cnt
+                max_mult2 = min(max_mult, remain[idx] // curr[idx]) if curr[idx] else max_mult
                 #print(f"max_mult2 = {max_mult2}, remain[idx] = {remain[idx]}, max_mult = {max_mult}, curr[-1] = {curr[-1]}, mn = {mn}, mx = {mx}")
                 if not max_mult2: break
-                yield from recur(idx + 1, pref_eq=(pref_eq and mx == lex_max[idx]), max_mult=max_mult2, seen_nonzero=(seen_nonzero or bool(cnt)))
-            curr.pop()
+                yield from recur(idx + 1, pref_eq=(pref_eq and cnt == lex_max[idx]), seen_remain=True, max_mult=max_mult2, seen_nonzero=(seen_nonzero or bool(cnt)))
+            curr[idx] = 0
             return
-        
+        #grps = []
         yield from recur(0)
         return
 
@@ -5343,27 +5356,29 @@ def groupingNDifferentColouredObjects(colour_counts: List[int]=[40, 60]) -> int:
     memo = {}
     def recur(prev_group: Tuple[int]) -> int:
         #if not nonzero_set: return 1
-        if not any(remain):
-            #print("found")
-            return 1
-        args = (prev_group, tuple(remain))
+        for last_idx in reversed(range(len(remain))):
+            if remain[last_idx] > 0: break
+        else: return 1
+        args = (tuple(min(prev_group[idx], remain[idx] + 1) for idx in range(n_colours)), tuple(remain))
         if args in memo.keys(): return memo[args]
         res = 0
-        for grp, max_mult in lexicographicallySmallerGroupingGenerator(remain, prev_group):
+        #grps.append(None)
+        for grp, max_mult in lexicographicallySmallerGroupingGenerator(remain, prev_group, first_remain_nonzero=True):
+            #print(grp, max_mult)
             for mult in range(1, max_mult + 1):
                 for i in range(n_colours):
                     remain[i] -= grp[i]
                 #print(prev_group, grp, mult, remain)
+                #grps[-1] = (grp, mult)
                 res += recur(grp)
-            
             if max_mult > 0:
                 for i in range(n_colours):
                     remain[i] += grp[i] * max_mult
             #print(remain)
-
+        #grps.pop()
         memo[args] = res
         return res
-
+    #grps = []
     res = recur(tuple(float("inf") for _ in range(n_colours)))
     print(f"Time taken = {time.time() - since:.4f} seconds")
     return res
@@ -5600,7 +5615,7 @@ if __name__ == "__main__":
         print(f"Solution to Project Euler #179 = {res}")
 
     if not to_evaluate or 181 in to_evaluate:
-        res = groupingNDifferentColouredObjects(colour_counts=[4, 2])
+        res = groupingNDifferentColouredObjects(colour_counts=[60, 40])
         print(f"Solution to Project Euler #181 = {res}")
 
     if not to_evaluate or 183 in to_evaluate:
