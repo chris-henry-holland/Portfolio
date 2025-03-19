@@ -5305,8 +5305,39 @@ def groupingNDifferentColouredObjects(colour_counts: List[int]=[40, 60]) -> int:
     """
     Solution to Project Euler Problem #181
 
-    Currently incorrect
+    Calculates the number of ways of partitioning numbers of coloured objects
+    where there is a given number of objects of each different colour, objects
+    of the same colour are indistinguishable, two partitions with the same
+    contents are considered the same, regardless of the order of the objects
+    and two partitionings where the partitions are permutations of each other
+    are considered the same.
+
+    Note that if colour_counts contains only one entry, this is just the
+    partition function.
+
+    Args:
+        Optional named:
+        colour_counts (list of ints): The number of objects of each different
+                colour for which the number of distinct partitionings is
+                being sought.
+            Default: [40, 60]
+    
+    Returns:
+    Integer (int) giving the number of distinct partitionings of objects
+    with the number of objects of each different colour as given by
+    colour_counts, where objects of the same colour are indistinguishable,
+    two partitions with the same contents are considered the same, regardless
+    of the order of the objects and two partitionings where the partitions
+    are permutations of each other are considered the same.
+
+    Brief outline of rationale:
+    This is solved using top-down dynamic programming, ensuring that
+    the different partitionings are only counted once by only considering
+    partitions that are lexicographically smaller than the previous
+    partition (where equal partitions are handled by considering the
+    different possible multiples of that partition).
     """
+    # Review- currently very slow
     since = time.time()
     remain = sorted(colour_counts, reverse=True)
     while remain and not remain[-1]: remain.pop()
