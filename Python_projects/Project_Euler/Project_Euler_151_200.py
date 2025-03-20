@@ -4668,12 +4668,50 @@ def largestPandigitalConcatenatingProduct(min_n_prods: int=2, incl_zero: bool=Tr
 
 
 # Problem 171
-def sumSquareOfTheDigitalSquares(max_n_dig: int=20, n_tail_digs: int=9, base: int=10) -> int:
+def sumSquareOfTheDigitalSquares(max_n_dig: int=20, n_tail_digs: Optional[int]=9, base: int=10) -> int:
     """
     Solution to Project Euler #171
+
+    For a given base, finds the sum of strictly positive integers
+    which, when expressed in that base contain at most max_n_dig
+    digits and whose sum of squares of those digits is a perfect
+    square, returning that sum (if n_tail_digs is None) or the
+    value of the rightmost n_tail_digs of that sum (if n_tail_digs is a
+    strictly positive integers) when interpreted as an integer in
+    the chosen base.
+
+    Args:
+        Optional named:
+        max_n_dig (int): Strictly positive integer giving the
+                maximum number of digits when expressed in the chosen
+                base of the strictly positive ntegers considered for
+                inclusion in the sum.
+            Default: 20
+        n_tail_digs (int or None): If specified as a strictly
+                positive integer, gives the number of rightmost
+                digits of the sum whose value is to be returned.
+                Otherwise, the sum itself is returned.
+            Default: 9
+        base (int): Integer strictly greater than 1 giving the base
+                in which the integers are to be represented when
+                assessing which integers have fewer than max_n_dig
+                digits, have a sum of squares of digits equal to
+                a perfect square, and when finding the value of
+                the rightmost n_tail_digs digits of the final
+                sum for the returned value (if n_tail_digs given as
+                a strictly positive integer).
+            Default: 10
+
+    Returns:
+    Integer (int) giving the value of the rightmost n_tail_digs
+    digits when interpreted as an integer in the chosen base or
+    (if n_tail_digs is None) the value of the sum of all strictly
+    positive integers which when expressed in the chosen base
+    contain no more than max_n_dig digits and the sum of the
+    squares of those digits is itself a perfect square.
     """
     since = time.time()
-    md = base ** n_tail_digs
+    md = None if n_tail_digs is None else base ** n_tail_digs
 
     curr = [0] * (base - 1)
     def digitalSquaresNonZeroDigitCountsGenerator(d: int=1, remain: int=max_n_dig, curr_dig_sq_sum: int=0) -> Generator[Tuple[int], None, None]:
@@ -4705,7 +4743,8 @@ def sumSquareOfTheDigitalSquares(max_n_dig: int=20, n_tail_digs: int=9, base: in
         for d in range(1, base):
             cnt = nz_dig_counts[d - 1]
             if not cnt: continue
-            res = (res + mult * d * ((multinom * cnt) // max_n_dig)) % md
+            res = (res + mult * d * ((multinom * cnt) // max_n_dig))
+            if md is not None: res %= md
     print(f"Time taken = {time.time() - since:.4f} seconds")
     return res
         
@@ -5521,7 +5560,7 @@ def semiPrimeCount(n_max: int=10 ** 8 - 1) -> int:
     return res
 
 if __name__ == "__main__":
-    to_evaluate = {181}
+    to_evaluate = {171}
 
     if not to_evaluate or 151 in to_evaluate:
         res = singleSheetCountExpectedValueFloat(n_halvings=4)
