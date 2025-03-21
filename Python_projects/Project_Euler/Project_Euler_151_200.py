@@ -4487,9 +4487,56 @@ def sumOfPowersOfTwoEachMaxTwice(num: int=10 ** 25) -> int:
     """
 
 # Problem 170
-def largestPandigitalConcatenatingProduct(min_n_prods: int=2, incl_zero: bool=True,  base: int=10) -> int:
+def largestPandigitalConcatenatingProduct(min_n_prods: int=2, incl_zero: bool=True, base: int=10) -> int:
     """
     Solution to Project Euler #170
+
+    For a given base, finds the largest 0-(base - 1) or 1-(base - 1)
+    pandigital concatenated product whose input numbers when concatenated
+    with no leading zeros also forms a similar pandigital number where
+    the number of products is no less than min_n_prods.
+
+    A concatenated product in a given base is a strictly positive integer
+    constructed by concatenating the result of a number of products
+    between a common positive integer (the multiplier) and other
+    strictly positive input integers.
+    
+    In this case, for such a concatenated product to be considered, it
+    must be 0-(base - 1) or 1-(base - 1) (depending on incl_zero),
+    it must have been concatenated from at least min_n_prods integers and
+    the collection of digits of the multiplier and other input integers
+    used to construct the concatenated product, when expressed in the
+    chosen base without leading zeros, must consist of each of the
+    digits from 0 to (base - 1) or 1 to (base - 1) respectively each
+    exactly once.
+
+    Args:
+        Optional named:
+        min_in_prods (int): Strictly positive integer giving the minimum
+                number of products from which any considered concatenated
+                product must consist.
+            Default: 2
+        incl_zero (bool): Boolean, which if True siginifies that the
+                concatenated product and the concatenation of the
+                multiplier and other input integers should be
+                0-(base - 1) pandigital, otherwise 1-(base - 1)
+                pandigital.
+            Default: True
+        base (int): Integer strictly greater than 1 giving the base
+                in which the integers are to be represented when
+                concatenating and when assessing whether integers
+                or concatenations of integers are pandigital.
+            Default: 10
+
+    Returns:
+    Integer (int) giving the largest 0-(base - 1) or 1-(base - 1)
+    pandigital concatenated product whose input numbers when concatenated
+    with no leading zeros also forms a similar pandigital number where
+    the number of products is no less than min_n_prods.
+
+    Outline of rationale:
+    
+    TODO
     """
 
     # Review- consider optimising by ensuring each separate
