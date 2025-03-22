@@ -4290,6 +4290,61 @@ def ulamSequenceTwoOddTermValueSum(num2_min: int=5, num2_max: int=21, term_numbe
 def rightRotationMultiplesSum(min_n_digs: int=2, max_n_digs: int=100, n_tail_digs: Optional[int]=5, base: int=10) -> int:
     """
     Solution to Project Euler #168
+
+    Calculates the sum of all strictly positive integers whose
+    representation in the chosen base without leading zeros contains
+    between min_n_digs and max_n_digs inclusive and is an integer
+    multiple of its right rotation, returning either that number (if
+    n_tail_digs is given as None) or the integer whose representation
+    in the chosen base is the same as the rightmost n_tail_digs of
+    the representation in the chosen base of this sum in the same order.
+
+    A right rotation of the representation of an integer in a chosen
+    base is the integer whose representation in the chosen base
+    takes as its leftmost digit, the rightmost digit of the original
+    integer and its remaining digits are the other digits in the
+    original integer in the same order, such that the second leftmost
+    digit is the same as the leftmost digit of the representation
+    of the original integer and the rightmost digit is the same as
+    the second rightmost digit of the representation of the original
+    integer.
+
+    Args:
+        Optional named:
+        min_n_digs (int): Strictly positive integer giving the minimum
+                number of digits in the representation in the chosen
+                base without leading zeros of integers considered for
+                inclusion in the sum.
+            Default: 2
+        max_n_digs (int): Strictly positive integer giving the maximum
+                number of digits in the representation in the chosen
+                base without leading zeros of integers considered for
+                inclusion in the sum.
+            Default: 100
+        n_tail_digs (int or None): If given as a strictly positive
+                integer, then the integer whose representation in the
+                chosen base is this number of the rightmost digits of
+                the representation of the sum value in the chosen base
+                in the same order. If given as None, then the value of
+                the sum itself is returned.
+            Default: 5
+        base (int): Integer strictly greater than 1 giving the base
+                in which the integers are to be represented when
+                assessing how many digits they contain and whether each
+                on is a multiple of its right rotation.
+            Default: 10
+    
+    Returns:
+    Integer (int) giving the sum of all strictly positive integers whose
+    representation in the chosen base without leading zeros contains
+    between min_n_digs and max_n_digs inclusive and is an integer
+    multiple of its right rotation, returning either that number (if
+    n_tail_digs is given as None) or the integer whose representation
+    in the chosen base is the same as the rightmost n_tail_digs of
+    the representation in the chosen base of this sum in the same order.
+
+    Outline of rationale:
+    TODO
     """
     since = time.time()
     md = None if n_tail_digs is None else base ** n_tail_digs
