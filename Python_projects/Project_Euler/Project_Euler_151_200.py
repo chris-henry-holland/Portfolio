@@ -4182,6 +4182,27 @@ def magicSquareWithRepeatsCount(square_side_length: int=4, val_max: int=9) -> in
 
 # Problem 167
 def ulamSequenceGenerator(a1: int, a2: int) -> Generator[int, None, None]:
+    """
+    Generator yielding the terms in the Ulam sequence U(a1, a2) in
+    order.
+
+    The Ulam sequence U(a1, a2) is the sequence such that the first and
+    second terms are a1 and a2 respectively and the other terms are
+    defined to be the smallest non-negative integer that can be
+    expressed as the sum of any two distinct previous terms in the
+    sequence in exactly one way.
+
+    Args:
+        Required positional:
+        a1 (int): Strictly positive integer giving the first term
+                in the Ulam sequence U(a1, a2).
+        a2 (int): Strictly positive integer giving the second term
+                in the Ulam sequence U(a1, a2)
+    
+    Yields:
+    The terms in the Ulam sequence U(a1, a2) in the order they
+    appear in that sequence.
+    """
     seq = [a1, a2]
     yield a1
     yield a2
