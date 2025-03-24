@@ -4226,14 +4226,39 @@ def ulamSequenceGenerator(a1: int, a2: int) -> Generator[int, None, None]:
         print(seq, seen_once, candidates, )
     return
 
-def ulamSequenceTwoOddPattern(num2: int) -> Tuple[List[int], List[int]]:
-    even_pair = [2, 2 * (num2 + 1)]
+def ulamSequenceTwoOddPattern(a2: int) -> Tuple[List[int], List[int]]:
+    """
+    Finds a complete description of the Ulam sequence U(2, a2) where
+    a2 is an odd integer strictly greater than 3.
+
+    The Ulam sequence U(a1, a2) is the sequence such that the first and
+    second terms are a1 and a2 respectively and the other terms are
+    defined to be the smallest non-negative integer that can be
+    expressed as the sum of any two distinct previous terms in the
+    sequence in exactly one way.
+
+    It can be shown that for Ulam sequences of the form U(2, a2) where
+    a2 is an odd integer strictly greater than 3 that:
+        1. U(2, a2) contains exactly 2 even terms, 2 and 2 * (a2 + 1)
+        2. The difference sequence of U(2, a2) (i.e. the sequence
+            constructed from the difference between successive terms
+            in U(2, a2)) is eventually cyclic (i.e. it encounters a
+            contiguous subsequence that repeats endlessly back-to-back
+            for the remainder of the sequence).
+    
+    It is therefore possible to completely describe the sequence U(2, a2)
+    with a finite sequence of its initial terms until it becomes cyclic
+            
+    Outline of rationale:
+    TODO
+    """
+    even_pair = [2, 2 * (a2 + 1)]
     last_even_idx = (even_pair[-1] >> 1) + 3
     rh_length = even_pair[-1] >> 1
 
     def diffSequence() -> Generator[int, None, None]:
         #idx0 = last_even_idx + 1
-        latest_odd = deque(range(num2, even_pair[1] + 2, 2))
+        latest_odd = deque(range(a2, even_pair[1] + 2, 2))
         #print(latest_odd)
         for num in itertools.count(latest_odd[-1] + 2, step=2):
             if latest_odd[0] < num - even_pair[1]:
