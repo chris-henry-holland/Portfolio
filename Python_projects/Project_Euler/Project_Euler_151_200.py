@@ -4242,18 +4242,56 @@ def ulamSequenceTwoOddPattern(a2: int) -> Tuple[List[int], List[int]]:
         1. U(2, a2) contains exactly 2 even terms, 2 and 2 * (a2 + 1)
         2. The difference sequence of U(2, a2) (i.e. the sequence
             constructed from the difference between successive terms
-            in U(2, a2)) is eventually cyclic (i.e. it encounters a
-            contiguous subsequence that repeats endlessly back-to-back
-            for the remainder of the sequence).
+            in U(2, a2)) is eventually cyclic (i.e. after a certain
+            term, the sequence consists of a finite sequence that
+            repeats back-to-back endlessly).
     
     It is therefore possible to completely describe the sequence U(2, a2)
-    with a finite sequence of its initial terms until it becomes cyclic
+    with a finite sequence of its initial terms until it becomes cyclic,
+    and then the finite contiguous subsequence of the difference sequence
+    from that term onwards until the first cycle ends.
+
+    Args:
+        Required positional:
+        a2 (int): Odd integer strictly greater than 3 for which the
+                Ulam sequence U(2, a2) is to be described.
+    
+    Returns:
+    2-tuple of lists of integers, whose index 0 contains the list of
+    the initial terms of the Ulam sequence U(2, a2), starting with 2, a2
+    up until the first term in the sequence where the difference sequence
+    becomes cyclic, and whose index 1 contains the list of difference
+    sequence terms from the difference between the last term in the list
+    at index 0 and the next term, up until the end of the first cycle
+    of the differnce sequence, so that the difference term after the
+    final difference term in this list is the first difference term in
+    the list, followed by the second and so on, endlessly cycling.
             
     Outline of rationale:
-    TODO
+    Given that there are only 2 even terms in the sequence 2 and m where
+    m = 2 * (a2  + 1) and the sum of two integers is odd if and only if
+    one is odd and the other even, an odd number num is in the Ulam sequence
+    if and only if exactly one of (num - 2) and (num - m) is in the Ulam
+    sequence.
+    It follows that any terms with value greater than a given term num where
+    num exceeds 2 * m (so that num - m > m) are only dependent on the two even
+    terms (which are constant) and the preceding terms with value no less
+    than (num - m + 2). The number of odd numbers between (num - m + 2) and num
+    is (m / 2) = a2 + 1. Therefore, the remainder of the Ulam sequence and
+    its difference sequence can be completely calculated from this point on
+    from a maximum of the a2 + 1 preceding terms.
+    It therefore follows that for terms in the Ulam exceeding 2 * (a2 + 1),
+    once we encounter a contiguous subsequence of length a2 + 1 of differences
+    between successive terms that has occurred before in the sequence (also
+    where the terms in the corresponding Ulam sequence exceeds 2 * (a2 + 1)),
+    then we have found a cycle in the difference terms.
+    A rolling hash with length (a2 + 1) over the difference sequence is used
+    to efficiently detect such repetitions and so cycles.
     """
+    # It appears that the cycle always seems to begin at the soonest possible
+    # point, but have not proved this and so we do not use this result.
     even_pair = [2, 2 * (a2 + 1)]
-    last_even_idx = (even_pair[-1] >> 1) + 3
+    #last_even_idx = (even_pair[-1] >> 1) + 3
     rh_length = even_pair[-1] >> 1
 
     def diffSequence() -> Generator[int, None, None]:
@@ -4298,7 +4336,7 @@ def ulamSequenceTwoOddPattern(a2: int) -> Tuple[List[int], List[int]]:
         diffs.pop()
     
     initial = [2]
-    for num in range(num2, even_pair[1], 2):
+    for num in range(a2, even_pair[1], 2):
         initial.append(num)
     initial.append(even_pair[1])
     initial.append(even_pair[1] + 1)
@@ -4306,9 +4344,9 @@ def ulamSequenceTwoOddPattern(a2: int) -> Tuple[List[int], List[int]]:
         initial.append(initial[-1] + diffs[i])
     return (initial, diffs[rpt_start_idx:])
 
-def ulamSequenceTwoOddTermValue(num2: int, term_number: int) -> int:
+def ulamSequenceTwoOddTermValue(a2: int, term_number: int) -> int:
     idx = term_number - 1
-    initial, rpt_diffs = ulamSequenceTwoOddPattern(num2)
+    initial, rpt_diffs = ulamSequenceTwoOddPattern(a2)
     #print(initial, rpt_diffs)
     if idx < len(initial):
         return initial[idx]
@@ -4323,12 +4361,12 @@ def ulamSequenceTwoOddTermValue(num2: int, term_number: int) -> int:
     #print(res)
     return res
 
-def ulamSequenceTwoOddTermValueSum(num2_min: int=5, num2_max: int=21, term_number: int=10 ** 11) -> int:
+def ulamSequenceTwoOddTermValueSum(a2_min: int=5, a2_max: int=21, term_number: int=10 ** 11) -> int:
     
     since = time.time()
     res = 0
-    for num2 in range(num2_min + (not num2_min & 1), num2_max + 1, 2):
-        res += ulamSequenceTwoOddTermValue(num2, term_number)
+    for a2 in range(a2_min + (not a2_min & 1), a2_max + 1, 2):
+        res += ulamSequenceTwoOddTermValue(a2, term_number)
     print(f"Time taken = {time.time() - since:.4f} seconds")
     return res
 
