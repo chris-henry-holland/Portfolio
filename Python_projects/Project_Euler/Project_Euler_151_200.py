@@ -4223,7 +4223,7 @@ def ulamSequenceGenerator(a1: int, a2: int) -> Generator[int, None, None]:
                 seen_once.add(num3)
                 candidates.add(num3)
         seq.append(num)
-        print(seq, seen_once, candidates, )
+        #print(seq, seen_once, candidates, )
     return
 
 def ulamSequenceTwoOddPattern(a2: int) -> Tuple[List[int], List[int]]:
@@ -4345,12 +4345,56 @@ def ulamSequenceTwoOddPattern(a2: int) -> Tuple[List[int], List[int]]:
     return (initial, diffs[rpt_start_idx:])
 
 def ulamSequenceTwoOddTermValue(a2: int, term_number: int) -> int:
-    idx = term_number - 1
+    """
+    Finds the a given term of the Ulam sequence U(2, a2) where
+    a2 is an odd integer strictly greater than 3.
+
+    The Ulam sequence U(a1, a2) is the sequence such that the first and
+    second terms are a1 and a2 respectively and the other terms are
+    defined to be the smallest non-negative integer that can be
+    expressed as the sum of any two distinct previous terms in the
+    sequence in exactly one way.
+
+    Args:
+        Required positional:
+        a2 (int): Odd integer strictly greater than 3 for which the
+                desired term in the Ulam sequence U(2, a2) is to be found.
+        term_number (int): Strictly positive integer giving the which
+                term to be returned, where term_number 1 corresponds
+                to the first term, i.e. 2, term_number 2 corresponds
+                to the second term, i.e. a2, and so on.
+    
+    Returns:
+    Integer (int) giving the term_number:th term in the Ulam sequence
+    U(2, a2).
+                
+    Outline of rationale:
+    From ulamSequenceTwoOddPattern(), we can get a finite number of initial
+    terms and a finite number of difference between successive later terms
+    (starting with the difference between the last of the listed initial
+    terms and the next term) that cycles endlessly to describe the rest
+    of the terms in the (infinite) sequence (see the function's outline of
+    rationale for justification of this way of representing the Ulam sequence
+    U(2, a2) for odd a2 strictly greater than 3).
+    This can be used to find a specific term in the Ulam sequence by returning
+    term_number:th term in the initial terms if this list has length at least
+    term_number, or if term_number exceeds this length, by adding the final
+    initial term to the sum of the first (term_number - l_i) term differences
+    in the cycles, where l_i is the number of initial terms. This can be
+    calculated by finding the integers q and r such that:
+        q * l_c + r = term_number - l_i
+    where l_c is the number of term differences in the identified cycle, such
+    that 0 <= r < l_c. Then the final solution is just:
+        (final initial term) + q * sum(all cycle differences) +
+            (sum of first r cycle differences)
+    """
+
+    #idx = term_number - 1
     initial, rpt_diffs = ulamSequenceTwoOddPattern(a2)
     #print(initial, rpt_diffs)
-    if idx < len(initial):
-        return initial[idx]
-    idx2 = idx - len(initial) + 1
+    if term_number <= len(initial):
+        return initial[term_number - 1]
+    idx2 = term_number - len(initial)
     q, r = divmod(idx2, len(rpt_diffs))
     #print(q, r)
     res = initial[-1]
@@ -4365,7 +4409,7 @@ def ulamSequenceTwoOddTermValueSum(a2_min: int=5, a2_max: int=21, term_number: i
     
     since = time.time()
     res = 0
-    for a2 in range(a2_min + (not a2_min & 1), a2_max + 1, 2):
+    for a2 in range(max(5, a2_min + (not a2_min & 1)), a2_max + 1, 2):
         res += ulamSequenceTwoOddTermValue(a2, term_number)
     print(f"Time taken = {time.time() - since:.4f} seconds")
     return res
