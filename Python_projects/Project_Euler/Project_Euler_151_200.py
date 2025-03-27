@@ -4186,11 +4186,11 @@ def ulamSequenceGenerator(a1: int, a2: int) -> Generator[int, None, None]:
     Generator yielding the terms in the Ulam sequence U(a1, a2) in
     order.
 
-    The Ulam sequence U(a1, a2) is the sequence such that the first and
-    second terms are a1 and a2 respectively and the other terms are
-    defined to be the smallest non-negative integer that can be
-    expressed as the sum of any two distinct previous terms in the
-    sequence in exactly one way.
+    For strictly positive integers a1, a2, the Ulam sequence U(a1, a2) is
+    the sequence such that the first and second terms are a1 and a2
+    respectively and the other terms are defined to be the smallest
+    non-negative integer that can be expressed as the sum of any two
+    distinct previous terms in the sequence in exactly one way.
 
     Args:
         Required positional:
@@ -4231,11 +4231,11 @@ def ulamSequenceTwoOddPattern(a2: int) -> Tuple[List[int], List[int]]:
     Finds a complete description of the Ulam sequence U(2, a2) where
     a2 is an odd integer strictly greater than 3.
 
-    The Ulam sequence U(a1, a2) is the sequence such that the first and
-    second terms are a1 and a2 respectively and the other terms are
-    defined to be the smallest non-negative integer that can be
-    expressed as the sum of any two distinct previous terms in the
-    sequence in exactly one way.
+    For strictly positive integers a1, a2, the Ulam sequence U(a1, a2) is
+    the sequence such that the first and second terms are a1 and a2
+    respectively and the other terms are defined to be the smallest
+    non-negative integer that can be expressed as the sum of any two
+    distinct previous terms in the sequence in exactly one way.
 
     It can be shown that for Ulam sequences of the form U(2, a2) where
     a2 is an odd integer strictly greater than 3 that:
@@ -4349,11 +4349,11 @@ def ulamSequenceTwoOddTermValue(a2: int, term_number: int) -> int:
     Finds the a given term of the Ulam sequence U(2, a2) where
     a2 is an odd integer strictly greater than 3.
 
-    The Ulam sequence U(a1, a2) is the sequence such that the first and
-    second terms are a1 and a2 respectively and the other terms are
-    defined to be the smallest non-negative integer that can be
-    expressed as the sum of any two distinct previous terms in the
-    sequence in exactly one way.
+    For strictly positive integers a1, a2, the Ulam sequence U(a1, a2) is
+    the sequence such that the first and second terms are a1 and a2
+    respectively and the other terms are defined to be the smallest
+    non-negative integer that can be expressed as the sum of any two
+    distinct previous terms in the sequence in exactly one way.
 
     Args:
         Required positional:
@@ -4406,7 +4406,44 @@ def ulamSequenceTwoOddTermValue(a2: int, term_number: int) -> int:
     return res
 
 def ulamSequenceTwoOddTermValueSum(a2_min: int=5, a2_max: int=21, term_number: int=10 ** 11) -> int:
+    """
+    Finds the sum of the term_number:th term for each of the Ulam sequences
+    U(2, a2) for which a2 is an odd integers strictly greater than 3 and
+    a2_min <= a2 <= a2_max.
+
+    For strictly positive integers a1, a2, the Ulam sequence U(a1, a2) is
+    the sequence such that the first and second terms are a1 and a2
+    respectively and the other terms are defined to be the smallest
+    non-negative integer that can be expressed as the sum of any two
+    distinct previous terms in the sequence in exactly one way.
+
+    Args:
+        Optional_named:
+        a2_min (int): Integer giving the lower bound on the values of
+                the odd integers a2 strictly greater than 3 for which the
+                term in the Ulam sequence U(2, a2) is to be included in
+                the sum.
+            Default: 5
+        a2_max (int): Integer giving the upper bound on the values of
+                the odd integers a2 strictly greater than 3 for which the
+                term in the Ulam sequence U(2, a2) is to be included in
+                the sum.
+            Default: 21
+        term_number (int): Strictly positive integer giving the which
+                term in the specified Ulam sequences the sum is to be
+                performed, where term_number 1 corresponds to the first
+                term, i.e. 2, term_number 2 corresponds to the second
+                term, and so on.
+            Default: 10 ** 11
     
+    Returns:
+    Integer (int) giving the sum of the term_number:th term of each of
+    the Ulam sequences U(2, a2) for which a2 is an odd number strictly
+    greater than 3 and a2_min <= a2 <= a2_max.
+                
+    Outline of rationale:
+    See outline of rationale for ulamSequenceTwoOddTermValue().
+    """
     since = time.time()
     res = 0
     for a2 in range(max(5, a2_min + (not a2_min & 1)), a2_max + 1, 2):
