@@ -5,12 +5,9 @@ import heapq
 import itertools
 import math
 import os
+import random
 import sys
 import time
-
-import numpy as np
-import scipy.special as sp
-import sympy as sym
 
 from collections import deque
 from sortedcontainers import SortedDict, SortedList
@@ -5788,6 +5785,187 @@ def maximumProductOfPartsTerminatingSum(n_min: int=5, n_max: int=10 ** 4, base: 
     print(f"Time taken = {time.time() - since:.4f} seconds")
     return res
 
+# Problem 185
+def numberMindExact(alphabet: str="0123456789", guesses: List[Tuple[str, int]]=[
+    ("5616185650518293", 2),
+    ("3847439647293047", 1),
+    ("5855462940810587", 3),
+    ("9742855507068353", 3),
+    ("4296849643607543", 3),
+    ("3174248439465858", 1),
+    ("4513559094146117", 2),
+    ("7890971548908067", 3),
+    ("8157356344118483", 1),
+    ("2615250744386899", 2),
+    ("8690095851526254", 3),
+    ("6375711915077050", 1),
+    ("6913859173121360", 1),
+    ("6442889055042768", 2),
+    ("2321386104303845", 0),
+    ("2326509471271448", 2),
+    ("5251583379644322", 2),
+    ("1748270476758276", 3),
+    ("4895722652190306", 1),
+    ("3041631117224635", 3),
+    ("1841236454324589", 3),
+    ("2659862637316867", 2),
+]) -> List[str]:
+
+    # Review- try finding ways to prune the search space to 
+    # make this method viable
+
+    since = time.time()
+    n = len(guesses[0][0])
+
+    f_sets = [set() for _ in range(max(x[1] for x in guesses) + 1)]
+    l_dicts = [{} for _ in range(n)]
+    f_lst = []
+    for i, (s, f) in enumerate(guesses):
+        f_sets[f].add(i)
+        for idx in range(n):
+            l = s[idx]
+            l_dicts[idx].setdefault(l, [])
+            l_dicts[idx][l].append(i)
+        f_lst.append(f)
+    #print(f_sets)
+    #print(l_dicts)
+    
+    curr = []
+    res = []
+
+    def recur(idx: int=n - 1) -> None:
+        if idx < 0:
+            res.append("".join(curr[::-1]))
+            return
+        if len(f_sets) > idx + 1 and f_sets[idx + 1]:
+            opts = {guesses[i][0][idx] for i in f_sets[idx + 1]}
+            if len(opts) > 1: return
+        else: opts = set(alphabet)
+        if f_sets:
+            for i in f_sets[0]:
+                opts.discard(guesses[i][0][idx])
+        if not opts: return
+        curr.append(None)
+        #print(curr, opts)
+        for l in opts:
+            curr[-1] = l
+            shifted = []
+            for i in l_dicts[idx].get(l, []):
+                f = f_lst[i]
+                f_sets[f].remove(i)
+                f_sets[f - 1].add(i)
+                shifted.append(i)
+                f_lst[i] -= 1
+            recur(idx - 1)
+            for i in shifted:
+                f = f_lst[i]
+                f_lst[i] += 1
+                f_sets[f].remove(i)
+                f_sets[f + 1].add(i)
+        curr.pop()
+        return
+    
+    recur(idx=n - 1)
+    print(f"Time taken = {time.time() - since:.4f} seconds")
+    return res
+
+def numberMindSimulatedAnnealing(alphabet: str="0123456789", n_trials: int=20, guesses: List[Tuple[str, int]]=[
+    ("5616185650518293", 2),
+    ("3847439647293047", 1),
+    ("5855462940810587", 3),
+    ("9742855507068353", 3),
+    ("4296849643607543", 3),
+    ("3174248439465858", 1),
+    ("4513559094146117", 2),
+    ("7890971548908067", 3),
+    ("8157356344118483", 1),
+    ("2615250744386899", 2),
+    ("8690095851526254", 3),
+    ("6375711915077050", 1),
+    ("6913859173121360", 1),
+    ("6442889055042768", 2),
+    ("2321386104303845", 0),
+    ("2326509471271448", 2),
+    ("5251583379644322", 2),
+    ("1748270476758276", 3),
+    ("4895722652190306", 1),
+    ("3041631117224635", 3),
+    ("1841236454324589", 3),
+    ("2659862637316867", 2),
+]) -> List[str]:
+    """
+    Solution to Project Euler #185
+    """
+    since = time.time()
+    n = len(guesses[0][0])
+    #print(n)
+    alpha_dict = {l: i for i, l in enumerate(alphabet)}
+
+    def encode(l: str) -> int:
+        return alpha_dict[l]
+
+    def decode(num: int) -> str:
+        return alphabet[num]
+    
+    guess_enc = []
+    for s, g in guesses:
+        guess_enc.append(([encode(l) for l in s], g))
+
+    def dist(s: str) -> int:
+        res = 0
+        for s2, g in guess_enc:
+            #print(s, s2)
+            #print(s, s2, sum(num1 == num2 for num1, num2 in zip(s, s2)))
+            res += abs(sum(num1 == num2 for num1, num2 in zip(s, s2)) - g)
+        #print(s, res)
+        return res
+
+    def randomStep(curr: List[int]) -> List[int]:
+        idx = random.randrange(0, n)
+        num = random.randrange(0, len(alphabet) - 1)
+        num += (num >= curr[idx])
+        res = list(curr)
+        res[idx] = num
+        return res
+
+    curr = [random.randrange(0, len(alphabet)) for _ in range(n)]
+    d = dist(curr)
+    #print(d)
+    #if not d: return "".join(decode(x) for x in curr)
+    best = float("inf")
+    while d:
+        #print(d, curr)
+        for _ in range(n_trials):
+            improved = False
+            order = list(range(n))
+            random.shuffle(order)
+            #order = random.shuffle(range(n))
+            for i in order:
+                prev = curr[i]
+                num = random.randrange(0, len(alphabet) - 1)
+                num += num >= curr[i]
+                curr[i] = num
+                d2 = dist(curr)
+                if d2 < d:
+                    d = d2
+                    improved = True
+                else: curr[i] = prev
+            if improved:
+                if d < best:
+                    best = d
+                    print(f"new best = {best}")
+                break
+        else:
+            curr = randomStep(curr)
+            d = dist(curr)
+            if d < best:
+                best = d
+                print(f"new best = {d}")
+    
+    res = "".join(decode(x) for x in curr)
+    print(f"Time taken = {time.time() - since:.4f} seconds")
+    return res
+
 # Problem 187
 def semiPrimeCount(n_max: int=10 ** 8 - 1) -> int:
     """
@@ -5827,7 +6005,7 @@ def semiPrimeCount(n_max: int=10 ** 8 - 1) -> int:
     return res
 
 if __name__ == "__main__":
-    to_evaluate = {171}
+    to_evaluate = {185}
 
     if not to_evaluate or 151 in to_evaluate:
         res = singleSheetCountExpectedValueFloat(n_halvings=4)
@@ -5900,7 +6078,7 @@ if __name__ == "__main__":
         print(f"Solution to Project Euler #166 = {res}")
 
     if not to_evaluate or 167 in to_evaluate:
-        res = ulamSequenceTwoOddTermValueSum(num2_min=5, num2_max=21, term_number=10 ** 11)
+        res = ulamSequenceTwoOddTermValueSum(a2_min=5, a2_max=21, term_number=10 ** 11)
         print(f"Solution to Project Euler #167 = {res}")
 
     if not to_evaluate or 168 in to_evaluate:
@@ -5959,6 +6137,41 @@ if __name__ == "__main__":
         res = maximumProductOfPartsTerminatingSum(n_min=5, n_max=10 ** 4, base=10)
         print(f"Solution to Project Euler #183 = {res}")
 
+    if not to_evaluate or 185 in to_evaluate:
+        res = numberMindSimulatedAnnealing(alphabet="0123456789", n_trials=20, guesses=[
+            ("5616185650518293", 2),
+            ("3847439647293047", 1),
+            ("5855462940810587", 3),
+            ("9742855507068353", 3),
+            ("4296849643607543", 3),
+            ("3174248439465858", 1),
+            ("4513559094146117", 2),
+            ("7890971548908067", 3),
+            ("8157356344118483", 1),
+            ("2615250744386899", 2),
+            ("8690095851526254", 3),
+            ("6375711915077050", 1),
+            ("6913859173121360", 1),
+            ("6442889055042768", 2),
+            ("2321386104303845", 0),
+            ("2326509471271448", 2),
+            ("5251583379644322", 2),
+            ("1748270476758276", 3),
+            ("4895722652190306", 1),
+            ("3041631117224635", 3),
+            ("1841236454324589", 3),
+            ("2659862637316867", 2),
+        ])
+        print(f"Solution to Project Euler #185 = {res}")
+
+    """
+            ("90342", 2),
+            ("70794", 0),
+            ("39458", 2),
+            ("34109", 1),
+            ("51545", 2),
+            ("12531", 1),
+    """
     if not to_evaluate or 187 in to_evaluate:
         res = semiPrimeCount(n_max=10 ** 8 - 1)
         print(f"Solution to Project Euler #187 = {res}")
