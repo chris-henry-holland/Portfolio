@@ -18,6 +18,7 @@ sys.path.append(os.path.join(os.path.dirname(__file__), "../Algorithms_and_Datas
 from prime_sieves import PrimeSPFsieve, SimplePrimeSieve
 from addition_chains import AdditionChainCalculator
 from string_searching_algorithms import rollingHashWithValue
+from Pythagorean_triple_generators import pythagoreanTripleGeneratorByHypotenuse
 
 def gcd(a: int, b: int) -> int:
     """
@@ -5603,6 +5604,141 @@ def countConsecutiveNumberPositiveDivisorsMatch(n_max: int=10 ** 7) -> int:
     print(f"Time taken = {time.time() - since:.4f} seconds")
     return res
 
+# Problem 180
+def goldenTriplets(max_order: int) -> List[Tuple[int, Tuple[int, int], Tuple[int, int], Tuple[int, int]]]:
+
+    res = []
+    for b_x in range(2, max_order + 1):
+        for a_x in range(1, b_x):
+            if gcd(a_x, b_x) != 1: continue
+            for b_y in range(b_x, max_order + 1):
+                for a_y in range(1, a_x + 1 if b_y == b_x else b_y):
+                    if gcd(a_y, b_y) != 1: continue
+                    a_z1, b_z1 = addFractions((a_x, b_x), (a_y, b_y))
+                    if a_z1 < b_z1 and b_z1 <= max_order:
+                        if a_x * b_y <= a_y * b_x:
+                            res.append((1, (a_x, b_x), (a_y, b_y), (a_z1, b_z1)))
+                        else:
+                            res.append((1, (a_y, b_y), (a_x, b_x), (a_z1, b_z1)))
+                    b_z2, a_z2 = addFractions((b_x, a_x), (b_y, a_y))
+                    if a_z2 < b_z2 and b_z2 <= max_order:
+                        if a_x * b_y <= a_y * b_x:
+                            res.append((-1, (a_x, b_x), (a_y, b_y), (a_z2, b_z2)))
+                        else:
+                            res.append((-1, (a_y, b_y), (a_x, b_x), (a_z2, b_z2)))
+    #print(len(res))
+    seen = set()
+    ps = PrimeSPFsieve(max_order)
+    for (a, b, c), _ in pythagoreanTripleGeneratorByHypotenuse(primitive_only=True, max_hypotenuse=max_order):
+        c_facts = sorted(ps.factors(c))
+        for d in range(c + 1, max_order + 1):
+            for fact in c_facts:
+                c2 = c // fact
+                d_c = d
+                #if not d_c % c: continue
+                g_a1 = gcd(a, fact)
+                g_b1 = gcd(b, fact)
+                #if min(g_a1, g_b1) != 1: continue
+                #if d * fact // g_a1 > max_order or d * fact // g_b1 > max_order:
+                #    continue
+                d_a = d * (fact // g_a1)
+                d_b = d * (fact // g_b1)
+                a2 = a // g_a1
+                b2 = b // g_b1
+                #if (a, b, c) == (3, 4, 5): print(c, fact, d_a, d_b, d_c, d // c2)
+                #if not d_c % c and not d_b % c and not d_a % c:
+                #    print(c, fact, d_a, d_b, d_c, d // c2)
+                #    continue
+                #if (c, fact) == (5, 5):
+                #    print("hello")
+                #    print(a, b, c)
+                #    print(c, fact, d_a, d_b, d_c, d // c2)
+                #if (d // c2) * c == d_c:
+                #    print(c, fact, d_a, d_b, d_c, d // c2)
+                for num in range(1, (d // c2) + 1):
+                    if gcd(num, fact) != 1: continue
+                    a3, b3, c3 = a2 * num, b2 * num, c2 * num
+                    #if (a, b, c) == (3, 4, 5): print(num, ((a3, d_a), (b3, d_b), (c3, d_c)))
+                    g1 = gcd(a3, d_a)
+                    g2 = gcd(b3, d_b)
+                    g3 = gcd(c3, d_c)
+                    #if gcd(g1, gcd(g2, g3)) != 1: continue
+                    if min(g1, g2, g3) > 1:
+                        #print(f"no unit gcd: {g1, g2, g3}")
+                        continue
+                    d_a2, d_b2, d_c2 = d_a // g1, d_b // g2, d_c // g3
+                    if max(d_a2, d_b2, d_c2) > max_order: continue
+                    ans = ((a3 // g1, d_a2), (b3 // g2, d_b2), (c3 // g3, d_c2))
+                    if ans in seen:
+                        print(f"repeat seen: {ans}")
+                        print(g1, g2, g3)
+                    seen.add(ans)
+                    #if (a, b, c) == (3, 4, 5): print(num, (2, ans))
+                    res.append((2, *ans))
+                    #if not d_c % c and not d_b % c and not d_a % c:
+                    #    print(c, fact, d_a, d_b, d_c, d // c2)
+                    #    print(g1, g2, g3)
+                    #    print(num, ans)
+        for num in range(1, max_order + 1):
+            g1 = gcd(a, num)
+            g2 = gcd(b, num)
+            g3 = gcd(c, num)
+            a2, num_a = a // g1, num // g1
+            b2, num_b = b // g2, num // g2
+            c2, num_c = c // g3, num // g3
+            for d_mult in range((num // a) + 1, (max_order // (max(a2, b2, c2))) + 1):
+                if gcd(d_mult, num) != 1: continue
+                #if gcd(num_a, d_mult) != 1 and gcd(num_b, d_mult) != 1 and gcd(num_c, d_mult) != 1: continue
+                a3 = a2 * d_mult
+                b3 = b2 * d_mult
+                c3 = c2 * d_mult
+                g1 = gcd(a3, num_a)
+                g2 = gcd(b3, num_b)
+                g3 = gcd(c3, num_c)
+                res.append((-2, (num_b // g2, b3 // g2), (num_a // g1, a3 // g1), (num_c // g3, c3 // g3)))
+    #print(res)
+    print()
+    return res
+
+def goldenTripletsSum(max_order: int) -> Tuple[int]:
+    triplets = goldenTriplets(max_order)
+    res = (0, 1)
+    tot1 = 0
+    tot2 = 0
+    tots = {}
+    seen = set()
+    tots_breakdown = {}
+    for n, x, y, z in triplets:
+        mult = 1 + (x != y)
+        tot1 += mult
+        tot2 += 1
+        tots[n] = tots.get(n, 0) + 1
+        
+        add = addFractions(x, addFractions(y, z))
+        add = (add[0], add[1])
+        tots_breakdown.setdefault(n, set())
+        tots_breakdown[n].add((x, y, z))
+        if n == 2:
+            print(n, (x, y, z), add)
+        if add in seen: continue
+        res = addFractions(res, add)
+        seen.add(add)
+        #print(n, (x, y, z), add, res)
+        #res = addFractions(res, add)
+    print(f"total1 = {tot1}, total2 = {tot2}, unique = {len(seen)}")
+    print(f"totals breakdown = {tots}")
+    tots_breakdown_counts = {x: len(y) for x, y in tots_breakdown.items()}
+    print(f"totals unique breakdown = {tots_breakdown_counts}")
+    print(res)
+    return res
+
+def goldenTripletsSumTotalNumeratorDenominator(max_order: int=35) -> Tuple[int]:
+    since = time.time()
+    frac = goldenTripletsSum(max_order)
+    res = sum(frac)
+    print(f"Time taken = {time.time() - since:.4f} seconds")
+    return res
+
 # Problem 181
 def groupingNDifferentColouredObjects(colour_counts: List[int]=[40, 60]) -> int:
     """
@@ -6005,7 +6141,7 @@ def semiPrimeCount(n_max: int=10 ** 8 - 1) -> int:
     return res
 
 if __name__ == "__main__":
-    to_evaluate = {185}
+    to_evaluate = {180}
 
     if not to_evaluate or 151 in to_evaluate:
         res = singleSheetCountExpectedValueFloat(n_halvings=4)
@@ -6128,6 +6264,10 @@ if __name__ == "__main__":
     if not to_evaluate or 179 in to_evaluate:
         res = countConsecutiveNumberPositiveDivisorsMatch(n_max=10 ** 7)
         print(f"Solution to Project Euler #179 = {res}")
+
+    if not to_evaluate or 180 in to_evaluate:
+        res = goldenTripletsSumTotalNumeratorDenominator(max_order=35)
+        print(f"Solution to Project Euler #180 = {res}")
 
     if not to_evaluate or 181 in to_evaluate:
         res = groupingNDifferentColouredObjects(colour_counts=[60, 40])
