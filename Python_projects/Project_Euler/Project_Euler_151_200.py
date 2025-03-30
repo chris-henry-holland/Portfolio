@@ -5752,6 +5752,9 @@ def goldenTripletsSum(max_order: int) -> Tuple[int]:
     return res
 
 def goldenTripletsSumTotalNumeratorDenominator(max_order: int=35) -> Tuple[int]:
+    """
+    Solution to Project Euler #180
+    """
     since = time.time()
     frac = goldenTripletsSum(max_order)
     res = sum(frac)
@@ -5869,6 +5872,70 @@ def groupingNDifferentColouredObjects(colour_counts: List[int]=[40, 60]) -> int:
         return res
     #grps = []
     res = recur(tuple(float("inf") for _ in range(n_colours)))
+    print(f"Time taken = {time.time() - since:.4f} seconds")
+    return res
+
+# Problem 182
+def exponentsMinimisingRSAEncryptionUnconcealed(p: int, q: int) -> List[int]:
+
+    # For 1 < e < phi, the number of unconcealed integers on
+    # the range [0, n - 1] is:
+    #  (1 + gcd(e - 1, p - 1)) * (1 + gcd(e - 1, q - 1))
+    # Therefore need to find the values of e such that
+    # gcd(e - 1, p - 1) = 1, gcd(e, p - 1) = 1, gcd(e - 1, q - 1) = 1
+    # and gcd(e, p - 1) = 1.
+
+    mn_cnt = float("inf")
+    res = []
+    phi = (p - 1) * (q - 1)
+    for e in range(2, phi):
+        if gcd(e, phi) != 1: continue
+        cnt = (1 + gcd(e - 1, p - 1)) * (1 + gcd(e - 1, q - 1))
+        if cnt > mn_cnt: continue
+        if cnt < mn_cnt:
+            mn_cnt = cnt
+            res = []
+        res.append(e)
+    print(mn_cnt)#, res)
+    return res
+
+    """
+    less1_factors = [[], []]
+    for i, n in enumerate((p - 1, q - 1)):
+        if not n & 1:
+            less1_factors[i].append(2)
+            n >>= 1
+        while not n & 1:
+            n >>= 1
+        for m in range(3, isqrt(n) + 1, 2):
+            if m ** 2 > n: break
+            n2, r = divmod(n, m)
+            if r: continue
+            less1_factors[i].append(m)
+            while not r:
+                n = n2
+                n2, r = divmod(n, m)
+        if n > 1: less1_factors[i].append(n)
+    print("hello")
+    phi = (p - 1) * (q - 1)
+    sieve = [True] * phi
+    all_p_factors = sorted(set(less1_factors[0]).union(less1_factors[1]))
+    print(p - 1, q - 1, all_p_factors)
+    for n in all_p_factors:
+        for idx in range(n, phi, n):
+            sieve[idx] = False
+    print(sieve)
+    res = []
+    for e in range(2, phi):
+        if sieve[e - 1] and sieve[e]: res.append(e)
+    print(res)
+    return res
+    """
+
+def exponentsMinimisingRSAEncryptionUnconcealedSum(p: int=1009, q: int=3643) -> int:
+
+    since = time.time()
+    res = sum(exponentsMinimisingRSAEncryptionUnconcealed(p, q))
     print(f"Time taken = {time.time() - since:.4f} seconds")
     return res
 
@@ -6160,7 +6227,7 @@ def semiPrimeCount(n_max: int=10 ** 8 - 1) -> int:
     return res
 
 if __name__ == "__main__":
-    to_evaluate = {180}
+    to_evaluate = {182}
 
     if not to_evaluate or 151 in to_evaluate:
         res = singleSheetCountExpectedValueFloat(n_halvings=4)
@@ -6291,6 +6358,10 @@ if __name__ == "__main__":
     if not to_evaluate or 181 in to_evaluate:
         res = groupingNDifferentColouredObjects(colour_counts=[60, 40])
         print(f"Solution to Project Euler #181 = {res}")
+
+    if not to_evaluate or 182 in to_evaluate:
+        res = exponentsMinimisingRSAEncryptionUnconcealedSum(p=1009, q=3643) 
+        print(f"Solution to Project Euler #182 = {res}")
 
     if not to_evaluate or 183 in to_evaluate:
         res = maximumProductOfPartsTerminatingSum(n_min=5, n_max=10 ** 4, base=10)
