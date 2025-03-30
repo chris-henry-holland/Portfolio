@@ -5608,6 +5608,7 @@ def countConsecutiveNumberPositiveDivisorsMatch(n_max: int=10 ** 7) -> int:
 def goldenTriplets(max_order: int) -> List[Tuple[int, Tuple[int, int], Tuple[int, int], Tuple[int, int]]]:
 
     res = []
+    sqrts = {i ** 2: i for i in range(1, max_order + 1)}
     for b_x in range(2, max_order + 1):
         for a_x in range(1, b_x):
             if gcd(a_x, b_x) != 1: continue
@@ -5626,6 +5627,23 @@ def goldenTriplets(max_order: int) -> List[Tuple[int, Tuple[int, int], Tuple[int
                             res.append((-1, (a_x, b_x), (a_y, b_y), (a_z2, b_z2)))
                         else:
                             res.append((-1, (a_y, b_y), (a_x, b_x), (a_z2, b_z2)))
+                    a_zsq1, b_zsq1 = addFractions((a_x ** 2, b_x ** 2), (a_y ** 2, b_y ** 2))
+                    if a_zsq1 < b_zsq1 and a_zsq1 in sqrts.keys() and b_zsq1 in sqrts.keys():
+                        a_z, b_z = sqrts[a_zsq1], sqrts[b_zsq1]
+                        if a_x * b_y <= a_y * b_x:
+                            res.append((2, (a_x, b_x), (a_y, b_y), (a_z, b_z)))
+                        else:
+                            res.append((2, (a_y, b_y), (a_x, b_x), (a_z, b_z)))
+                    b_zsq2, a_zsq2 = addFractions((b_x ** 2, a_x ** 2), (b_y ** 2, a_y ** 2))
+                    if a_zsq2 < b_zsq2 and a_zsq2 in sqrts.keys() and b_zsq2 in sqrts.keys():
+                        a_z, b_z = sqrts[a_zsq2], sqrts[b_zsq2]
+                        if a_x * b_y <= a_y * b_x:
+                            res.append((-2, (a_x, b_x), (a_y, b_y), (a_z, b_z)))
+                        else:
+                            res.append((-2, (a_y, b_y), (a_x, b_x), (a_z, b_z)))
+    
+
+    """
     #print(len(res))
     seen = set()
     ps = PrimeSPFsieve(max_order)
@@ -5698,6 +5716,7 @@ def goldenTriplets(max_order: int) -> List[Tuple[int, Tuple[int, int], Tuple[int
                 res.append((-2, (num_b // g2, b3 // g2), (num_a // g1, a3 // g1), (num_c // g3, c3 // g3)))
     #print(res)
     print()
+    """
     return res
 
 def goldenTripletsSum(max_order: int) -> Tuple[int]:
@@ -5718,18 +5737,18 @@ def goldenTripletsSum(max_order: int) -> Tuple[int]:
         add = (add[0], add[1])
         tots_breakdown.setdefault(n, set())
         tots_breakdown[n].add((x, y, z))
-        if n == 2:
-            print(n, (x, y, z), add)
+        #if n == 2:
+        #    print(n, (x, y, z), add)
         if add in seen: continue
         res = addFractions(res, add)
         seen.add(add)
         #print(n, (x, y, z), add, res)
         #res = addFractions(res, add)
-    print(f"total1 = {tot1}, total2 = {tot2}, unique = {len(seen)}")
-    print(f"totals breakdown = {tots}")
+    #print(f"total1 = {tot1}, total2 = {tot2}, unique = {len(seen)}")
+    #print(f"totals breakdown = {tots}")
     tots_breakdown_counts = {x: len(y) for x, y in tots_breakdown.items()}
-    print(f"totals unique breakdown = {tots_breakdown_counts}")
-    print(res)
+    #print(f"totals unique breakdown = {tots_breakdown_counts}")
+    #print(res)
     return res
 
 def goldenTripletsSumTotalNumeratorDenominator(max_order: int=35) -> Tuple[int]:
