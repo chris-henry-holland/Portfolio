@@ -5605,8 +5605,55 @@ def countConsecutiveNumberPositiveDivisorsMatch(n_max: int=10 ** 7) -> int:
     return res
 
 # Problem 180
-def goldenTriplets(max_order: int) -> List[Tuple[int, Tuple[int, int], Tuple[int, int], Tuple[int, int]]]:
+def goldenTriplets(max_order: int) -> List[Tuple[int, Tuple[Tuple[int, int], Tuple[int, int], Tuple[int, int]]]]:
+    """
+    Consider the families of functions for integer n:
+        f_(1, n)(x, y, z) = x ** (n + 1) + y ** (n + 1) - z ** (n + 1)
+        f_(2, n)(x, y, z) = (x * y + y * z + z * x) * (x ** (n - 1) + y ** (n - 1) - z ** (n - 1))
+        f_(3, n)(x, y, z) = x * y * z * (x ** (n - 2) + y ** (n - 2) - z ** (n - 2))
+    Use these to define the functions for integer n:
+        f_n(x, y, z) = f_(1, n)(x, y, z) + f_(2, n)(x, y, z) - f_(3, n)(x, y, z)
+    
+    This function finds all the integer values of n and the rational
+    triples (x, y, z) such that f_n(x, y, z) = 0, x < y and when expressed
+    as a fraciton in lowest form, each of x, y and z are all between
+    zero and one exclusive and have a denominator no greater than
+    max_order.
 
+    Args:
+        Required positional:
+        max_order (int): Strictly positive integer giving the largest
+                denominator for any of x, y or z of rational triples
+                (x, y, z) considered for inclusion in the result.
+    
+    Returns:
+    List of 2-tuples, each of which represents values of n and (x, y, z)
+    collectively satisfying the stated constraints, whose index 0 contains
+    an integer (int) giving the value of n for that solution, and whose
+    index 1 contains a 3-tuple of 2-tuples, representing the values of
+    x, y and z respectively for the solution as fractions in lowest
+    form where indices 0 and 1 contains an integers giving the numerator
+    and denominator respectively.
+
+    Outline of rationale:
+    Through algebraic manipulation, the equation f_n(x, y, z) = 0 can be
+    shown to be equivalent to:
+        (x ** n + y ** n - z ** n) * (x + y + z) = 0
+    This can be zero if and only if either (x ** n + y ** n - z ** n) = 0
+    or (x + y + z) = 0. As x, y and z must all be strictly positive,
+    x + y + z must also be strictly positive and so can never be zero.
+    Consequently, for strictly positive x, y, z, f_n(x, y, z) = 0 is
+    equivalent to:
+        x ** n + y ** n = z ** n
+    It follows from Fermat's last theorem that if n is an integer, this
+    has no solutions over rational triples (x, y, z) unless abs(n) <= 2.
+    Furthermore, for any rational x, y, z, x ** 0 + y ** 0 = 1 + 1 = 2
+    and z ** 0 = 1, so this also has no solutions for n = 0.
+    Therefore, we need only find solutions for when n is -2, -1, 1 or 2.
+    This can be done by checking each permitted value of x and y and
+    checking whether for each of these values of n it produces a permitted
+    value of z (i.e. a rational value between 0 and 1 exclusive).
+    """
     res = []
     sqrts = {i ** 2: i for i in range(1, max_order + 1)}
     for b_x in range(2, max_order + 1):
@@ -5618,29 +5665,29 @@ def goldenTriplets(max_order: int) -> List[Tuple[int, Tuple[int, int], Tuple[int
                     a_z1, b_z1 = addFractions((a_x, b_x), (a_y, b_y))
                     if a_z1 < b_z1 and b_z1 <= max_order:
                         if a_x * b_y <= a_y * b_x:
-                            res.append((1, (a_x, b_x), (a_y, b_y), (a_z1, b_z1)))
+                            res.append((1, ((a_x, b_x), (a_y, b_y), (a_z1, b_z1))))
                         else:
-                            res.append((1, (a_y, b_y), (a_x, b_x), (a_z1, b_z1)))
+                            res.append((1, ((a_y, b_y), (a_x, b_x), (a_z1, b_z1))))
                     b_z2, a_z2 = addFractions((b_x, a_x), (b_y, a_y))
                     if a_z2 < b_z2 and b_z2 <= max_order:
                         if a_x * b_y <= a_y * b_x:
-                            res.append((-1, (a_x, b_x), (a_y, b_y), (a_z2, b_z2)))
+                            res.append((-1, ((a_x, b_x), (a_y, b_y), (a_z2, b_z2))))
                         else:
-                            res.append((-1, (a_y, b_y), (a_x, b_x), (a_z2, b_z2)))
+                            res.append((-1, ((a_y, b_y), (a_x, b_x), (a_z2, b_z2))))
                     a_zsq1, b_zsq1 = addFractions((a_x ** 2, b_x ** 2), (a_y ** 2, b_y ** 2))
                     if a_zsq1 < b_zsq1 and a_zsq1 in sqrts.keys() and b_zsq1 in sqrts.keys():
                         a_z, b_z = sqrts[a_zsq1], sqrts[b_zsq1]
                         if a_x * b_y <= a_y * b_x:
-                            res.append((2, (a_x, b_x), (a_y, b_y), (a_z, b_z)))
+                            res.append((2,( (a_x, b_x), (a_y, b_y), (a_z, b_z))))
                         else:
-                            res.append((2, (a_y, b_y), (a_x, b_x), (a_z, b_z)))
+                            res.append((2, ((a_y, b_y), (a_x, b_x), (a_z, b_z))))
                     b_zsq2, a_zsq2 = addFractions((b_x ** 2, a_x ** 2), (b_y ** 2, a_y ** 2))
                     if a_zsq2 < b_zsq2 and a_zsq2 in sqrts.keys() and b_zsq2 in sqrts.keys():
                         a_z, b_z = sqrts[a_zsq2], sqrts[b_zsq2]
                         if a_x * b_y <= a_y * b_x:
-                            res.append((-2, (a_x, b_x), (a_y, b_y), (a_z, b_z)))
+                            res.append((-2, ((a_x, b_x), (a_y, b_y), (a_z, b_z))))
                         else:
-                            res.append((-2, (a_y, b_y), (a_x, b_x), (a_z, b_z)))
+                            res.append((-2, ((a_y, b_y), (a_x, b_x), (a_z, b_z))))
     
 
     """
@@ -5727,7 +5774,7 @@ def goldenTripletsSum(max_order: int) -> Tuple[int]:
     tots = {}
     seen = set()
     tots_breakdown = {}
-    for n, x, y, z in triplets:
+    for n, (x, y, z) in triplets:
         mult = 1 + (x != y)
         tot1 += mult
         tot2 += 1
