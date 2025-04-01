@@ -5650,7 +5650,7 @@ def goldenTriplets(max_order: int) -> List[Tuple[int, Tuple[Tuple[int, int], Tup
     Furthermore, for any rational x, y, z, x ** 0 + y ** 0 = 1 + 1 = 2
     and z ** 0 = 1, so this also has no solutions for n = 0.
     Therefore, we need only find solutions for when n is -2, -1, 1 or 2.
-    This can be done by checking each permitted value of x and y and
+    This is done by checking each permitted value of x and y and
     checking whether for each of these values of n it produces a permitted
     value of z (i.e. a rational value between 0 and 1 exclusive).
     """
@@ -6235,6 +6235,192 @@ def numberMindSimulatedAnnealing(alphabet: str="0123456789", n_trials: int=20, g
     print(f"Time taken = {time.time() - since:.4f} seconds")
     return res
 
+# Problem 186
+class UnionFind:
+    def __init__(self, n: int):
+        self.n = n
+        self.root = list(range(n))
+        self.rank = [1] * n
+        self.size = [1] * n
+    
+    def find(self, i: int) -> int:
+        r = self.root[i]
+        if r == i: return i
+        res = self.find(r)
+        self.root[i] = res
+        return res
+    
+    def union(self, i1: int, i2: int) -> None:
+        r1, r2 = list(map(self.find, (i1, i2)))
+        if r1 == r2: return
+        d = self.rank[r1] - self.rank[r2]
+        if d < 0: r1, r2 = r2, r1
+        elif not d: self.rank[r1] += 1
+        self.root[r2] = r1
+        self.size[r1] += self.size[r2]
+        self.size[r2] = 0
+        return
+    
+    def connected(self, i1: int, i2: int) -> bool:
+        return self.find(i1) == self.find(i2)
+
+    def connectedComponentSize(self, i: int) -> int:
+        return self.size[self.find(i)]
+
+def edgeCountForVertexToConnectToProportionOfGraph(
+    vertex: int,
+    target_proportion: float,
+    n_vertices: int,
+    edge_iterator: Iterable[Tuple[int, int]],
+    ignore_self_edges: bool=True,
+) -> int:
+    target = math.floor(n_vertices * target_proportion)
+    if target <= 1: return 0
+    uf = UnionFind(n_vertices)
+    prev_sz = 1
+    self_edge_count = 0
+    for i, e in enumerate(edge_iterator):
+        if e[0] == e[1]:
+            self_edge_count += 1
+        uf.union(*e)
+        sz = uf.connectedComponentSize(vertex)
+        if sz > prev_sz:
+            print(i, e, sz, target)
+            prev_sz = sz
+        if sz >= target:
+            return i + 1 - (self_edge_count if ignore_self_edges else 0)
+    return -1
+
+def generalisedLaggedFibonacciGenerator(poly_coeffs: Tuple[int]=(100003, -200003, 0, 300007), lags: Tuple[int]=(24, 55), min_val: int=0, max_val: int=10 ** 6 - 1) -> Generator[int, None, None]:
+    """
+    Generator iterating over the terms in a generalisation
+    of a lagged Fibonacci generator sequence for given for a
+    given initial polynomial and given lag lengths within n a
+    given range.
+
+    The generalisation of the lagged Fibonacci generator
+    sequence for the given tuple of integers poly_coeffs, tuple
+    of strictly positive integers lags, and the integers min_val
+    and max_val is the sequence such that for integer i >= 1,
+    the i:th term in the sequence is:
+        t_i = (sum j from 0 to len(poly_coeffs) - 1) (poly_coeffs[j] * i ** j) % md + min_val
+                for i <= max(lags)
+              ((sum j fro 0 to len(lags) - 1) (t_(i - lags[i]))) % md + min_val
+                otherwise
+    where md is one greater than the difference between
+    min_value and max_value and % signifies modular division
+    (i.e. the remainder of the integer preceding that symbol
+    by the integer succeeding it). This sequence contains integer
+    values between min_value and max_value inclusive.
+
+    The terms where i <= max(lags) are referred as the polynomial
+    terms and the terms where i > max(lags) are referred to as the
+    recursive terms.
+
+    In the case that lags is length 2 with those two elements
+    distinct, this is a traditional lagged Fibonacci generator
+    sequence.
+
+    For well chosen values of poly_coeffs and lags for given
+    min_value and max_value, this can potentially be used as a
+    generator of pseudo-random integers between min-value and
+    max_value inclusive.
+
+    Note that the generator never terminates and thus any
+    iterator over this generator must include provision to
+    terminate (e.g. a break or return statement), otherwise
+    it would result in an infinite loop.
+
+    Args:
+        Optional named:
+        poly_coeffs (tuple of ints): Tuple of integers giving
+                the coefficients of the polynomial used to
+                generate the polynomial terms.
+            Default: (100003, -200003, 0, 300007)
+        lags (tuple of ints): Strictly positive integers,
+                which when generating the recursive terms,
+                indicates how many steps back in the sequence
+                the previous terms summed should each be
+                from the position of the term being generated.
+                Additionally, the maximum value determines
+                at which term the transition from the polynomial
+                terms to the recursive terms will occur.
+            Default: (24, 55)
+        min_value (int): Integer giving the smallest value
+                possible for terms in the sequence.
+        max_value (int): Integer giving the largest value
+                possible for terms in the sequence. Must
+                be no smaller than min_value.
+    
+    Yields:
+    Integer (int) between min_value and max_value inclusive,
+    with the i:th term yielded (for strictly positive integer
+    i) representing the i:th term in the generalisation of
+    the lagged Fibonacci generator defined above for the
+    given parameters.
+    """
+    qu = deque()
+    md = max_val - min_val + 1
+    #print(md)
+    lags = sorted(lags)
+    max_lag = lags[-1]
+    for k in range(1, max_lag + 1):
+        num = (sum(c * k ** i for i, c in enumerate(poly_coeffs)) % md) + min_val
+        #num = ((100003 - 200003 * k + 300007 * k ** 3) % md) - 5 * 10 ** 5
+        #print(num)
+        qu.append(num)
+        yield num
+    #cnt = 0
+    while True:
+        num = qu.popleft()
+        for i in range(len(lags) - 1):
+            num += qu[-lags[i]]
+        num = (num % md) + min_val
+        #if cnt < 10:
+        #    print(num)
+        #cnt += 1
+        #num = ((qu[-24] + qu.popleft() + 10 ** 6) % md) - 5 * 10 ** 5
+        qu.append(num)
+        yield num
+    return
+
+def laggedFibonacciGraphEdgeGenerator(
+    n_vertices: int=10 ** 6,
+    n_edges: Optional[int]=None,
+    l_fib_poly_coeffs: Tuple[int]=(100003, -200003, 0, 300007),
+    l_fib_lags: Tuple[int]=(24, 55),
+) -> Generator[Tuple[int, int], None, None]:
+    
+    it = generalisedLaggedFibonacciGenerator(poly_coeffs=l_fib_poly_coeffs, lags=l_fib_lags, min_val=0, max_val=n_vertices - 1)
+    it2 = itertools.count(0) if n_edges is None else range(n_edges)
+    for _ in it2:
+        edge = []
+        edge.append(next(it))
+        edge.append(next(it))
+        yield tuple(edge)
+    return 
+
+def laggedFibonacciGraphEdgeCountForVertexToConnectToProportionOfGraph(
+    vertex: int=524287,
+    target_proportion: float=.99,
+    n_vertices: int=10 ** 6,
+    n_edges: Optional[int]=None,
+    l_fib_poly_coeffs: Tuple[int]=(100003, -200003, 0, 300007),
+    l_fib_lags: Tuple[int]=(24, 55),
+    ignore_self_edges: bool=True,
+) -> int:
+    since = time.time()
+    res = edgeCountForVertexToConnectToProportionOfGraph(
+            vertex,
+            target_proportion,
+            n_vertices,
+            laggedFibonacciGraphEdgeGenerator(n_vertices=n_vertices, n_edges=n_edges, l_fib_poly_coeffs=l_fib_poly_coeffs, l_fib_lags=l_fib_lags),
+            ignore_self_edges=ignore_self_edges,
+        )
+    print(f"Time taken = {time.time() - since:.4f} seconds")
+    return res
+    
+
 # Problem 187
 def semiPrimeCount(n_max: int=10 ** 8 - 1) -> int:
     """
@@ -6274,7 +6460,7 @@ def semiPrimeCount(n_max: int=10 ** 8 - 1) -> int:
     return res
 
 if __name__ == "__main__":
-    to_evaluate = {182}
+    to_evaluate = {186}
 
     if not to_evaluate or 151 in to_evaluate:
         res = singleSheetCountExpectedValueFloat(n_halvings=4)
@@ -6449,6 +6635,18 @@ if __name__ == "__main__":
             ("51545", 2),
             ("12531", 1),
     """
+    if not to_evaluate or 186 in to_evaluate:
+        res = laggedFibonacciGraphEdgeCountForVertexToConnectToProportionOfGraph(
+                vertex=524287,
+                target_proportion=.99,
+                n_vertices=10 ** 6,
+                n_edges=None,
+                l_fib_poly_coeffs=(100003, -200003, 0, 300007),
+                l_fib_lags=(24, 55),
+                ignore_self_edges=True,
+            )
+        print(f"Solution to Project Euler #186 = {res}")
+
     if not to_evaluate or 187 in to_evaluate:
         res = semiPrimeCount(n_max=10 ** 8 - 1)
         print(f"Solution to Project Euler #187 = {res}")

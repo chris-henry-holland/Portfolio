@@ -162,6 +162,28 @@ def multiplyFractions(frac1: Tuple[int, int], frac2: Tuple[int, int]) -> Tuple[i
     g = gcd(frac_prov[0], frac_prov[1])
     return (-(frac_prov[0] // g) if neg else (frac_prov[0] // g), frac_prov[1] // g)
 
+# Problem -1
+def ramanujanSummationOfAllMultiples(nums: List[int]=[3, 5]) -> Tuple[int, int]:
+    since = time.time()
+    n_nums = len(nums)
+    res = (0, 1)
+    for bm in range(1, 1 << n_nums):
+        neg = True
+        bm2 = bm
+        l = 1
+        i = 0
+        while bm2:
+            if bm2 & 1:
+                neg = not neg
+                l = lcm(l, nums[i])
+            bm2 >>= 1
+            i += 1
+        contrib = (l if neg else -l, 12)
+        #print(l, contrib)
+        res = addFractions(res, contrib)
+    print(f"Time taken = {time.time() - since:.4f} seconds")
+    return res
+
 # Problem root 13
 def rootExpansionDigits(num: int, n_digs: int, base: int=10) -> List[int]:
 
@@ -329,7 +351,11 @@ def loadBlackAndWhitePNGImage(filename: str, relative_to_program_file_directory:
 #def 
 
 if __name__ == "__main__":
-    to_evaluate = {"secret"}
+    to_evaluate = {"-1"}
+
+    if not to_evaluate or "-1" in to_evaluate:
+        res = ramanujanSummationOfAllMultiples(nums=[3, 5])
+        print(f"Solution to Project Euler #-1 = {res}")
 
     if not to_evaluate or "root_13" in to_evaluate:
         res = rootExpansionDigitSum(num=13, n_digs=1_000, base=10)
