@@ -6459,8 +6459,76 @@ def semiPrimeCount(n_max: int=10 ** 8 - 1) -> int:
     print(f"Time taken = {time.time() - since:.4f} seconds")
     return res
 
+# Problem 188
+def primeFactorisation(n: int) -> Dict[int, int]:
+    res = {}
+    if n < 2: return {}
+    n2 = n
+    if not n2 & 1:
+        res[2] = 1
+        n2 >>= 1
+        while not n2 & 1:
+            n2 >>= 1
+            res[2] += 1
+    for p in range(3, isqrt(n2), 2):
+        if p > isqrt(n2): break
+        n3, r = divmod(n2, p)
+        if r: continue
+        n2 = n3
+        res[p] = 1
+        n3, r = divmod(n2, p)
+        while not r:
+            n2 = n3
+            res[p] += 1
+            n3, r = divmod(n2, p)
+    if n2 > 1:
+        res[n2] = 1
+    return res
+
+def eulerTotientFunction(n: int) -> int:
+    p_fact = primeFactorisation(n)
+    #print(p_fact)
+    res = 1
+    for p, f in p_fact.items():
+        res *= (p - 1) * (p ** (f - 1))
+    return res
+
+def modPower(base: int, exp: int, md: int, e_tot_md: Optional[int]=None) -> int:
+    return pow(base, exp, md)
+    #if gcd(base, md) != 1: return (base ** exp) % md
+    #print("hi")
+    #if e_tot_md is None:
+    #    e_tot_md = eulerTotientFunction(md)
+    #exp %= e_tot_md
+    #print(exp)
+    #return (base ** exp) % md
+
+def modTetration(base: int=1777, tetr: int=1855, md: int=10 ** 8) -> int:
+    """
+    Solution to Project Euler #188
+    """
+    since = time.time()
+    e_tot_md = eulerTotientFunction(md)
+    #print(md, e_tot_md)
+    res = base
+    seen_dict = {1: 0, base: 1}
+    seen_lst = [0, base]
+    for i in range(2, tetr + 1):
+        res = modPower(base, res, md, e_tot_md=e_tot_md)
+        if res in seen_dict.keys():
+            i0 = seen_dict[res]
+            cycle_len = i - i0
+            r = (tetr - i) % cycle_len
+            res = seen_lst[i0 + r]
+            break
+        seen_lst.append(res)
+        seen_dict[res] = i
+        #print(i, res)
+    print(f"Time taken = {time.time() - since:.4f} seconds")
+    return res
+
 if __name__ == "__main__":
-    to_evaluate = {186}
+    to_evaluate = {188}
 
     if not to_evaluate or 151 in to_evaluate:
         res = singleSheetCountExpectedValueFloat(n_halvings=4)
@@ -6650,6 +6718,10 @@ if __name__ == "__main__":
     if not to_evaluate or 187 in to_evaluate:
         res = semiPrimeCount(n_max=10 ** 8 - 1)
         print(f"Solution to Project Euler #187 = {res}")
+
+    if not to_evaluate or 188 in to_evaluate:
+        res = modTetration(base=1777, tetr=100, md=10 ** 8)
+        print(f"Solution to Project Euler #188 = {res}")
     #for n in range(2, 11):
     #    usg = iter(ulamSequenceGenerator(2, 2 * n + 1))
     #    even_pair = []
