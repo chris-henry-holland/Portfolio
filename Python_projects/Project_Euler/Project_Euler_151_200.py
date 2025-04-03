@@ -6527,8 +6527,42 @@ def modTetration(base: int=1777, tetr: int=1855, md: int=10 ** 8) -> int:
     print(f"Time taken = {time.time() - since:.4f} seconds")
     return res
 
+# Problem 190
+def maximisedRestrictedPowerProduct(n: int) -> Tuple[int, int]:
+    
+    def powerProduct(num):
+        res = 1
+        for i in range(2, num + 1):
+            res *= i ** i
+        return res
+
+    numer = powerProduct(n)
+    exp = ((n * (n + 1)) >> 1)
+    if not n & 1:
+        numer *= 2 ** exp
+        denom = (n + 1) ** exp
+    else:
+        denom = ((n + 1) >> 1) ** exp
+    g = gcd(numer, denom)
+    res = (numer // g, denom // g)
+    print(res, res[0] / res[1])
+    return res
+
+def sumFloorMaximisedRestrictedPowerProduct(n_min: int=2, n_max: int=15) -> int:
+    """
+    Solution to Project Euler #190
+    """
+    since = time.time()
+    res = 0
+    for i in range(n_min, n_max + 1):
+        frac = maximisedRestrictedPowerProduct(i)
+        res += math.floor(frac[0] / frac[1])
+    print(f"Time taken = {time.time() - since:.4f} seconds")
+    return res
+
+
 if __name__ == "__main__":
-    to_evaluate = {188}
+    to_evaluate = {190}
 
     if not to_evaluate or 151 in to_evaluate:
         res = singleSheetCountExpectedValueFloat(n_halvings=4)
@@ -6722,6 +6756,11 @@ if __name__ == "__main__":
     if not to_evaluate or 188 in to_evaluate:
         res = modTetration(base=1777, tetr=100, md=10 ** 8)
         print(f"Solution to Project Euler #188 = {res}")
+
+    if not to_evaluate or 190 in to_evaluate:
+        res = sumFloorMaximisedRestrictedPowerProduct(n_min=2, n_max=15)
+        print(f"Solution to Project Euler #190 = {res}")
+
     #for n in range(2, 11):
     #    usg = iter(ulamSequenceGenerator(2, 2 * n + 1))
     #    even_pair = []
