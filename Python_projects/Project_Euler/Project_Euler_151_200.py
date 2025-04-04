@@ -6560,9 +6560,29 @@ def sumFloorMaximisedRestrictedPowerProduct(n_min: int=2, n_max: int=15) -> int:
     print(f"Time taken = {time.time() - since:.4f} seconds")
     return res
 
+# Problem 191
+def attendancePrizeStringCount(n_days: int=30, n_consec_absent: int=3, n_late: int=2) -> int:
+    since = time.time()
+    curr = [[0] * n_consec_absent for _ in range(n_late)]
+    curr[0][0] = 1
+    for _ in range(n_days):
+        prev = curr
+        curr = [[0] * n_consec_absent for _ in range(n_late)]
+        for i_a in range(1, n_consec_absent):
+            for i_l in range(n_late):
+                curr[i_l][i_a] = prev[i_l][i_a - 1]
+        for i_l in range(n_late - 1):
+            sm = sum(prev[i_l])
+            curr[i_l][0] += sm
+            curr[i_l + 1][0] += sm
+        i_l = n_late - 1
+        curr[i_l][0] += sum(prev[i_l])
+    res = sum(sum(x) for x in curr)
+    print(f"Time taken = {time.time() - since:.4f} seconds")
+    return res
 
 if __name__ == "__main__":
-    to_evaluate = {190}
+    to_evaluate = {191}
 
     if not to_evaluate or 151 in to_evaluate:
         res = singleSheetCountExpectedValueFloat(n_halvings=4)
@@ -6760,6 +6780,11 @@ if __name__ == "__main__":
     if not to_evaluate or 190 in to_evaluate:
         res = sumFloorMaximisedRestrictedPowerProduct(n_min=2, n_max=15)
         print(f"Solution to Project Euler #190 = {res}")
+
+    if not to_evaluate or 191 in to_evaluate:
+        res = attendancePrizeStringCount(n_days=30, n_consec_absent=3, n_late=2)
+        print(f"Solution to Project Euler #191 = {res}")
+
 
     #for n in range(2, 11):
     #    usg = iter(ulamSequenceGenerator(2, 2 * n + 1))
