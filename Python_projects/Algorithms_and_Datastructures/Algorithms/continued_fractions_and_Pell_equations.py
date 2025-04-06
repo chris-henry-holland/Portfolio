@@ -4,7 +4,7 @@ import itertools
 import math
 
 from sortedcontainers import SortedList
-from typing import Dict, List, Tuple, Set, Union, Generator, Callable, Optional, Any, Hashable
+from typing import Dict, List, Tuple, Set, Union, Generator, Callable, Optional, Any, Hashable, Iterable
 
 def isqrt(n: int) -> int:
     """
@@ -69,7 +69,142 @@ def nthConvergent(n: int, cf_func: Callable[[int], int]) -> Tuple[int]:
         res = (res[1] + cf_func(i) * res[0], res[0])
     return res
 
-def sqrtCF(num: int) -> Tuple[Union[Tuple[int], int]]:
+def continuedFractionConvergentGenerator(continued_fraction_terms: Iterable[int])\
+        -> Generator[Tuple[int], None, None]:
+    """
+    Generates the convergents in order of a given continued fraction
+    representation of a non-negative number with terms as given in
+    the function cf_func() giving the terms in the continued fraction
+    sequence under consideration.
+    Note that if the continued fraction is infinite, this generator
+    will not itself terminate, so any loop over this generator would
+    in such a case need to contain a break or return statement.
+    
+    Args:
+        Required positional:
+        continued_fraction_terms (iterable): An ordered iterable
+                object containing integers representing the terms
+                in the continued fraction representation of the
+                non-negative number in question. Note that the
+                first term must be a non-negative integer
+    
+    Yields:
+    Each convergent of the continued fraction with terms given by
+    cf_func in turn.
+    
+    Outline of rationale:
+    For continued fraction sequence, it is a known result (see
+    https://pi.math.cornell.edu/~gautam/ContinuedFractions.pdf) that
+    if p_i and q_i represent the numerator and denominator in lowest
+    terms (i.e. gcd(p_i, q_i) = 1) of the ith convergent of a given
+    continued fraction [a_0, a_1, a_2, ...] for any non-negative
+    integer i:
+        p_0 = a_0, q_0 = 1
+        p_1 = a_1 * a_0 + 1, q_1 = a_1
+        and for n >= 2:
+        p_n = a_n * p_(n - 1) + p_(n - 2)
+        q_n = a_n * q_(n - 1) + q_(n - 2)
+    """
+    it = iter(continued_fraction_terms)
+    a_0 = next(it)
+    curr = [(a_0, 1)]
+    yield curr[0]
+    a_1 = next(it)
+    if a_1 == -1: return
+    curr.append((a_1 * a_0 + 1, a_1))
+    yield curr[-1]
+    n = 2
+    while True:
+        a_n = next(it)
+        if a_n == -1: break
+        curr = [curr[1], (a_n * curr[-1][0] + curr[-2][0],\
+                a_n * curr[-1][1] + curr[-2][1])]
+        yield curr[-1]
+        n += 1
+    return
+
+"""
+def bestRationalApproximation(denom_max: int, continued_fraction_terms: Iterable[int])\
+        -> Tuple[int]:
+    ""
+    Finds the best rational approximation of the non-negative number
+    with the continued fraction whose terms are given by
+    continued_fraction_terms for the given maximum denominator
+    denom_max.
+
+    The best rational approximation of a non-negative number num
+    for a given maximum denominator denom_max is the unique fraction
+    p / q (where p and q are integers) such that q < denom_max and
+    for any integers p2, q2:
+        if abs(num - p2 / q2) < abs(num - p / q)
+        then q2 > denom_max.
+    
+    Args:
+        Required positional:
+        denom_max (int): Strictly positive integer giving the maximum
+                value of denominator the best rational approximation
+                may have when expressed as a fraction in lowest terms.
+        continued_fraction_terms (iterable): An ordered iterable
+                object containing integers representing the terms
+                in the continued fraction representation of the
+                non-negative number whose best rational approximation
+                for the given maximum denominator is to be found.
+                Note that the first term must be a non-negative integer.
+    
+    Returns:
+    2-tuple of integers (ints) giving the best rational approximation
+    of the number represented by continued_fraction_terms as a fraction
+    in lowest terms, where index 0 contains the numerator and index 1
+    the denominator.
+    
+    Outline of rationale:
+    See documentation for continuedFractionConvergentGenerator() and
+    https://shreevatsa.wordpress.com/2011/01/10/not-all-best-rational-approximations-are-the-convergents-of-the-continued-fraction/
+    ""
+    #print(denom_max, continued_fraction_terms)
+    it = iter(continued_fraction_terms)
+    a_0 = next(it)
+    curr = [(a_0, 1)]
+    a_1 = next(it)
+    if a_1 == -1: return (a_0, 1)
+    curr.append((a_1 * a_0 + 1, a_1))
+    a_n = a_1
+    n = 2
+    for a_n in it:
+        if a_n == -1: break
+        nxt = (a_n * curr[-1][0] + curr[-2][0],\
+                a_n * curr[-1][1] + curr[-2][1])
+        if nxt[1] > denom_max:
+            break
+        curr = [curr[1], nxt]
+        n += 1
+    else:
+        return curr[-1]
+    mult_max = (denom_max - curr[-2][1]) // curr[-1][1]
+    #print(mult_max, a_n)
+    if mult_max > (a_n >> 1):
+        return (mult_max * curr[-1][0] + curr[-2][0],\
+                mult_max * curr[-1][1] + curr[-2][1])
+    return curr[-1]
+"""
+def eContinuedFractionSequenceValue(i: int) -> int:
+    """
+    Gives the ith index (0-indexed) value of the continued fraction
+    sequence of e (Euler's number).
+    
+    Args:
+        Required positional:
+        i (int): The index of the continued fraction sequence to be
+                returned
+        
+    Returns:
+    The ith index value of the continued fraction sequence of e.
+    """
+    if i % 3 == 2:
+        return ((i // 3) + 1) << 1
+    return 1 + (i == 0)
+
+def sqrtContinuedFractionRepresentation(num: int) -> Tuple[Union[Tuple[int], int]]:
     """
     Finds the continued fraction representation of the
     square root of num
@@ -105,6 +240,168 @@ def sqrtCF(num: int) -> Tuple[Union[Tuple[int], int]]:
         curr = (-b, (num - b ** 2) // curr[1])
         prev = curr
     return ()
+
+def sqrtContinuedFractionTermValue(i: int, num: int) -> int:
+    """
+    Gives the ith index (0-indexed) value of the continued fraction
+    sequence of the square root of non-negative integer num.
+    
+    Args:
+        Required positional:
+        i (int): The index of the continued fraction sequence to be
+                returned
+        num (int): The non-negative integer whose square root the
+                continued fraction sequence represents.
+        
+    Returns:
+    The ith index value of the continued fraction sequence of the
+    square root of num.
+    If the sequence has terminated before the ith index (which is the
+    case only for exact squares for i > 0), -1 is returned.
+    
+    Examples:
+    >>> [sqrtContinuedFractionTermValue(i, 2) for i in range(5)]
+    [1, 2, 2, 2, 2]
+    >>> [sqrtContinuedFractionTermValue(i, 7) for i in range(10)]
+    [2, 1, 1, 1, 4, 1, 1, 1, 4, 1]
+    >>> [sqrtContinuedFractionTermValue(i, 4) for i in range(5)]
+    [2, -1, -1, -1, -1]
+    """
+    num_cf = sqrtContinuedFractionRepresentation(num)
+    if i < len(num_cf[0]): return num_cf[0][i]
+    if num_cf[1] == -1:
+        return -1
+    j = num_cf[1]
+    return num_cf[0][j + (i - j) % (len(num_cf[0]) - j)]
+
+def sqrtContinuedFractionTermGenerator(num: int) -> Generator[int, None, None]:
+    """
+    Generator yielding the terms of the continued fraction
+    representation of the square root of num, for strictly
+    positive integers.
+    If num is a perfect square then yields exactly one value
+    (num itself), otherwise the generator does not inherently
+    terminate.
+    
+    Args:
+        Required positional:
+        num (int): The non-negative integer whose square root the
+                continued fraction sequence represents.
+        
+    Yields:
+    Integers giving the terms of the continued fraction sequence of the
+    square root of num in order.
+    """
+    num_cf = sqrtContinuedFractionRepresentation(num)
+    if num_cf[1] == -1:
+        # Perfect square
+        yield num_cf[0][0]
+        return
+    n = len(num_cf[0])
+    i = 0
+    while True:
+        yield num_cf[0][i]
+        i += 1
+        if i == n: i = num_cf[1]
+    return
+
+def sqrtConvergentGenerator(num: int) -> Generator[Tuple[int, int], None, None]:
+    """
+    Generator yielding the convergents of the square root of num,
+    for strictly positive integers.
+    If num is a perfect square then yields exactly one value,
+    (num, 1), otherwise the generator does not inherently
+    terminate.
+    
+    Args:
+        Required positional:
+        num (int): The non-negative integer whose square root the
+                convergents are to be yielded
+        
+    Yields:
+    2-tuples of non-negative integers giving the convergents of the
+    square root of num in order as fractions in reduced form where
+    index 0 contains the numerator and index 1 the demoninator of
+    the corresponding convergent.
+    """
+    yield from continuedFractionConvergentGenerator(sqrtContinuedFractionTermGenerator(num))
+    return
+
+def sqrtBestRationalApproximation(denom_max: int, num: int)\
+        -> Tuple[int]:
+    """
+    Finds the best rational approximation of the square root of
+    a given non-negative number for the given maximum denominator
+    denom_max.
+
+    The best rational approximation of a non-negative number num
+    for a given maximum denominator denom_max is the unique fraction
+    p / q (where p and q are integers) such that q < denom_max and
+    for any integers p2, q2:
+        if abs(num - p2 / q2) < abs(num - p / q)
+        then q2 > denom_max.
+    
+    Args:
+        Required positional:
+        denom_max (int): Strictly positive integer giving the maximum
+                value of denominator the best rational approximation
+                may have when expressed as a fraction in lowest terms.
+        num (int): The non-negative integer whose square root the
+                best rational approximation for the maximum denominator
+                denom_max is to be found.
+    
+    Returns:
+    2-tuple of integers (ints) giving the best rational approximation
+    of num as a fraction in lowest terms, where index 0 contains the
+    numerator and index 1 the denominator.
+
+    Outline of rationale:
+    See documentation for continuedFractionConvergentGenerator() and
+    https://shreevatsa.wordpress.com/2011/01/10/not-all-best-rational-approximations-are-the-convergents-of-the-continued-fraction/
+    """
+    #return bestRationalApproximation(denom_max, sqrtContinuedFractionTermGenerator(num))
+    it = iter(sqrtContinuedFractionTermGenerator(num))
+    a_0 = next(it)
+    curr = [(a_0, 1)]
+    a_1 = next(it)
+    if a_1 == -1: return (a_0, 1)
+    curr.append((a_1 * a_0 + 1, a_1))
+    a_n = a_1
+    n = 2
+    for a_n in it:
+        if a_n == -1: break
+        nxt = (a_n * curr[-1][0] + curr[-2][0],\
+                a_n * curr[-1][1] + curr[-2][1])
+        if nxt[1] > denom_max:
+            break
+        curr = [curr[1], nxt]
+        n += 1
+    else:
+        return curr[-1]
+    mult_max = (denom_max - curr[-2][1]) // curr[-1][1]
+    #print(mult_max, a_n)
+    if mult_max << 1 < a_n:
+        return curr[-1]
+    if mult_max << 1 == a_n:
+        frac1 = (mult_max * curr[-1][0] + curr[-2][0],\
+                mult_max * curr[-1][1] + curr[-2][1])
+        frac2 = curr[-1]
+        
+        if frac1[0] * frac2[1] > frac2[0] * frac1[1]:
+            frac1, frac2 = frac2, frac1
+        #print(frac1, frac2)
+        if frac1[0] ** 2 > frac1[1] ** 2 * num:
+            #print("hi2")
+            return frac1
+        elif frac2[0] ** 2 < frac2[1] ** 2 * num:
+            #print("hi3")
+            return frac2
+        #print(frac1, frac2, (frac1[0] * frac2[1]) ** 2 + (frac2[0] * frac1[1]) ** 2, 2 * num * (frac1[1] * frac2[1]) ** 2)
+        return frac2 if (frac1[0] * frac2[1]) ** 2 + (frac2[0] * frac1[1]) ** 2 < 2 * num * (frac1[1] * frac2[1]) ** 2 else frac1
+        
+    return (mult_max * curr[-1][0] + curr[-2][0],\
+            mult_max * curr[-1][1] + curr[-2][1])
+    
 
 def pellFundamentalSolution(D: int) -> Tuple[int]:
     """
@@ -144,7 +441,7 @@ def pellFundamentalSolution(D: int) -> Tuple[int]:
     #one satisfying the requirement that x and y are strictly
     #positive, and there is no solution not even a trivial one
     #to Pell's negative equation with square D and integer x and y).
-    D_cf = sqrtCF(D)
+    D_cf = sqrtContinuedFractionRepresentation(D)
     if D_cf[1] == -1:
         return (None, None)#(1, 0)
     def cf_func(i: int) -> int:
@@ -166,7 +463,7 @@ def pellFundamentalSolution(D: int) -> Tuple[int]:
     return (res, None)
     """
     # Solution checking every convergent in order
-    cf_func = lambda i: sqrtCFSequenceValue(i, D)
+    cf_func = lambda i: sqrtContinuedFractionRepresentationSequenceValue(i, D)
     nth_convergent_func = lambda n: nthConvergent(n, cf_func)
     
     i = 1

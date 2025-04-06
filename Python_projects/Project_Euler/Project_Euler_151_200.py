@@ -19,6 +19,7 @@ from prime_sieves import PrimeSPFsieve, SimplePrimeSieve
 from addition_chains import AdditionChainCalculator
 from string_searching_algorithms import rollingHashWithValue
 from Pythagorean_triple_generators import pythagoreanTripleGeneratorByHypotenuse
+from continued_fractions_and_Pell_equations import sqrtBestRationalApproximation
 
 def gcd(a: int, b: int) -> int:
     """
@@ -6581,8 +6582,27 @@ def attendancePrizeStringCount(n_days: int=30, n_consec_absent: int=3, n_late: i
     print(f"Time taken = {time.time() - since:.4f} seconds")
     return res
 
+# Problem 192
+def bestSqrtApproximationsDenominatorSum(n_max: int=10 ** 5, denom_bound: int=10 ** 12) -> int:
+
+    # See https://shreevatsa.wordpress.com/2011/01/10/not-all-best-rational-approximations-are-the-convergents-of-the-continued-fraction/
+    since = time.time()
+    m = 2
+    nxt_sq = m ** 2
+    res = 0
+    for num in range(2, n_max + 1):
+        if num == nxt_sq:
+            m += 1
+            nxt_sq = m ** 2
+            continue
+        frac = sqrtBestRationalApproximation(denom_bound, num)
+        res += frac[1]
+        #print(num, frac)
+    print(f"Time taken = {time.time() - since:.4f} seconds")
+    return res
+
 if __name__ == "__main__":
-    to_evaluate = {191}
+    to_evaluate = {192}
 
     if not to_evaluate or 151 in to_evaluate:
         res = singleSheetCountExpectedValueFloat(n_halvings=4)
@@ -6785,6 +6805,9 @@ if __name__ == "__main__":
         res = attendancePrizeStringCount(n_days=30, n_consec_absent=3, n_late=2)
         print(f"Solution to Project Euler #191 = {res}")
 
+    if not to_evaluate or 192 in to_evaluate:
+        res = bestSqrtApproximationsDenominatorSum(n_max=10 ** 5, denom_bound=10 ** 12)
+        print(f"Solution to Project Euler #192 = {res}")
 
     #for n in range(2, 11):
     #    usg = iter(ulamSequenceGenerator(2, 2 * n + 1))
@@ -6812,3 +6835,9 @@ if __name__ == "__main__":
 
     #num = 9
     #print(num, partsCountMaximisingProductOfParts(num))
+
+    #cf = lambda i: 1
+    #it = iter(sqrtConvergentGenerator(13))
+    #for i in range(8):
+    #    print(i, next(it))
+    #print(sqrtContinuedFractionRepresentation(13))
