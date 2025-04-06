@@ -6528,6 +6528,60 @@ def modTetration(base: int=1777, tetr: int=1855, md: int=10 ** 8) -> int:
     print(f"Time taken = {time.time() - since:.4f} seconds")
     return res
 
+# Problem 189
+def numberOfTriangularGridColourings(n_colours: int=3, n_rows: int=8) -> int:
+    """
+    Solution to Project Euler #189
+    """
+    since = time.time()
+    if n_rows == 1: return n_colours
+    if n_colours <= 1: return 0
+    elif n_colours == 2: return n_colours
+    stk = []
+
+    memo = {}
+    def recur(row_idx: int, triangle_idx: int) -> int:
+        if triangle_idx == row_idx + 1:
+            row_idx += 1
+            if row_idx == n_rows: return 1
+            triangle_idx = 0
+        n_prev = max(0, row_idx + 1 - (not triangle_idx))
+        colour_map = {}
+        nxt = 0
+        #print(row_idx, triangle_idx, n_prev, stk)
+        for i in range(n_prev):
+            c0 = stk[-n_prev + i]
+            if c0 in colour_map.keys():
+                continue
+            colour_map[c0] = nxt
+            nxt += 1
+            if nxt == n_colours: break
+        prev = tuple(colour_map[stk[-n_prev + i]] for i in range(n_prev))
+        #print(prev)
+        args = (row_idx, triangle_idx, prev)
+        if args in memo.keys(): return memo[args]
+        res = 0
+        stk.append(0)
+        if triangle_idx:
+            c_opts = {c: 0 for c in range(n_colours)}
+            for c0 in set(range(n_colours)) - {prev[0], prev[-1]}:
+                for c in set(range(n_colours)) - {c0}:
+                    c_opts[c] += 1
+        else: c_opts = {c: 1 for c in range(n_colours)}
+        #print(c_opts)
+        for c, mult in c_opts.items():
+            stk[-1] = c
+            res += mult * recur(row_idx, triangle_idx + 1)
+        stk.pop()
+
+        memo[args] = res
+        return res
+
+    res = recur(0, 0)
+    print(f"Time taken = {time.time() - since:.4f} seconds")
+    return res
+
+
 # Problem 190
 def maximisedRestrictedPowerProduct(n: int) -> Tuple[int, int]:
     
@@ -6602,7 +6656,7 @@ def bestSqrtApproximationsDenominatorSum(n_max: int=10 ** 5, denom_bound: int=10
     return res
 
 if __name__ == "__main__":
-    to_evaluate = {192}
+    to_evaluate = {189}
 
     if not to_evaluate or 151 in to_evaluate:
         res = singleSheetCountExpectedValueFloat(n_halvings=4)
@@ -6796,6 +6850,10 @@ if __name__ == "__main__":
     if not to_evaluate or 188 in to_evaluate:
         res = modTetration(base=1777, tetr=100, md=10 ** 8)
         print(f"Solution to Project Euler #188 = {res}")
+
+    if not to_evaluate or 189 in to_evaluate:
+        res = numberOfTriangularGridColourings(n_colours=3, n_rows=8)
+        print(f"Solution to Project Euler #189 = {res}")
 
     if not to_evaluate or 190 in to_evaluate:
         res = sumFloorMaximisedRestrictedPowerProduct(n_min=2, n_max=15)
