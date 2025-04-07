@@ -6655,8 +6655,34 @@ def bestSqrtApproximationsDenominatorSum(n_max: int=10 ** 5, denom_bound: int=10
     print(f"Time taken = {time.time() - since:.4f} seconds")
     return res
 
+# Problem 193
+def squareFreeNumberCount(n_max: int=2 ** 50 - 1) -> int:
+    """
+    Solution to Project Euler #193
+    """
+    # Review- Try to find a faster method (look into Mobius function)
+    since = time.time()
+    mx = isqrt(n_max)
+    ps = PrimeSPFsieve(mx)
+    res = 0
+    for n in range(2, mx + 1):
+        p_cnt = 0
+        n2 = n
+        while n2 > 1:
+            if ps.sieve[n2][1] != 1: break
+            p_cnt += 1
+            n2 = ps.sieve[n2][2]
+        else:
+            contrib = n_max // n ** 2
+            #print(n, contrib, p_cnt)
+            res += contrib if (p_cnt & 1) else -contrib
+    #print(res)
+    res = n_max - res
+    print(f"Time taken = {time.time() - since:.4f} seconds")
+    return res
+
 if __name__ == "__main__":
-    to_evaluate = {189}
+    to_evaluate = {193}
 
     if not to_evaluate or 151 in to_evaluate:
         res = singleSheetCountExpectedValueFloat(n_halvings=4)
@@ -6866,6 +6892,10 @@ if __name__ == "__main__":
     if not to_evaluate or 192 in to_evaluate:
         res = bestSqrtApproximationsDenominatorSum(n_max=10 ** 5, denom_bound=10 ** 12)
         print(f"Solution to Project Euler #192 = {res}")
+    
+    if not to_evaluate or 193 in to_evaluate:
+        res = squareFreeNumberCount(n_max=2 ** 50 - 1)
+        print(f"Solution to Project Euler #193 = {res}")
 
     #for n in range(2, 11):
     #    usg = iter(ulamSequenceGenerator(2, 2 * n + 1))
