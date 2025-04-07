@@ -6681,8 +6681,29 @@ def squareFreeNumberCount(n_max: int=2 ** 50 - 1) -> int:
     print(f"Time taken = {time.time() - since:.4f} seconds")
     return res
 
+# Problem 194
+def allowedColouredConfigurationsCount(type_a_count: int=25, type_b_count: int=75, n_colours: int=1984, md: Optional[int]=10 ** 8) -> int:
+    """
+    Solution to Project Euler #194
+    
+    """
+    since = time.time()
+    if not type_a_count and not type_b_count: return 1
+    if n_colours < 3: return 0
+
+    n = n_colours
+    
+    res = math.comb(type_a_count + type_b_count, type_a_count) * n * (n - 1) * \
+            ((n - 2) * (4 + (n - 3) * (27 + (n - 4) * (33 + (n - 5) * (11 + (n - 6)))))) ** type_a_count *\
+            ((n - 2) * (6 + (n - 3) * (38 + (n - 4) * (40 + (n - 5) * (12 + (n - 6)))))) ** type_b_count
+    if md is not None:
+        res %= md
+    print(f"Time taken = {time.time() - since:.4f} seconds")
+    return res
+
+
 if __name__ == "__main__":
-    to_evaluate = {193}
+    to_evaluate = {194}
 
     if not to_evaluate or 151 in to_evaluate:
         res = singleSheetCountExpectedValueFloat(n_halvings=4)
@@ -6896,6 +6917,10 @@ if __name__ == "__main__":
     if not to_evaluate or 193 in to_evaluate:
         res = squareFreeNumberCount(n_max=2 ** 50 - 1)
         print(f"Solution to Project Euler #193 = {res}")
+
+    if not to_evaluate or 194 in to_evaluate:
+        res = allowedColouredConfigurationsCount(type_a_count=25, type_b_count=75, n_colours=1984, md=10 ** 8)
+        print(f"Solution to Project Euler #194 = {res}")
 
     #for n in range(2, 11):
     #    usg = iter(ulamSequenceGenerator(2, 2 * n + 1))
