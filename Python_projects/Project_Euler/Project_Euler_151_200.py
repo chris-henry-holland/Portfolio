@@ -6055,6 +6055,46 @@ def maximumProductOfPartsTerminatingSum(n_min: int=5, n_max: int=10 ** 4, base: 
     print(f"Time taken = {time.time() - since:.4f} seconds")
     return res
 
+# Problem 184
+def orderedFractionsWithMaxNumeratorDenominatorSquareSum(max_numerator_denominator_square_sum: int, reverse: bool=False, incl_first: bool=True, incl_last: bool=True) -> Generator[Tuple[int, int], None, None]:
+    # Using Farey sequences
+    bounds = [(1, 1), (0, 1)] if reverse else [(0, 1), (1, 1)]
+    curr = bounds[0]
+    if incl_first:
+        yield curr
+    stk = [bounds[1]]
+    while stk:
+        nxt = (curr[0] + stk[-1][0], curr[1] + stk[-1][1])
+        if nxt[0] ** 2 + nxt[1] ** 2 <= max_numerator_denominator_square_sum:
+            stk.append(nxt)
+            continue
+        curr = stk.pop()
+        if incl_last or curr != bounds[1]:
+            yield curr
+    return
+
+def latticeTrianglesContainingOriginCount(lattice_radius: int=105, incl_edge: bool=False) -> int:
+    since = time.time()
+    r_sq = lattice_radius ** 2
+    cnt1 = 0
+    cnt2 = 0
+    res = 0
+    it0 = lambda b1, b2, b3: orderedFractionsWithMaxNumeratorDenominatorSquareSum(r_sq - (not incl_edge), reverse=b1, incl_first=b2, incl_last=b3)
+    for it in (it0(False, True, False), it0(True, True, False), it0(False, True, False), it0(True, True, False)):
+        for frac in it:
+            #print(frac)
+            l_sq = frac[0] ** 2 + frac[1] ** 2
+            degen = isqrt((r_sq - (not incl_edge)) // l_sq)
+            #print(frac, degen)
+            res += cnt2 * degen
+            cnt2 += cnt1 * degen
+            cnt1 += degen
+
+    res <<= 1
+    print(f"Time taken = {time.time() - since:.4f} seconds")
+    return res
+
+
 # Problem 185
 def numberMindExact(alphabet: str="0123456789", guesses: List[Tuple[str, int]]=[
     ("5616185650518293", 2),
@@ -6701,9 +6741,155 @@ def allowedColouredConfigurationsCount(type_a_count: int=25, type_b_count: int=7
     print(f"Time taken = {time.time() - since:.4f} seconds")
     return res
 
+# Problem 195
+def integerSideSixtyDegreeTrianglesWithMaxInscribedCircleRadiusCount(radius_max: int=1053779) -> int:
+    since = time.time()
+    r_sq_mx = radius_max ** 2
+    """
+    
+    m_max = isqrt(48 * r_sq_mx)
+    print(f"m_max = {m_max}")
+    res = 0
+    seen = set()
+    for m in range(2, m_max + 1):
+        #print(f"m = {m}")
+        for n in range(1, m):
+            if gcd(m, n) != 1: continue
+            a0, b0, c0 = 2 * m * n - n ** 2, m ** 2 - n ** 2, m ** 2 - m * n + n ** 2
+            #print(a0, b0, c0)
+            g = gcd(gcd(a0, b0), c0)
+            #if g != 1:
+            #    print((m, n), (a0, b0, c0), g)
+            a, b, c = a0 // g, b0 // g, c0 // g
+            tup = tuple(sorted([a, b, c]))
+            if tup in seen  or tup[0] == tup[-1]: continue
+            seen.add(tup)
+            #print(a, b, c)
+            r_sq = 3 * (n * (m - n)) ** 2
+            comp1 = r_sq_mx * (4 * 3 ** 2)
+            if r_sq > comp1: break
+            comp2 = r_sq_mx * (4 * g ** 2)
+            #print((a, b, c), g)
+            #print(r_sq / r_sq_mx, r_sq, r_sq_mx)
+            k_sq_mx = comp2 // r_sq
+            #if not k_sq_mx: break
+            res += isqrt(k_sq_mx)
+    """
+    # Why is the following slower?
+    #print(f"m_max = {m_max}")
+    res = 0
+    seen = {}
+    m_max1 = isqrt((16 * r_sq_mx) // 3)
+    for m in range(2, m_max1 + 1):
+        #print(f"m = {m}")
+        start = (-(m - 1) % 3)
+        for n0 in range(start, ((m + 1) >> 1), 3):
+            for n in range(n0, n0 + 2):
+                if not n or gcd(m, n) != 1: continue
+                a, b, c = 2 * m * n - n ** 2, m ** 2 - n ** 2, m ** 2 - m * n + n ** 2
+                g = gcd(gcd(a, b), c)
+                if g != 1: print(1, g, (m, n), a, b, c)
+                #print(a0, b0, c0)
+                #g = gcd(gcd(a0, b0), c0)
+                #if g != 1:
+                #    print((m, n), (a0, b0, c0), g)
+                #a, b, c = a0 // g, b0 // g, c0 // g
+                tup = tuple(sorted([a, b, c]))
+                if tup in seen or tup[0] == tup[-1]:
+                    #print(f"already seen, {(m, n)}; {seen[tup]}")
+                    continue
+                seen[tup] = (m, n)
+                #print(a, b, c)
+                r_sq = 3 * (n * (m - n)) ** 2
+                #comp1 = r_sq_mx * (4 * 3 ** 2)
+                #if r_sq > comp1: break
+                #comp2 = r_sq_mx * (4 * g ** 2)
+                comp = r_sq_mx * 4
+                if r_sq > comp: break
+                #print((a, b, c), g)
+                #print(r_sq / r_sq_mx, r_sq, r_sq_mx)
+                k_sq_mx = comp // r_sq
+                #if not k_sq_mx: break
+                res += isqrt(k_sq_mx)
+            else: continue
+            break
+    since1 = time.time()
+    print(since1 - since)
+    m_max2 = isqrt(48 * r_sq_mx)
+    for m0 in range(1, m_max2 + 1, 3):
+        for i, m in enumerate((m0, m0 + 1)):
+            for n in range(2 - i, (m >> 1), 3):
+                if gcd(m, n) != 1: continue
+                a, b, c = (2 * m * n - n ** 2) // 3, (m ** 2 - n ** 2) // 3, (m ** 2 - m * n + n ** 2) // 3
+                g = gcd(gcd(a, b), c)
+                if g != 1: print(2, g, (m, n), a, b, c)
+                #print(a0, b0, c0)
+                #g = gcd(gcd(a0, b0), c0)
+                #if g != 1:
+                #    print((m, n), (a0, b0, c0), g)
+                #a, b, c = a0 // g, b0 // g, c0 // g
+                tup = tuple(sorted([a, b, c]))
+                if tup in seen or tup[0] == tup[-1]:
+                    print(f"already seen, {(m, n)}; {seen[tup]}")
+                    continue
+                seen[tup] = (m, n)
+                #print(a, b, c)
+                r_sq = (n * (m - n)) ** 2
+                #comp1 = r_sq_mx * (4 * 3 ** 2)
+                #if r_sq > comp1: break
+                #comp2 = r_sq_mx * (4 * g ** 2)
+                comp = r_sq_mx * 12
+                if r_sq > comp:
+                    #print(m, n)
+                    break
+                #print((a, b, c), g)
+                #print(r_sq / r_sq_mx, r_sq, r_sq_mx)
+                k_sq_mx = comp // r_sq
+                #if not k_sq_mx: break
+                res += isqrt(k_sq_mx)
+    """
+    for m in range(2, m_max2 + 1):
+        if not m % 3: continue
+        print(f"m = {m}")
+        start = (-m % 3)
+        if not start: start += 3
+        for n in range(start, (m >> 1), 3):
+            #print(m, n)
+            if gcd(m, n) != 1: continue
+            a, b, c = (2 * m * n - n ** 2) // 3, (m ** 2 - n ** 2) // 3, (m ** 2 - m * n + n ** 2) // 3
+            g = gcd(gcd(a, b), c)
+            if g != 1: print(2, g, (m, n), a, b, c)
+            #print(a0, b0, c0)
+            #g = gcd(gcd(a0, b0), c0)
+            #if g != 1:
+            #    print((m, n), (a0, b0, c0), g)
+            #a, b, c = a0 // g, b0 // g, c0 // g
+            tup = tuple(sorted([a, b, c]))
+            if tup in seen or tup[0] == tup[-1]:
+                print(f"already seen, {(m, n)}; {seen[tup]}")
+                continue
+            seen[tup] = (m, n)
+            #print(a, b, c)
+            r_sq = (n * (m - n)) ** 2
+            #comp1 = r_sq_mx * (4 * 3 ** 2)
+            #if r_sq > comp1: break
+            #comp2 = r_sq_mx * (4 * g ** 2)
+            comp = r_sq_mx * 12
+            if r_sq > comp:
+                print(m, n)
+                break
+            #print((a, b, c), g)
+            #print(r_sq / r_sq_mx, r_sq, r_sq_mx)
+            k_sq_mx = comp // r_sq
+            #if not k_sq_mx: break
+            res += isqrt(k_sq_mx)
+    """
+    print(time.time() - since1)
+    print(f"Time taken = {time.time() - since:.4f} seconds")
+    return res
 
 if __name__ == "__main__":
-    to_evaluate = {194}
+    to_evaluate = {184}
 
     if not to_evaluate or 151 in to_evaluate:
         res = singleSheetCountExpectedValueFloat(n_halvings=4)
@@ -6843,6 +7029,10 @@ if __name__ == "__main__":
         res = maximumProductOfPartsTerminatingSum(n_min=5, n_max=10 ** 4, base=10)
         print(f"Solution to Project Euler #183 = {res}")
 
+    if not to_evaluate or 184 in to_evaluate:
+        res = latticeTrianglesContainingOriginCount(lattice_radius=105, incl_edge=False)
+        print(f"Solution to Project Euler #184 = {res}")
+
     if not to_evaluate or 185 in to_evaluate:
         res = numberMindSimulatedAnnealing(alphabet="0123456789", n_trials=20, guesses=[
             ("5616185650518293", 2),
@@ -6922,6 +7112,10 @@ if __name__ == "__main__":
         res = allowedColouredConfigurationsCount(type_a_count=25, type_b_count=75, n_colours=1984, md=10 ** 8)
         print(f"Solution to Project Euler #194 = {res}")
 
+    if not to_evaluate or 195 in to_evaluate:
+        res = integerSideSixtyDegreeTrianglesWithMaxInscribedCircleRadiusCount(radius_max=1053779)
+        print(f"Solution to Project Euler #195 = {res}")
+
     #for n in range(2, 11):
     #    usg = iter(ulamSequenceGenerator(2, 2 * n + 1))
     #    even_pair = []
@@ -6954,3 +7148,6 @@ if __name__ == "__main__":
     #for i in range(8):
     #    print(i, next(it))
     #print(sqrtContinuedFractionRepresentation(13))
+
+    #for frac in orderedFractionsWithMaxNumeratorDenominatorSquareSum(max_numerator_denominator_square_sum=100, reverse=True):
+    #    print(frac)
