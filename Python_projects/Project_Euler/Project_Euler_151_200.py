@@ -6888,8 +6888,63 @@ def integerSideSixtyDegreeTrianglesWithMaxInscribedCircleRadiusCount(radius_max:
     print(f"Time taken = {time.time() - since:.4f} seconds")
     return res
 
+# Problem 198
+def orderedFareyFractionPairsWithMaxDenominatorProductGenerator(max_denominator_product: int) -> Generator[Tuple[Tuple[int, int], Tuple[int, int]], None, None]:
+    # Using Farey sequences
+    
+    pair = ((0, 1), (1, 1))
+    #yield pair
+    stk = [pair]
+    while stk:
+        pair = stk.pop()
+        if pair[0][1] * pair[1][1] > max_denominator_product:
+            continue
+        yield pair
+        frac = (pair[0][0] + pair[1][0], pair[0][1] + pair[1][1])
+        stk.append((frac, pair[1]))
+        stk.append((pair[0], frac))
+    return
+
+def ambiguousNumberCount(max_denominator: int=10 ** 8, upper_bound: Tuple[int, int]=(1, 100), incl_upper_bound: bool=False) -> int:
+    since = time.time()
+    res = 0
+    comp = (lambda x: x[0] * upper_bound[1] <= x[1] * upper_bound[0]) if incl_upper_bound else (lambda x: x[0] * upper_bound[1] < x[1] * upper_bound[0])
+    for pair in orderedFareyFractionPairsWithMaxDenominatorProductGenerator(max_denominator >> 1):
+        if not comp(pair[0]): break
+        numer = pair[0][0] * pair[1][1] + pair[1][0] * pair[0][1]
+        denom = (pair[0][1] * pair[1][1]) << 1
+        #if numer & 1:
+        #    denom <<= 1
+        #    if denom > max_denominator: continue
+        #else:
+        #    numer >>= 1
+        if comp((numer, denom)):
+            res += 1
+            #print((numer, denom), pair)
+        #res += comp((numer, denom))
+
+    print(f"Time taken = {time.time() - since:.4f} seconds")
+    return res
+
+def ambiguousNumberCount2(max_denominator: int=10 ** 8, upper_bound: Tuple[int, int]=(1, 100), incl_upper_bound: bool=False) -> int:
+    since = time.time()
+    mx = max_denominator >> 1
+    denom1 = isqrt(mx)
+    stk = list(range(upper_bound[1], denom1))
+    res = 0
+    while stk:
+        denom2 = stk[-1]
+        if denom1 * denom2 > mx:
+            denom1 = stk.pop()
+            continue
+        res += 1
+        stk.append(denom1 + denom2)
+    res += mx - (upper_bound[1] >> 1)
+    print(f"Time taken = {time.time() - since:.4f} seconds")
+    return res
+
 if __name__ == "__main__":
-    to_evaluate = {184}
+    to_evaluate = {198}
 
     if not to_evaluate or 151 in to_evaluate:
         res = singleSheetCountExpectedValueFloat(n_halvings=4)
@@ -7115,6 +7170,10 @@ if __name__ == "__main__":
     if not to_evaluate or 195 in to_evaluate:
         res = integerSideSixtyDegreeTrianglesWithMaxInscribedCircleRadiusCount(radius_max=1053779)
         print(f"Solution to Project Euler #195 = {res}")
+    
+    if not to_evaluate or 198 in to_evaluate:
+        res = ambiguousNumberCount2(max_denominator=10 ** 8, upper_bound=(1, 100), incl_upper_bound=False)
+        print(f"Solution to Project Euler #198 = {res}")
 
     #for n in range(2, 11):
     #    usg = iter(ulamSequenceGenerator(2, 2 * n + 1))
@@ -7151,3 +7210,6 @@ if __name__ == "__main__":
 
     #for frac in orderedFractionsWithMaxNumeratorDenominatorSquareSum(max_numerator_denominator_square_sum=100, reverse=True):
     #    print(frac)
+
+    #for pair in orderedFareyFractionPairsWithMaxDenominatorProductGenerator(max_denominator_product=100):
+    #    print(pair)
