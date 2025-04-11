@@ -6888,6 +6888,44 @@ def integerSideSixtyDegreeTrianglesWithMaxInscribedCircleRadiusCount(radius_max:
     print(f"Time taken = {time.time() - since:.4f} seconds")
     return res
 
+# Problem 197
+def findFloorRecursiveSequenceLoop(u0: float, max_term: int, base: int=2, a: float=-1., b: float=0., c: float=30.403243784, div: int=10 ** 9) -> Tuple[int, Tuple[float], Tuple[float]]:
+    seen = {}
+    u = u0 * div
+    i = 0
+    res = []
+    i0 = max_term
+    #print(max_term)
+    for i in range(max_term + 1):
+        if u in seen.keys():
+            i0 = seen[u]
+            break
+        seen[u] = i
+        res.append(u)
+        x = u / div
+        u = math.floor(base ** (a * x ** 2 + b * x + c))
+        i += 1
+    
+    return (div, tuple(res[:i0]), tuple(res[i0:]))
+        
+def findFloorRecursiveSequenceTermSum(term_numbers: list=[10 ** 12, 10 ** 12 + 1], u0: float=-1, base: int=2, a: float=-1., b: float=0., c: float=30.403243784, div: int=10 ** 9) -> float:
+    """
+    Solution to Project Euler #197
+    """
+    since = time.time()
+    _, init_terms, loop_terms = findFloorRecursiveSequenceLoop(u0, max_term=max(term_numbers), base=base, a=a, b=b, c=c, div=div)
+    #print(init_terms, loop_terms)
+    res = 0
+    for i in term_numbers:
+        if i < len(init_terms):
+            res += init_terms[i]
+            continue
+        j = (i - len(init_terms)) % len(loop_terms)
+        res += loop_terms[j]
+    res /= div
+    print(f"Time taken = {time.time() - since:.4f} seconds")
+    return res
+
 # Problem 198
 def orderedFareyFractionPairsWithMaxDenominatorProductGenerator(max_denominator_product: int) -> Generator[Tuple[Tuple[int, int], Tuple[int, int]], None, None]:
     # Using Farey sequences
@@ -6944,7 +6982,7 @@ def ambiguousNumberCount2(max_denominator: int=10 ** 8, upper_bound: Tuple[int, 
     return res
 
 if __name__ == "__main__":
-    to_evaluate = {198}
+    to_evaluate = {197}
 
     if not to_evaluate or 151 in to_evaluate:
         res = singleSheetCountExpectedValueFloat(n_halvings=4)
@@ -7170,6 +7208,10 @@ if __name__ == "__main__":
     if not to_evaluate or 195 in to_evaluate:
         res = integerSideSixtyDegreeTrianglesWithMaxInscribedCircleRadiusCount(radius_max=1053779)
         print(f"Solution to Project Euler #195 = {res}")
+
+    if not to_evaluate or 197 in to_evaluate:
+        res = findFloorRecursiveSequenceTermSum(term_numbers=[10 ** 12, 10 ** 12 + 1], u0=-1, base=2, a=-1., b=0., c=30.403243784, div=10 ** 9)
+        print(f"Solution to Project Euler #197 = {res}")
     
     if not to_evaluate or 198 in to_evaluate:
         res = ambiguousNumberCount2(max_denominator=10 ** 8, upper_bound=(1, 100), incl_upper_bound=False)
