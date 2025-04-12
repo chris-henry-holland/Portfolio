@@ -6502,6 +6502,21 @@ def semiPrimeCount(n_max: int=10 ** 8 - 1) -> int:
 
 # Problem 188
 def primeFactorisation(n: int) -> Dict[int, int]:
+    """
+    Finds the prime factorisation of the strictly positive integer
+    n.
+
+    Args:
+        Required positional:
+        n (int): Strictly positive integer whose prime factorisation
+                is to be found.
+    
+    Returns:
+    Dictionary (dict) whose keys are all the prime numbers
+    that divide n with corresponding value as the number of
+    times that prime divides n (i.e. the power of that prime in the
+    prime factorisation of n).
+    """
     res = {}
     if n < 2: return {}
     n2 = n
@@ -6527,11 +6542,45 @@ def primeFactorisation(n: int) -> Dict[int, int]:
     return res
 
 def eulerTotientFunction(n: int) -> int:
+    """
+    Finds the Euler totient function for the strictly positive
+    integer n.
+
+    For each strictly positive integer, the Euler totient function
+    at that integer is the number of strictly positive integers
+    less than that integer to which the integer is coprime (i.e.
+    the greatest common denominator of the two integers is 1).
+    Note that for a prime number p, the Euler totient function
+    for p is (p - 1).
+
+    Given that the Euler totient function is multiplicative (i.e.
+    the value of the function for the product of two coprime
+    integers is equal to the product of the value of the Euler
+    totient function for those two integers) and the Euler
+    totient function for a prime p to the power of a positive
+    integer k is (p - 1) * p ** (k - 1), if n has the prime
+    factorisation:
+        n = p_1 ** k_1 * p_2 ** k_2 * ...
+    it follows that the Euler totient function for n is:
+        (p_1 - 1) * p_1 ** (k_1 - 1) * (p_2 - 1) * p_2 ** (k_2 - 1) * ...
+    This is the method used by this function to calculate
+    the Euler totient function for given n, using the function
+    primeFactorisation() to find the prime factorisation of n.
+
+    Args:
+        Required positional:
+        n (int): Strictly positive integer for which the value
+                of the Euler totient function is to be found.
+    
+    Returns:
+    Integer (int) giving the value of the Euler totient function
+    (as defined above) for n.
+    """
     p_fact = primeFactorisation(n)
     #print(p_fact)
     res = 1
-    for p, f in p_fact.items():
-        res *= (p - 1) * (p ** (f - 1))
+    for p, k in p_fact.items():
+        res *= (p - 1) * (p ** (k - 1))
     return res
 
 def modPower(base: int, exp: int, md: int, e_tot_md: Optional[int]=None) -> int:
