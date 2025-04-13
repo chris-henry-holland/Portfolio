@@ -6596,10 +6596,41 @@ def modPower(base: int, exp: int, md: int, e_tot_md: Optional[int]=None) -> int:
 def modTetration(base: int=1777, tetr: int=1855, md: int=10 ** 8) -> int:
     """
     Solution to Project Euler #188
+
+    Computes the strictly positive integer base tetrated to the non-negative
+    integer tetr modulo md (i.e. the remainder when base to the tetr:th
+    tetration is divided by md).
+
+    Tetration for a strictly positive integer is defined such that
+    the tetration of that integer to 0 is 1 and for any positive
+    integer k, the tetration of the integer to k (or equivalently the
+    k:th tetration of the integer) is equal to the integer to the
+    power of the tetration of the integer to (k - 1).
+
+    Args:
+        Optional named:
+        base (int): Strictly positive integer to be tetrated to the
+                integer tetr modulo md.
+            Default: 1777
+        tetr (int): Non-negative integer giving the number to which
+                base is to be tetrated modulo md.
+            Default: 1855
+        md (int): Strictly positive integer giving the modulus to
+                which the tetration of base to tetr is to be taken.
+
+    Returns:
+    Integer (int) giving the tetration of base to k modulo md.
+
+    Outline of rationale:
+    TODO (explain the reduction of each intermediate modulo the
+    Euler totient function of md due to the Euler-Fermat theorem
+    and the checking for cycles to potentially reduce the number of
+    iterations needing to be performed)
     """
     since = time.time()
     e_tot_md = eulerTotientFunction(md)
     #print(md, e_tot_md)
+    if not tetr: return 1
     res = base
     seen_dict = {1: 0, base: 1}
     seen_lst = [0, base]
