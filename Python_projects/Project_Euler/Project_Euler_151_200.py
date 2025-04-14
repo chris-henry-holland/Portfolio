@@ -6652,6 +6652,58 @@ def modTetration(base: int=1777, tetr: int=1855, md: int=10 ** 8) -> int:
 def numberOfTriangularGridColourings(n_colours: int=3, n_rows: int=8) -> int:
     """
     Solution to Project Euler #189
+
+    For a collection of equilateral triangles of the same size
+    arranged in a tesselating pattern itself forming an equilateral
+    triangle with n_rows rows of alternating upward pointing and
+    downward pointing triangles, calculates the number of ways of
+    colouring the colleciont of triangles such that up to n_colours
+    different colours are used and no two adjacent triangles (i.e.
+    triangles for which the edge of one lies entirely up against
+    the edge of another) have the same colour.
+
+    In this, symmetries are not taken into account (so for example,
+    if one pattern can be rotated to form another pattern that was
+    different from the first in its initial orientation, the two
+    patterns are still considered to be different).
+
+    Args:
+        Optional named:
+        n_colours (int): Strictly positive integer giving the
+                maximum number of different colours that may be
+                used to colour the collection of equilateral triangles
+                for colourings counted in the total.
+            Default: 3
+        n_rows (int): Strictly positive integer giving the number of
+                rows of alternating upward and downward pointing
+                equilateral triangles in the overall equilateral
+                triangle pattern.
+            Default: 8
+    
+    Returns:
+    Integer (int) giving the number of different possible colourings
+    of the tesselating equilateral subject to the rules for allowed
+    colourings stated with given n_colours and n_rows.
+
+    Brief outline of rationale:
+    This uses top-down dynamic programming with memoisation, going
+    row by row from a vertex of the overall triangle pattern towards
+    the opposite edge, going from one upward pointing triangle to the
+    next (and so accounting for one or two triangles at a time)
+    keeping track of the position in the overall pattern (by row and
+    index) and the colourings of the triangles that will be adjacent
+    to triangles yet to be placed, recalibrating the colour labelling
+    at each step such that the colours of those triangles are labelled
+    according to where they were first encountered amoung those, so
+    that for instance the first triangle recorded and all others in
+    recorded with the same colour are labelled 0, the next different
+    colour recorded and all others with the same colour are labelled
+    1 and so on. This reduces the possibility space by recognising
+    different colourings that can be mapped onto each other by a
+    bijection as equivalent (as it is only whether two colours are
+    the same or different that matter), so enabling us to just
+    calculate each equivalent colouring once and saving duplicated
+    calculations.
     """
     since = time.time()
     if n_rows == 1: return n_colours
@@ -7062,7 +7114,7 @@ def ambiguousNumberCount2(max_denominator: int=10 ** 8, upper_bound: Tuple[int, 
     return res
 
 if __name__ == "__main__":
-    to_evaluate = {197}
+    to_evaluate = {189}
 
     if not to_evaluate or 151 in to_evaluate:
         res = singleSheetCountExpectedValueFloat(n_halvings=4)
