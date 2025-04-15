@@ -6756,7 +6756,44 @@ def numberOfTriangularGridColourings(n_colours: int=3, n_rows: int=8) -> int:
 
 # Problem 190
 def maximisedRestrictedPowerProduct(n: int) -> Tuple[int, int]:
+    """
     
+    
+    Outline of rationale:
+    Solved using Lagrange multipliers. For real values, this has the
+    Lagrangian (where x is the n-dimensional vector (x_1, x_2, ..., x_n))
+    and l is a real valued parameter, the Lagrange multiplier:
+        L(x, l) = f(x) + l * g(x)
+    where:
+        f(x) = (prod i = 1 to n) x_i ** i
+        g(x) = ((sum i = 1 to n) x_i) - n
+    The extrema of f(x) subject to the constraint g(x) = 0 are the
+    values of x of the solutions of the simultaneous equations:
+        (partial d / dx_i) L(x) = 0
+    for i = 1, 2, ..., n and
+        (partial d / dl) L(x) = 0
+    We find that:
+        (partial d / dx_i) L(x) = j * f(x) / x_j + l
+    and:
+        (partial d / dl) L(x) = g(x)
+    Therefore, the simultaneous equations become:
+        f(x) = l * x_i / i
+    for i = 1, 2, ..., n, and
+        (sum i = 1 to n) x_i = n
+    For 1 < i <= n, this gives:
+        x_i / x_(i - 1) = i / (i - 1)
+    From this it can be shown by induction (or intuitively by
+    telescopic cancellation) that for 1 <= i <= n:
+        x_i = i * x_1
+    Consequently:
+        (sum i = 1 to n) x_i = x_1 * (sum i = 1 to n) i
+                             = x_1 * n * (n + 1) / 2
+    Thus, given that this must equal n:
+        x_1 = 2 / (m + 1)
+    and so for 1 <= i <= n:
+        x_i = 2 * i / (n + 1)
+    TODO
+    """
     def powerProduct(num):
         res = 1
         for i in range(2, num + 1):
