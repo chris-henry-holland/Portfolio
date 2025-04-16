@@ -6757,8 +6757,30 @@ def numberOfTriangularGridColourings(n_colours: int=3, n_rows: int=8) -> int:
 # Problem 190
 def maximisedRestrictedPowerProduct(n: int) -> Tuple[int, int]:
     """
+    For the strictly postive integer n, finds the maximum value of
+    the function:
+        P_n(x_1, x_2, ..., x_n) = (prod i from 1 to n) x_i ** i
+    where for integer 1 <= i <= n, x_i is real and:
+        (sum i from 1 to n) x_i = n
+
+    It can be shown that this value must be rational (see outline
+    of rationale below), and so the answer is given as a fraction
+    in lowest terms.
     
+    Args:
+        Required positional:
+        n (int): Strictly positive integer for which the above
+                function P_n(x_1, x_2, ..., x_n) should be maximised
+                subject to the stated constraints on x_1, x_2, ...,
+                x_n for this n.
     
+    Returns:
+    2-tuple of integers (int) representing the rational number that
+    is the maximum value of P_n(x_1, x_2, ..., x_n) subject to the
+    stated constraints on x_1, x_2, ..., x_n for the given n, given
+    as a fraction in lowest terms where index 0 and 1 contain the
+    numerator and denominator respectively of this fraction.
+
     Outline of rationale:
     Solved using Lagrange multipliers. For real values, this has the
     Lagrangian (where x is the n-dimensional vector (x_1, x_2, ..., x_n))
