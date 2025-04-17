@@ -6760,7 +6760,7 @@ def maximisedRestrictedPowerProduct(n: int) -> Tuple[int, int]:
     For the strictly postive integer n, finds the maximum value of
     the function:
         P_n(x_1, x_2, ..., x_n) = (prod i from 1 to n) x_i ** i
-    where for integer 1 <= i <= n, x_i is real and:
+    where for integers 1 <= i <= n, x_i is real and:
         (sum i from 1 to n) x_i = n
 
     It can be shown that this value must be rational (see outline
@@ -6837,6 +6837,40 @@ def maximisedRestrictedPowerProduct(n: int) -> Tuple[int, int]:
 def sumFloorMaximisedRestrictedPowerProduct(n_min: int=2, n_max: int=15) -> int:
     """
     Solution to Project Euler #190
+
+    For the positive integers n, define the family of functions:
+        P_n(x_1, x_2, ..., x_n) = (prod i from 1 to n) x_i ** i
+    where for integers 1 <= i <= n, x_i are all real.
+    
+    This function for each integer n between n_min and n_max
+    inclusive finds the floor of the maximum of P_n(x_1, x_2, ..., x_n)
+    such that:
+        (sum i from 1 to n) x_i = n
+    and returns the sum of these values.
+    
+    Args:
+        Required positional:
+        n_min (int): Strictly positive integer giving the smallest
+                value of n for which the floor of the maximum of the
+                function P_n(x_1, x_2, ..., x_n) subject to the
+                stated constraints on x_1, x_2, ..., x_n should be
+                included in the sum.
+            Default: 2
+        n_max (int): Integer no less than n_min giving the largest
+                value of n for which the floor of the maximum of the
+                function P_n(x_1, x_2, ..., x_n) subject to the
+                stated constraints on x_1, x_2, ..., x_n should be
+                included in the sum.
+    
+    Returns:
+    Integer (int) giving the sum of the floors of the maximum values of
+    P_n(x_1, x_2, ..., x_n) where for integers 1 <= i <= n, x_i is
+    real and sum to n, over the integers n from n_min to n_max
+    inclusive.
+
+    Outline of rationale:
+    See outline of rationale in the documentation for the function
+    maximisedRestrictedPowerProduct().
     """
     since = time.time()
     res = 0
