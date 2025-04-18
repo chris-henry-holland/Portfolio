@@ -6811,10 +6811,16 @@ def maximisedRestrictedPowerProduct(n: int) -> Tuple[int, int]:
         (sum i = 1 to n) x_i = x_1 * (sum i = 1 to n) i
                              = x_1 * n * (n + 1) / 2
     Thus, given that this must equal n:
-        x_1 = 2 / (m + 1)
+        x_1 = 2 / (n + 1)
     and so for 1 <= i <= n:
         x_i = 2 * i / (n + 1)
-    TODO
+    Therefore, the maximum value of P_n(x) for the given constraint
+    is:
+        (prod i from 1 to n) (2 * i / (n + 1)) ** i
+        = (2 / (n + 1)) ** (n * (n + 1) / 2) * (prod i from 1 to n) i ** i
+    Since n and i are integers and the product contains a finite
+    number of terms, this value is rational, justifying the
+    returned value being given as a fraction.
     """
     def powerProduct(num):
         res = 1
@@ -6831,7 +6837,7 @@ def maximisedRestrictedPowerProduct(n: int) -> Tuple[int, int]:
         denom = ((n + 1) >> 1) ** exp
     g = gcd(numer, denom)
     res = (numer // g, denom // g)
-    print(res, res[0] / res[1])
+    #print(res, res[0] / res[1])
     return res
 
 def sumFloorMaximisedRestrictedPowerProduct(n_min: int=2, n_max: int=15) -> int:
