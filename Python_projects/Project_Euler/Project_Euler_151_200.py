@@ -6888,6 +6888,47 @@ def sumFloorMaximisedRestrictedPowerProduct(n_min: int=2, n_max: int=15) -> int:
 
 # Problem 191
 def attendancePrizeStringCount(n_days: int=30, n_consec_absent: int=3, n_late: int=2) -> int:
+    """
+    Solution to Project Euler #191
+
+    Over a period of n_days, count the number of ways of achieving
+    a daily attendance record with no consecutive absences of
+    n_consec_absent and no more than n_late total lates, where
+    the possible outcomes each day are present, absent or late.
+
+    Two attendance records over n_days are distinct if and only
+    if the attendance marked on at least one of the days is
+    different between the two records.
+
+    Args:
+        Optional named:
+        n_days (int): The total number of days of the attendance
+                record.
+            Default: 30
+        n_consec_absent (int): The number of consecutive absences
+                in an attendance record that will result in that
+                attendance record not being counted in the total.
+            Default: 3
+        n_late (int): The total number of lates in an attendance
+                record that will result in the that attendance
+                record not being counted in the total.
+            Default: 2
+    
+    Returns:
+    The total number of distinct attendance records possible over
+    n_days subject to the given constraints.
+    
+    Brief outline of rationale:
+    Solved using bottom-up dynamic programming, iterating over the
+    days in increasing order, at each stage finding the number
+    of ways of after that day having each non-negative integer up to
+    (n_consec_absent - 1) consecutive absences up to the current day
+    without having any previous consecutive n_consec_absent days
+    absent and each non-negative integer up to (n_late - 1) total
+    days late, based on these counts for the previous day.
+    The solution is then the total of these numbers for day number
+    n_days.
+    """
     since = time.time()
     curr = [[0] * n_consec_absent for _ in range(n_late)]
     curr[0][0] = 1
