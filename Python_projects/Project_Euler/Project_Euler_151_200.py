@@ -6951,7 +6951,35 @@ def attendancePrizeStringCount(n_days: int=30, n_consec_absent: int=3, n_late: i
 # Problem 192
 def bestSqrtApproximationsDenominatorSum(n_max: int=10 ** 5, denom_bound: int=10 ** 12) -> int:
     """
-    TODO
+    Finds the sum of the denominators of the best rational approximations
+    for the denominator bound denom_bound of the square roots of all
+    non-square integers between 1 and n_max inclusive.
+
+    The best rational approximation of a non-negative number num
+    for a given denominator bound denom_bound is the unique fraction
+    p / q (where p and q are integers) such that q < denom_bound and
+    for any integers p2, q2:
+        if abs(num - p2 / q2) < abs(num - p / q)
+        then q2 > denom_bound.
+    
+    Args:
+        Optional named:
+        n_max (int): Non-negative integer such that the denominator of
+                the best rational approximation of no integers larger
+                than this are included in the denominator sum.
+            Default: 10 ** 5
+        denom_bound (int): Strictly positive integer giving the maximum
+                value of denominator the best rational approximations
+                may have when expressed as a fraction in lowest terms.
+            Default: 10 ** 12
+        
+    
+    Returns:
+    The sum of the denominators of the described best rational approximations.
+
+    Outline of rationale:
+    See documentation for continuedFractionConvergentGenerator() and
+    https://shreevatsa.wordpress.com/2011/01/10/not-all-best-rational-approximations-are-the-convergents-of-the-continued-fraction/
     """
     # See https://shreevatsa.wordpress.com/2011/01/10/not-all-best-rational-approximations-are-the-convergents-of-the-continued-fraction/
     since = time.time()
