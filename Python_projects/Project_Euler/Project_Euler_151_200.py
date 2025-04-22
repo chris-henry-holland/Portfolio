@@ -7267,6 +7267,9 @@ def ambiguousNumberCount(max_denominator: int=10 ** 8, upper_bound: Tuple[int, i
     return res
 
 def ambiguousNumberCount2(max_denominator: int=10 ** 8, upper_bound: Tuple[int, int]=(1, 100), incl_upper_bound: bool=False) -> int:
+    """
+    Solution to Project Euler Problem #198
+    """
     since = time.time()
     mx = max_denominator >> 1
     denom1 = isqrt(mx)
@@ -7283,8 +7286,52 @@ def ambiguousNumberCount2(max_denominator: int=10 ** 8, upper_bound: Tuple[int, 
     print(f"Time taken = {time.time() - since:.4f} seconds")
     return res
 
+# Problem #199
+def IterativeCirclePackingUncoveredAreaProportion(n_iter: int=10) -> float:
+
+    since = time.time()
+    n_initial_internal_circles = 3
+    if n_initial_internal_circles < 2: return 0.
+    counts = [0, n_initial_internal_circles]
+    precursors = [(), ()]
+    precursor_dict = {}
+    curr_dict = {(0, 1, 1): n_initial_internal_circles, (1, 1, 1): 1}
+    for i in range(n_iter):
+        prev_dict = curr_dict
+        curr_dict = {}
+        for prec, f in prev_dict.items():
+            if prec in precursor_dict.keys():
+                idx = precursor_dict[prec]
+            else:
+                idx = len(precursors)
+                precursors.append(prec)
+                counts.append(0)
+                precursor_dict[prec] = idx
+            counts[idx] += f
+            if i == n_iter - 1: continue
+            for prec2 in ((prec[0], prec[1], idx), (prec[0], prec[2], idx), (prec[1], prec[2], idx)):
+                curr_dict[prec2] = curr_dict.get(prec2, 0) + f
+    radii_inv = [-1, 1 + 2 / math.sqrt(3)]
+    #print(precursors)
+    #print(counts)
+    
+    res = 1 - counts[1] / radii_inv[1] ** 2
+    for i in range(2, len(counts)):
+        f = counts[i]
+        prec = precursors[i]
+        prec_r_inv = [radii_inv[j] for j in prec]
+        #print(prec_r_inv)
+        r_inv = sum(prec_r_inv) + 2 * math.sqrt(prec_r_inv[0] * prec_r_inv[1] + prec_r_inv[0] * prec_r_inv[2] + prec_r_inv[1] * prec_r_inv[2])
+        radii_inv.append(r_inv)
+        res -= f / r_inv ** 2
+    #print(radii_inv)
+    print(f"Time taken = {time.time() - since:.4f} seconds")
+    return res
+
+
+
 if __name__ == "__main__":
-    to_evaluate = {189}
+    to_evaluate = {199}
 
     if not to_evaluate or 151 in to_evaluate:
         res = singleSheetCountExpectedValueFloat(n_halvings=4)
@@ -7518,6 +7565,10 @@ if __name__ == "__main__":
     if not to_evaluate or 198 in to_evaluate:
         res = ambiguousNumberCount2(max_denominator=10 ** 8, upper_bound=(1, 100), incl_upper_bound=False)
         print(f"Solution to Project Euler #198 = {res}")
+
+    if not to_evaluate or 199 in to_evaluate:
+        res = IterativeCirclePackingUncoveredAreaProportion(n_iter=10)
+        print(f"Solution to Project Euler #199 = {res}")
 
     #for n in range(2, 11):
     #    usg = iter(ulamSequenceGenerator(2, 2 * n + 1))
