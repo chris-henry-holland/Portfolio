@@ -17,7 +17,7 @@ sys.path.append(os.path.join(os.path.dirname(__file__), "../Algorithms_and_Datas
 sys.path.append(os.path.join(os.path.dirname(__file__), "../Algorithms_and_Datastructures/Data_structures"))
 from prime_sieves import PrimeSPFsieve, SimplePrimeSieve
 from addition_chains import AdditionChainCalculator
-from string_searching_algorithms import rollingHashWithValue
+from string_searching_algorithms import rollingHashWithValue, KnuthMorrisPratt
 from Pythagorean_triple_generators import pythagoreanTripleGeneratorByHypotenuse
 from continued_fractions_and_Pell_equations import sqrtBestRationalApproximation
 
@@ -7536,7 +7536,7 @@ def ambiguousNumberCount2(max_denominator: int=10 ** 8, upper_bound: Tuple[int, 
     print(f"Time taken = {time.time() - since:.4f} seconds")
     return res
 
-# Problem #199
+# Problem 199
 def IterativeCirclePackingUncoveredAreaProportion(n_iter: int=10) -> float:
     """
     Solution to Project Euler #199
@@ -7580,8 +7580,156 @@ def IterativeCirclePackingUncoveredAreaProportion(n_iter: int=10) -> float:
     print(f"Time taken = {time.time() - since:.4f} seconds")
     return res
 
+# Problem 200
+def squbeGenerator(ps: Optional[SimplePrimeSieve]=None, filter_func: Optional[Callable[[int], bool]]=None) -> Generator[int, None, None]:
+    if ps is None: ps = SimplePrimeSieve()
+    if filter_func is None:
+        filter_func = lambda x: True
+    
+    rng_mult = 10
+    
+    curr_rng = [1, rng_mult]
+    p_gen = iter(ps.endlessPrimeGenerator())
+    p0 = next(p_gen)
+    p_nxt = p0
+    
+    p_lst = []
+    i2_0 = 1
+    while True:
+        #print(f"rng = {curr_rng}")
+        p_mx = isqrt(curr_rng[1] // p0 ** 3)
+        if p_nxt <= p_mx:
+            p_lst.append(p_nxt)
+            for p in p_gen:
+                if p > p_mx:
+                    p_nxt = p
+                    break
+                p_lst.append(p)
+        
+        sqube_lst = []
+        #i1_0 = 0
+        for i2 in range(i2_0, len(p_lst)):
+            p2 = p_lst[i2]
+            p2_sq = p2 ** 2
+            i1_0 = bisect.bisect_right(p_lst, integerNthRoot((curr_rng[0] - 1) // p2_sq, 3), hi=i2)
+            i1_1 = bisect.bisect_right(p_lst, integerNthRoot((curr_rng[1] - 1) // p2_sq, 3), lo=i1_0, hi=i2)
+            for i1 in range(i1_0, i1_1):
+                p1 = p_lst[i1]
+                num = p2_sq * p1 ** 3
+                if filter_func(num): sqube_lst.append(num)
+            
+            p2_cub = p2_sq * p2
+            i1_0 = bisect.bisect_right(p_lst, isqrt((curr_rng[0] - 1) // p2_cub), hi=i2)
+            i1_1 = bisect.bisect_right(p_lst, isqrt((curr_rng[1] - 1) // p2_cub), lo=i1_0, hi=i2)
+            for i1 in range(i1_0, i1_1):
+                p1 = p_lst[i1]
+                num = p2_cub * p1 ** 2
+                if filter_func(num): sqube_lst.append(num)
+        
+        #sqube_lst.sort()
+        for num in sorted(sqube_lst):
+            yield num
+
+        curr_rng = [curr_rng[1], curr_rng[1] * rng_mult]
+
+    return
+    """
+    while True:
+        if p_max is None: p_max = float("inf")
+        for p2 in :
+            if p2 > p_max: break
+            p2_sq = p2 ** 2
+            while sqube_heap and sqube_heap[0] < p2_sq * p_lst[0] ** 3:
+                yield heapq.heappop(sqube_heap)
+            for p1 in p_lst:
+                common = p1 ** 2 * p2_sq
+                num2 = common * p1
+                if filter_func(num2):
+                    heapq.heappush(sqube_heap, num2)
+                num3 = common * p2
+                if filter_func(num3):
+                    heapq.heappush(sqube_heap, num3)
+            p_lst.append(p2)
+        print("reached largest allowed prime")
+        while sqube_heap:
+            yield heapq.heappop(sqube_heap)
+    return
+    """
+    
+
+def isPrimeFree(num: int, primeChecker: Callable[[int], bool], base: int=10) -> bool:
+    if primeChecker(num): return False
+    num2 = num
+    mult = 1
+    while num2:
+        num2, d = divmod(num2, base)
+        #print(num2 == 0, d)
+        for d2 in range(num2 == 0, d):
+            #print(num + (d2 - d) * mult)
+            if primeChecker(num + (d2 - d) * mult): return False
+        #print(d + 1, base)
+        for d2 in range(d + 1, base):
+            #print(num + (d2 - d) * mult)
+            if primeChecker(num + (d2 - d) * mult): return False
+        mult *= base
+    return True
+
+def intContainsSubstring(num: int, substr_rev_kmp: KnuthMorrisPratt, base: int=10):
+    s = []
+    num2 = num
+    while num2:
+        num2, d = divmod(num2, base)
+        s.append(d)
+    #print(s, substr_lst[::-1])
+    #kmp = KnuthMorrisPratt(substr_lst[::-1])
+    for _ in substr_rev_kmp.matchStartGenerator(s):
+        #print("contains substring")
+        return True
+    else: return False
+
+def findNthPrimeProofSqubeWithSubstring(substr_num: int=200, n: int=200, base: int=10) -> int:
+    """
+    Solution to Project Euler #200
+    """
+    since = time.time()
+    ps = SimplePrimeSieve()
+
+    memo = {}
+    def primeChecker(num: int) -> bool:
+        args = num
+        if args in memo.keys(): return memo[args]
+        res = ps.millerRabinPrimalityTest(num, n_trials=10)
+        # res = ps.isPrime(num, extend_sieve=False, extend_sieve_sqrt=False, use_miller_rabin_screening=True, n_miller_rabin_trials=3)
+        memo[args] = res
+        return res
+
+    count = 0
+    p = []
+    num2 = substr_num
+    while num2:
+        num2, d = divmod(num2, base)
+        p.append(d)
+    kmp = KnuthMorrisPratt(p)
+
+    def squbeFilterFunction(num: int) -> bool:
+        return intContainsSubstring(num, kmp, base=base)
+
+    #p = p[::-1]
+    found = False
+    for num in squbeGenerator(ps=ps, filter_func=squbeFilterFunction):
+        #print(num)
+        if not isPrimeFree(num, primeChecker, base=base): continue
+        count += 1
+        print(count, num)
+        if count == n:
+            found = True
+            break
+    res = num if found else -1
+    print(f"Time taken = {time.time() - since:.4f} seconds")
+    return res
+
 if __name__ == "__main__":
-    to_evaluate = {196}
+    to_evaluate = {200}
 
     if not to_evaluate or 151 in to_evaluate:
         res = singleSheetCountExpectedValueFloat(n_halvings=4)
@@ -7823,6 +7971,10 @@ if __name__ == "__main__":
     if not to_evaluate or 199 in to_evaluate:
         res = IterativeCirclePackingUncoveredAreaProportion(n_iter=10)
         print(f"Solution to Project Euler #199 = {res}")
+
+    if not to_evaluate or 200 in to_evaluate:
+        res = findNthPrimeProofSqubeWithSubstring(substr_num=200, n=200, base=10)
+        print(f"Solution to Project Euler #200 = {res}")
 
     #for n in range(2, 11):
     #    usg = iter(ulamSequenceGenerator(2, 2 * n + 1))
