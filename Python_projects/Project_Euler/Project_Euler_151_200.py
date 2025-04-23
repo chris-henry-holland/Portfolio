@@ -7190,6 +7190,256 @@ def integerSideSixtyDegreeTrianglesWithMaxInscribedCircleRadiusCount(radius_max:
     print(f"Time taken = {time.time() - since:.4f} seconds")
     return res
 
+# Problem 196
+def primeTriangleTripletRowSum(row_num: int, ps: Optional[SimplePrimeSieve]=None) -> int:
+    if row_num == 1: return 0
+    elif row_num in {2, 3}: return 5
+    elif row_num == 4: return 7
+    
+    end_idx = (row_num * (row_num + 1)) >> 1
+    start_idx = end_idx - row_num + 1
+    mx_num = end_idx + 2 * row_num + 1
+
+    mx_num_sqrt = isqrt(mx_num)
+
+    if ps is None:
+        ps = SimplePrimeSieve()
+    #ps.extendSieve(min(10 ** 7, mx_num_sqrt))
+
+    memo = {}
+    def primeCheck(num: int) -> bool:
+        args = num
+        if args in memo.keys(): return memo[args]
+        res = ps.millerRabinPrimalityTest(num, n_trials=10)
+        # res = ps.isPrime(num, extend_sieve=False, extend_sieve_sqrt=False, use_miller_rabin_screening=True, n_miller_rabin_trials=3)
+        memo[args] = res
+        return res
+
+    res = 0
+    if row_num & 1:
+        if start_idx & 1:
+            num = start_idx
+            if primeCheck(num):
+                num2 = num - row_num + 1
+                num3 = num + row_num + 1
+                num4 = num2 - row_num + 3
+                num5 = num3 + row_num + 1
+                num6 = num + 2
+                if (primeCheck(num2) and primeCheck(num3)) or\
+                        (primeCheck(num2) and (primeCheck(num4))) or\
+                        (primeCheck(num3) and (primeCheck(num5) or primeCheck(num6))):
+                    res += num
+        else:
+            num = start_idx + 1
+            if primeCheck(num):
+                num2 = num - row_num + 1
+                num3 = num + row_num - 1
+                num4 = num3 + 2
+                num5 = num2 - row_num + 1
+                num6 = num5 + 2
+                num7 = num3 + row_num - 1
+                num8 = num7 + 2
+                num9 = num + 2
+                if (primeCheck(num2) + primeCheck(num3) + primeCheck(num4) > 1) or\
+                        (primeCheck(num2) and (primeCheck(num5) or primeCheck(num6))) or\
+                        (primeCheck(num3) and primeCheck(num7)) or\
+                        (primeCheck(num4) and (primeCheck(num8) or primeCheck(num9))):
+                    res += num
+        for num in range(num + 2, end_idx - 2, 2):
+            if not primeCheck(num): continue
+            num2 = num - row_num + 1
+            num3 = num + row_num - 1
+            num4 = num3 + 2
+            if (primeCheck(num2) + primeCheck(num3) + primeCheck(num4) > 1):
+                res += num
+                continue
+            num5 = num2 - row_num + 1
+            num6 = num5 + 2
+            if primeCheck(num2) and (primeCheck(num5) or primeCheck(num6)):
+                res += num
+                continue
+            num7 = num3 + row_num + 1
+            num8 = num - 2
+            if primeCheck(num3) and (primeCheck(num7) or primeCheck(num8)):
+                res += num
+                continue
+            num9 = num7 + 2
+            num10 = num + 2
+            if primeCheck(num4) and (primeCheck(num9) or primeCheck(num10)):
+                res += num
+                continue
+        num += 2
+        if not primeCheck(num): return res
+        num2 = num - row_num + 1
+        num3 = num + row_num - 1
+        num4 = num3 + 2
+        if (primeCheck(num2) + primeCheck(num3) + primeCheck(num4) > 1):
+            return res + num
+        num5 = num2 - row_num + 1
+        if primeCheck(num2) and primeCheck(num5):
+            return res + num
+        num7 = num3 + row_num + 1
+        num8 = num - 2
+        if primeCheck(num3) and (primeCheck(num7) or primeCheck(num8)):
+            return res + num
+        num9 = num7 + 2
+        num10 = num + 2
+        if primeCheck(num4) and (primeCheck(num9) or primeCheck(num10)):
+            return res + num
+        return res
+    if start_idx & 1:
+        num = start_idx
+        if primeCheck(num):
+            num2 = num - row_num + 2
+            num3 = num + row_num
+            num4 = num2 - row_num + 2
+            num5 = num3 + row_num + 2
+            num6 = num + 2
+            if (primeCheck(num2) and primeCheck(num3)) or\
+                    (primeCheck(num2) and (primeCheck(num4) or primeCheck(num6))) or\
+                    (primeCheck(num3) and primeCheck(num5)):
+                res += num
+    else:
+        num = start_idx + 1
+        if primeCheck(num):
+            num2 = num - row_num
+            num3 = num2 + 2
+            num4 = num + row_num
+            num5 = num2 - row_num + 2
+            num6 = num5 + 2
+            num7 = num4 + row_num
+            num8 = num7 + 2
+            num9 = num + 2
+            if (primeCheck(num2) + primeCheck(num3) + primeCheck(num4) > 1) or\
+                    (primeCheck(num2) and primeCheck(num5)) or\
+                    (primeCheck(num3) and (primeCheck(num6) or primeCheck(num9))) or\
+                    (primeCheck(num4) and (primeCheck(num7) or primeCheck(num8))):
+                res += num
+        num += 2
+    for num in range(num + 2, end_idx - 2, 2):
+        if not primeCheck(num): continue
+        num2 = num - row_num
+        num3 = num2 + 2
+        num4 = num + row_num
+        if (primeCheck(num2) + primeCheck(num3) + primeCheck(num4) > 1):
+            res += num
+            continue
+        num5 = num2 - row_num + 2
+        num6 = num - 2
+        if primeCheck(num2) and (primeCheck(num5) or primeCheck(num6)):
+            res += num
+            continue
+        num7 = num5 + 2
+        num8 = num + 2
+        if primeCheck(num3) and (primeCheck(num7) or primeCheck(num8)):
+            res += num
+            continue
+        num9 = num4 + row_num
+        num10 = num9 + 2
+        if primeCheck(num4) and (primeCheck(num9) or primeCheck(num10)):
+            res += num
+            continue
+    num += 2
+    if not primeCheck(num): return res
+    if end_idx & 1:
+        num2 = num - row_num
+        num3 = num2 + 2
+        num4 = num + row_num
+        if (primeCheck(num2) + primeCheck(num3) + primeCheck(num4) > 1):
+            return res + num
+        num5 = num2 - row_num + 2
+        num6 = num - 2
+        if primeCheck(num2) and (primeCheck(num5) or primeCheck(num6)):
+            return res + num
+        num8 = num + 2
+        if primeCheck(num3) and (primeCheck(num8)):
+            return res + num
+        num9 = num4 + row_num
+        num10 = num9 + 2
+        if primeCheck(num4) and (primeCheck(num9) or primeCheck(num10)):
+            return res + num
+        return res
+    num2 = num - row_num
+    num4 = num + row_num
+    if (primeCheck(num2) and primeCheck(num4)):
+        return res + num
+    num5 = num2 - row_num + 2
+    num6 = num - 2
+    if primeCheck(num2) and (primeCheck(num5) or primeCheck(num6)):
+        return res + num
+    num9 = num4 + row_num
+    num10 = num9 + 2
+    if primeCheck(num4) and (primeCheck(num9) or primeCheck(num10)):
+        return res + num
+    return res
+    
+    """
+    res = 0
+
+    candidate_primes = set()
+    candidate_prime_sum = 0
+    prime_counts_qu = deque()
+    prime_counts_curr = [0] * 3
+    is_prime = [False] * 5
+    for i in range(3):
+        prev_is_prime = is_prime[1: -1]
+        num3 = start_idx + i
+        num4 = num3 + row_num
+        num5 = num4 + row_num + 1
+        num2 = num3 - row_num + 1
+        num1 = num2 - row_num + 2
+        nums = [num1, num2, num3, num4, num5]
+        is_prime = [primeCheck(num) for num in nums]
+        pc = [sum(is_prime[:3])]
+        for j in range(3, len(is_prime)):
+            pc.append(pc[-1] + is_prime[j] - is_prime[j - 3])
+        prime_counts_curr = [x + y for x, y in zip(prime_counts_curr, pc)]
+        prime_counts_qu.append(pc)
+        if is_prime[2]:
+            candidate_primes.add(nums[2])
+            candidate_prime_sum += nums[2]
+        if max([x * y for x, y in zip(prime_counts_curr, prev_is_prime)]) >= 3:
+            res += candidate_prime_sum
+            candidate_primes = set()
+            candidate_prime_sum = 0
+    #print(nums)
+    #print(2, prev_is_prime, nums[2], res)
+
+    for i in range(3, row_num):
+        prev_is_prime = is_prime[1: -1]
+        nums = [num + 1 for num in nums]
+        #print(nums)
+        is_prime = [primeCheck(num) for num in nums]
+        pc = [sum(is_prime[:3])]
+        for j in range(3, len(is_prime)):
+            pc.append(pc[-1] + is_prime[j] - is_prime[j - 3])
+        prime_counts_qu.append(pc)
+        prime_counts_curr = [x + y - z for x, y, z in zip(prime_counts_curr, pc, prime_counts_qu.popleft())]
+        if is_prime[2]:
+            candidate_primes.add(nums[2])
+            candidate_prime_sum += nums[2]
+        if nums[2] - 3 in candidate_primes:
+            candidate_primes.remove(nums[2] - 3)
+            candidate_prime_sum -= nums[2] - 3
+        if max([x * y for x, y in zip(prime_counts_curr, prev_is_prime)]) >= 3:
+            res += candidate_prime_sum
+            candidate_primes = set()
+            candidate_prime_sum = 0
+        #print(i, prev_is_prime, nums[2], res)
+    
+    return res
+    """
+    
+def primeTriangleTripletRowsSum(row_nums: List[int]=[5678027, 7208785]) -> int:
+    """
+    Solution to Project Euler #196
+    """
+    since = time.time()
+    ps = SimplePrimeSieve()
+    res = sum(primeTriangleTripletRowSum(row_num=row_num, ps=ps) for row_num in row_nums)
+    print(f"Time taken = {time.time() - since:.4f} seconds")
+    return res
+
 # Problem 197
 def findFloorRecursiveSequenceLoop(u0: float, max_term: int, base: int=2, a: float=-1., b: float=0., c: float=30.403243784, div: int=10 ** 9) -> Tuple[int, Tuple[float], Tuple[float]]:
     seen = {}
@@ -7288,7 +7538,9 @@ def ambiguousNumberCount2(max_denominator: int=10 ** 8, upper_bound: Tuple[int, 
 
 # Problem #199
 def IterativeCirclePackingUncoveredAreaProportion(n_iter: int=10) -> float:
-
+    """
+    Solution to Project Euler #199
+    """
     since = time.time()
     n_initial_internal_circles = 3
     if n_initial_internal_circles < 2: return 0.
@@ -7328,10 +7580,8 @@ def IterativeCirclePackingUncoveredAreaProportion(n_iter: int=10) -> float:
     print(f"Time taken = {time.time() - since:.4f} seconds")
     return res
 
-
-
 if __name__ == "__main__":
-    to_evaluate = {199}
+    to_evaluate = {196}
 
     if not to_evaluate or 151 in to_evaluate:
         res = singleSheetCountExpectedValueFloat(n_halvings=4)
@@ -7557,6 +7807,10 @@ if __name__ == "__main__":
     if not to_evaluate or 195 in to_evaluate:
         res = integerSideSixtyDegreeTrianglesWithMaxInscribedCircleRadiusCount(radius_max=1053779)
         print(f"Solution to Project Euler #195 = {res}")
+
+    if not to_evaluate or 196 in to_evaluate:
+        res = primeTriangleTripletRowsSum(row_nums=[5678027, 7208785])
+        print(f"Solution to Project Euler #196 = {res}")
 
     if not to_evaluate or 197 in to_evaluate:
         res = findFloorRecursiveSequenceTermSum(term_numbers=[10 ** 12, 10 ** 12 + 1], u0=-1, base=2, a=-1., b=0., c=30.403243784, div=10 ** 9)

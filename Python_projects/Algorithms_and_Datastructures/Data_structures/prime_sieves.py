@@ -102,7 +102,7 @@ class SimplePrimeSieve:
         while not d & 1:
             d >>= 1
             s += 1
-        for _ in range(n_trials):
+        for _ in range(min(n_trials, n - 3)):
             a = 0
             while a in seen:
                 a = random.randrange(2, n - 1)
@@ -358,7 +358,7 @@ class PrimeSPFsieve:
         while not d & 1:
             d >>= 1
             s += 1
-        for _ in range(n_trials):
+        for _ in range(min(n_trials, n - 3)):
             a = 0
             while a in seen:
                 a = random.randrange(2, n - 1)
