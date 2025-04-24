@@ -7582,6 +7582,38 @@ def IterativeCirclePackingUncoveredAreaProportion(n_iter: int=10) -> float:
 
 # Problem 200
 def squbeGenerator(ps: Optional[SimplePrimeSieve]=None, filter_func: Optional[Callable[[int], bool]]=None) -> Generator[int, None, None]:
+    """
+    Generator yielding all sqube numbers in order that give 
+    (if such a function is given) a value of True when applied
+    to the function filter_func.
+
+    A sqube is a strictly positive integer that can be expressed
+    as p ** 2 * q ** 3 where p and q are distinct prime numbers.
+
+    Args:
+        Optional named:
+        ps (SimplePrimeSieve object or None): If specified, a
+                simple prime sieve object used to produce prime
+                numbers.
+            Default: None
+        filter_func (function with a single integer argument and
+                outputting a bool or None): If specified, a boolean
+                function used to filter the squbes that are yielded.
+                If not specified, then no squbes are omitted.
+            Default: None (resulting in a function that always
+                returns True)
+    
+    Yields:
+    Integers (int) representing the squbes that return True to
+    filter_func (if that is required) in ascending order.
+    
+
+    Outline of rationale:
+    In order to yield the numbers in increasing order, the
+    sqube numbers are produced in batches, each producing
+    the squbes between successive powers of 10. Each batch
+    is then sorted and yielded in this sorted order.
+    """
     if ps is None: ps = SimplePrimeSieve()
     if filter_func is None:
         filter_func = lambda x: True
