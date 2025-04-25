@@ -1596,6 +1596,7 @@ def cumulativeDigitCount(d: int, n_max: int, base: int=10) -> int:
                 in which d is a digit and in which all numbers are
                 to be expressed when counting the number of
                 occurrences of the digit d.
+            Defualt: 10
     
     Returns:
     Integer (int) giving the number of occurrences of the digit with
@@ -7690,6 +7691,38 @@ def squbeGenerator(ps: Optional[SimplePrimeSieve]=None, filter_func: Optional[Ca
     
 
 def isPrimeFree(num: int, primeChecker: Callable[[int], bool], base: int=10) -> bool:
+    """
+    Assesses whether a strictly positive integer num is prime free
+    when expressed in the chosen base, checking for prime status
+    using the functon primeChecker().
+
+    A strictly positive integer is prime free in a given base if
+    and only if it is not prime and when represented in the chosen base,
+    all strictly positive integers that when represented in the
+    chosen base have the same number of digits as the original number
+    (with no leading zeros) and exactly one digit is different, are
+    also not prime.
+
+    Args:
+        Required positional:
+        num (int): Strictly positive integer whose status as prime free
+                in the chosen base is being assessed.
+        primeChecker (function taking an integer as input and outputting
+                a boolean): The function used to check whether a given
+                strictly positive integer is prime. For a given strictly
+                positive integer as input, should returns True if that
+                integer is a prime and False otherwise.
+        
+        Optional named:
+        base (int): Integer strictly greater than 1 giving the base
+                in which the given integer should be represented when
+                assessing whether it is prime free.
+            Defualt: 10
+
+    Returns:
+    Boolean (bool), with the value True if num is prime free in the chosen
+    base, otherwise False.
+    """
     if primeChecker(num): return False
     num2 = num
     mult = 1
@@ -7706,7 +7739,38 @@ def isPrimeFree(num: int, primeChecker: Callable[[int], bool], base: int=10) -> 
         mult *= base
     return True
 
-def intContainsSubstring(num: int, substr_rev_kmp: KnuthMorrisPratt, base: int=10):
+def intContainsSubstring(num: int, substr_rightleft_kmp: KnuthMorrisPratt, base: int=10) -> bool:
+    """
+    Assesses whether a strictly positive integer num when expressed
+    in the chosen base without leading zeros contains as a contiguous
+    substring the digit value pattern contained in the KnuthMorrisPratt
+    object substr_rightleft_kmp.
+
+    The digit value pattern is represented in the KnuthMorrisPratt as a
+    list of integers, each between 0 and (base - 1) inclusive representing
+    the value of the corresponding digit, in right to left order.
+    
+    Args:
+        Required positional:
+        num (int): The strictly positive integer being assessed for
+                whether it contains as a substring the digit pattern
+        substr_rightleft_kmp (KnuthMorrisPratt): An object encapsulating
+                the digit value pattern to be matched in right to left order
+                and an implementation of the Knuth-Morris-Pratt algorithm
+                for that pattern.
+            
+        Optional named:
+        base (int): Integer strictly greater than 1 giving the base
+                in which the given integer should be represented when
+                assessing whether it contains the digit value pattern
+                contained in substr_rightleft_kmp as a contiguous substring.
+            Defualt: 10
+
+    Returns:
+    Boolean (bool) with value True if num when expressed in the chosen base
+    without leading zeros contains as a contiguous substring the digit value
+    pattern contained in the KnuthMorrisPratt object substr_rightleft_kmp.
+    """
     s = []
     num2 = num
     while num2:
@@ -7714,14 +7778,64 @@ def intContainsSubstring(num: int, substr_rev_kmp: KnuthMorrisPratt, base: int=1
         s.append(d)
     #print(s, substr_lst[::-1])
     #kmp = KnuthMorrisPratt(substr_lst[::-1])
-    for _ in substr_rev_kmp.matchStartGenerator(s):
+    for _ in substr_rightleft_kmp.matchStartGenerator(s):
         #print("contains substring")
         return True
     else: return False
 
-def findNthPrimeProofSqubeWithSubstring(substr_num: int=200, n: int=200, base: int=10) -> int:
+def findNthPrimeProofSqubeWithSubstring(substr_num: int=200, substr_num_lead_zeros_count: int=0, n: int=200, base: int=10) -> int:
     """
     Solution to Project Euler #200
+
+    Finds the n:th smallest strictly positive integer that is a sqube and
+    when represented in the chosen base is prime free and contains as a
+    contiguous substring
+    the digit string consisting of the digits of strictly positive integer
+    substr_num when represented in the same base with exactly
+    substr_num_lead_zeros_count leading zeros.
+
+    A sqube is a strictly positive integer that can be expressed as
+    p ** 2 * q ** 3 where p and q are distinct prime numbers.
+
+    A strictly positive integer is prime free in a given base if
+    and only if it is not prime and when represented in the chosen base,
+    all strictly positive integers that when represented in the
+    chosen base have the same number of digits as the original number
+    (with no leading zeros) and exactly one digit is different, are
+    also not prime.
+
+    Args:
+        Optional named:
+        substr_num (int): The value of the digit string when interpreted
+                in the chosen base with substr_num_lead_zeros_count leading
+                zeros that any sqube prime free integers when represented in
+                the chosen base without leading zeros must contain as a
+                contiguous substring.
+            Default: 200
+        substr_num_lead_zeros_count (int): Non-negative integer giving the
+                number of leading zeros the digit string with value substr_num
+                should have when expressed in the chosen base as a digit
+                string that any sqube prime free integers when represented in
+                the chosen base without leading zeros must contain as a
+                contiguous substring.
+            Default: 0
+        n (int): Strictly positive integer specifying which of the integers
+                satisfying the given constraints should be returned, that
+                being the n:th smallest such integer.
+            Default: 200
+        base (int): Integer strictly greater than 1 giving the base
+                in which the given integer should be represented when
+                assessing whether it contains the above specified digit
+                string as a contiguous substring (with that digit string,
+                when interpreted in this base having the value substr_num).
+            Defualt: 10
+    
+    Returns:
+    Integer (int) giving the n:th smallest strictly positive integer that is
+    a sqube and when represented in the chosen base is prime free and contains
+    as a contiguous substring the digit string consisting of the digits of
+    strictly positive integer substr_num when represented in the same base with
+    exactly substr_num_lead_zeros_count leading zeros.
     """
     since = time.time()
     ps = SimplePrimeSieve()
@@ -7741,6 +7855,7 @@ def findNthPrimeProofSqubeWithSubstring(substr_num: int=200, n: int=200, base: i
     while num2:
         num2, d = divmod(num2, base)
         p.append(d)
+    p.extend([0] * substr_num_lead_zeros_count)
     kmp = KnuthMorrisPratt(p)
 
     def squbeFilterFunction(num: int) -> bool:
@@ -8005,7 +8120,7 @@ if __name__ == "__main__":
         print(f"Solution to Project Euler #199 = {res}")
 
     if not to_evaluate or 200 in to_evaluate:
-        res = findNthPrimeProofSqubeWithSubstring(substr_num=200, n=200, base=10)
+        res = findNthPrimeProofSqubeWithSubstring(substr_num=200, substr_num_lead_zeros_count=0, n=200, base=10)
         print(f"Solution to Project Euler #200 = {res}")
 
     #for n in range(2, 11):
