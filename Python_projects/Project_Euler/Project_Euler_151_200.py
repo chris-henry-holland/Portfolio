@@ -7541,7 +7541,100 @@ def ambiguousNumberCount2(max_denominator: int=10 ** 8, upper_bound: Tuple[int, 
 def IterativeCirclePackingUncoveredAreaProportion(n_iter: int=10) -> float:
     """
     Solution to Project Euler #199
+
+    Consider a circle containing three identically sized circles such that
+    the three circles do not overlap with each other, are externally tangent with
+    each other and is externally to internally tangent to the original circle.
+    Further consider a process whereby, starting with this construction, at each
+    step (which we refer to as an iteration), into each contiguous region inside
+    the original circle ot covered by another circle place a circle sized and
+    positioned such that it is tangent to each circle on the boundary of that
+    region, that tangent being external to internal in the case of the original
+    circle and external otherwise (note that for this construction, the region
+    will be bounded by exactly three circles, possibly including the boundary
+    of the original circle).
+
+    This function calculates the proportion of the area of the original circle
+    that is not covered by any other circle after n_iter iterations of this
+    process.
+
+    Args:
+        Optional named:
+        n_iter (int): The number of iterations of the described process that
+                should have been completed after which the proportion of the
+                area of the original circle uncovered by another circle
+                it to be calculated.
+            Default: 10
+    
+    Returns:
+    Float giving the proportion of the area of the original circle left
+    uncovered by any other circle after n_iter iterations of the above
+    described process.
+
+    Outline of rationale:
+    We use Descarte's theorem, which states that for four circles that are
+    each tangent to each other (with all tangencies at different points)
+    with curvatures k1, k2, k3 and k4, the following identity holds:
+        (k1 + k2 + k3 + k4) ** 2 = 2 * (k1 ** 2 + k2 ** 2 + k3 ** 2 + k4 ** 2)
+    The absolute value of the curvature is the reciprocal of the radius
+    of the circle.
+    Note that it is only possible to make such a construction if the four
+    circles do not overlap at all (and so are all internally tangent to
+    each other) or one circle completely contains the other circles, which
+    do not overlap with each other (and so the other circles are externally
+    to internally tangent to that circle and externally tangent to each
+    other). In the former case, all the curvatures are positive, and in
+    the latter case, the curvature of the outer circle is negative and the
+    others positive.
+    Applying this to the construction in the problem, we find that the
+    curvature of the original circle should be taken to be negative (without
+    loss of generality, -1) and all others positive.
+    For a given gap between three circles of known curvature, we can use this
+    equation to find the curvature of the circle to be placed.
+    If we solve the equation for k4 given known k1, k2 and k3, we get:
+        k4 = (k1 + k2 + k3) +/- 2 * sqrt(k1 * k2 + k1 * k3 + k2 * k3)
+    It can be shown that if the negative branch is chosen for nonzero k1, k2,
+    k3 then k4 will be negative. As noted, other than the original circle
+    the curvature should be positive, and so the positive branch should
+    always be used.
+    We can find the curvatures of the initial identical three circles
+    with basic trigonometry to get a curvature of:
+        (2 / sqrt(3) + 1)
+    recalling that we set the curvature of the original circle as -1,
+    corresponding to a radius of 1.
+    All that remains is to identify the gaps in each iteration. For the first
+    iteration, there are three gaps between the original circle and two of
+    the three identical circles, and a single gap between the three identical
+    circles.
+    Gaps for subsequent iterations can be identified during the previous
+    iteration, by noticing that when a circle is placed in a gap, it produces
+    exactly three gaps, those being between the circle being placed and two
+    of the circles on the boundary. In fact, this accounts for all of the
+    gaps as any others that exist will have been filled in that iteration.
+    We can therefore simply make a record of these new gaps when a new circle
+    is inserted, ready for the next iteration.
+    This enables the problem to be solved, by taking the areas of all the
+    circles produced during the n_iter iterations, and (since these circles
+    do not intersect with each other) summing these areas and diving them
+    by the area of the original circle (which is pi) to get the proportion
+    of the area covered and subtracting this from 1 to get the proportion
+    uncovered, the desired result.
+    This can be slightly optimised by noting that all the areas end up
+    including a factor of pi, which is cancelled when taking the ratio of
+    the interior circle areas with the original circle area. We can therefore
+    ignore the factor of pi.
+    A further optimisation is made by noting that the curvature and so radius
+    of each circle is only dependent on the curvatures of the three forming
+    the gap into which it is being placed. Given the symmetry of the
+    construction there will inevitably be repeats of these curvatures. We
+    therefore can avoid repeating the same calculations by keeping track
+    of the counts of circles formed from different precursor combinations
+    (these precursors being curvatures previously encountered), with the
+    actual curvatures and subsequently radii and areas calculated later,
+    with the areas multiplied by the number of occurrences of that circle
+    type in the final calculation.
     """
+    # Review- consider rewording the documentation for clarity
     since = time.time()
     n_initial_internal_circles = 3
     if n_initial_internal_circles < 2: return 0.
