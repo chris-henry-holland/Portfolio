@@ -7046,6 +7046,9 @@ def allowedColouredConfigurationsCount(type_a_count: int=25, type_b_count: int=7
 
 # Problem 195
 def integerSideSixtyDegreeTrianglesWithMaxInscribedCircleRadiusCount(radius_max: int=1053779) -> int:
+    """
+    Solution to Project Euler #195
+    """
     since = time.time()
     r_sq_mx = radius_max ** 2
     """
@@ -7193,6 +7196,64 @@ def integerSideSixtyDegreeTrianglesWithMaxInscribedCircleRadiusCount(radius_max:
 
 # Problem 196
 def primeTriangleTripletRowSum(row_num: int, ps: Optional[SimplePrimeSieve]=None) -> int:
+    """
+    Consider a sequence of lists of integers such that the first list
+    is the single integer 1, and each subsequent list contains exactly
+    one more element than the list immediately preceding it, and whose
+    first element is one greater than the last element of the preceding
+    list and every other element in the list is exactly one greater than
+    the preceding list element.
+
+    In this construction, a prime triplet is defined to be three distinct
+    prime numbers such that relative to the location of one of those
+    numbers in the construction (referred to as the centre prime), each
+    of the other two are in the same list, the preceding list or the
+    succeeding list and its position in that list is either the same, one
+    before or one after the position of the centre prime in its list.
+
+    This function calculates the sum of numbers that appear in the
+    row_num:th list and are constituent primes in at least one prime
+    triplet.
+
+    Args:
+        Required positional:
+        row_num (int): The number of the list in the sequence of lists
+                in the described construction for which the elements
+                that are part of at least one prime triplet are to be
+                summed.
+
+        Optional named:
+        ps (SimplePrimeSieve or None): If given, a prime sieve used
+                to establish which numbers are prime.
+    
+    Returns:
+    Integer (int) giving the sum of elements in the row_num:th list
+    in the construction that are constituent primes in at least one prime
+    triplet.
+
+    Brief outline of rationale:
+    For each prime number in the row, we consider the possible places the
+    prime. We reduce the search space by considering the parity of the
+    elements (i.e. whether they are odd or even), which for rows beyond
+    the 4th results in a splitting into two cases: odd row numbers
+    (for which numbers directly above have the same parity and directly
+    below have different parity from the current number) and even row
+    numbers (for which numbers directly above have different parity and
+    directly below have the same parity as the current number). Additionally,
+    the first odd number in each row is treated separately due to it
+    encountering the left border of the triangle, which further splits
+    into the cases where the first element of the row is even or odd.
+    We also note that the last element of each row is a triangle number,
+    and triangle numbers larger than 3 are all composite, enabling a
+    further minor reduction in the search space.
+    We use the Miller-Rabin primality test with 10 trials to establish
+    whether a number is prime or not. This is not a probabalistic rather
+    than an exact test, and can falsely identify non-primes as primes (though
+    not the reverse), but appears to be reliable enough to give the
+    correct answer and for the numbers that are involved in this problem
+    (> 10 ** 10) a full check is either prohibitavely slow or requires
+    a prohibitively large amount of memory.
+    """
     if row_num == 1: return 0
     elif row_num in {2, 3}: return 5
     elif row_num == 4: return 7
@@ -7434,10 +7495,47 @@ def primeTriangleTripletRowSum(row_num: int, ps: Optional[SimplePrimeSieve]=None
 def primeTriangleTripletRowsSum(row_nums: List[int]=[5678027, 7208785]) -> int:
     """
     Solution to Project Euler #196
+
+    Consider a sequence of lists of integers such that the first list
+    is the single integer 1, and each subsequent list contains exactly
+    one more element than the list immediately preceding it, and whose
+    first element is one greater than the last element of the preceding
+    list and every other element in the list is exactly one greater than
+    the preceding list element.
+
+    In this construction, a prime triplet is defined to be three distinct
+    prime numbers such that relative to the location of one of those
+    numbers in the construction (referred to as the centre prime), each
+    of the other two are in the same list, the preceding list or the
+    succeeding list and its position in that list is either the same, one
+    before or one after the position of the centre prime in its list.
+
+    This function calculates the sum of numbers that appear in any of
+    the lists with sequence numbers in row_nums and are constituent primes
+    in at least one prime triplet.
+
+    Args:
+        Optional named:
+        row_nums (list of ints): The sequence numbers of the lists in the
+                described construction for which the elements that are
+                part of at least one prime triplet are to be summed.
+            Default: [5678027, 7208785]
+    
+    Returns:
+    Integer (int) giving the sum of elements the lists in the construction
+    with sequence numbers in row_nums that are constituent primes in at least
+    one prime triplet.
+
+    Brief outline of rationale:
+    See Brief outline of rationale for the function primeTriangleTripletRowSum().
     """
+    # Review- consider rewording documentation for clarity- esp consider
+    # defining a row in the array, as this is the terminology used in the
+    # outline of rationale in primeTriangleTripletRowSum() and is probably
+    # more intuitive.
     since = time.time()
     ps = SimplePrimeSieve()
-    res = sum(primeTriangleTripletRowSum(row_num=row_num, ps=ps) for row_num in row_nums)
+    res = sum(primeTriangleTripletRowSum(row_num=row_num, ps=ps) for row_num in set(row_nums))
     print(f"Time taken = {time.time() - since:.4f} seconds")
     return res
 
@@ -7521,6 +7619,7 @@ def ambiguousNumberCount2(max_denominator: int=10 ** 8, upper_bound: Tuple[int, 
     """
     Solution to Project Euler Problem #198
     """
+    # Needs to be revised to work for upper_bound that has non-unit numerator
     since = time.time()
     mx = max_denominator >> 1
     denom1 = isqrt(mx)
@@ -7969,7 +8068,7 @@ def findNthPrimeProofSqubeWithSubstring(substr_num: int=200, substr_num_lead_zer
     return res
 
 if __name__ == "__main__":
-    to_evaluate = {200}
+    to_evaluate = {196}
 
     if not to_evaluate or 151 in to_evaluate:
         res = singleSheetCountExpectedValueFloat(n_halvings=4)
@@ -8205,7 +8304,7 @@ if __name__ == "__main__":
         print(f"Solution to Project Euler #197 = {res}")
     
     if not to_evaluate or 198 in to_evaluate:
-        res = ambiguousNumberCount2(max_denominator=10 ** 8, upper_bound=(1, 100), incl_upper_bound=False)
+        res = ambiguousNumberCount(max_denominator=10 ** 8, upper_bound=(1, 100), incl_upper_bound=False)
         print(f"Solution to Project Euler #198 = {res}")
 
     if not to_evaluate or 199 in to_evaluate:
