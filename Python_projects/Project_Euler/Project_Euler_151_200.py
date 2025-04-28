@@ -7002,7 +7002,53 @@ def bestSqrtApproximationsDenominatorSum(n_max: int=10 ** 5, denom_bound: int=10
 def squareFreeNumberCount(n_max: int=2 ** 50 - 1) -> int:
     """
     Solution to Project Euler #193
+
+    Finds the number of square free numbers no greater than n_max.
+
+    A square free number is a strictly positive integer that is not
+    divisible by any squared prime number.
+
+    Args:
+        Optional named:
+        n_max (int): Strictly positive integer for which no integer
+                greater than this is considered for inclusion in the
+                count.
+            Default: 2 ** 50 - 1
+    
+    Returns:
+    Integer (int) giving the number of square free numbers no greater
+    than n_max.
+
+    Outline of rationale:
+    Instead of counting the strictly positive integers no greater than
+    n_max that are square free we count the strictly positive integers
+    no greater than n_max that are not square free and subtract this
+    from n_max.
+    Consider a prime p and the multiples of p ** 2. These are not
+    square free, and the number of these no greater than n_max is
+    the floor of n_max / p ** 2. This suggests that we might find the
+    count of numbers that are not square free no greater than n_max
+    by adding together n_max / p ** 2 all primes p no greater than
+    the square root of n_max.
+    But this would cause double counting, as for two distinct primes
+    p1 and p2, the multiples of p1 * p2 will be counted twice.
+    This can be corrected by the inclusion-exclusion principle, by
+    taking all integers between 2 and the square root of n_max
+    inclusive that are not divisible by the square of a prime, and
+    for each such number m finding n_max / m ** 2 and, if m is
+    divisible by an odd number of distinct primes adding this to
+    the total and if m is divisible by an even number of distinct
+    primes subtracting this from the total. This will produce
+    the number of strictly positive integers no greater than n_max
+    that are not square free, which as previously noted can be
+    subtracted from n_max to get the desired result.
+    We use a prime sieve that records the smallest prime factor
+    of each integer to efficiently identify the integers no greater
+    than the square root of n_max that do not have any repeated prime
+    factors and to find the number of distinct prime factors of those
+    integers.
     """
+    # Review- consider making the explanation more rigerous
     # Review- Try to find a faster method (look into Mobius function)
     since = time.time()
     mx = isqrt(n_max)
@@ -7195,7 +7241,7 @@ def integerSideSixtyDegreeTrianglesWithMaxInscribedCircleRadiusCount(radius_max:
     return res
 
 # Problem 196
-def primeTriangleTripletRowSum(row_num: int, ps: Optional[SimplePrimeSieve]=None) -> int:
+def numberTrianglePrimeTripletRowSum(row_num: int, ps: Optional[SimplePrimeSieve]=None) -> int:
     """
     Consider a sequence of lists of integers such that the first list
     is the single integer 1, and each subsequent list contains exactly
@@ -7492,7 +7538,7 @@ def primeTriangleTripletRowSum(row_num: int, ps: Optional[SimplePrimeSieve]=None
     return res
     """
     
-def primeTriangleTripletRowsSum(row_nums: List[int]=[5678027, 7208785]) -> int:
+def numberTrianglePrimeTripletRowsSum(row_nums: List[int]=[5678027, 7208785]) -> int:
     """
     Solution to Project Euler #196
 
@@ -7535,7 +7581,7 @@ def primeTriangleTripletRowsSum(row_nums: List[int]=[5678027, 7208785]) -> int:
     # more intuitive.
     since = time.time()
     ps = SimplePrimeSieve()
-    res = sum(primeTriangleTripletRowSum(row_num=row_num, ps=ps) for row_num in set(row_nums))
+    res = sum(numberTrianglePrimeTripletRowSum(row_num=row_num, ps=ps) for row_num in set(row_nums))
     print(f"Time taken = {time.time() - since:.4f} seconds")
     return res
 
@@ -8068,7 +8114,7 @@ def findNthPrimeProofSqubeWithSubstring(substr_num: int=200, substr_num_lead_zer
     return res
 
 if __name__ == "__main__":
-    to_evaluate = {196}
+    to_evaluate = {193}
 
     if not to_evaluate or 151 in to_evaluate:
         res = singleSheetCountExpectedValueFloat(n_halvings=4)
@@ -8296,7 +8342,7 @@ if __name__ == "__main__":
         print(f"Solution to Project Euler #195 = {res}")
 
     if not to_evaluate or 196 in to_evaluate:
-        res = primeTriangleTripletRowsSum(row_nums=[5678027, 7208785])
+        res = numberTrianglePrimeTripletRowsSum(row_nums=[5678027, 7208785])
         print(f"Solution to Project Euler #196 = {res}")
 
     if not to_evaluate or 197 in to_evaluate:
