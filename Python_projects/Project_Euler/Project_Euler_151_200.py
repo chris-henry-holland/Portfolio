@@ -7624,27 +7624,93 @@ def findFloorRecursiveSequenceTermSum(term_numbers: list=[10 ** 12, 10 ** 12 + 1
     return res
 
 # Problem 198
-def orderedFareyFractionPairsWithMaxDenominatorProductGenerator(max_denominator_product: int) -> Generator[Tuple[Tuple[int, int], Tuple[int, int]], None, None]:
+def orderedFareyFractionPairsWithMaxDenominatorProductGenerator(max_denominator_product: int, max_lower: Tuple[int, int]=(1, 1), incl_zero: bool=True) -> Generator[Tuple[Tuple[int, int], Tuple[int, int]], None, None]:
     # Using Farey sequences
     
+    mn_lower_reciprocal = ((max_lower[1] - 1) // max_lower[0]) + 1
+    if incl_zero:
+        for denom in range(mn_lower_reciprocal, max_denominator_product + 1):
+            yield ((0, 1), (1, denom))
+
     pair = ((0, 1), (1, 1))
     #yield pair
-    stk = [pair]
+    stk = []
+    mx_lower_reciprocal = isqrt(max_denominator_product)
+    stk = [((1, d), (1, d - 1)) for d in range(mn_lower_reciprocal, mx_lower_reciprocal + 1)]
+    print(mn_lower_reciprocal, mx_lower_reciprocal)
+    print(stk)
     while stk:
         pair = stk.pop()
         if pair[0][1] * pair[1][1] > max_denominator_product:
             continue
         yield pair
         frac = (pair[0][0] + pair[1][0], pair[0][1] + pair[1][1])
-        stk.append((frac, pair[1]))
+        if (frac[0] * max_lower[1] <= max_lower[0] * frac[1]):
+            stk.append((frac, pair[1]))
         stk.append((pair[0], frac))
     return
 
-def ambiguousNumberCount(max_denominator: int=10 ** 8, upper_bound: Tuple[int, int]=(1, 100), incl_upper_bound: bool=False) -> int:
+def ambiguousNumberCountUpToFraction(max_denominator: int=10 ** 8, upper_bound: Tuple[int, int]=(1, 100), incl_upper_bound: bool=False) -> int:
+    """
+    Solution to Project Euler Problem #198
+    """
     since = time.time()
-    res = 0
+
+    g = gcd(*upper_bound)
+    if g != 1:
+        upper_bound = tuple(x // g for x in upper_bound)
+
     comp = (lambda x: x[0] * upper_bound[1] <= x[1] * upper_bound[0]) if incl_upper_bound else (lambda x: x[0] * upper_bound[1] < x[1] * upper_bound[0])
-    for pair in orderedFareyFractionPairsWithMaxDenominatorProductGenerator(max_denominator >> 1):
+
+    mn_lower_reciprocal = ((upper_bound[1] - 1) // upper_bound[0]) + 1
+    mx_denom_prod = max_denominator >> 1
+
+    #yield pair
+    mx_lower_reciprocal = isqrt(mx_denom_prod)
+    safe_stk = [(d, d - 1) for d in range(mn_lower_reciprocal + 1, mx_lower_reciprocal + 1)]
+
+    unsafe_stk = [] if (1, mn_lower_reciprocal) == upper_bound else [((1, mn_lower_reciprocal), (1, mn_lower_reciprocal - 1))]
+    #print(mn_lower_reciprocal, mx_lower_reciprocal)
+    #print(stk)
+    #print(safe_stk)
+    #print(unsafe_stk)
+    # The number of reciprocals with even denominator and value
+    # greater than (or greater than or equal to if incl_upper_bound)
+    # upper_bound and denominator no greater than max_denominator.
+    res = mx_denom_prod - (mn_lower_reciprocal >> 1) + (incl_upper_bound and upper_bound[0] == 1 and upper_bound[1] <= max_denominator and not upper_bound[1] & 1)
+    #print(res)
+    while unsafe_stk:
+        pair = unsafe_stk.pop()
+        denom_hlf = pair[0][1] * pair[1][1]
+        if pair[0][1] * pair[1][1] > mx_denom_prod:
+            continue
+        numer = pair[0][0] * pair[1][1] + pair[1][0] * pair[0][1]
+        res += comp((numer, denom_hlf << 1))
+
+        frac = (pair[0][0] + pair[1][0], pair[0][1] + pair[1][1])
+        if (frac[0] * upper_bound[1] <= upper_bound[0] * frac[1]):
+            unsafe_stk.append((frac, pair[1]))
+            safe_stk.append((pair[0][1], frac[1]))
+        else:
+            unsafe_stk.append((pair[0], frac))
+    
+    while safe_stk:
+        pair = safe_stk.pop()
+
+        if pair[0] * pair[1] > mx_denom_prod:
+            continue
+        res += 1
+        d = pair[0] + pair[1]
+        safe_stk.append((pair[0], d))
+        safe_stk.append((d, pair[1]))
+    print(f"Time taken = {time.time() - since:.4f} seconds")
+    return res
+
+    """
+    res = 0
+    mx = max_denominator >> 1
+    comp = (lambda x: x[0] * upper_bound[1] <= x[1] * upper_bound[0]) if incl_upper_bound else (lambda x: x[0] * upper_bound[1] < x[1] * upper_bound[0])
+    for pair in orderedFareyFractionPairsWithMaxDenominatorProductGenerator(mx, max_lower=(1, 100), incl_zero=False):
         if not comp(pair[0]): break
         numer = pair[0][0] * pair[1][1] + pair[1][0] * pair[0][1]
         denom = (pair[0][1] * pair[1][1]) << 1
@@ -7657,20 +7723,28 @@ def ambiguousNumberCount(max_denominator: int=10 ** 8, upper_bound: Tuple[int, i
             res += 1
             #print((numer, denom), pair)
         #res += comp((numer, denom))
-
+    res += mx - ((((upper_bound[1] - 1) // upper_bound[0]) + 1) >> 1)
+    """
     print(f"Time taken = {time.time() - since:.4f} seconds")
     return res
 
-def ambiguousNumberCount2(max_denominator: int=10 ** 8, upper_bound: Tuple[int, int]=(1, 100), incl_upper_bound: bool=False) -> int:
-    """
-    Solution to Project Euler Problem #198
-    """
-    # Needs to be revised to work for upper_bound that has non-unit numerator
+def ambiguousNumberCountUpToReciprocal(max_denominator: int=10 ** 8, upper_bound_reciprocal=100, incl_upper_bound: bool=False) -> int:
+    
+    # Alternative solution that only works when the upper bound is a reciprocal
     since = time.time()
+    
     mx = max_denominator >> 1
+
+    # The reciprocals with even denominator greater than (or greater than or
+    # equal to if incl_upper_bound is True) upper_bound_reciprocal and no
+    # greater than max_denominator
+    res = mx - (upper_bound_reciprocal >> 1) + (incl_upper_bound and upper_bound_reciprocal <= max_denominator and not upper_bound_reciprocal & 1)
+    
+    
     denom1 = isqrt(mx)
-    stk = list(range(upper_bound[1], denom1))
-    res = 0
+    stk = list(range(upper_bound_reciprocal, denom1))
+    #print(stk)
+    
     while stk:
         denom2 = stk[-1]
         if denom1 * denom2 > mx:
@@ -7678,7 +7752,7 @@ def ambiguousNumberCount2(max_denominator: int=10 ** 8, upper_bound: Tuple[int, 
             continue
         res += 1
         stk.append(denom1 + denom2)
-    res += mx - (upper_bound[1] >> 1)
+    
     print(f"Time taken = {time.time() - since:.4f} seconds")
     return res
 
@@ -8114,7 +8188,7 @@ def findNthPrimeProofSqubeWithSubstring(substr_num: int=200, substr_num_lead_zer
     return res
 
 if __name__ == "__main__":
-    to_evaluate = {193}
+    to_evaluate = {198}
 
     if not to_evaluate or 151 in to_evaluate:
         res = singleSheetCountExpectedValueFloat(n_halvings=4)
@@ -8350,7 +8424,8 @@ if __name__ == "__main__":
         print(f"Solution to Project Euler #197 = {res}")
     
     if not to_evaluate or 198 in to_evaluate:
-        res = ambiguousNumberCount(max_denominator=10 ** 8, upper_bound=(1, 100), incl_upper_bound=False)
+        res = ambiguousNumberCountUpToFraction(max_denominator=10 ** 8, upper_bound=(1, 100), incl_upper_bound=False)
+        #res = ambiguousNumberCountUpToReciprocal(max_denominator=10 ** 8, upper_bound_reciprocal=100, incl_upper_bound=False)
         print(f"Solution to Project Euler #198 = {res}")
 
     if not to_evaluate or 199 in to_evaluate:
