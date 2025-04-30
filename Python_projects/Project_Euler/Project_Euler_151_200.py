@@ -7653,6 +7653,19 @@ def orderedFareyFractionPairsWithMaxDenominatorProductGenerator(max_denominator_
 def ambiguousNumberCountUpToFraction(max_denominator: int=10 ** 8, upper_bound: Tuple[int, int]=(1, 100), incl_upper_bound: bool=False) -> int:
     """
     Solution to Project Euler Problem #198
+
+    Calculates the number of strictly positive ambiguous numbers
+    less than (or less than or equal to) upper_bound which, when
+    expressed as a fraction in lowest terms, have a denominator
+    no greater than max_denominator.
+
+    An ambiguous number is defined to be a number such that...
+    TODO
+    Given that the number between and equidistant from two
+    rational numbers is guaranteed to be rational, all ambiguous
+    numbers are rational, meaning that for any ambiguous number
+    we can ask whether when expressed in lowest terms its
+    denominator is no greater than max_denominator.
     """
     since = time.time()
 
