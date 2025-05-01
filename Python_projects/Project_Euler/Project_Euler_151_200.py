@@ -7659,13 +7659,51 @@ def ambiguousNumberCountUpToFraction(max_denominator: int=10 ** 8, upper_bound: 
     expressed as a fraction in lowest terms, have a denominator
     no greater than max_denominator.
 
-    An ambiguous number is defined to be a number such that...
-    TODO
+    An ambiguous number is defined to be a number for which there
+    exists a strictly positive integer such that of all rational
+    numbers that can be expressed as fractions with a denominator
+    no larger than that integer, for exactly two of them the
+    absolute difference between them and the ambiguous number is
+    exactly equal and is smaller than that of every other such
+    rational number.
+
     Given that the number between and equidistant from two
     rational numbers is guaranteed to be rational, all ambiguous
     numbers are rational, meaning that for any ambiguous number
     we can ask whether when expressed in lowest terms its
     denominator is no greater than max_denominator.
+
+    Args:
+        Optional named:
+        max_denominator (int): Strictly positive integer giving
+                the largest denominator of the rational numbers
+                considered for inclusion in the count (when
+                expressed as a fraction in lowest terms).
+            Default: 10 ** 8
+        upper_bound (2-tuple of ints): A non-negative rational
+                number, represented as a 2-tuple of ints where
+                index 0 contains the numerator and index 1 the
+                denominator of a fraction equal to that rational
+                number, where the numerator is non-negative and
+                the denominator is strictly positive, giving the
+                upper bound for numbers considered for inclusion
+                in the count.
+            Default: (1, 100) (representing one one-hundredth)
+        incl_upper_bound (bool): Boolean which, if True and
+                the number upper_bound is ambiguous is included
+                in the count, and if False this number is not
+                included in the count even if it is ambiguous.
+            Default: False
+    
+    Returns:
+    Integer (int) giving the number of strictly positive ambiguous
+    numbers less than (if incl_upper_bound is False) or less than
+    or equal to (if incl_upper_bound is True) upper_bound which,
+    when expressed as a fraction in lowest terms, have a denominator
+    no greater than max_denominator.
+
+    Outline of rationale:
+    TODO
     """
     since = time.time()
 
