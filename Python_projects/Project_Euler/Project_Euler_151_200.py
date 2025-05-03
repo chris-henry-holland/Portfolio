@@ -7625,6 +7625,11 @@ def findFloorRecursiveSequenceTermSum(term_numbers: list=[10 ** 12, 10 ** 12 + 1
 
 # Problem 198
 def orderedFareyFractionPairsWithMaxDenominatorProductGenerator(max_denominator_product: int, max_lower: Tuple[int, int]=(1, 1), incl_zero: bool=True) -> Generator[Tuple[Tuple[int, int], Tuple[int, int]], None, None]:
+    """
+    Generator yielding all of the Farey fraction pairs with denominator
+    product no greater than ... TODO
+    """
+    
     # Using Farey sequences
     
     mn_lower_reciprocal = ((max_lower[1] - 1) // max_lower[0]) + 1
