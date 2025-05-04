@@ -7626,8 +7626,59 @@ def findFloorRecursiveSequenceTermSum(term_numbers: list=[10 ** 12, 10 ** 12 + 1
 # Problem 198
 def orderedFareyFractionPairsWithMaxDenominatorProductGenerator(max_denominator_product: int, max_lower: Tuple[int, int]=(1, 1), incl_zero: bool=True) -> Generator[Tuple[Tuple[int, int], Tuple[int, int]], None, None]:
     """
-    Generator yielding all of the Farey fraction pairs with denominator
-    product no greater than ... TODO
+    Generator yielding all of the Farey fraction pairs with the product
+    of the denominators in the pair no greater than max_denominator_product
+    and the smaller of the two fractions having a value no less than
+    max_lower, with or without pairs that include zero depending on
+    incl_zero.
+
+    A Farey pair is a pair of fractions that appear adjacent to each other
+    in a Farey sequence of some order.
+
+    In the context used here, the Farey sequence of order n (where n is
+    a strcitly positive integer) is the sequence of rational numbers between
+    0 and 1 inclusive in order of ascending value which when expressed
+    as a fraction in lowest terms has a denominator of at most n.
+
+    The Farey sequence of order 1 is simply:
+        0 / 1, 1 / 1
+    
+    For n greater than 1, the Farey sequence of order n can be constructed
+    from the Farey sequence of order (n - 1) by identifying all consecutive
+    pairs of elements in that sequence, say p1 / q1 and p2 / q2 whose
+    denominators when expressed in lowest terms sum to exactly n (i.e.
+    q1 + q2 = n) and inserting between those two elements the fraction
+    whose numerator and denominator are the sum of the numerators and
+    denominators respectively of the pair of fractions (i.e.
+    (p1 + p2) / (q1 + q2)). Note that the fraction this construction
+    produces is guaranteed to already be in lowest terms.
+
+    Args:
+        Required positional:
+        max_denominator_product (int): The largest product of denominators
+                for the Farey fraction pairs
+        
+        Optional named:
+        max_lower (2-tuple of ints): Rational number between 0 and 1
+                inclusive giving the largest value of the smaller of the
+                pair for the Farey pairs that are to be yielded, represented
+                as a fraction whose numerator is given in index 0 and whose
+                denominator is given in index 1 of the 2-tuple. The former
+                should be a non-negative integer and the latter a strictly
+                positive integer with a value no less than the former.
+            Default: (1, 1) (representing 1)
+        incl_zero (bool): Boolean which, if True indicates that Farey
+                pairs including 0 (or (0, 1) as a fraction) are to be
+                yielded, and if False such pairs are not to be yielded.
+            Default: True
+
+    Yields:
+    2-tuple of 2-tuples of ints, representing a Farey pair where the
+    2-tuple in index 0 is the smaller of the pair and the 2-tuple in index
+    1 is the larger of the pair. Both numbers in the pair are represented
+    as fractions, with index 0 and 1 in the 2-tuple are the numerator
+    and denominator respectively of the represented fraction in lowest
+    terms.
     """
     
     # Using Farey sequences
