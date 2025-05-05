@@ -337,7 +337,7 @@ def integerPlusSquareRootMultiplePower(a: int, b: int, c: int, exp: int, md: Opt
     """
     if md is None:
         curr = (a, b)
-        res = (1, 1)
+        res = (1, 0)
         e = exp
         while True:
             if e & 1:
@@ -347,7 +347,7 @@ def integerPlusSquareRootMultiplePower(a: int, b: int, c: int, exp: int, md: Opt
             curr = (curr[0] ** 2 + c * curr[1] ** 2, 2 * curr[0] * curr[1])
         return res
     curr = (a % md, b % md)
-    res = (1, 1)
+    res = (1, 0)
     e = exp
     while True:
         if e & 1:
@@ -362,9 +362,34 @@ def sumOfPolynomialProductRemainders(n_min: int=10 ** 9, n_max: int=11 * 10 ** 8
     Solution to Project Euler Bonus Problem #18i
     """
     since = time.time()
-    ps = SimplePrimeSieve(n_max)
-    print("calculated prime sieve")
+    ps = SimplePrimeSieve()
 
+    def primeChecker(num: int) -> bool:
+        res = ps.millerRabinPrimalityTest(num, n_trials=10)
+        # res = ps.isPrime(num, extend_sieve=False, extend_sieve_sqrt=False, use_miller_rabin_screening=True, n_miller_rabin_trials=3)
+        return res
+    
+    res = 0
+    i0 = n_min + (-n_min) % 12
+    for i in range(i0, n_max + 1, 12):
+        p1 = i + 1
+        if p1 > n_max: break
+        if primeChecker(p1):
+            exp = (p1 - 1) // 3
+            r_tup1 = integerPlusSquareRootMultiplePower(a=-2, b=1, c=3, exp=exp, md=p1)
+            ans = (-18 * r_tup1[1] * (1 - 2 * r_tup1[0])) % p1
+            res += ans
+        p2 = i + 5
+        if p2 > n_max: break
+        if primeChecker(p2):
+            exp = (p2 + 1) // 3
+            r_tup2 = integerPlusSquareRootMultiplePower(a=-2, b=1, c=3, exp=exp, md=p2)
+            ans = (18 * r_tup2[1] * (1 - 2 * r_tup2[0])) % p2
+            res += ans
+
+    """
+    ps = SimplePrimeSieve(n_max)
+    print(f"calculated prime sieve after {time.time() - since:.4f} seconds")
     res = 0
     i0 = bisect.bisect_left(ps.p_lst, n_min)
     for i in range(i0, len(ps.p_lst)):
@@ -373,17 +398,20 @@ def sumOfPolynomialProductRemainders(n_min: int=10 ** 9, n_max: int=11 * 10 ** 8
         pmd12 = p % 12
         ans = 0
         if pmd12 == 1:
-            r_tup = integerPlusSquareRootMultiplePower(a=-2, b=1, c=3, exp=(p - 1) // 3, md=p)
-            print(p, r_tup)
+            exp = (p - 1) // 3
+            r_tup = integerPlusSquareRootMultiplePower(a=-2, b=1, c=3, exp=exp, md=p)
             ans = -18 * r_tup[1] * (1 - 2 * r_tup[0])
         elif pmd12 == 5:
-            r_tup = integerPlusSquareRootMultiplePower(a=-2, b=1, c=3, exp=(p + 1) // 3, md=p)
-            print(p, r_tup)
+            exp = (p + 1) // 3
+            r_tup = integerPlusSquareRootMultiplePower(a=-2, b=1, c=3, exp=exp, md=p)
+            
             ans = 18 * r_tup[1] * (1 - 2 * r_tup[0])
         else: continue
+        #print(p, exp, r_tup)
         ans %= p
-        print(f"{p}: {ans}")
+        #print(f"{p}: {ans}")
         res += ans
+    """
     print(f"Time taken = {time.time() - since:.4f} seconds")
     return res
 
@@ -426,7 +454,7 @@ if __name__ == "__main__":
         print(f"Solution to Project Euler #heegner = {res}")
 
     if not to_evaluate or "18i" in to_evaluate:
-        res = sumOfPolynomialProductRemainders(n_min=0, n_max=100)
+        res = sumOfPolynomialProductRemainders(n_min=10 ** 9, n_max=11 * 10 ** 8)
         print(f"Solution to Project Euler #18i = {res}")
     
     #if not to_evaluate or "18i" in to_evaluate:
