@@ -20,7 +20,7 @@ from typing import Dict, List, Tuple, Set, Union, Generator, Callable, Optional,
 
 sys.path.append(os.path.join(os.path.dirname(__file__), "../Algorithms_and_Datastructures/Algorithms"))
 sys.path.append(os.path.join(os.path.dirname(__file__), "../Algorithms_and_Datastructures/Data_structures"))
-from prime_sieves import PrimeSPFsieve
+from prime_sieves import PrimeSPFsieve, SimplePrimeSieve
 from addition_chains import AdditionChainCalculator
 
 def gcd(a: int, b: int) -> int:
@@ -327,6 +327,66 @@ def polynomialPrimeProductRemainder(p_min: int=10 ** 9, p_max: int=11 * 10 ** 8)
     print(f"Time taken = {time.time() - since:.4f} seconds")
     return res
 
+def integerPlusSquareRootMultiplePower(a: int, b: int, c: int, exp: int, md: Optional[int]=None) -> Tuple[int]:
+    """
+    Calculates (a + b * sqrt(c)) ** exp in the form (n, m) where:
+        (a + b * sqrt(c)) ** exp = n + m * sqrt(c)
+    If md is not None, n and m are given modulo md.
+
+    Calculates using binary exponentiation
+    """
+    if md is None:
+        curr = (a, b)
+        res = (1, 1)
+        e = exp
+        while True:
+            if e & 1:
+                res = (res[0] * curr[0] + c * res[1] * curr[1], res[0] * curr[1] + res[1] * curr[0])
+            e >>= 1
+            if not e: break
+            curr = (curr[0] ** 2 + c * curr[1] ** 2, 2 * curr[0] * curr[1])
+        return res
+    curr = (a % md, b % md)
+    res = (1, 1)
+    e = exp
+    while True:
+        if e & 1:
+            res = ((res[0] * curr[0] + c * res[1] * curr[1]) % md, (res[0] * curr[1] + res[1] * curr[0]) % md)
+        e >>= 1
+        if not e: break
+        curr = ((pow(curr[0], 2, md) + c * pow(curr[1], 2, md)) % md, (2 * curr[0] * curr[1]) % md)
+    return res
+
+def sumOfPolynomialProductRemainders(n_min: int=10 ** 9, n_max: int=11 * 10 ** 8) -> int:
+    """
+    Solution to Project Euler Bonus Problem #18i
+    """
+    since = time.time()
+    ps = SimplePrimeSieve(n_max)
+    print("calculated prime sieve")
+
+    res = 0
+    i0 = bisect.bisect_left(ps.p_lst, n_min)
+    for i in range(i0, len(ps.p_lst)):
+        p = ps.p_lst[i]
+        if p > n_max: break
+        pmd12 = p % 12
+        ans = 0
+        if pmd12 == 1:
+            r_tup = integerPlusSquareRootMultiplePower(a=-2, b=1, c=3, exp=(p - 1) // 3, md=p)
+            print(p, r_tup)
+            ans = -18 * r_tup[1] * (1 - 2 * r_tup[0])
+        elif pmd12 == 5:
+            r_tup = integerPlusSquareRootMultiplePower(a=-2, b=1, c=3, exp=(p + 1) // 3, md=p)
+            print(p, r_tup)
+            ans = 18 * r_tup[1] * (1 - 2 * r_tup[0])
+        else: continue
+        ans %= p
+        print(f"{p}: {ans}")
+        res += ans
+    print(f"Time taken = {time.time() - since:.4f} seconds")
+    return res
+
 # Problem Secret
 def loadBlackAndWhitePNGImage(filename: str, relative_to_program_file_directory: bool=False) -> List[Tuple[int]]:
     """
@@ -351,7 +411,7 @@ def loadBlackAndWhitePNGImage(filename: str, relative_to_program_file_directory:
 #def 
 
 if __name__ == "__main__":
-    to_evaluate = {"-1"}
+    to_evaluate = {"18i"}
 
     if not to_evaluate or "-1" in to_evaluate:
         res = ramanujanSummationOfAllMultiples(nums=[3, 5])
@@ -364,6 +424,10 @@ if __name__ == "__main__":
     if not to_evaluate or "heegner" in to_evaluate:
         res = closestCosPiSqrtInteger(abs_n_max=1000)
         print(f"Solution to Project Euler #heegner = {res}")
+
+    if not to_evaluate or "18i" in to_evaluate:
+        res = sumOfPolynomialProductRemainders(n_min=0, n_max=100)
+        print(f"Solution to Project Euler #18i = {res}")
     
     #if not to_evaluate or "18i" in to_evaluate:
     #    res = polynomialPrimeProductRemainder(p_min=100_000, p_max=110_000)
