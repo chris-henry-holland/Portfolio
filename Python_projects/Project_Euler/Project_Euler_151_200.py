@@ -6310,12 +6310,72 @@ class UnionFind:
         return self.size[self.find(i)]
 
 def edgeCountForVertexToConnectToProportionOfGraph(
+    n_vertices: int,
     vertex: int,
     target_proportion: float,
-    n_vertices: int,
     edge_iterator: Iterable[Tuple[int, int]],
     ignore_self_edges: bool=True,
 ) -> int:
+    """
+    For an undirected graph initially consisting of n_vertices and no
+    edges, where the vertices are labelled with the integers from 0 to
+    (n_vertices - 1) inclusive, undirected edges between the vertices
+    are inserted one by one as provided by the iterator edge_iterator,
+    which produces an ordered sequence of edges in the form of 2-tuples
+    with the labels of the vertices the edge should connect.
+
+    This function calculates the smallest number of edges to be
+    inserted before the vertex with integer label vertex is connected
+    to a proportion of the vertices in the graph (including itself)
+    no less than target_proportion.
+
+    In an undirected graph, a vertex is connected to another vertex if
+    and only if there exists an unbroken path using edges of the
+    graph from the first vertex to the second.
+
+    Args:
+        Required positional:
+        n_vertices (int): Strictly positive integer giving the number
+                of vertices in the graph.
+        vertex (int): Integer between 0 and (n_vertices - 1) inclusive
+                specifying for which vertex the proportion of vertices
+                in the graph is being monitored as edges are inserted.
+        target_proportion (float): The proportion of the vertices in
+                the graph the vertex labelled vertex is to be connected
+                when the number of edges inserted is to be returned
+                (including the vertex itself).
+        edge_iterator (iterator of 2-tuples of ints): Ordered iterator
+                producing a finite or infinite number of 2-tuples of
+                ints, both of which are between 0 and (n_vertices - 1)
+                inclusive, each corresponding to an edge connecting
+                the vertices labelled with the two contained integers.
+
+        Optional named:
+        ignore_self_edges (bool): Boolean which if True signifies that
+                if an edge produced by the iterator edge_iterator
+                connects a vertex to itself, it should ignored (and so
+                that edge is not included in the count of edges),
+                but if False such edges are still included.
+            Default: True
+
+    Returns:
+    Integer (int) giving the number of edges inserted into the graph by
+    the iterator edge_iterator (if ignore_self_edges is True, not including
+    edges connecting an edge to itself) before the vertex labelled with the
+    integer vertex is first connected to a proportion of the vertices in the
+    graph (including itself) no less than target_proportion. If edge_iterator
+    produces a finite number of edges and even with all the edges in this
+    iterator are included that proportion of the graph is never reached then
+    -1 is returned.
+            
+    Outline of rationale:
+    This is a simple application of the Union Find (or Disjoint Set Union)
+    data structure with path compression and union by rank to efficiently
+    keep track of the connected components of the graph (i.e. the partitions
+    of the vertices in which every vertex is connected to every other
+    vertex within a partition and is connected to no vertex in another
+    partition) as the edges are added.
+    """
     target = math.floor(n_vertices * target_proportion)
     if target <= 1: return 0
     uf = UnionFind(n_vertices)
@@ -6443,9 +6503,9 @@ def laggedFibonacciGraphEdgeGenerator(
     return 
 
 def laggedFibonacciGraphEdgeCountForVertexToConnectToProportionOfGraph(
+    n_vertices: int=10 ** 6,
     vertex: int=524287,
     target_proportion: float=.99,
-    n_vertices: int=10 ** 6,
     n_edges: Optional[int]=None,
     l_fib_poly_coeffs: Tuple[int]=(100003, -200003, 0, 300007),
     l_fib_lags: Tuple[int]=(24, 55),
@@ -6453,9 +6513,9 @@ def laggedFibonacciGraphEdgeCountForVertexToConnectToProportionOfGraph(
 ) -> int:
     since = time.time()
     res = edgeCountForVertexToConnectToProportionOfGraph(
+            n_vertices,
             vertex,
             target_proportion,
-            n_vertices,
             laggedFibonacciGraphEdgeGenerator(n_vertices=n_vertices, n_edges=n_edges, l_fib_poly_coeffs=l_fib_poly_coeffs, l_fib_lags=l_fib_lags),
             ignore_self_edges=ignore_self_edges,
         )
@@ -8523,9 +8583,9 @@ if __name__ == "__main__":
     """
     if not to_evaluate or 186 in to_evaluate:
         res = laggedFibonacciGraphEdgeCountForVertexToConnectToProportionOfGraph(
+                n_vertices=10 ** 6,
                 vertex=524287,
                 target_proportion=.99,
-                n_vertices=10 ** 6,
                 n_edges=None,
                 l_fib_poly_coeffs=(100003, -200003, 0, 300007),
                 l_fib_lags=(24, 55),

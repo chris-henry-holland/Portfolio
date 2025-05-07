@@ -12,6 +12,7 @@ import time
 
 import numpy as np
 import scipy.special as sp
+import scipy.signal as sig
 import sympy as sym
 
 from collections import deque
@@ -416,7 +417,7 @@ def sumOfPolynomialProductRemainders(n_min: int=10 ** 9, n_max: int=11 * 10 ** 8
     return res
 
 # Problem Secret
-def loadBlackAndWhitePNGImage(filename: str, relative_to_program_file_directory: bool=False) -> List[Tuple[int]]:
+def loadBlackAndWhitePNGImage(filename: str, relative_to_program_file_directory: bool=False) -> np.ndarray:
     """
         Optional named:
         relative_to_program_file_directory (bool): If True then
@@ -432,14 +433,50 @@ def loadBlackAndWhitePNGImage(filename: str, relative_to_program_file_directory:
     #shape = image_np.shape[:2]
     res = image_np[:, :, 0]
 
-    print(res)
+    #print(res)
     print(res.shape)
     return res
 
-#def 
+def repeatedAdjacentConvolutions(arr: np.ndarray, n_convolutions: int, md: Optional[int]=None) -> np.ndarray:
+    pattern = np.array([[0, 1, 0], [1, 0, 1], [0, 1, 0]], dtype=int)
+    shp = arr.shape
+    arr %= md
+    arr2 = np.array(arr) #np.zeros((shp[0] + 1, shp[1] + 1), dtype=int)
+    cycle_len = math.lcm(*shp, md)
+    if md is not None:
+        n_convolutions = n_convolutions % cycle_len
+    print(f"n_convolutions = {n_convolutions}")
+    print(f"cycle length = {cycle_len}")
+    #arr2[1:-1, 1:-1] = arr
+    print(arr2[:4, :4])
+    print(arr2[:4,-4:])
+    print(arr2[-4:,:4])
+    print(arr2[-4:,-4:])
+    for i in range(2 * cycle_len):
+        arr2 = sig.convolve2d(arr2, pattern, boundary="wrap")[1:-1, 1:-1]
+        if md is not None: arr2 %= md
+        
+        if not i % 100:
+            print(i)
+        if np.all(arr2 == arr): print("back to original after {i} convolutions")
+        if not (i + 1) % cycle_len:
+            print(i)
+            print(arr2[:4, :4])
+            print(arr2[:4,-4:])
+            print(arr2[-4:,:4])
+            print(arr2[-4:,-4:])
+    return arr2
+
+def repeatedAdjacentConvolutionsLoadedImage(n_convolutions: int=10 ** 12, in_filename: str="bonus_secret_statement.png", out_filename: str="bonus_secret_statement_decoded.png", relative_to_program_file_directory: bool=True, md: Optional[int]=7) -> np.ndarray:
+    
+    since = time.time()
+    arr = loadBlackAndWhitePNGImage(in_filename, relative_to_program_file_directory=relative_to_program_file_directory)
+    res = repeatedAdjacentConvolutions(arr, n_convolutions, md=md)
+    print(f"Time taken = {time.time() - since:.4f} seconds")
+    return res
 
 if __name__ == "__main__":
-    to_evaluate = {"18i"}
+    to_evaluate = {"secret"}
 
     if not to_evaluate or "-1" in to_evaluate:
         res = ramanujanSummationOfAllMultiples(nums=[3, 5])
@@ -461,6 +498,6 @@ if __name__ == "__main__":
     #    res = polynomialPrimeProductRemainder(p_min=100_000, p_max=110_000)
     #    print(f"Solution to Project Euler #18i = {res}")
 
-    #if not to_evaluate or "secret" in to_evaluate:
-    #    res = loadBlackAndWhitePNGImage(filename="bonus_secret_statement.png", relative_to_program_file_directory=True)
-    #    print(f"Solution to Project Euler #secret = {res}")
+    if not to_evaluate or "secret" in to_evaluate:
+        res = repeatedAdjacentConvolutionsLoadedImage(n_convolutions=10 ** 12, in_filename="bonus_secret_statement.png", out_filename="bonus_secret_statement_decoded.png", relative_to_program_file_directory=True, md=7)
+        print(f"Solution to Project Euler #secret = {res}")
