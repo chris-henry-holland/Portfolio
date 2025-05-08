@@ -6206,6 +6206,72 @@ def numberMindSimulatedAnnealing(alphabet: str="0123456789", n_trials: int=20, g
 ]) -> List[str]:
     """
     Solution to Project Euler #185
+
+    Using a given set of characters (alphabet), a string of a given length has
+    been constructed. A sequence of similarly constructed strings are given
+    (each with the same length and using the same set of characters), each having
+    an associated number corresponding to the number of positions in the string
+    for which the character in that position in the string is the same as the
+    character at the equivalent position in the original string (referred to
+    as the number of matches).
+
+    This function produces a string which is could have been the original string
+    based on that sequence of similarly constructed strings with the associated
+    number.
+
+    This is performed using simulated annealing, using as a score the sum of
+    the absolute difference between the actual number of matches and the required
+    number of matches for each string (referret to as the score), with at each
+    step making at most n_trials attempts at random single character changes at
+    each position to improve the score before making a random single character
+    change regardless of its effect on the score.
+
+    Args:
+        Optional named:
+        alphabet (str): A string containing the characters that may be used
+                in the original string.
+            Default: "0123456789"
+        n_trials (int): Strictly positive integer giving the number of attempts
+                made during the simulated annealing to make a change that improves
+                the score before making a random single character change regardless
+                of its effect on the score.
+            Default: 20
+        guesses (list of 2-tuples whose index 0 contains a string and whose index
+                1 contains an int): The sequence of strings with the same length
+                as the original string and consisting of the characters in
+                alphabet, each with the corresponding number of matches, with
+                which the returned string must be consistent for all of the
+                contained strings and number of matches.
+            Default: [
+                        ("5616185650518293", 2),
+                        ("3847439647293047", 1),
+                        ("5855462940810587", 3),
+                        ("9742855507068353", 3),
+                        ("4296849643607543", 3),
+                        ("3174248439465858", 1),
+                        ("4513559094146117", 2),
+                        ("7890971548908067", 3),
+                        ("8157356344118483", 1),
+                        ("2615250744386899", 2),
+                        ("8690095851526254", 3),
+                        ("6375711915077050", 1),
+                        ("6913859173121360", 1),
+                        ("6442889055042768", 2),
+                        ("2321386104303845", 0),
+                        ("2326509471271448", 2),
+                        ("5251583379644322", 2),
+                        ("1748270476758276", 3),
+                        ("4895722652190306", 1),
+                        ("3041631117224635", 3),
+                        ("1841236454324589", 3),
+                        ("2659862637316867", 2),
+                    ]
+    
+    Returns:
+    A string (str) with the same length as each of the strings in guesses
+    that is consistent with all of the number of matches with all of the
+    strings in guesses. Note that while this may be the original string,
+    it is not guaranteed.
     """
     since = time.time()
     n = len(guesses[0][0])
