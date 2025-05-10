@@ -6057,10 +6057,64 @@ def maximumProductOfPartsTerminatingSum(n_min: int=5, n_max: int=10 ** 4, base: 
     return res
 
 # Problem 184
-def orderedFractionsWithMaxNumeratorDenominatorSquareSum(max_numerator_denominator_square_sum: int, reverse: bool=False, incl_first: bool=True, incl_last: bool=True) -> Generator[Tuple[int, int], None, None]:
+def orderedFractionsWithMaxNumeratorDenominatorSquareSum(max_numerator_denominator_square_sum: int, reverse: bool=False, incl_zero: bool=True, incl_one: bool=True) -> Generator[Tuple[int, int], None, None]:
+    """
+    Generator yielding all rational numbers between zero and one
+    for which, when expressed as a fraction in lowest terms the
+    sum of the squares of the numerator and denominator does not
+    exceed max_numerator_denominator_square_sum. These are
+    yielded in order of increasing (if reverse is False) or
+    decreasing (if reverse is True) size.
+
+    Args:
+        Required positional:
+        max_numerator_denominator_square_sum (int): Strictly positive
+                integer giving the largest value for the squared sum
+                of the numerator and denominator for any yielded
+                rational number when expressed as a fraction in lowest
+                terms.
+        
+        Optional named:
+        reverse (bool): Boolean indicating whether the rational numbers
+                are to be yielded in increasing (if False) or decreasing
+                (if True) order of size.
+            Default: False
+        incl_zero (bool): Boolean indicating whether the value 0 should
+                be yielded (as either the first or last value yielded
+                depending on reverse)
+            Default: True
+        incl_one (bool): Boolean indicating whether the value 1 should
+                be yielded (as either the last or first value yielded
+                depending on reverse)
+            Default: True
+
+    Yields:
+    2-tuples of integers (ints) representing a rational number as a
+    fraction in lowest terms, where index 0 contains a non-negative integer
+    representing the numerator and index 1 contains a strictly positive
+    integer representing the denominator. The collection of values
+    yielded represent all rational numbers greater than (or greater than or
+    equal to if incl_zero is True) zero and less than (or less than or
+    equal to if incl_one is True) one which when represented as a fraction
+    in lowest terms have the squared sum of numerator and denominator not
+    exceeding max_numerator_denominator_square_sum, which are yielded
+    in strictly increasing (if reverse is False) or strictly decreasing
+    (if reverse is True) order of size.
+
+    Brief outline of rationale:
+    The terms are calculated in a manner similar to that used to
+    calculate Farey sequences, by starting with the sequence consisting
+    of the two fractions 0 / 1 and 1 / 1 and between each pair of
+    successive terms in the sequence placing the fraction with numerator
+    and denominator being the sums of the numerators and the denominators
+    respecively of the fractions between which it is being placed, until
+    the squared sum of these values exceeds the allowed maximum.
+    """
+    
     # Using Farey sequences
     bounds = [(1, 1), (0, 1)] if reverse else [(0, 1), (1, 1)]
     curr = bounds[0]
+    incl_first, incl_last = (incl_one, incl_zero) if reverse else (incl_zero, incl_one)
     if incl_first:
         yield curr
     stk = [bounds[1]]
@@ -6080,8 +6134,8 @@ def latticeTrianglesContainingOriginCount(lattice_radius: int=105, incl_edge: bo
     cnt1 = 0
     cnt2 = 0
     res = 0
-    it0 = lambda b1, b2, b3: orderedFractionsWithMaxNumeratorDenominatorSquareSum(r_sq - (not incl_edge), reverse=b1, incl_first=b2, incl_last=b3)
-    for it in (it0(False, True, False), it0(True, True, False), it0(False, True, False), it0(True, True, False)):
+    it0 = lambda b1, b2, b3: orderedFractionsWithMaxNumeratorDenominatorSquareSum(r_sq - (not incl_edge), reverse=b1, incl_zero=b2, incl_one=b3)
+    for it in (it0(False, True, False), it0(True, False, True), it0(False, True, False), it0(True, False, True)):
         for frac in it:
             #print(frac)
             l_sq = frac[0] ** 2 + frac[1] ** 2
