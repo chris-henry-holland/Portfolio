@@ -6129,6 +6129,49 @@ def orderedFractionsWithMaxNumeratorDenominatorSquareSum(max_numerator_denominat
     return
 
 def latticeTrianglesContainingOriginCount(lattice_radius: int=105, incl_edge: bool=False) -> int:
+    """
+    Solution to Project Euler #184
+
+    Consider the set of lattice points on a Cartesian plane (i.e. points
+    that have integer x and y coordinates) that are within a distance of
+    lattice_radius of the origin, inclusive if incl_edge is True else
+    exclusive. This function calculates the number of distinct triangles
+    that can be formed whose vertices are each from the described set of
+    lattice points and which completely enclose the origin.
+
+    A triangle completely encloses a point if and only if the point is
+    inside the triangle and is not one of the vertices or on one of the
+    edges of the triangle.
+
+    Two triangles are distinct if and only if there is at least one vertex
+    of one of the triangles whose Cartesian coordinates does not describe
+    a vertex in the other triangle.
+
+    Args:
+        Optional named:
+        lattice_radius (int): Strictly poisitve integer specifying the
+                Euclidean distance in the Cartesian plane within which
+                lattice points should be to be allowed to be used as
+                positions for triangle vertices.
+            Default: 105
+        incl_edge (bool): Boolean specifying whether lattice points at
+                a distance of exactly lattice_radius should be allowed
+                to be used as positions for triangle vertices, with
+                such vertices being allowed to be used if and only if
+                this is given as True.
+            Defualt: False
+    
+    Returns:
+    Integer (int) giving the number of distinct triangles whose vertices
+    are each at one of the described set of lattice points and which
+    completely enclose the origin.
+
+    Outline of rationale:
+    For each triangle enclosing the origin, at least one vertex must be
+    strictly above the x-axis and one vertex must be strictly below the
+    x-axis.
+    TODO
+    """
     since = time.time()
     r_sq = lattice_radius ** 2
     cnt1 = 0
@@ -8585,7 +8628,7 @@ def findNthPrimeProofSqubeWithSubstring(substr_num: int=200, substr_num_lead_zer
     return res
 
 if __name__ == "__main__":
-    to_evaluate = {198}
+    to_evaluate = {184}
 
     if not to_evaluate or 151 in to_evaluate:
         res = singleSheetCountExpectedValueFloat(n_halvings=4)
