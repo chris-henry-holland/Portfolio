@@ -6167,10 +6167,51 @@ def latticeTrianglesContainingOriginCount(lattice_radius: int=105, incl_edge: bo
     completely enclose the origin.
 
     Outline of rationale:
-    For each triangle enclosing the origin, at least one vertex must be
-    strictly above the x-axis and one vertex must be strictly below the
-    x-axis.
+    We can partition the lattice points into:
+     1) the origin
+     2) those in the upper half plane (where y > 0) along with the points
+        on the positive x axis (where y = 0 and x > 0)
+     3) those in the lower half plane (where y < 0) along with the points
+        on the negative x axis (where y = 0 and x < 0)
+    Given our definitions, the origin cannot be one of the vertices of a
+    triangle enclosing the origin, so partition 1 can be ignored.
+    Additionally, partitions 2 and 3 can be mapped onto each other by a
+    rotation by pi about the origin.
+    For any given triangle enclosing the origin, either two or more of the
+    vertices are in partition 2 or two or more of the vertices are in
+    partition 3. Given the symmetry of these partitions, the total number
+    of triangles enclosing the origin in each of these two cases is the
+    same, and so we only need to calculate the number of such triangles
+    for one of these cases and (since there is no overlap in the cases)
+    the final answer is simply double that count. We choose the case where
+    at least two of the vertices are in partition 2.
+    Now suppose that two vertices of the triangle have been placed in
+    partition 2 and consider where the third vertex can be placed such that
+    the triangle encloses the origin. If we imagine looking from the third
+    vertex towards the origin, we find that the triangle encloses the origin
+    if and only if from this perspective one of the points is strictly to
+    the left of the origin and the other is strictly to the right of the
+    origin. The points for which this is the case can be constructed as
+    follows.
+    Construct a line from each of the two points in partition 2 that pass
+    through the origin and extend to infinity, forming a wedge in the lower
+    half plane with its tip at the origin. The points which those two vertices
+    appear strictly to the left and strictly to the right of the origin
+    respectively are precisely those points within that wedge, not including
+    its borders.
+    We now observe that by symmetry, the number of lattice points within
+    that wedge is equal to the number of lattice points in the wedge when
+    rotated by pi about the origin. This is the number of lattice points in
+    partition 2 whose position vector with respect to the origin makes an
+    angle strictly between that made by the position vectors of the two
+    other vertices.
+    Consequently, for each pair of lattice points in partition 2 comprising
+    two vertices in a triangle, the number of possible lattice points for the
+    third vertex resulting in a triangle enclosing the origin is the number
+    of valid lattice points whose position vector from the origin makes an
+    angle strictly between that of the two chosen lattice points.
     TODO
+
     """
     since = time.time()
     r_sq = lattice_radius ** 2
