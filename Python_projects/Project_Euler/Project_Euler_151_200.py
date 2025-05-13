@@ -6210,8 +6210,15 @@ def latticeTrianglesContainingOriginCount(lattice_radius: int=105, incl_edge: bo
     third vertex resulting in a triangle enclosing the origin is the number
     of valid lattice points whose position vector from the origin makes an
     angle strictly between that of the two chosen lattice points.
+    Now consider a single lattice point in partition 2, and the number of
+    triangles containing the origin there are such that one vertex is at that
+    point and one of the other vertices is in partition 2 and has an angle
+    with the x-axis less than that of the original point. Note that by adding
+    this total over all points in partition 2, we get the total number of
+    triangles containing the origin such that two of the vertices are in
+    partition 2, which as previously observed is half the final answer.
+    We can calculate the total number of such triangles by 
     TODO
-
     """
     since = time.time()
     r_sq = lattice_radius ** 2
