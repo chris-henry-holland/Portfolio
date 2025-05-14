@@ -6223,29 +6223,86 @@ def latticeTrianglesContainingOriginCount(lattice_radius: int=105, incl_edge: bo
      2) The sum over all encountered lattice points of the number of other
         lattice points encountered with angle strictly less than that lattice
         point (this corresponds to the number of pairs of lattice points
-        that correspond to triangles containing the origin for the third
-        vertex having an angle with the x-axis about the origin be the partition 2 vertex with smaller angle and the
-        third vertex with a lattice point opposite greater than that of
-        the partition 2 vertex)
-    
-    For each angle, find the total number of lattice points at that angle,
-    which we refer to as the degeneracy of that angle.
-
-    Iterate over all of the lattice points in partition 2 in order of their
-    angle from the positive x-axis. The order of points of equal angle does
-    not matter
-
-
-    Now consider a single lattice point in partition 2, and the number of
-    triangles containing the origin there are such that one vertex is at that
-    point and one of the other vertices is in partition 2 and has an angle
-    with the x-axis less than that of the original point. Note that by adding
-    this total over all points in partition 2, we get the total number of
-    triangles containing the origin such that two of the vertices are in
-    partition 2, which as previously observed is half the final answer.
-    We can calculate the total number of such triangles by 
-    TODO
+        that form two vertices, one of which has an anticlockwise angle from
+        the x-axis about the origin no greater than this angle, another has
+        an anticlockwise angle from the x-axis about the origin between pi
+        and pi plus this angle inclusive, which all form triangles if the
+        third vertex has an anticlockwise angle from the x-axis about the
+        origin between the current angle and pi exclusive).
+     3) The sum over all encountered lattice points of the number of unordered
+        pairs of lattice points encountered with angles strictly less than
+        that lattice point and angles different from each other (this
+        corresponds to the number of triangles containing the origin for
+        which two of the lattice points make an anticlockwise angle about the
+        x-axis no greater than this angle).
+    Note that count after the final iteration, the final count 3 corresponds
+    to the number of triangles enclosing the origin for which at least two
+    vertices are in partition 2, which as previously observed is half the
+    final answer.
+    These counts can be maintained as follows. Each count starts at 0. For
+    each angle, find the total number of lattice points at that angle,
+    which we refer to as the degeneracy of that angle. Mutliply the degeneracy
+    by the current count 2 (which is the count 2 for the previous angle), and
+    add this to count 3. Similarly, multiply the degeneracy by the current
+    count 1 (which is similarly the count 1 for the previous angle), and add
+    this to count 2. Finally, add the degeneracy to count 1. After this we
+    can proceed to the next angle and repeat this process until the angle
+    pi is reached, before which the process is terminated.
+    All that remains is to establish the angles between 0 and pi anticlockwise
+    from the x-axis correspond to lattice points and how many.
+    For this, we split the set of angles into the ranges [0, pi / 4),
+    [pi / 4, pi / 2), [pi / 2, 3 * pi / 4) and [3 * pi / 4, pi). Recall that
+    for all lattice points eligible to be triangle vertices, (x, y), we have
+    x ** 2 + y ** 2 is less than (or equal to if incl_edge is True)
+    lattice_radius ** 2.
+    For the first range, we additionally require y >= 0 and x > y.
+    As such, we can map (x, y) onto the rational numbers smaller than 1 through
+    the function f(x, y) = y / x. Note that the angle with the x-axis is given
+    by the principal value of arctan(y / x) which is strictly increasing. This
+    also implies that all lattice points for which f(x, y) is the same have equal
+    angle with the x-axis. We can therefore find the lattice points by iterating
+    over the rational numbers in increasing order between 0 (inclusive) and 1
+    (exclusive) for which when expressed as a fraction in lowest terms, the sum
+    of the squared numerator and denominator is less than (or equal to)
+    lattice_radius ** 2. Furthermore, the degeneracy of the angle corresponding
+    to each such rational number will be the number of ways it can be represented
+    as a fraction such that the squared numerator and denominator is less than
+    (or equal to) lattice_radius ** 2, which is simply the largest integer a
+    such that a ** 2 * (squared sum of squared numerator and denominator in lowest
+    terms) is less than (or equal to) lattice_radius ** 2, which in the less than
+    case is:
+      floor(sqrt(lattice_radius ** 2 / (sum of squared numerator and denominator in lowest terms)))
+    and in the less than or equal to case is:
+      floor(sqrt((lattice_radius ** 2 - 1) / (sum of squared numerator and denominator in lowest terms)))
+    The sequence of such rational numbers from 0 to 1 is generated by the
+    generator orderedFractionsWithMaxNumeratorDenominatorSquareSum() in a manner
+    similar to the calculation of Farey sequences (see the outline of rationale
+    of that generator).
+    The other ranges can be iterated over similarly, with f(x, y) = -y / x for
+    the range [3 * pi / 4, pi) (resulting in the angle being the principal value
+    of -arctan(f(x, y)) which is strictly decreasing with increasing f(x, y), so
+    we iterate over the same rational numbers from 1 to 0 instead of from 0 to 1),
+    f(x, y) = x / y for the range [pi / 4, pi / 2) (resulting in the angle being the
+    principal value of pi / 2 - arctan(f(x, y)), which is strictly decreasing with
+    increasing f(x, y) and so again iterating over the same rational numbers from
+    1 to 0) and finally f(x, y) = -x / y for the range [pi / 2, 3 * pi / 4)
+    (resulting in the angle being the principal value of pi / 2 + arctan(f(x, y))),
+    which is strictly increasing with increasing f(x, y) and so iterating over the
+    same rational numbers from 0 to 1 like with the range [0, pi / 4].
+    The rational numbers for all of these four ranges can be generated in the
+    correct order by the generator orderedFractionsWithMaxNumeratorDenominatorSquareSum()
+    for the appropriate inputs, and so we can chain these ranges together in
+    order to find the rational numbers corresponding to each angle at which there
+    is at least one lattice point at that angle anticlockwise from the x-axis
+    in order of increasing angle. Using each fraction thus obtained, we can
+    calculate the degeneracy and finally use these values in the process
+    detailed above, maintaining the three counts through the iterations to
+    finally get the total number of triangles with vertices on permitted
+    lattice points that surround the origin for which at least two of the
+    vertices are in partition 2 of the lattice points, which can be doubled
+    to obtain the final answer.
     """
+    # Review- Outline of rationale for clarity and verbosity.
     since = time.time()
     r_sq = lattice_radius ** 2
     cnt1 = 0
