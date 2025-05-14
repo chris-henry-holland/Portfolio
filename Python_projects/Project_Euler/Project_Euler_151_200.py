@@ -6210,6 +6210,32 @@ def latticeTrianglesContainingOriginCount(lattice_radius: int=105, incl_edge: bo
     third vertex resulting in a triangle enclosing the origin is the number
     of valid lattice points whose position vector from the origin makes an
     angle strictly between that of the two chosen lattice points.
+    
+    This implies that we can find the number of triangles for which two
+    of the vertices are in partition 2 as follows:
+    Iterate over all the angles from 0 (inclusive) to pi (exclusive) in
+    order of increasing size for the angles at which there is at least one
+    lattice point at that angle to the x-axis from the origin. During this
+    process we maintain three counts:
+     1) The number of lattice points encountered (this corresponds to the
+        number of lattice points in partition 2 with an angle no greater
+        than the current angle)
+     2) The sum over all encountered lattice points of the number of other
+        lattice points encountered with angle strictly less than that lattice
+        point (this corresponds to the number of pairs of lattice points
+        that correspond to triangles containing the origin for the third
+        vertex having an angle with the x-axis about the origin be the partition 2 vertex with smaller angle and the
+        third vertex with a lattice point opposite greater than that of
+        the partition 2 vertex)
+    
+    For each angle, find the total number of lattice points at that angle,
+    which we refer to as the degeneracy of that angle.
+
+    Iterate over all of the lattice points in partition 2 in order of their
+    angle from the positive x-axis. The order of points of equal angle does
+    not matter
+
+
     Now consider a single lattice point in partition 2, and the number of
     triangles containing the origin there are such that one vertex is at that
     point and one of the other vertices is in partition 2 and has an angle
