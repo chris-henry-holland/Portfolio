@@ -6033,6 +6033,38 @@ def partsCountMaximisingProductOfParts(n: int) -> int:
 def maximumProductOfPartsTerminatingSum(n_min: int=5, n_max: int=10 ** 4, base: int=10) -> int:
     """
     Solution to Problem 183
+
+    For a strictly positive integers n, define the function M(n) to be the
+    maximum value of r ** k where k is a strictly positive integer and
+    k * r = n.
+
+    For strictly positive integers n and integers strictly greater than 1
+    base, define the function D(n, base) to be equal to -n if M(n) has a
+    terminating base-mal representation (i.e. the equivalent of a decimal
+    representation, but using the integer base as the base rather than base
+    10) and n if M(n) has a non-terminating base-mal representation.
+
+    This function calculates the sum:
+        (sum n from n_min to n_max) D(n, base)
+    
+    Args:
+        Optional named:
+        n_min (int): Strictly positive integer giving the smallest value of
+                n included in the sum.
+            Default: 5
+        n_max (int): Strictly positive integer giving the largest value of
+                n included in the sum.
+            Default: 10 ** 4
+        base (int): Integer strictly greater than 1 giving the base in which
+                the value of function M(n) is to be represented when assessing
+                whether its representation is terminating or non-terminating
+                for each value of n in the sum over D(n, base).
+            Default: 10
+    
+    Returns:
+    Integer (int) giving the value of the sum:
+        (sum n from n_min to n_max) D(n, base)
+    where D(n, base) is defined above.
     """
     since = time.time()
     base_pf = calculatePrimeFactorisation(base)
@@ -8759,7 +8791,7 @@ def findNthPrimeProofSqubeWithSubstring(substr_num: int=200, substr_num_lead_zer
     return res
 
 if __name__ == "__main__":
-    to_evaluate = {184}
+    to_evaluate = {183}
 
     if not to_evaluate or 151 in to_evaluate:
         res = singleSheetCountExpectedValueFloat(n_halvings=4)
