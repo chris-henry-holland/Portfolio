@@ -5835,9 +5835,42 @@ def goldenTripletsSum(max_order: int) -> Tuple[int]:
     #print(res)
     return res
 
-def goldenTripletsSumTotalNumeratorDenominator(max_order: int=35) -> Tuple[int]:
+def goldenTripletsSumTotalNumeratorDenominator(max_order: int=35) -> int:
     """
     Solution to Project Euler #180
+
+    Consider the families of functions for integer n:
+        f_(1, n)(x, y, z) = x ** (n + 1) + y ** (n + 1) - z ** (n + 1)
+        f_(2, n)(x, y, z) = (x * y + y * z + z * x) * (x ** (n - 1) + y ** (n - 1) - z ** (n - 1))
+        f_(3, n)(x, y, z) = x * y * z * (x ** (n - 2) + y ** (n - 2) - z ** (n - 2))
+    Use these to define the functions for integer n:
+        f_n(x, y, z) = f_(1, n)(x, y, z) + f_(2, n)(x, y, z) - f_(3, n)(x, y, z)
+    
+    This function finds the sum over the integer values of n and the rational
+    triples (x, y, z) such that f_n(x, y, z) = 0, x < y and when expressed
+    as a fraciton in lowest form, each of x, y and z are all between
+    zero and one exclusive and have a denominator no greater than
+    max_order of (x + y + z), returning the sum of the numerator and
+    denominator of this value when it is expressed as a fraction in
+    lowest terms.
+
+    Args:
+        Required positional:
+        max_order (int): Strictly positive integer giving the largest
+                denominator for any of x, y or z of rational triples
+                (x, y, z) considered for inclusion in the result.
+    
+    Returns:
+    2-tuple of integers (int), giving the sum of the numerator and denominator
+    of the sum over (x + y + z) for all rational ordered triples (x, y, z)
+    and integers n satisfying the above stated properties, when represented
+    as a fraction in lowest terms (i.e. such that the denominator is strictly
+    positive and the numerator and denominator are coprime).
+
+    Outline of rationale:
+    See outline of rationale section in the function goldenTriplets()
+    for details of the method of finding the values of (x, y, z) and
+    n satisfying the given properties.
     """
     since = time.time()
     frac = goldenTripletsSum(max_order)
