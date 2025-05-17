@@ -5769,6 +5769,41 @@ def goldenTriplets(max_order: int) -> List[Tuple[int, Tuple[Tuple[int, int], Tup
     return res
 
 def goldenTripletsSum(max_order: int) -> Tuple[int]:
+    """
+    Consider the families of functions for integer n:
+        f_(1, n)(x, y, z) = x ** (n + 1) + y ** (n + 1) - z ** (n + 1)
+        f_(2, n)(x, y, z) = (x * y + y * z + z * x) * (x ** (n - 1) + y ** (n - 1) - z ** (n - 1))
+        f_(3, n)(x, y, z) = x * y * z * (x ** (n - 2) + y ** (n - 2) - z ** (n - 2))
+    Use these to define the functions for integer n:
+        f_n(x, y, z) = f_(1, n)(x, y, z) + f_(2, n)(x, y, z) - f_(3, n)(x, y, z)
+    
+    This function finds the sum over the integer values of n and the rational
+    triples (x, y, z) such that f_n(x, y, z) = 0, x < y and when expressed
+    as a fraciton in lowest form, each of x, y and z are all between
+    zero and one exclusive and have a denominator no greater than
+    max_order of (x + y + z).
+
+    Args:
+        Required positional:
+        max_order (int): Strictly positive integer giving the largest
+                denominator for any of x, y or z of rational triples
+                (x, y, z) considered for inclusion in the result.
+    
+    Returns:
+    2-tuple of integers (int), giving the rational number result
+    of the sum over (x + y + z) for all rational ordered triples (x, y, z)
+    and integers n satisfying the above stated properties. This is
+    represented as a fraction in lowest terms, where index 0 contains
+    a non-negative integer giving the numerator of this fraction and index 1
+    contains a strictly positive integer giving the denominator of this
+    fraction.
+
+    Outline of rationale:
+    See outline of rationale section in the function goldenTriplets()
+    for details of the method of finding the values of (x, y, z) and
+    n satisfying the given properties.
+    """
+
     triplets = goldenTriplets(max_order)
     res = (0, 1)
     tot1 = 0
