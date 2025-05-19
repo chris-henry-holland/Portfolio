@@ -5390,6 +5390,9 @@ def integerAngledQuadrilaterals(tol: float=10 ** -9):
     Integer (int) giving the number of convex quadrilaterals whose
     angles between edges and diagonals are all integer degrees to
     within the tolerance tol.
+
+    Outline of rationale:
+    TODO
     """
     since = time.time()
     #res = 0
@@ -5994,6 +5997,53 @@ def groupingNDifferentColouredObjects(colour_counts: List[int]=[40, 60]) -> int:
 
 # Problem 182
 def exponentsMinimisingRSAEncryptionUnconcealed(p: int, q: int) -> List[int]:
+    """
+    An RSA encryption based on the distinct prime numbers p and q of
+    an integer m between 0 and (n - 1) inclusive can be calculated as
+    follows:
+     1) Define n = p * q, phi = (p - 1) * (q - 1)
+     2) Select an integer e between 1 and phi exclusive that is coprime
+        with phi (i.e. the greatest common divisor with phi is 1).
+     3) The encryption applied to an integer m between 0 and (n - 1)
+        inclusive is then:
+         m ** e (mod n)
+
+    For RSA encryptions based on given distinct primes p and q, this
+    function calculates the possible values of e (between 1 and phi
+    exclusive and coprime with phi, where phi = (p - 1) * (q - 1))
+    for which there are no other choices of such values of e for which
+    the RSA encryptions result in fewer integers between 0 and (n - 1)
+    (where n = p * q) being encrypted to themselves (so-called
+    uncovered messages).
+         
+    Args:
+        Required positional:
+        p (int): Prime number giving the first of the two primes on
+                which the RSA encryptions of interest are to be
+                based. Should be different from q.
+        q (int): Prime number giving the second of the two primes on
+                which the RSA encryptions of interest are to be
+                based. Should be different from p.
+    
+    Returns:
+    List of integers (ints) between 1 and phi exclusive (where phi
+    is (p - 1) * (q - 1)) giving the possible choices of e for RSA
+    encryptions based on p and q for which there are no other 
+    possible choices of e result in fewer integers between 0 and
+    (n - 1) (where n = p * q) being encrypted to themselves by the
+    corresponding RSA encryption.
+
+    Outline of rationale:
+    It can be shown that for 1 < e < phi, the number of integers
+    in the range [0, n - 1] that map to themselves is:
+        (1 + gcd(e - 1, p - 1)) * (1 + gcd(e - 1, q - 1))
+    We therefore iterate over the values of e between 2 and (phi - 1)
+    inclusive such that gcd(e, phi) = 1, keeping track of the
+    minimum value of the above expression encountered and a
+    list of the values of e encountered for which that expression
+    takes on that value.
+    """
+    # Review- derive the expression given in Outline of rationale.
 
     # For 1 < e < phi, the number of unconcealed integers on
     # the range [0, n - 1] is:
@@ -6050,7 +6100,49 @@ def exponentsMinimisingRSAEncryptionUnconcealed(p: int, q: int) -> List[int]:
     """
 
 def exponentsMinimisingRSAEncryptionUnconcealedSum(p: int=1009, q: int=3643) -> int:
+    """
+    Solution to Project Euler #182
 
+    An RSA encryption based on the distinct prime numbers p and q of
+    an integer m between 0 and (n - 1) inclusive can be calculated as
+    follows:
+     1) Define n = p * q, phi = (p - 1) * (q - 1)
+     2) Select an integer e between 1 and phi exclusive that is coprime
+        with phi (i.e. the greatest common divisor with phi is 1).
+     3) The encryption applied to an integer m between 0 and (n - 1)
+        inclusive is then:
+         m ** e (mod n)
+
+    For RSA encryptions based on given distinct primes p and q, this
+    function calculates the sum of the possible values of e (between 1 and
+    phi exclusive and coprime with phi, where phi = (p - 1) * (q - 1))
+    for which there are no other choices of such values of e for which
+    the RSA encryptions result in fewer integers between 0 and (n - 1)
+    (where n = p * q) being encrypted to themselves (so-called
+    uncovered messages).
+         
+    Args:
+        Optional named:
+        p (int): Prime number giving the first of the two primes on
+                which the RSA encryptions of interest are to be
+                based. Should be different from q.
+            Default: 1009
+        q (int): Prime number giving the second of the two primes on
+                which the RSA encryptions of interest are to be
+                based. Should be different from p.
+            Default: 3643
+    
+    Returns:
+    Integer (int) giving the sum of the possible choices of e for RSA
+    encryptions based on p and q for which there are no other 
+    possible choices of e result in fewer integers between 0 and
+    (n - 1) (where n = p * q) being encrypted to themselves by the
+    corresponding RSA encryption.
+
+    Outline of rationale:
+    See outline of rationale for the function
+    exponentsMinimisingRSAEncryptionUnconcealed().
+    """
     since = time.time()
     res = sum(exponentsMinimisingRSAEncryptionUnconcealed(p, q))
     print(f"Time taken = {time.time() - since:.4f} seconds")
