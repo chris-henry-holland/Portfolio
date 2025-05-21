@@ -5020,6 +5020,75 @@ def sumSquareOfTheDigitalSquares(max_n_dig: int=20, n_tail_digs: Optional[int]=9
 def countNumbersWithDigitRepeatCap(n_dig: int=18, max_dig_rpt: int=3, base: int=10) -> int:
     """
     Solution to Project Euler #172
+
+    Calculates the number of strictly positive integers which,
+    whose representation in the chosen base with no leading zeros
+    contains exactly n_dig digits with no single digit value appearing
+    more than max_dig_rpt times.
+
+    Args:
+        Optional named:
+        n_dig (int): Strictly positive integer specifying the number
+                of digits the integers considered must contain when
+                expressed in the chosen base with no leading zeros.
+            Default: 18
+        max_dig_rpt (int): Strictly positive integer specifying the
+                maximum number of times any digit value may appear
+                in the representation of any integer considered
+                in the chosen base with no leading zeros.
+            Default: 3
+        base (int): Integer strictly greater than 1 giving the base
+                in which the integers are to be represented (with
+                no leading zeros) when assessing whether an it contains
+                exactly n_dig digits and the same digit value no more
+                than max_dig_rpt times.
+            Default: 10
+    
+    Returns:
+    Integer (int) giving the number of strictly positive integers which,
+    whose representation in the chosen base with no leading zeros
+    contains exactly n_dig digits with no single digit value appearing
+    more than max_dig_rpt times.
+
+    Outline of rationale:
+    We take a bottom up dynamic programming approach by consider
+    constructing the numbers to be counted one digit at a time from
+    left to right, keeping track of the number of prefixes of that
+    length and of different types exist.
+    We observe that after the first digit (which cannot be 0), when going
+    from one digit to the next, the order of the digits previously
+    encountered does not matter, only their frequencies. This allows
+    for grouping together of the prefixes encountered based on the
+    frequency of the digits encountered, considerably reducing the number
+    of required calculations.
+    We can further observe that since all possible digit values are
+    treated equally after the first digit (which again cannot be zero),
+    we can further group together prefixes based on the number of
+    times each digit frequency occurs over the possible digit values,
+    without needing to keep track of which frequency corresponds to
+    which digit value (i.e. recording a frequency of frequencies).
+    As we iterate over the digits from left to right, we keep track
+    of these frequency of frequencies in a dictionary, whose keys
+    are a tuple of length no greater than (max_dig_rpt + 1) containing
+    the frequency of each digit frequency encountered that this
+    represents (with the indices of the tuple element giving the
+    frequency to which it corresponds) as keys and the corresponding
+    value being the number of prefixes of the current length that this
+    tuple represents (accounting for possible the different allocation
+    of digit values to each frequency and the different possible
+    orderings of these digits).
+    Care must be taken with the first digit, which may not be zero,
+    but this can be accounted for easily due to the simplicity of
+    only considering single digit numbers by noting that the single
+    digit prefixes are just the integers from 1 to (base - 1)
+    inclusive, which trivially results in the frequency of frequencies
+    dictionary:
+        {(base - 1, 1): base - 1}
+    representing that there are (base - 1) different ways of
+    constructing single digit numbers in this base such that
+    (base - 1) digit values in this base occur 0 times and 1
+    digit value occurs once (with the minus one in the value being
+    due to the digit not being allowed to be zero).
     """
     since = time.time()
     if max_dig_rpt * base < n_dig: return 0
