@@ -3653,6 +3653,47 @@ def twoDimensionalLineSegmentPairCrossInternally(
 def twoDimensionalLineSegmentsCountInternalCrossings(
         line_segments: List[Tuple[Tuple[int, int], Tuple[int, int]]]
 ) -> int:
+
+    # Bentley-Ottmann algorithm
+    def gradient(p1: Tuple[int, int], p2: Tuple[int, int]) -> float:
+        if p1 == p2: return 0
+        diffs = [p2[i] - p1[i] for i in range(len(p1))]
+        if not diffs[0]:
+            return float("inf") if diffs[0] > 0 else -float("inf")
+        return diffs[1] / diffs[0]
+
+    points0 = set()
+    for seg in line_segments:
+        for p in seg:
+            points0.add(p)
+    points = sorted(points0)
+    points_dict = {p: i for i, p in enumerate(points)}
+    n = len(points)
+    out_adj = [set() for _ in range(n)]
+    in_adj = [set() for _ in range(n)]
+    for seg in line_segments:
+        i1, i2 = sorted([points_dict[x] for x in seg])
+        out_adj[i1].add(i2)
+        in_adj[i2].add(i1)
+    
+    events_heap = [(p, False, i) for i, p in enumerate(points)]
+    heapq.heapify(events_heap)
+    seg_line = SortedList()
+    in_seg_dict = {}
+    res = 0
+    while events_heap:
+        event = heapq.heappop(events_heap)
+        if not event[1]:
+            i = event[2]
+            for in_seg in in_seg_dict[i]:
+                pass
+            #for i2 in out_adj:
+            #    out_segs = 
+
+    return res
+
+
+    """
     line_segments_sorted = sorted([sorted(x) for x  in line_segments])
     x_ends = SortedList()
     
@@ -3667,6 +3708,7 @@ def twoDimensionalLineSegmentsCountInternalCrossings(
             #res += twoDimensionalLineSegmentPairCrossInternally(seg_sort, line_segments_sorted[i2])
         x_ends.add((seg[1][0], i))
     return len(res)
+    """
 
 def blumBlumShubPseudoRandomTwoDimensionalLineSegmentsCountInternalCrossings(
         n_line_segments: int=5000,
@@ -9020,7 +9062,7 @@ def findNthPrimeProofSqubeWithSubstring(substr_num: int=200, substr_num_lead_zer
     return res
 
 if __name__ == "__main__":
-    to_evaluate = {183}
+    to_evaluate = {165}
 
     if not to_evaluate or 151 in to_evaluate:
         res = singleSheetCountExpectedValueFloat(n_halvings=4)
