@@ -151,6 +151,105 @@ def integerNthRoot(m: int, n: int) -> int:
         x2 += 1
     return -x2
 
+class CustomFraction:
+
+    def __init__(self, numerator: int, denominator: int):
+        if (denominator, numerator) < (0, 0):
+            numerator, denominator = -numerator, -denominator
+        if not numerator and not denominator:
+            raise ValueError("0 / 0 is indeterminate")
+        g = gcd(numerator, denominator)
+        self.numerator = numerator // g
+        self.denominator = denominator // g
+    
+    def __hash__(self):
+        return hash((self.numerator, self.denominator))
+
+    def __str__(self):
+        return f"{self.numerator} / {self.denominator}"
+
+    def __name__(self):
+        return f"{self.numerator} / {self.denominator}"
+    
+    def __eq__(self, other: Union["CustomFraction", int]) -> bool:
+        if isinstance(other, int):
+            other = CustomFraction(other, 1)
+        return self.numerator == other.numerator and self.denominator == other.denominator
+    
+    def __neq__(self, other: Union["CustomFraction", int]) -> bool:
+        return not self.__eq__(other)
+
+    def __add__(self, other: Union["CustomFraction", int]) -> "CustomFraction":
+        if isinstance(other, int):
+            other = CustomFraction(other, 1)
+        if self.denominator == 0:
+            if self != other and other.denominator: raise ValueError("Indeterminate value for addition of +inf and -inf")
+            return self
+        elif other.denominator == 0:
+            return other
+        denom = lcm(abs(self.denominator), abs(other.denominator))
+        numer = (self.numerator * denom // self.denominator) + (other.numerator * denom // other.denominator) 
+        return CustomFraction(numer, denom)
+    
+    def __radd__(self, other: Union["CustomFraction", int]) -> "CustomFraction":
+        return self.__add__(other)
+
+    def __sub__(self, other: Union["CustomFraction", int]) -> "CustomFraction":
+        if isinstance(other, int):
+            other = CustomFraction(other, 1)
+        if self.denominator == 0:
+            if self == other and other.denominator:
+                sgn = "+" if self.numerator > 0 else "-"
+                raise ValueError(f"Indeterminate value for subtraction of {sgn}inf from {sgn}inf")
+            return self
+        elif other.denominator == 0:
+            return CustomFraction(-other.numerator, other.denominator)
+        denom = lcm(abs(self.denominator), abs(other.denominator))
+        numer = (self.numerator * denom // self.denominator) - (other.numerator * denom // other.denominator) 
+        return CustomFraction(numer, denom)
+    
+    def __rsub__(self, other: Union["CustomFraction", int]) -> "CustomFraction":
+        res = self.__sub__(other)
+        res.numerator = -res.numerator
+        return res
+    
+    def __mul__(self, other: Union["CustomFraction", int]) -> "CustomFraction":
+        if isinstance(other, int):
+            other = CustomFraction(other, 1)
+        return CustomFraction(self.numerator * other.numerator, self.denominator * other.denominator)
+    
+    def __rmul__(self, other: Union["CustomFraction", int]) -> "CustomFraction":
+        return self.__mul__(other)
+
+    def __div__(self, other: Union["CustomFraction", int]) -> "CustomFraction":
+        if isinstance(other, int):
+            other = CustomFraction(other, 1)
+        return CustomFraction(self.numerator * other.denominator, self.denominator * other.numerator)
+
+    def __rdiv__(self, other: Union["CustomFraction", int]) -> "CustomFraction":
+        res = self.__div__(other)
+        return CustomFraction(res.denominator, res.numerator)
+    
+    def __lt__(self, other: Union["CustomFraction", int]) -> "CustomFraction":
+        if isinstance(other, int):
+            other = CustomFraction(other, 1)
+        return self.numerator * other.denominator < self.denominator * other.numerator
+    
+    def __le__(self, other: Union["CustomFraction", int]) -> "CustomFraction":
+        if isinstance(other, int):
+            other = CustomFraction(other, 1)
+        return self.numerator * other.denominator <= self.denominator * other.numerator
+    
+    def __gt__(self, other: Union["CustomFraction", int]) -> "CustomFraction":
+        if isinstance(other, int):
+            other = CustomFraction(other, 1)
+        return self.numerator * other.denominator > self.denominator * other.numerator
+    
+    def __ge__(self, other: Union["CustomFraction", int]) -> "CustomFraction":
+        if isinstance(other, int):
+            other = CustomFraction(other, 1)
+        return self.numerator * other.denominator >= self.denominator * other.numerator
+
 def addFractions(frac1: Tuple[int, int], frac2: Tuple[int, int]) -> Tuple[int, int]:
     """
     Finds the sum of two fractions in lowest terms (i.e. such that
@@ -194,6 +293,26 @@ def multiplyFractions(frac1: Tuple[int, int], frac2: Tuple[int, int]) -> Tuple[i
     #print(frac_prov)
     g = gcd(frac_prov[0], frac_prov[1])
     return (-(frac_prov[0] // g) if neg else (frac_prov[0] // g), frac_prov[1] // g)
+
+def compareFractions(frac1: Tuple[int, int], frac2: Tuple[int, int]) -> int:
+    """
+    Compares two fractions, identifying which is larger or if they are the
+    same size.
+
+    Args:
+        frac1 (2-tuple of ints): The first of the fractions to compare,
+                in the form (numerator, denominator)
+        frac2 (2-tuple of ints): The second of the fractions to compare,
+                in the form (numerator, denominator)
+    
+    Returns:
+    Integer (int) giving 1 if frac1 is larger, -1 if frac2 is larger and 0 if
+    frac1 and frac2 are equal.
+    """
+    num = frac1[0] * frac2[1] - frac2[0] * frac1[1]
+    if num > 0: return 1
+    elif num < 0: return -1
+    return 0
 
 def floorHarmonicSeries(n: int) -> int:
     """
@@ -3603,11 +3722,13 @@ def twoDimensionalLineSegmentEquation(
 def twoDimensionalLineSegmentPairCrossInternally(
         seg1: Tuple[Tuple[int, int], Tuple[int, int]],
         seg2: Tuple[Tuple[int, int], Tuple[int, int]],
-) -> Optional[Tuple[Tuple[int, int], Tuple[int, int]]]:
+) -> Optional[Tuple[CustomFraction, CustomFraction]]:
     failed_screen = False
+    #print(seg1, seg2)
     for i in range(2):
-        if min(seg1[0][i], seg1[1][i]) >= max(seg2[0][i], seg2[1][i]) or min(seg2[0][i], seg2[1][i]) >= max(seg1[0][i], seg1[1][i]):
+        if min(seg1[0][i], seg1[1][i]) > max(seg2[0][i], seg2[1][i]) or min(seg2[0][i], seg2[1][i]) > max(seg1[0][i], seg1[1][i]):
             #failed_screen = True
+            #print("bounding boxes do not overlap")
             return None
     """
     #ans1 = True
@@ -3636,31 +3757,47 @@ def twoDimensionalLineSegmentPairCrossInternally(
     ans2 = True
     a1, b1, c1 = twoDimensionalLineSegmentEquation(seg1)
     a2, b2, c2 = twoDimensionalLineSegmentEquation(seg2)
+    #print(a1, b1, c1)
+    #print(a2, b2, c2)
 
     if a1 == a2 and b1 == b2: ans2 = False#return False # Parallel
 
     denom = a1 * b2 - a2 * b1
-    x, y = (b2 * c1 - b1 * c2, denom), (a2 * c1 - a1 * c2, denom)
-    if denom > 0: y = y = tuple(-a for a in y)
-    else: x = tuple(-a for a in x)
+    x, y = (b2 * c1 - b1 * c2, denom), (a1 * c2 - a2 * c1, denom)
+    #if denom > 0: y = tuple(-a for a in y)
+    #else: x = tuple(-a for a in x)
+    if denom < 0:
+        x = tuple(-z for z in x)
+        y = tuple(-z for z in y)
+    #print(x, y, x[0] / x[1], y[0] / y[1])
     for seg in (seg1, seg2):
         x1, x2 = sorted([seg[0][0], seg[1][0]])
         y1, y2 = sorted([seg[0][1], seg[1][1]])
-        if (x[0] <= x1 * x[1] or x[0] >= x2 * x[1]) and (y[0] <= y1 * y[1] or y[0] >= y2 * y[1]): return None
-    g1, g2 = gcd(*x), gcd(*y)
-    return (tuple(a // g1 for a in x), tuple(a // g2 for a in x))
+        #print(x1, x2)
+        #print(y1, y2)
+        if (x[0] <= x1 * x[1] or x[0] >= x2 * x[1]) and (y[0] <= y1 * y[1] or y[0] >= y2 * y[1]):
+            #print("x out of range")
+            return None
+    #g1, g2 = gcd(*x), gcd(*y)
+    #return (tuple(a // g1 for a in x), tuple(a // g2 for a in y))
+    #print("crossing found")
+    return (CustomFraction(*x), CustomFraction(*y))
 
 def twoDimensionalLineSegmentsCountInternalCrossings(
         line_segments: List[Tuple[Tuple[int, int], Tuple[int, int]]]
 ) -> int:
-
+    """
     # Bentley-Ottmann algorithm
-    def gradient(p1: Tuple[int, int], p2: Tuple[int, int]) -> float:
+    def gradient(p1: Tuple[int, int], p2: Tuple[int, int]) -> CustomFraction:
         if p1 == p2: return 0
         diffs = [p2[i] - p1[i] for i in range(len(p1))]
-        if not diffs[0]:
-            return float("inf") if diffs[0] > 0 else -float("inf")
-        return diffs[1] / diffs[0]
+        return CustomFraction(diffs[1], diffs[0])
+        #if not diffs[0]:
+        #    return (1, 0) if diffs[0] > 0 else -(-1, 0)
+        #g = gcd(*diffs)
+        #return (diffs[1] // g, diffs[0] // g)
+    
+    
 
     points0 = set()
     for seg in line_segments:
@@ -3675,40 +3812,254 @@ def twoDimensionalLineSegmentsCountInternalCrossings(
         i1, i2 = sorted([points_dict[x] for x in seg])
         out_adj[i1].add(i2)
         in_adj[i2].add(i1)
-    
-    events_heap = [(p, False, i) for i, p in enumerate(points)]
+
+    events_heap = [(p, True, i) for i, p in enumerate(points)]
     heapq.heapify(events_heap)
+    seen_crossings = {}
+    
+    def findGreaterXCrossing(lower_edge: Tuple[int, int], lower_grad: CustomFraction, upper_edge: Tuple[int, int], upper_grad: CustomFraction) -> Optional[Tuple[CustomFraction, CustomFraction]]:
+        if lower_grad <= upper_grad: return None
+        return twoDimensionalLineSegmentPairCrossInternally(
+            (points[lower_edge[0]], points[lower_edge[1]]),
+            (points[upper_edge[0]], points[upper_edge[1]]),
+        )
+    
+    def addCrossing(edge1: Tuple[int, int], edge2: Tuple[int, int], crossing: Optional[Tuple[CustomFraction, CustomFraction]]) -> None:
+        if crossing is None: return
+        #if edge2 < edge1:
+        #    edge1, edge2 = edge2, edge1
+        seen_crossings.setdefault(edge1[0], {})
+        seen_crossings[edge1[0]].setdefault(edge1[1], {})
+        seen_crossings[edge1[0]][edge1[1]].setdefault(edge2[0], set())
+        if edge2[1] in seen_crossings[edge1[0]][edge1[1]][edge2[0]]: return
+        seen_crossings[edge1[0]][edge1[1]][edge2[0]].add(edge2[1])
+        #if edge1[0] == 374:
+        #    print(f"edge1 = {edge1}")
+        #elif edge2[0] == 374:
+        #    print(f"edge2 = {edge2}")
+        heapq.heappush(events_heap, (crossing, False, edge1, edge2))
+        return
+    
     seg_line = SortedList()
     in_seg_dict = {}
-    res = 0
+
+    def updateSurroundingSegments(p: Tuple[int, int]):
+        #print("using updateSurroundingSegments()")
+        # Below
+        #print(seg_line)
+        #print(in_seg_dict)
+        rm_segs = []
+        add_segs = []
+        j0 = seg_line.bisect_left((p[1], CustomFraction(-1, 0)))
+        p_curr = p
+        for j0 in reversed(range(j0)):
+            seg = seg_line[j0]
+            grad = seg[1]
+            if grad <= 0: break
+            p0 = (seg[2], seg[0])
+            if p0[0] == p_curr[0]: break
+            diff = grad * (p_curr[0] - p0[0])
+            #print(p0[1], type(p0[1]), diff, type(diff))
+            p2 = (p_curr[0], p0[1] + diff)
+            if p2[1] < p_curr[1]: break
+            p_curr = p2
+            rm_segs.append(seg)
+            add_segs.append((p_curr[1], grad, p_curr[0], seg[3]))
+        if add_segs:
+            #print(f"add_segs 1 = {add_segs}")
+            for seg in rm_segs: seg_line.remove(seg)
+            for seg in add_segs:
+                seg_line.add(seg)
+                grad = seg[1]
+                p2 = (seg[2], seg[0])
+                edge = seg[3]
+                #print(edge)
+                in_seg_dict[edge[1]][edge[0]] = (p2, grad)
+            return
+        # Above
+        j2 = seg_line.bisect_right((p[1], CustomFraction(1, 0)))
+        p_curr = p
+        for j2 in range(j2, len(seg_line)):
+            seg = seg_line[j2]
+            grad = seg[1]
+            if grad >= 0: break
+            p0 = (seg[2], seg[0])
+            if p0[0] == p_curr[0]: break
+            p2 = (p_curr[0], p0[1] + grad * (p_curr[0] - p_curr[0]))
+            if p2[1] > p_curr[1]: break
+            p_curr = p2
+            rm_segs.append(seg)
+            add_segs.append((p_curr[1], grad, p_curr[0], seg[3]))
+        if add_segs:
+            #print(f"add_segs 2 = {add_segs}")
+            for seg in rm_segs: seg_line.remove(seg)
+            for seg in add_segs:
+                seg_line.add(seg)
+                grad = seg[1]
+                p2 = (seg[2], seg[0])
+                edge = seg[3]
+                in_seg_dict[edge[1]][edge[0]] = (p2, grad)
+        return
+    n_vertices = 0
+    res = set()
+    res2 = 0
     while events_heap:
         event = heapq.heappop(events_heap)
+        #print(seg_line)
+        #print(event)
+        p = event[0]
         if not event[1]:
-            i = event[2]
-            for in_seg in in_seg_dict[i]:
-                pass
-            #for i2 in out_adj:
-            #    out_segs = 
+            # Crossing event
+            #print("Crossing")
+            #print(seg_line)
+            #print(event)
+            p = event[0]
+            edge1, edge2 = event[2:4]
+            #print(event)
+            #print((points[edge1[0]], points[edge1[1]]), (points[edge2[0]], points[edge2[1]]))
+            #print(event[0][0], event[0][0])
+            res.add(p)
+            res2 += 1
+            #if edge1[0] == 374:
+            #    print(edge1)
+            #    #print(seg_line)
+            #    print(in_seg_dict.get(edge1[1], {}))
+            #    print(in_seg_dict.get(edge1[0], {}))
 
-    return res
-
+            p1, grad1 = in_seg_dict[edge1[1]][edge1[0]]
+            seg1 = (p1[1], grad1, p1[0], edge1)
+            seg_line.remove(seg1)
+            p2, grad2 = in_seg_dict[edge2[1]][edge2[0]]
+            seg2 = (p2[1], grad2, p2[0], edge2)
+            seg_line.remove(seg2)
+            updateSurroundingSegments(p)
+            add_seg1 = (p[1], grad2, p[0], edge2)
+            add_seg2 = (p[1], grad1, p[0], edge1)
+            j = seg_line.bisect_left(add_seg1) - 1
+            #print(f"j = {j}")
+            if j >= 0:
+                seg0 = seg_line[j]
+                edge0 = seg0[3]
+                grad0 = seg0[1]
+                crossing = findGreaterXCrossing(edge0, grad0, edge2, grad2)
+                addCrossing(edge0, edge2, crossing)
+            j = seg_line.bisect_right(add_seg2)
+            #print(f"j = {j}, len(seg_line) = {len(seg_line)}")
+            if j < len(seg_line):
+                seg3 = seg_line[j]
+                edge3 = seg3[3]
+                grad3 = seg3[1]
+                crossing = findGreaterXCrossing(edge1, grad1, edge3, grad3)
+                addCrossing(edge1, edge3, crossing)
+            seg_line.add(add_seg1)
+            in_seg_dict[edge2[1]][edge2[0]] = (p, grad2)
+            seg_line.add(add_seg2)
+            in_seg_dict[edge1[1]][edge1[0]] = (p, grad1)
+            continue
+        # Vertex event
+        n_vertices += 1
+        if not n_vertices % 50:
+            print(f"{n_vertices} vertices processed, x = {p[0]}, number of crossings found = {res2}")
+        i = event[2]
+        rm_seg = None
+        if i in in_seg_dict.keys():
+            in_segs = in_seg_dict.pop(i)
+            for i0, (p0, grad) in in_segs.items():
+                rm_seg = (p0[1], grad, p0[0], (i0, i))
+                seg_line.remove(rm_seg)
+        if out_adj[i]:
+            updateSurroundingSegments(p)
+        if not out_adj[i]:
+            if rm_seg is None: continue
+            j2 = seg_line.bisect_right(rm_seg)
+            j1 = j2 - 1
+            if j1 < 0 or j2 >= len(seg_line): continue
+            seg1 = seg_line[j1]
+            seg2 = seg_line[j2]
+            edge1 = seg1[3]
+            grad1 = seg1[1]
+            edge2 = seg2[3]
+            grad2 = seg2[1]
+            crossing = findGreaterXCrossing(edge1, grad1, edge2, grad2)
+            addCrossing(edge1, edge2, crossing)
+            #i1, i2 = seg1[3:5]
+            #i3, i4 = seg2[3:5]
+            #if i3 < i1:
+            #    (i1, i2), (i3, i4) = (i3, i4), (i1, i2)
+            #seen_crossings.setdefault(i1, {})
+            #seen_crossings[i1].setdefault(i2, {})
+            #seen_crossings[i1][i2].setdefault(i3, set())
+            #if i4 in seen_crossings[i1][i2][i3]: continue
+            #seen_crossings[i1][i2][i3].add(i4)
+            #heapq.heappush(events_heap, (crossing, False, i1, i2, i3, i4))
+            continue
+        add_segs = []
+        for i2 in out_adj[i]:
+            p2 = points[i2]
+            grad = gradient(p, p2)
+            add_segs.append((grad, p2, i2))
+        #if i == 374:
+        #    print(add_segs)
+        add_segs.sort()
+        j = seg_line.bisect_left((p[1], add_segs[0][0])) - 1
+        if j >= 0:
+            edge1 = (i, add_segs[0][2])
+            grad1 = add_segs[0][0]
+            seg0 = seg_line[j]
+            edge0 = seg0[3]
+            grad0 = seg0[1]
+            crossing = findGreaterXCrossing(edge0, grad0, edge1, grad1)
+            addCrossing(edge0, edge1, crossing)
+            #if crossing is not None:
+            #    seen_crossings.setdefault(i, {})
+            #    seen_crossings[i].setdefault(i2, {})
+            #    seen_crossings[i][i2].setdefault(i3, set())
+            #    seen_crossings[i][i2][i3].add(i4)
+            #    heapq.heappush(events_heap, (crossing, False, i, i2, i3, i4))
+        j = seg_line.bisect_right((p[1], add_segs[-1][0]))
+        if j < len(seg_line):
+            edge1 = (i, add_segs[-1][2])
+            grad1 = add_segs[-1][0]
+            seg2 = seg_line[j]
+            edge2 = seg2[3]
+            grad2 = seg2[1]
+            crossing = findGreaterXCrossing(edge1, grad1, edge2, grad2)
+            addCrossing(edge1, edge2, crossing)
+            #if crossing is not None:
+            #    heapq.heappush(events_heap, (crossing, False, i, i2, i3, i4))
+        for grad, p2, i2 in add_segs:
+            #if i2 == 4802 and i == 374:
+            #    print(i, i2)
+            seg_line.add((p[1], grad, p[0], (i, i2)))
+            in_seg_dict.setdefault(i2, {})
+            in_seg_dict[i2][i] = (p, grad)
+        #for i2 in out_adj:
+        #    out_segs = 
+    print(f"total number of line crossings (including duplicates) = {res2}")
+    return len(res)
 
     """
+
     line_segments_sorted = sorted([sorted(x) for x  in line_segments])
     x_ends = SortedList()
     
     res = set()
+    res2 = 0
     for i, seg in enumerate(line_segments_sorted):
+        if not (i + 1) % 50:
+            print(f"{i + 1} edges processed, number of crossings found = {res2}")
         seg_sort = tuple(sorted(seg))
         for x2, i2 in reversed(x_ends):
             if x2 < seg_sort[0][0]: break
             intersect = twoDimensionalLineSegmentPairCrossInternally(seg_sort, line_segments_sorted[i2])
             if intersect is not None:
                 res.add(intersect)
+                res2 += 1
             #res += twoDimensionalLineSegmentPairCrossInternally(seg_sort, line_segments_sorted[i2])
         x_ends.add((seg[1][0], i))
+    print(f"total number of line crossings (including duplicates) = {res2}")
     return len(res)
-    """
+    
 
 def blumBlumShubPseudoRandomTwoDimensionalLineSegmentsCountInternalCrossings(
         n_line_segments: int=5000,
@@ -9128,6 +9479,7 @@ if __name__ == "__main__":
             coord_min=0,
             coord_max=499,
         )
+        #res = twoDimensionalLineSegmentsCountInternalCrossings([((27, 44), (12, 32)), ((46, 53), (17, 62)), ((46, 70), (22, 40))])
         print(f"Solution to Project Euler #165 = {res}")
 
     if not to_evaluate or 166 in to_evaluate:
