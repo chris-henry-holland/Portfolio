@@ -5382,7 +5382,7 @@ def generalisedLaggedFibonacciGenerator(poly_coeffs: Tuple[int]=(100003, -200003
 
     For well chosen values of poly_coeffs and lags for given
     min_value and max_value, this can potentially be used as a
-    generator of pseudo-random integers between min-value and
+    generator of pseudo-random integers between min_value and
     max_value inclusive.
 
     Note that the generator never terminates and thus any
@@ -5407,9 +5407,11 @@ def generalisedLaggedFibonacciGenerator(poly_coeffs: Tuple[int]=(100003, -200003
             Default: (24, 55)
         min_value (int): Integer giving the smallest value
                 possible for terms in the sequence.
+            Default: -5 * 10 ** 5
         max_value (int): Integer giving the largest value
                 possible for terms in the sequence. Must
                 be no smaller than min_value.
+            Default: 5 * 10 ** 5 - 1
     
     Yields:
     Integer (int) between min_value and max_value inclusive,

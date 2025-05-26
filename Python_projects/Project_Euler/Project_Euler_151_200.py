@@ -3684,6 +3684,52 @@ def countIntegersConsecutiveDigitSumCapped(
 # Problem 165
 def blumBlumShubPseudoRandomGenerator(s_0: int=290797, s_mod: int=50515093, t_min: int=0, t_max: int=499) -> Generator[int, None, None]:
     """
+    Generator iterating over the terms in a Blum Blum Shub sequence
+    for a given seed value, modulus and value range.
+
+    To find the terms in the Blum Blum Shub sequence for a given seed
+    value, modulus and value range the following sequence s_i is used,
+    calculated from the recurrence relation:
+        s_(i + 1) = s_i * s_i (mod s_mod)
+    where s_0 is the seed value and s_mod is the modulus for this Blum
+    Blum Shub sequence.
+    For strictly positive integers i, the i:th term in the Blum Blum Shub
+    sequence, t_i is given by:
+        t_n = s_i + t_min (mod t_max - t_min + 1)
+    where t_min and t_max are the minimum and maximum values respectively
+    of the value range.
+
+    For well chosen values of s_0 and s_mod, this can potentially be used
+    as a generator of pseudo-random integers between t_min and t_max
+    inclusive.
+
+    Note that the generator never terminates and thus any
+    iterator over this generator must include provision to
+    terminate (e.g. a break or return statement), otherwise
+    it would result in an infinite loop.
+
+    Args:
+        Optional named:
+        s_0 (int): Integer giving the seed value for this Blum Blum Shub
+                sequence.
+            Default: 290797
+        s_mod (int): Integer strictly greater than 1 giving the modulus
+                for this Blum Blum Shub sequence.
+            Default: 50515093
+        t_min (int): Integer giving the smallest value possible
+                for terms in the Blum Blum Shub sequence.
+            Default: 0
+        t_max (int): Integer giving the smallest value possible
+                for terms in the Blum Blum Shub sequence. Must
+                be no smaller than t_min.
+            Default: 499
+    
+    Yields:
+    Integer (int) between min_value and max_value inclusive,
+    with the i:th term yielded (for strictly positive integer
+    i) representing the i:th term in the Blum Blum Shub sequence
+    for the given seed value (s_0), modulus (s_mod) and value range
+    ([t_min, t_max]).
     """
     s = s_0
     t_mod = t_max - t_min + 1
@@ -3786,7 +3832,8 @@ def twoDimensionalLineSegmentPairCrossInternally(
 def twoDimensionalLineSegmentsCountInternalCrossings(
         line_segments: List[Tuple[Tuple[int, int], Tuple[int, int]]]
 ) -> int:
-    """
+    #for seg in line_segments:
+    #    print(f"{seg[0][0]}, {seg[0][1]}, {seg[1][0]}, {seg[1][1]}")
     # Bentley-Ottmann algorithm
     def gradient(p1: Tuple[int, int], p2: Tuple[int, int]) -> CustomFraction:
         if p1 == p2: return 0
@@ -3843,7 +3890,7 @@ def twoDimensionalLineSegmentsCountInternalCrossings(
     seg_line = SortedList()
     in_seg_dict = {}
 
-    def updateSurroundingSegments(p: Tuple[int, int]):
+    def updateSurroundingSegments(p: Tuple[Union[CustomFraction, int], Union[CustomFraction, int]]):
         #print("using updateSurroundingSegments()")
         # Below
         #print(seg_line)
@@ -3878,6 +3925,8 @@ def twoDimensionalLineSegmentsCountInternalCrossings(
             return
         # Above
         j2 = seg_line.bisect_right((p[1], CustomFraction(1, 0)))
+        #print("checking above")
+        #print(f"j2 = {j2}")
         p_curr = p
         for j2 in range(j2, len(seg_line)):
             seg = seg_line[j2]
@@ -3885,9 +3934,12 @@ def twoDimensionalLineSegmentsCountInternalCrossings(
             if grad >= 0: break
             p0 = (seg[2], seg[0])
             if p0[0] == p_curr[0]: break
-            p2 = (p_curr[0], p0[1] + grad * (p_curr[0] - p_curr[0]))
+            diff = grad * (p_curr[0] - p0[0])
+            p2 = (p_curr[0], p0[1] + diff)
+            #print(f"p2 = ({p2[0].numerator / p2[0].denominator}, {p2[1].numerator / p2[1].denominator})")
             if p2[1] > p_curr[1]: break
             p_curr = p2
+            #print("found")
             rm_segs.append(seg)
             add_segs.append((p_curr[1], grad, p_curr[0], seg[3]))
         if add_segs:
@@ -3911,6 +3963,7 @@ def twoDimensionalLineSegmentsCountInternalCrossings(
         if not event[1]:
             # Crossing event
             #print("Crossing")
+            #print((event[0][0].numerator / event[0][0].denominator, event[0][1].numerator / event[0][1].denominator))
             #print(seg_line)
             #print(event)
             p = event[0]
@@ -3957,6 +4010,11 @@ def twoDimensionalLineSegmentsCountInternalCrossings(
             in_seg_dict[edge1[1]][edge1[0]] = (p, grad1)
             continue
         # Vertex event
+        #print("Vertex")
+        #print((event[0][0].numerator / event[0][0].denominator, event[0][1].numerator / event[0][1].denominator))
+        
+        #print(event)
+        #print(seg_line)
         n_vertices += 1
         if not n_vertices % 50:
             print(f"{n_vertices} vertices processed, x = {p[0]}, number of crossings found = {res2}")
@@ -4036,9 +4094,10 @@ def twoDimensionalLineSegmentsCountInternalCrossings(
         #for i2 in out_adj:
         #    out_segs = 
     print(f"total number of line crossings (including duplicates) = {res2}")
-    return len(res)
+    print(f"total number of line crossing points = {len(res)}")
+    #return len(res)
 
-    """
+    
 
     line_segments_sorted = sorted([sorted(x) for x  in line_segments])
     x_ends = SortedList()
@@ -4046,8 +4105,8 @@ def twoDimensionalLineSegmentsCountInternalCrossings(
     res = set()
     res2 = 0
     for i, seg in enumerate(line_segments_sorted):
-        if not (i + 1) % 50:
-            print(f"{i + 1} edges processed, number of crossings found = {res2}")
+        #if not (i + 1) % 50:
+        #    print(f"{i + 1} edges processed, number of crossings found = {res2}")
         seg_sort = tuple(sorted(seg))
         for x2, i2 in reversed(x_ends):
             if x2 < seg_sort[0][0]: break
