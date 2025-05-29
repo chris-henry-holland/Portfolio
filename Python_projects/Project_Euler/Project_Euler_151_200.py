@@ -3825,11 +3825,33 @@ def twoDimensionalLineSegmentEquation(
     #if g == 1: return (a, b, c)
     return (a // g, b // g, c // g)
 
-def twoDimensionalLineSegmentPairCrossInternally(
+def twoDimensionalLineSegmentPairInternalCrossing(
         seg1: Tuple[Tuple[int, int], Tuple[int, int]],
         seg2: Tuple[Tuple[int, int], Tuple[int, int]],
 ) -> Optional[Tuple[CustomFraction, CustomFraction]]:
-    #print("Using twoDimensionalLineSegmentPairCrossInternally()")
+    """
+    Identifies whether two line segments in two dimensions whose end points
+    are at integer Cartesian coordinates cross each other internally (i.e.
+    such that the crossing point is at neither of the end points of either
+    line segment), and if so gives the Cartesian coordinates at which they cross.
+
+    Args:
+        Required positional:
+        seg1 (2-tuple of 2-tuple of ints): 2-tuple containing the two end
+                points of one of the line segments whose status as crossing the
+                other internally is being assessed, each as a 2-tuple containing
+                the Cartesian coordinates of that end point.
+        seg2 (2-tuple of 2-tuple of ints): 2-tuple containing the two end
+                points of the other of the line segments whose status as crossing
+                the other internally is being assessed, each as a 2-tuple
+                containing the Cartesian coordinates of that end point.
+    
+    Returns:
+    A 2-tuple of CustomFraction objects representing the Cartesian coordinates
+    of the crossing point as fractions if the two line segments cross internally,
+    otherwise None.
+    """
+    #print("Using twoDimensionalLineSegmentPairInternalCrossing()")
     failed_screen = False
     #print(seg1, seg2)
     for i in range(2):
@@ -3927,7 +3949,7 @@ def twoDimensionalLineSegmentsCountInternalCrossings(
     
     def findGreaterXCrossing(lower_edge: Tuple[int, int], lower_grad: CustomFraction, upper_edge: Tuple[int, int], upper_grad: CustomFraction) -> Optional[Tuple[CustomFraction, CustomFraction]]:
         if lower_grad <= upper_grad: return None
-        return twoDimensionalLineSegmentPairCrossInternally(
+        return twoDimensionalLineSegmentPairInternalCrossing(
             (points[lower_edge[0]], points[lower_edge[1]]),
             (points[upper_edge[0]], points[upper_edge[1]]),
         )
@@ -3983,6 +4005,11 @@ def twoDimensionalLineSegmentsCountInternalCrossings(
             seg = seg_line[j]
             grad = seg[1]
             if grad <= 0: break
+            elif not grad.denominator:
+                p2 = p
+                rm_segs.append(seg)
+                add_segs.append((p2[1], grad, p2[0], seg[3]))
+                continue
             p0 = (seg[2], seg[0])
             if p0[0] == p[0]: break
             #print(f"grad = {grad.numerator / grad.denominator}")
@@ -4029,6 +4056,11 @@ def twoDimensionalLineSegmentsCountInternalCrossings(
             seg = seg_line[j]
             grad = seg[1]
             if grad >= 0: break
+            elif not grad.denominator:
+                p2 = p
+                rm_segs.append(seg)
+                add_segs.append((p2[1], grad, p2[0], seg[3]))
+                continue
             p0 = (seg[2], seg[0])
             if p0[0] == p[0]: break
             diff = grad * (p[0] - p0[0])
@@ -4062,9 +4094,11 @@ def twoDimensionalLineSegmentsCountInternalCrossings(
                 in_seg_dict[edge[1]][edge[0]] = (p2, grad)
         return
     
+    print_rng = (231, 230)#(CustomFraction(910300, 3887), CustomFraction(910700, 3887))
+
     n_vertices = 0
-    res = set()
-    res2 = 0
+    res = {}
+    #res2 = 0
     while events_heap:
         event = heapq.heappop(events_heap)
         #print(seg_line)
@@ -4072,7 +4106,7 @@ def twoDimensionalLineSegmentsCountInternalCrossings(
         p = event[0]
         if not event[1]:
             # Crossing event
-            if False:# event[0][0] > 165 and event[0][0] < 167:
+            if event[0][0] >= print_rng[0] and event[0][0] <= print_rng[1]:
                 print("Crossing")
                 print(f"{points[event[2][0]]} to {points[event[2][1]]} and {points[event[3][0]]} to {points[event[3][1]]}")
                 print((event[0][0].numerator / event[0][0].denominator, event[0][1].numerator / event[0][1].denominator))
@@ -4087,8 +4121,11 @@ def twoDimensionalLineSegmentsCountInternalCrossings(
             #print(event)
             #print((points[edge1[0]], points[edge1[1]]), (points[edge2[0]], points[edge2[1]]))
             #print(event[0][0], event[0][0])
-            res.add(p)
-            res2 += 1
+            res.setdefault(p, set())
+            res[p].add(edge1)
+            res[p].add(edge2)
+            #res.add(p)
+            #res2 += 1
             #if edge1[0] == 374:
             #    print(edge1)
             #    #print(seg_line)
@@ -4126,14 +4163,14 @@ def twoDimensionalLineSegmentsCountInternalCrossings(
             in_seg_dict[edge1[1]][edge1[0]] = (p, grad1)
             continue
         # Vertex event
-        if False:# event[0][0] > 165 and event[0][0] < 167:
+        if event[0][0] >= print_rng[0] and event[0][0] <= print_rng[1]:
             print("Vertex")
             print((event[0][0].numerator / event[0][0].denominator, event[0][1].numerator / event[0][1].denominator))
             print(event)
             print(seg_line)
         n_vertices += 1
         if not n_vertices % 50:
-            print(f"{n_vertices} vertices processed, x = {p[0]}, number of crossings found = {res2}")
+            print(f"{n_vertices} vertices processed, x = {p[0]}, number of unique crossing points found = {len(res)}")
         i = event[2]
         rm_seg = None
         if i in in_seg_dict.keys():
@@ -4209,7 +4246,11 @@ def twoDimensionalLineSegmentsCountInternalCrossings(
             in_seg_dict[i2][i] = (p, grad)
         #for i2 in out_adj:
         #    out_segs = 
-    print(f"total number of line crossings (including duplicates) = {res2}")
+    tot_cnt = 0
+    for e_set in res.values():
+        e_cnt = len(e_set)
+        tot_cnt += (e_cnt * (e_cnt - 1)) >> 1
+    print(f"total number of line crossings (including duplicates) = {tot_cnt}")
     print(f"total number of line crossing points = {len(res)}")
     #return len(res)
 
@@ -4221,32 +4262,43 @@ def twoDimensionalLineSegmentsCountInternalCrossings(
     x_ends = SortedList()
     
     xings2 = {}
-    res = set()
-    res2 = 0
+    res2 = {}
+    #res2 = 0
+    tot_cnt2 = 0
     for i, seg in enumerate(line_segments_sorted):
         #if not (i + 1) % 50:
         #    print(f"{i + 1} edges processed, number of crossings found = {res2}")
         seg_sort = tuple(sorted(seg))
         for x2, i2 in reversed(x_ends):
             if x2 < seg_sort[0][0]: break
-            intersect = twoDimensionalLineSegmentPairCrossInternally(seg_sort, line_segments_sorted[i2])
+            intersect = twoDimensionalLineSegmentPairInternalCrossing(seg_sort, line_segments_sorted[i2])
             if intersect is not None:
-                res.add(intersect)
+                res.setdefault(intersect, set())
+                #res.add(intersect)
+                
                 edge1 = (points_dict[seg_sort[0]], points_dict[seg_sort[1]])
                 edge2 = (points_dict[line_segments_sorted[i2][0]], points_dict[line_segments_sorted[i2][1]])
+                res2.setdefault(intersect, set())
+                res2[intersect].add(edge1)
+                res2[intersect].add(edge2)
                 xings2.setdefault(edge1, set())
                 xings2[edge1].add(edge2)
                 xings2.setdefault(edge2, set())
                 xings2[edge2].add(edge1)
-                res2 += 1
-            #res += twoDimensionalLineSegmentPairCrossInternally(seg_sort, line_segments_sorted[i2])
+                tot_cnt2 += 1
+            #res += twoDimensionalLineSegmentPairInternalCrossing(seg_sort, line_segments_sorted[i2])
         x_ends.add((seg[1][0], i))
-    for edge1, edge2_set in xings2.items():
-        for edge2 in edge2_set - xings.get(edge1, set()):
-            if edge2 > edge1:
-                print(f"missing intersection: {edge1} ({points[edge1[0]]} to {points[edge1[1]]}) with {edge2} ({points[edge2[0]]} to {points[edge2[1]]})")
+    for intersect, edges in res2.items():
+        edges2 = res.get(intersect, set())
+        if len(edges) == len(edges2): continue
+        print(f"missing intersections at {intersect} between the edges: {edges - edges2}")
+        print(f"all edges intersecting at {intersect}: {edges}")
+    #for edge1, edge2_set in xings2.items():
+    #    for edge2 in edge2_set - xings.get(edge1, set()):
+    #        if edge2 > edge1:
+    #            print(f"missing intersection: {edge1} ({points[edge1[0]]} to {points[edge1[1]]}) with {edge2} ({points[edge2[0]]} to {points[edge2[1]]})")
     #print(xings2)
-    print(f"total number of line crossings (including duplicates) = {res2}")
+    print(f"total number of line crossings (including duplicates) = {tot_cnt2}")
     return len(res)
     
 
@@ -9662,7 +9714,7 @@ if __name__ == "__main__":
 
     if not to_evaluate or 165 in to_evaluate:
         res = blumBlumShubPseudoRandomTwoDimensionalLineSegmentsCountInternalCrossings(
-            n_line_segments=5000,
+            n_line_segments=3000,
             blumblumshub_s_0=290797,
             blumblumshub_s_mod=50515093,
             coord_min=0,
@@ -9889,3 +9941,7 @@ if __name__ == "__main__":
 
     #for pair in orderedFareyFractionPairsWithMaxDenominatorProductGenerator(max_denominator_product=100):
     #    print(pair)
+    
+    #seg = ((18, 220), (280, 408)), ((231, 373), (362, 411))
+    #p = twoDimensionalLineSegmentPairInternalCrossing(*seg)
+    #print(p, (p[0].numerator / p[0].denominator, p[1].numerator / p[1].denominator))
