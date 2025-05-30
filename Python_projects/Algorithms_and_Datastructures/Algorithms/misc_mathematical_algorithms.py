@@ -1,9 +1,56 @@
 #! /usr/bin/env python
 import scipy.special as sp
 
-from typing import List, Union
+from typing import List, Union, Tuple
 
 Real = Union[int, float]
+
+def gcd(a: int, b: int) -> int:
+    """
+    For non-negative integers a and b (not both zero),
+    calculates the greatest common divisor of the two, i.e.
+    the largest positive integer that is an exact divisor
+    of both a and b.
+
+    Args:
+        Required positional:
+        a (int): Non-negative integer which is the first
+                which the greatest common divisor must
+                divide.
+        b (int): Non-negative integer which is the second
+                which the greatest common divisor must
+                divide. Must be non-zero if a is zero.
+    
+    Returns:
+    Strictly positive integer giving the greatest common
+    divisor of a and b.
+    """
+    #return a if not b else gcd(b, a % b)
+    while b != 0:
+        a, b = b, a % b
+    return a
+    
+def lcm(a: int, b: int) -> int:
+    """
+    For non-negative integers a and b (not both zero),
+    calculates the lowest common multiple of the two, i.e.
+    the smallest positive integer that is a multiple
+    of both a and b.
+
+    Args:
+        Required positional:
+        a (int): Non-negative integer which is the first
+                which must divide the lowest common multiple.
+        b (int): Non-negative integer which is the second
+                which must divide the lowest common multiple.
+                Must be non-zero if a is zero.
+    
+    Returns:
+    Strictly positive integer giving the lowest common
+    multiple of a and b.
+    """
+
+    return a * (b // gcd(a, b))
 
 def extendedEuclideanAlgorithm(a: int, b: int) -> Tuple[int, Tuple[int, int]]:
     """
@@ -515,6 +562,110 @@ class PrimeModuloCalculator:
         for k in k_lst:
             res = self.mult(res, self._multiplicativeInverseFactorialDivPPow(k))
         return res
+
+class CustomFraction:
+
+    def __init__(self, numerator: int, denominator: int):
+        if not numerator and not denominator:
+            raise ValueError("0 / 0 is indeterminate")
+        if denominator < 0:
+            numerator, denominator = -numerator, -denominator
+        g = gcd(abs(numerator), abs(denominator))
+        self.numerator = numerator // g
+        self.denominator = denominator // g
+    
+    def __hash__(self):
+        return hash((self.numerator, self.denominator))
+
+    def __str__(self):
+        return f"{self.numerator} / {self.denominator}"
+    
+    def __repr__(self):
+        return f"{self.numerator} / {self.denominator}"
+
+    def __name__(self):
+        return f"{self.numerator} / {self.denominator}"
+    
+    def __eq__(self, other: Union["CustomFraction", int]) -> bool:
+        if isinstance(other, int):
+            other = CustomFraction(other, 1)
+        return self.numerator == other.numerator and self.denominator == other.denominator
+    
+    def __neq__(self, other: Union["CustomFraction", int]) -> bool:
+        return not self.__eq__(other)
+
+    def __add__(self, other: Union["CustomFraction", int]) -> "CustomFraction":
+        if isinstance(other, int):
+            other = CustomFraction(other, 1)
+        if self.denominator == 0:
+            if self != other and other.denominator: raise ValueError("Indeterminate value for addition of +inf and -inf")
+            return self
+        elif other.denominator == 0:
+            return other
+        denom = lcm(abs(self.denominator), abs(other.denominator))
+        numer = (self.numerator * denom // self.denominator) + (other.numerator * denom // other.denominator) 
+        return CustomFraction(numer, denom)
+    
+    def __radd__(self, other: Union["CustomFraction", int]) -> "CustomFraction":
+        return self.__add__(other)
+
+    def __sub__(self, other: Union["CustomFraction", int]) -> "CustomFraction":
+        if isinstance(other, int):
+            other = CustomFraction(other, 1)
+        if self.denominator == 0:
+            if self == other and other.denominator:
+                sgn = "+" if self.numerator > 0 else "-"
+                raise ValueError(f"Indeterminate value for subtraction of {sgn}inf from {sgn}inf")
+            return self
+        elif other.denominator == 0:
+            return CustomFraction(-other.numerator, other.denominator)
+        denom = lcm(abs(self.denominator), abs(other.denominator))
+        numer = (self.numerator * denom // self.denominator) - (other.numerator * denom // other.denominator) 
+        return CustomFraction(numer, denom)
+    
+    def __rsub__(self, other: Union["CustomFraction", int]) -> "CustomFraction":
+        res = self.__sub__(other)
+        res.numerator = -res.numerator
+        return res
+    
+    def __mul__(self, other: Union["CustomFraction", int]) -> "CustomFraction":
+        if isinstance(other, int):
+            other = CustomFraction(other, 1)
+        return CustomFraction(self.numerator * other.numerator, self.denominator * other.denominator)
+    
+    def __rmul__(self, other: Union["CustomFraction", int]) -> "CustomFraction":
+        return self.__mul__(other)
+
+    def __div__(self, other: Union["CustomFraction", int]) -> "CustomFraction":
+        if isinstance(other, int):
+            other = CustomFraction(other, 1)
+        return CustomFraction(self.numerator * other.denominator, self.denominator * other.numerator)
+
+    def __rdiv__(self, other: Union["CustomFraction", int]) -> "CustomFraction":
+        res = self.__div__(other)
+        return CustomFraction(res.denominator, res.numerator)
+    
+    def __lt__(self, other: Union["CustomFraction", int]) -> "CustomFraction":
+        if isinstance(other, int):
+            other = CustomFraction(other, 1)
+        elif not self.denominator and not other.denominator: return self.numerator < other.numerator
+        return self.numerator * other.denominator < self.denominator * other.numerator
+    
+    def __le__(self, other: Union["CustomFraction", int]) -> "CustomFraction":
+        if isinstance(other, int):
+            other = CustomFraction(other, 1)
+        return self.numerator * other.denominator <= self.denominator * other.numerator
+    
+    def __gt__(self, other: Union["CustomFraction", int]) -> "CustomFraction":
+        if isinstance(other, int):
+            other = CustomFraction(other, 1)
+        elif not self.denominator and not other.denominator: return self.numerator > other.numerator
+        return self.numerator * other.denominator > self.denominator * other.numerator
+    
+    def __ge__(self, other: Union["CustomFraction", int]) -> "CustomFraction":
+        if isinstance(other, int):
+            other = CustomFraction(other, 1)
+        return self.numerator * other.denominator >= self.denominator * other.numerator
 
 if __name__ == "__main__":
     res = nthRoot(2, 2, eps=1e-5)
