@@ -236,6 +236,7 @@ class CustomFraction:
     def __lt__(self, other: Union["CustomFraction", int]) -> "CustomFraction":
         if isinstance(other, int):
             other = CustomFraction(other, 1)
+        elif not self.denominator and not other.denominator: return self.numerator < other.numerator
         return self.numerator * other.denominator < self.denominator * other.numerator
     
     def __le__(self, other: Union["CustomFraction", int]) -> "CustomFraction":
@@ -246,6 +247,7 @@ class CustomFraction:
     def __gt__(self, other: Union["CustomFraction", int]) -> "CustomFraction":
         if isinstance(other, int):
             other = CustomFraction(other, 1)
+        elif not self.denominator and not other.denominator: return self.numerator > other.numerator
         return self.numerator * other.denominator > self.denominator * other.numerator
     
     def __ge__(self, other: Union["CustomFraction", int]) -> "CustomFraction":
@@ -3814,11 +3816,38 @@ def blumBlueShubPseudoRandomLineSegmentGenerator(
         yield tuple(ans)
     return
 
-def twoDimensionalLineSegmentEquation(
-        seg: Tuple[Tuple[int, int], Tuple[int, int]],
-) -> Tuple[int, int, int]:
+def twoDimensionalLineEquationGivenTwoIntegerPoints(p1: Tuple[int, int], p2: Tuple[int, int]) -> Tuple[int, int, int]:
+    """
+    Calculates the equation for the line in two dimensional space
+    which contains the two distinct points p1 and p2 that both have
+    integer coordinates in the Cartesian plane. The equation is
+    expressed as the ordered integer triple (a, b, c) representing
+    the equation of a line of the form:
+        a * x + b * y = c
+    where (x, y) represents the Cartesian coordinates of a point on
+    the line a, b and c are integers, a and b are coprime, a is
+    non-negative and if a is zero then b is strictly positive.
+    These conditions mean that there is exactly one such triple
+    (a, b, c) whose corresponding equation describes this line
+    (which is the ordered triple returned).
+
+    Args:
+        Required postional:
+        p1 (2-tuple of ints): Cartesian coordinates of the first of
+                the two points through which the line whose equation
+                is to be found must pass through.
+        p2 (2-tuple of ints): Cartesian coordinates of the first of
+                the two points through which the line whose equation
+                is to be found must pass through. Must be different
+                from p1.
     
-    a, b, c = ((seg[0][1] - seg[1][1]), (seg[1][0] - seg[0][0]), (seg[1][0] * seg[0][1] - seg[0][0] * seg[1][1]))
+    Returns:
+    3-tuple of ints giving the ordered triple (a, b, c) (in that
+    order) uniquely representing the equation of the line passing
+    through p1 and p2 subject to the stated conditions.
+    """
+    if (p1 == p2): raise ValueError("p1 and p2 must be different")
+    a, b, c = ((p1[1] - p2[1]), (p2[0] - p1[0]), (p2[0] * p1[1] - p1[0] * p2[1]))
     if a < 0 or a == 0 and b < 0:
         a, b, c = -a, -b, -c
     g = gcd(a, b)
@@ -3851,6 +3880,9 @@ def twoDimensionalLineSegmentPairInternalCrossing(
     of the crossing point as fractions if the two line segments cross internally,
     otherwise None.
     """
+    #e_ref = ((356, 290), (356, 396))
+    #if e_ref in {tuple(seg1), tuple(seg2)}:
+    #    print(seg1, seg2)
     #print("Using twoDimensionalLineSegmentPairInternalCrossing()")
     failed_screen = False
     #print(seg1, seg2)
@@ -3872,8 +3904,8 @@ def twoDimensionalLineSegmentPairInternalCrossing(
         if len(angle_direction_set) > 1: return None
     #if failed_screen: print(seg1, seg2, vec_lst, angle_direction_set)
     #return True
-    a1, b1, c1 = twoDimensionalLineSegmentEquation(seg1)
-    a2, b2, c2 = twoDimensionalLineSegmentEquation(seg2)
+    a1, b1, c1 = twoDimensionalLineEquation(*seg1)
+    a2, b2, c2 = twoDimensionalLineEquation(*seg2)
     denom = a1 * b2 - a2 * b1
     x, y = (b2 * c1 - b1 * c2, denom), (a2 * c1 - a1 * c2, denom)
     if denom > 0: y = y = tuple(-a for a in y)
@@ -3884,12 +3916,15 @@ def twoDimensionalLineSegmentPairInternalCrossing(
     """
     
     ans2 = True
-    a1, b1, c1 = twoDimensionalLineSegmentEquation(seg1)
-    a2, b2, c2 = twoDimensionalLineSegmentEquation(seg2)
+    a1, b1, c1 = twoDimensionalLineEquationGivenTwoIntegerPoints(*seg1)
+    a2, b2, c2 = twoDimensionalLineEquationGivenTwoIntegerPoints(*seg2)
     #print(a1, b1, c1)
     #print(a2, b2, c2)
 
-    if a1 == a2 and b1 == b2: ans2 = False#return False # Parallel
+    if a1 == a2 and b1 == b2:
+        if c1 == c2: print(f"collinear segments: {seg1}, {seg2}")
+
+        ans2 = False#return False # Parallel
 
     denom = a1 * b2 - a2 * b1
     x, y = (b2 * c1 - b1 * c2, denom), (a1 * c2 - a2 * c1, denom)
@@ -3910,13 +3945,14 @@ def twoDimensionalLineSegmentPairInternalCrossing(
     #g1, g2 = gcd(*x), gcd(*y)
     #return (tuple(a // g1 for a in x), tuple(a // g2 for a in y))
     #print("crossing found")
+    #if e_ref in {tuple(seg1), tuple(seg2)}: print("intersection found")
     return (CustomFraction(*x), CustomFraction(*y))
 
 def twoDimensionalLineSegmentsCountInternalCrossings(
         line_segments: List[Tuple[Tuple[int, int], Tuple[int, int]]]
 ) -> int:
-    for seg in line_segments:
-        print(f"{seg[0][0]}, {seg[0][1]}, {seg[1][0]}, {seg[1][1]}")
+    #for seg in line_segments:
+    #    print(f"{seg[0][0]}, {seg[0][1]}, {seg[1][0]}, {seg[1][1]}")
     # Bentley-Ottmann algorithm
     def gradient(p1: Tuple[int, int], p2: Tuple[int, int]) -> CustomFraction:
         if p1 == p2: return 0
@@ -3928,6 +3964,12 @@ def twoDimensionalLineSegmentsCountInternalCrossings(
         #return (diffs[1] // g, diffs[0] // g)
     xings = {}
     
+    # Review- add mechanism for counting all crossings for overlapping line segments
+    seg_eqns = {}
+    for i, seg in enumerate(line_segments):
+        eqn = twoDimensionalLineEquationGivenTwoIntegerPoints(*seg)
+        seg_eqns.setdefault(eqn, [])
+        seg_eqns[eqn].append(i)
 
     points0 = set()
     for seg in line_segments:
@@ -3936,19 +3978,70 @@ def twoDimensionalLineSegmentsCountInternalCrossings(
     points = sorted(points0)
     points_dict = {p: i for i, p in enumerate(points)}
     n = len(points)
+
+    line_segments2 = []
+    collinear_dict = {}
+    for eqn, inds in seg_eqns.items():
+        if len(inds) == 1:
+            line_segments2.append(line_segments[inds[0]])
+            continue
+        print("found collinear line segments:")
+        print([line_segments[i] for i in inds])
+        a, b, c = eqn
+        line_changes = []
+        k_vals = {}
+        for i in inds:
+            p1, p2 = line_segments[i]
+            k1 = b * p1[0] - a * p1[1]
+            k2 = b * p2[0] - a * p2[1]
+            if k1 > k2:
+                k1, k2 = k2, k1
+                p1, p2 = p2, p1
+            #j1, j2 = points_dict[p1], points_dict[p2]
+            k_vals[p1] = k1
+            k_vals[p2] = k2
+            line_changes.append((k1, 1, p1, i))
+            line_changes.append((k2, -1, p2, i))
+        line_changes.sort()
+        #print(line_changes)
+        curr = []
+        cnt = 0
+        incl_segs = []
+        for k, d, p, i in line_changes:
+            cnt += d
+            if d > 0: incl_segs.append(i)
+            if not curr:
+                curr.append(p)
+            if cnt: continue
+            curr.append(p)
+            curr_tup = tuple(curr)
+            e = tuple(points_dict[p] for p in curr)
+            line_segments2.append(curr_tup)
+            #print(f"adding {curr_tup}")
+            if len(incl_segs) > 1:
+                collinear_dict[e] = (eqn, [])
+                for i in incl_segs:
+                    pairs = sorted((k_vals[p2], points_dict[p2]) for p2 in line_segments[i])
+                    collinear_dict[e][1].append((tuple(pair[1] for pair in pairs), tuple(pair[0] for pair in pairs)))
+            curr = []
+            incl_segs = []
+    #print(collinear_dict)
     out_adj = [set() for _ in range(n)]
     in_adj = [set() for _ in range(n)]
-    for seg in line_segments:
+    for seg in line_segments2:
         i1, i2 = sorted([points_dict[x] for x in seg])
         out_adj[i1].add(i2)
         in_adj[i2].add(i1)
+
+    #for e in [(4730, 5424), (2960, 5832), (638, 5600), (5240, 5734), (1689, 5768)]:
+    #    print(f"edge {e} from {points[e[0]]} to {points[e[1]]}")
 
     events_heap = [(p, True, i) for i, p in enumerate(points)]
     heapq.heapify(events_heap)
     seen_crossings = {}
     
     def findGreaterXCrossing(lower_edge: Tuple[int, int], lower_grad: CustomFraction, upper_edge: Tuple[int, int], upper_grad: CustomFraction) -> Optional[Tuple[CustomFraction, CustomFraction]]:
-        if lower_grad <= upper_grad: return None
+        if lower_grad < upper_grad: return None
         return twoDimensionalLineSegmentPairInternalCrossing(
             (points[lower_edge[0]], points[lower_edge[1]]),
             (points[upper_edge[0]], points[upper_edge[1]]),
@@ -3956,6 +4049,15 @@ def twoDimensionalLineSegmentsCountInternalCrossings(
     
     def addCrossing(edge1: Tuple[int, int], edge2: Tuple[int, int], crossing: Optional[Tuple[CustomFraction, CustomFraction]]) -> None:
         if crossing is None: return
+        if crossing not in xings.keys():
+            xings[crossing] = set()
+            heapq.heappush(events_heap, (crossing, False))
+        #if (1410, 1412) in {tuple(edge1), tuple(edge2)}:
+        #    print(f"adding crossing between {edge1} and {edge2}")
+        xings[crossing].add(edge1)
+        xings[crossing].add(edge2)
+        return
+        """
         #if edge2 < edge1:
         #    edge1, edge2 = edge2, edge1
         seen_crossings.setdefault(edge1[0], {})
@@ -3970,11 +4072,12 @@ def twoDimensionalLineSegmentsCountInternalCrossings(
         #    print(f"edge2 = {edge2}")
         heapq.heappush(events_heap, (crossing, False, edge1, edge2))
         return
+        """
     
     seg_line = SortedList()
     in_seg_dict = {}
 
-    def updateSurroundingSegments(p: Tuple[Union[CustomFraction, int], Union[CustomFraction, int]], seg0):
+    def updateSurroundingSegments(p: Tuple[Union[CustomFraction, int], Union[CustomFraction, int]]) -> None:#, seg0):
         #print("using updateSurroundingSegments()")
         #print(f"p = {p}")
         # From Below to Above
@@ -4094,7 +4197,7 @@ def twoDimensionalLineSegmentsCountInternalCrossings(
                 in_seg_dict[edge[1]][edge[0]] = (p2, grad)
         return
     
-    print_rng = (231, 230)#(CustomFraction(910300, 3887), CustomFraction(910700, 3887))
+    print_rng = (1, -1)# (CustomFraction(140597, 310), CustomFraction(140603, 310))
 
     n_vertices = 0
     res = {}
@@ -4108,16 +4211,67 @@ def twoDimensionalLineSegmentsCountInternalCrossings(
             # Crossing event
             if event[0][0] >= print_rng[0] and event[0][0] <= print_rng[1]:
                 print("Crossing")
+                print(", ".join([f"{pt[0]} to {pt[1]}" for pt in xings[event[0]]]))
+                print((event[0][0].numerator / event[0][0].denominator, event[0][1].numerator / event[0][1].denominator))
+                print(seg_line)
+                print(event)
+            edges = xings.get(event[0], set())
+            edge_mx = (CustomFraction(-1, 0),)
+            edge_mn = (CustomFraction(1, 0),)
+            edges2 = []
+            for edge in edges:
+                p2, grad2 = in_seg_dict[edge[1]][edge[0]]
+                edges2.append((edge, grad2))
+                #if (1410, 1412) in edges:
+                #    print(edge_mx, (grad2, edge), (grad2, edge) > edge_mx)
+                edge_mx = max(edge_mx, (grad2, edge))
+                #if (1410, 1412) in edges:
+                #    print(edge_mx)
+                edge_mn = min(edge_mn, (grad2, edge))
+                seg2 = (p2[1], grad2, p2[0], edge)
+                seg_line.remove(seg2)
+            updateSurroundingSegments(p)
+            add_seg_mn = (p[1], edge_mn[0], p[0], edge_mn[1])
+            j = seg_line.bisect_left(add_seg_mn) - 1
+            if j >= 0:
+                seg0 = seg_line[j]
+                edge0 = seg0[3]
+                grad0 = seg0[1]
+                crossing = findGreaterXCrossing(edge0, grad0, edge_mn[1], edge_mn[0])
+                addCrossing(edge0, edge_mn[1], crossing)
+            add_seg_mx = (p[1], edge_mx[0], p[0], edge_mx[1])
+            #if (1410, 1412) in edges:
+            #    print(f"edge (1410, 1412):")
+            #    print(edges2)
+            #    print(edges2[0][1] > edges2[1][1])
+            #    print(add_seg_mx)
+            j = seg_line.bisect_right(add_seg_mx)
+            #print(f"checking above: j = {j}, len(seg_line) = {len(seg_line)}")
+            if j < len(seg_line):
+                seg3 = seg_line[j]
+                edge3 = seg3[3]
+                grad3 = seg3[1]
+                crossing = findGreaterXCrossing(edge_mx[1], edge_mx[0], edge3, grad3)
+                addCrossing(edge_mx[1], edge3, crossing)
+            for edge, grad in edges2:
+                #print(grad)
+                add_seg = (p[1], grad, p[0], edge)
+                seg_line.add(add_seg)
+                in_seg_dict[edge[1]][edge[0]] = (p, grad)
+            continue
+            """
+            if event[0][0] >= print_rng[0] and event[0][0] <= print_rng[1]:
+                print("Crossing")
                 print(f"{points[event[2][0]]} to {points[event[2][1]]} and {points[event[3][0]]} to {points[event[3][1]]}")
                 print((event[0][0].numerator / event[0][0].denominator, event[0][1].numerator / event[0][1].denominator))
                 print(seg_line)
                 print(event)
             p = event[0]
             edge1, edge2 = event[2:4]
-            xings.setdefault(event[2], set())
-            xings[event[2]].add(event[3])
-            xings.setdefault(event[3], set())
-            xings[event[3]].add(event[2])
+            #xings.setdefault(event[2], set())
+            #xings[event[2]].add(event[3])
+            #xings.setdefault(event[3], set())
+            #xings[event[3]].add(event[2])
             #print(event)
             #print((points[edge1[0]], points[edge1[1]]), (points[edge2[0]], points[edge2[1]]))
             #print(event[0][0], event[0][0])
@@ -4138,7 +4292,7 @@ def twoDimensionalLineSegmentsCountInternalCrossings(
             p2, grad2 = in_seg_dict[edge2[1]][edge2[0]]
             seg2 = (p2[1], grad2, p2[0], edge2)
             seg_line.remove(seg2)
-            updateSurroundingSegments(p, seg1)
+            updateSurroundingSegments(p)#, seg1)
             add_seg1 = (p[1], grad2, p[0], edge2)
             add_seg2 = (p[1], grad1, p[0], edge1)
             j = seg_line.bisect_left(add_seg1) - 1
@@ -4162,6 +4316,7 @@ def twoDimensionalLineSegmentsCountInternalCrossings(
             seg_line.add(add_seg2)
             in_seg_dict[edge1[1]][edge1[0]] = (p, grad1)
             continue
+            """
         # Vertex event
         if event[0][0] >= print_rng[0] and event[0][0] <= print_rng[1]:
             print("Vertex")
@@ -4170,7 +4325,7 @@ def twoDimensionalLineSegmentsCountInternalCrossings(
             print(seg_line)
         n_vertices += 1
         if not n_vertices % 50:
-            print(f"{n_vertices} vertices processed, x = {p[0]}, number of unique crossing points found = {len(res)}")
+            print(f"{n_vertices} vertices processed, x = {p[0]}, number of unique crossing points found = {len(xings)}")
         i = event[2]
         rm_seg = None
         if i in in_seg_dict.keys():
@@ -4179,7 +4334,7 @@ def twoDimensionalLineSegmentsCountInternalCrossings(
                 rm_seg = (p0[1], grad, p0[0], (i0, i))
                 seg_line.remove(rm_seg)
         if out_adj[i]:
-            updateSurroundingSegments(p, (p[1], CustomFraction(0, 1), p[0]))
+            updateSurroundingSegments(p)#, (p[1], CustomFraction(0, 1), p[0]))
         if not out_adj[i]:
             if rm_seg is None: continue
             j2 = seg_line.bisect_right(rm_seg)
@@ -4213,12 +4368,16 @@ def twoDimensionalLineSegmentsCountInternalCrossings(
         #    print(add_segs)
         add_segs.sort()
         j = seg_line.bisect_left((p[1], add_segs[0][0])) - 1
+        if p == (453, 51):
+            print(f"{p} add segments: {add_segs}")
         if j >= 0:
             edge1 = (i, add_segs[0][2])
             grad1 = add_segs[0][0]
             seg0 = seg_line[j]
             edge0 = seg0[3]
             grad0 = seg0[1]
+            if p == (453, 51):
+                print(f"below: {j}, {edge0}, {grad0}")
             crossing = findGreaterXCrossing(edge0, grad0, edge1, grad1)
             addCrossing(edge0, edge1, crossing)
             #if crossing is not None:
@@ -4234,6 +4393,8 @@ def twoDimensionalLineSegmentsCountInternalCrossings(
             seg2 = seg_line[j]
             edge2 = seg2[3]
             grad2 = seg2[1]
+            if p == (453, 51):
+                print(f"above: {j}, {edge2}, {grad2}")
             crossing = findGreaterXCrossing(edge1, grad1, edge2, grad2)
             addCrossing(edge1, edge2, crossing)
             #if crossing is not None:
@@ -4246,12 +4407,38 @@ def twoDimensionalLineSegmentsCountInternalCrossings(
             in_seg_dict[i2][i] = (p, grad)
         #for i2 in out_adj:
         #    out_segs = 
+    
+    xings_final = {}
+    for intersect, e_set in xings.items():
+        xings_final[intersect] = []
+        for e in e_set:
+            e_tup = tuple(e)
+            if e_tup not in collinear_dict.keys():
+                xings_final[intersect].append({e_tup})
+                continue
+            xings_final[intersect].append(set())
+            eqn, e_lst = collinear_dict[e_tup]
+            a, b, c = eqn
+            k = b * intersect[0] - a * intersect[1]
+            for e2, k_vals in e_lst:
+                if k <= k_vals[0] or k >= k_vals[1]: continue
+                xings_final[intersect][-1].add(tuple(e2))
+            #print(intersect, k, e, e_lst, xings_final[intersect][-1])
+            if not xings_final[intersect][-1]: xings_final[intersect].pop() # should not happen
+
     tot_cnt = 0
-    for e_set in res.values():
-        e_cnt = len(e_set)
-        tot_cnt += (e_cnt * (e_cnt - 1)) >> 1
+    for e_lst in xings_final.values():
+        cnt = 0
+        ans = 0
+        for e_set in e_lst:
+            l = len(e_set)
+            cnt += l
+            ans -= (l * (l - 1)) >> 1
+        ans += (cnt * (cnt - 1)) >> 1
+        tot_cnt += ans
+    unique_cnt = len(xings_final)
     print(f"total number of line crossings (including duplicates) = {tot_cnt}")
-    print(f"total number of line crossing points = {len(res)}")
+    print(f"total number of line crossing points = {unique_cnt}")
     #return len(res)
 
     #print("edges crossing edge (2, 14):")
@@ -4285,14 +4472,18 @@ def twoDimensionalLineSegmentsCountInternalCrossings(
                 xings2[edge1].add(edge2)
                 xings2.setdefault(edge2, set())
                 xings2[edge2].add(edge1)
+                
                 tot_cnt2 += 1
             #res += twoDimensionalLineSegmentPairInternalCrossing(seg_sort, line_segments_sorted[i2])
         x_ends.add((seg[1][0], i))
-    for intersect, edges in res2.items():
-        edges2 = res.get(intersect, set())
-        if len(edges) == len(edges2): continue
-        print(f"missing intersections at {intersect} between the edges: {edges - edges2}")
-        print(f"all edges intersecting at {intersect}: {edges}")
+    
+    #for intersect in sorted(res2.keys()):
+    #    edges = res2[intersect]
+    #    edges2 = xings.get(intersect, set())
+    #    if len(edges) == len(edges2): continue
+    #    print(f"missing intersections at {intersect} between the edges: {edges - edges2}")
+    #    print(f"all edges intersecting at {intersect}: {edges}")
+    
     #for edge1, edge2_set in xings2.items():
     #    for edge2 in edge2_set - xings.get(edge1, set()):
     #        if edge2 > edge1:
@@ -9714,7 +9905,7 @@ if __name__ == "__main__":
 
     if not to_evaluate or 165 in to_evaluate:
         res = blumBlumShubPseudoRandomTwoDimensionalLineSegmentsCountInternalCrossings(
-            n_line_segments=3000,
+            n_line_segments=100,
             blumblumshub_s_0=290797,
             blumblumshub_s_mod=50515093,
             coord_min=0,
