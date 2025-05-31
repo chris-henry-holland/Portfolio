@@ -21,54 +21,7 @@ from string_searching_algorithms import rollingHashWithValue, KnuthMorrisPratt
 from Pythagorean_triple_generators import pythagoreanTripleGeneratorByHypotenuse
 from continued_fractions_and_Pell_equations import sqrtBestRationalApproximation
 from geometry_algorithms import twoDimensionalLineSegmentPairInternalCrossing, BentleyOttmannAlgorithmIntegerEndpoints
-from misc_mathematical_algorithms import CustomFraction
-
-def gcd(a: int, b: int) -> int:
-    """
-    For non-negative integers a and b (not both zero),
-    calculates the greatest common divisor of the two, i.e.
-    the largest positive integer that is an exact divisor
-    of both a and b.
-
-    Args:
-        Required positional:
-        a (int): Non-negative integer which is the first
-                which the greatest common divisor must
-                divide.
-        b (int): Non-negative integer which is the second
-                which the greatest common divisor must
-                divide. Must be non-zero if a is zero.
-    
-    Returns:
-    Strictly positive integer giving the greatest common
-    divisor of a and b.
-    """
-    #return a if not b else gcd(b, a % b)
-    while b != 0:
-        a, b = b, a % b
-    return a
-    
-def lcm(a: int, b: int) -> int:
-    """
-    For non-negative integers a and b (not both zero),
-    calculates the lowest common multiple of the two, i.e.
-    the smallest positive integer that is a multiple
-    of both a and b.
-
-    Args:
-        Required positional:
-        a (int): Non-negative integer which is the first
-                which must divide the lowest common multiple.
-        b (int): Non-negative integer which is the second
-                which must divide the lowest common multiple.
-                Must be non-zero if a is zero.
-    
-    Returns:
-    Strictly positive integer giving the lowest common
-    multiple of a and b.
-    """
-
-    return a * (b // gcd(a, b))
+from misc_mathematical_algorithms import CustomFraction, gcd, lcm
 
 def isqrt(n: int) -> int:
     """
@@ -9251,7 +9204,7 @@ def findNthPrimeProofSqubeWithSubstring(substr_num: int=200, substr_num_lead_zer
     return res
 
 if __name__ == "__main__":
-    to_evaluate = {165}
+    to_evaluate = {153}
 
     if not to_evaluate or 151 in to_evaluate:
         res = singleSheetCountExpectedValueFloat(n_halvings=4)
@@ -9262,7 +9215,7 @@ if __name__ == "__main__":
         print(f"Solution to Project Euler #152 = {res}")
     
     if not to_evaluate or 153 in to_evaluate:
-        res = findRealPartSumOverGaussianIntegerDivisors(n_max=5)
+        res = findRealPartSumOverGaussianIntegerDivisors(n_max=10 ** 8)
         print(f"Solution to Project Euler #153 = {res}")
     
     if not to_evaluate or 154 in to_evaluate:
