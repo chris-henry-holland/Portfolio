@@ -359,9 +359,18 @@ def twoDimensionalLineSegmentPairInternalCrossing(
 ) -> Optional[Tuple[CustomFraction, CustomFraction]]:
     """
     Identifies whether two line segments in two dimensions whose end points
-    are at integer Cartesian coordinates cross each other internally (i.e.
-    such that the crossing point is at neither of the end points of either
-    line segment), and if so gives the Cartesian coordinates at which they cross.
+    are at integer Cartesian coordinates cross each other internally, and if
+    so gives the Cartesian coordinates at which they cross with the coordinates
+    as fractions.
+
+    A line segment is a straight line extending between two points (these
+    points referred to as the end points of the line segment).
+
+    An internal crossing of two line segments is a point that is on both line
+    segments but not on either endpoint of either line segment (note that by
+    Euclidean geometry at most one such line crossing can occur). Two line
+    segments may be referred to as crossing internally if and only if there
+    exists an internal crossing for those two line segments.
 
     Args:
         Required positional:
