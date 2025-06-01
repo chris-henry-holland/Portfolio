@@ -353,15 +353,23 @@ def twoDimensionalLineEquationGivenTwoIntegerPoints(p1: Tuple[int, int], p2: Tup
     #if g == 1: return (a, b, c)
     return (a // g, b // g, c // g)
 
-def twoDimensionalLineSegmentPairInternalCrossing(
+def twoDimensionalLineSegmentPairCrossing(
         seg1: Tuple[Tuple[int, int], Tuple[int, int]],
         seg2: Tuple[Tuple[int, int], Tuple[int, int]],
+        internal_only: bool=True,
+        allow_endpoint_to_endpoint: bool=False,
 ) -> Optional[Tuple[CustomFraction, CustomFraction]]:
     """
     Identifies whether two line segments in two dimensions whose end points
-    are at integer Cartesian coordinates cross each other internally, and if
-    so gives the Cartesian coordinates at which they cross with the coordinates
-    as fractions.
+    are at integer Cartesian coordinates cross each other, and if so gives the
+    Cartesian coordinates at which they cross with the coordinates as fractions.
+
+    When internal_only is True, only internal crossings of line segments are
+    considered to be crossings, while when internal_only is False, having one
+    line segment's endpoint coincide with a point on the other line segment
+    that is not the end point is also considered an intersection, and if
+    additionally allow_endpoint_to_endpoint is True then one of each line
+    segment's end points coinciding is considered an intersection.
 
     A line segment is a straight line extending between two points (these
     points referred to as the end points of the line segment).
@@ -382,16 +390,30 @@ def twoDimensionalLineSegmentPairInternalCrossing(
                 points of the other of the line segments whose status as crossing
                 the other internally is being assessed, each as a 2-tuple
                 containing the Cartesian coordinates of that end point.
+        
+        Optional named:
+        internal_only (bool): Specifies whether only internal crossings are to
+                be considered as intersections (if given as True), or if crossings
+                involving end points of the line segments are also to be considered
+                as intersections (if given as False)
+            Default: True
+        allow_endpoint_to_endpoint (bool): Specifies whether, when internal_only
+                if False, coincidences between one of the end points of each
+                line segment is to be considered as an intersection (if True
+                and internal_only is False then these are considered to be
+                intersections, otherwise not).
+            Default: False
     
     Returns:
     A 2-tuple of CustomFraction objects representing the Cartesian coordinates
-    of the crossing point as fractions if the two line segments cross internally,
-    otherwise None.
+    of the intersection point as fractions if the two line segments intersect (where
+    the events considered to be intersections are defined based on internal_only
+    and allow_endpoint_to_endpoint as outlined above), otherwise None.
     """
     #e_ref = ((356, 290), (356, 396))
     #if e_ref in {tuple(seg1), tuple(seg2)}:
     #    print(seg1, seg2)
-    #print("Using twoDimensionalLineSegmentPairInternalCrossing()")
+    #print("Using twoDimensionalLineSegmentPairCrossing()")
     failed_screen = False
     #print(seg1, seg2)
     for i in range(2):
@@ -424,8 +446,12 @@ def twoDimensionalLineSegmentPairInternalCrossing(
     """
     
     ans2 = True
-    a1, b1, c1 = twoDimensionalLineEquationGivenTwoIntegerPoints(*seg1)
-    a2, b2, c2 = twoDimensionalLineEquationGivenTwoIntegerPoints(*seg2)
+    eqn1 = twoDimensionalLineEquationGivenTwoIntegerPoints(*seg1)
+    eqn2 = twoDimensionalLineEquationGivenTwoIntegerPoints(*seg2)
+    a1, b1, c1 = eqn1
+    a2, b2, c2 = eqn2
+
+    
     #print(a1, b1, c1)
     #print(a2, b2, c2)
 
@@ -433,28 +459,40 @@ def twoDimensionalLineSegmentPairInternalCrossing(
         if c1 == c2: print(f"collinear segments: {seg1}, {seg2}")
 
         ans2 = False#return False # Parallel
+        return None
 
     denom = a1 * b2 - a2 * b1
-    x, y = (b2 * c1 - b1 * c2, denom), (a1 * c2 - a2 * c1, denom)
+    x, y = CustomFraction(b2 * c1 - b1 * c2, denom), CustomFraction(a1 * c2 - a2 * c1, denom)
     #if denom > 0: y = tuple(-a for a in y)
     #else: x = tuple(-a for a in x)
-    if denom < 0:
-        x = tuple(-z for z in x)
-        y = tuple(-z for z in y)
+    #if denom < 0:
+    #    x = tuple(-z for z in x)
+    #    y = tuple(-z for z in y)
     #print(x, y, x[0] / x[1], y[0] / y[1])
-    for seg in (seg1, seg2):
-        x1, x2 = sorted([seg[0][0], seg[1][0]])
-        y1, y2 = sorted([seg[0][1], seg[1][1]])
+    #k_rng1 = sorted([b1 * seg1[0][0] - a1 * seg1[0][1], b1 * seg1[1][0] - a1 * seg1[1][1]])
+    #k_rng2 = sorted([b2 * seg2[0][0] - a2 * seg2[0][1], b1 * seg2[1][0] - a1 * seg2[1][1]])
+    end_seen = False
+    for seg, eqn in ((seg1, eqn1), (seg2, eqn2)):
+        a, b, c = eqn
+        k_rng = sorted([b * seg[0][0] - a * seg[0][1], b * seg[1][0] - a * seg[1][1]])
+        k = b * x - a * y
+        if k < k_rng[0] or k > k_rng[1]: return None
+        if k == k_rng[0] or k == k_rng[1]:
+            if internal_only: return None
+            if allow_endpoint_to_endpoint and end_seen: return None
+            end_seen = True
+        #x1, x2 = sorted([seg[0][0], seg[1][0]])
+        #y1, y2 = sorted([seg[0][1], seg[1][1]])
         #print(x1, x2)
         #print(y1, y2)
-        if (x[0] <= x1 * x[1] or x[0] >= x2 * x[1]) and (y[0] <= y1 * y[1] or y[0] >= y2 * y[1]):
-            #print("x out of range")
-            return None
+        #if (x[0] <= x1 * x[1] or x[0] >= x2 * x[1]) and (y[0] <= y1 * y[1] or y[0] >= y2 * y[1]):
+        #    #print("x out of range")
+        #    return None
     #g1, g2 = gcd(*x), gcd(*y)
     #return (tuple(a // g1 for a in x), tuple(a // g2 for a in y))
     #print("crossing found")
     #if e_ref in {tuple(seg1), tuple(seg2)}: print("intersection found")
-    return (CustomFraction(*x), CustomFraction(*y))
+    return (x, y)
 
 def BentleyOttmannAlgorithmIntegerEndpoints(
         line_segments: List[Tuple[Tuple[int, int], Tuple[int, int]]]
@@ -547,9 +585,11 @@ def BentleyOttmannAlgorithmIntegerEndpoints(
     
     def findGreaterXCrossing(lower_edge: Tuple[int, int], lower_grad: CustomFraction, upper_edge: Tuple[int, int], upper_grad: CustomFraction) -> Optional[Tuple[CustomFraction, CustomFraction]]:
         if lower_grad < upper_grad: return None
-        return twoDimensionalLineSegmentPairInternalCrossing(
+        return twoDimensionalLineSegmentPairCrossing(
             (points[lower_edge[0]], points[lower_edge[1]]),
             (points[upper_edge[0]], points[upper_edge[1]]),
+            internal_only=True,
+            allow_endpoint_to_endpoint=False,
         )
     
     def addCrossing(edge1: Tuple[int, int], edge2: Tuple[int, int], crossing: Optional[Tuple[CustomFraction, CustomFraction]]) -> None:

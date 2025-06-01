@@ -20,7 +20,7 @@ from addition_chains import AdditionChainCalculator
 from string_searching_algorithms import rollingHashWithValue, KnuthMorrisPratt
 from Pythagorean_triple_generators import pythagoreanTripleGeneratorByHypotenuse
 from continued_fractions_and_Pell_equations import sqrtBestRationalApproximation
-from geometry_algorithms import twoDimensionalLineSegmentPairInternalCrossing, BentleyOttmannAlgorithmIntegerEndpoints
+from geometry_algorithms import twoDimensionalLineSegmentPairCrossing, BentleyOttmannAlgorithmIntegerEndpoints
 from misc_mathematical_algorithms import CustomFraction, gcd, lcm
 
 def isqrt(n: int) -> int:
@@ -3753,7 +3753,12 @@ def twoDimensionalLineSegmentsCountInternalCrossings(
         seg_sort = tuple(sorted(seg))
         for x2, i2 in reversed(x_ends):
             if x2 < seg_sort[0][0]: break
-            intersect = twoDimensionalLineSegmentPairInternalCrossing(seg_sort, line_segments_sorted[i2])
+            intersect = twoDimensionalLineSegmentPairCrossing(
+                seg_sort,
+                line_segments_sorted[i2],
+                internal_only=True,
+                allow_endpoint_to_endpoint=False
+            )
             if intersect is not None:
                 res.setdefault(intersect, set())
                 #res.add(intersect)
@@ -3769,7 +3774,7 @@ def twoDimensionalLineSegmentsCountInternalCrossings(
                 xings2[edge2].add(edge1)
                 """
                 tot_cnt2 += 1
-            #res += twoDimensionalLineSegmentPairInternalCrossing(seg_sort, line_segments_sorted[i2])
+            #res += twoDimensionalLineSegmentPairCrossing(seg_sort, line_segments_sorted[i2], internal_only=True, allow_endpoint_to_endpoint=False)
         x_ends.add((seg[1][0], i))
     
     #for intersect in sorted(res2.keys()):
@@ -9204,7 +9209,7 @@ def findNthPrimeProofSqubeWithSubstring(substr_num: int=200, substr_num_lead_zer
     return res
 
 if __name__ == "__main__":
-    to_evaluate = {153}
+    to_evaluate = {165}
 
     if not to_evaluate or 151 in to_evaluate:
         res = singleSheetCountExpectedValueFloat(n_halvings=4)
@@ -9264,7 +9269,7 @@ if __name__ == "__main__":
 
     if not to_evaluate or 165 in to_evaluate:
         res = blumBlumShubPseudoRandomTwoDimensionalLineSegmentsCountInternalCrossings(
-            n_line_segments=5000,
+            n_line_segments=3000,
             blumblumshub_s_0=290797,
             blumblumshub_s_mod=50515093,
             coord_min=0,
@@ -9494,5 +9499,5 @@ if __name__ == "__main__":
     #    print(pair)
     
     #seg = ((18, 220), (280, 408)), ((231, 373), (362, 411))
-    #p = twoDimensionalLineSegmentPairInternalCrossing(*seg)
+    #p = twoDimensionalLineSegmentPairCrossing(*seg, internal_only=True, allow_endpoint_to_endpoint=False)
     #print(p, (p[0].numerator / p[0].denominator, p[1].numerator / p[1].denominator))
