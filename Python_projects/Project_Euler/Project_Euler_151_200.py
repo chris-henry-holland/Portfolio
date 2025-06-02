@@ -7942,7 +7942,73 @@ def allowedColouredConfigurationsCount(type_a_count: int=25, type_b_count: int=7
     """
     Solution to Project Euler #194
     
+    Consider the two undirected unweighted graphs A and B, each consisting
+    of 7 vertices which, when labelled with the integers from 0 to 6
+    inclusive each have the edges between the vertex pairs:
+        (0, 1)
+        (0, 2)
+        (0, 4)
+        (1, 5)
+        (2, 3)
+        (2, 4)
+        (3, 5)
+        (4, 6)
+        (5, 6)
+    with graph A having an additional edge between the vertex pair:
+        (1, 3)
+    Two such graphs (A and A, A and B, B and A or B and B) can be
+    fused to form a larger graph by letting the vertices labelled 2
+    and 3 (as per the labelling above) in the first of the two graphs
+    be the same vertices as those labelled 0 and 1 respectively in
+    the second, and similarly letting the edge between vertex pair
+    (2, 3) in the first graph be the same as the edge between vertex
+    pair (0, 1) in the second graph.
+
+    This process can then be repeated by using the second graph in
+    the above fusion as the first graph in the next fusion and a new
+    graph A or B as the second and performing another fusion in the
+    same way. We can then continue this process indefinitely,
+    effectively producing a chain of A and B graphs.
+    
+    Consider all graphs that can be formed in this way consisting
+    of the fusion of type_a_count graphs of type A and type_b_count
+    graphs of type B in any order. This function identifies the
+    sum of the number of ways of colouring the vertices each such
+    graph, such that there are n_colours different colours available
+    and no two adjacent vertices (i.e. no two vertices with an edge
+    between them) have the same colour, with the answer given modulo
+    md if md is given.
+
+    Args:
+        Optional named:
+        type_a_count (int): The number of A graphs (as defined above)
+                used in the construction of the graphs of interest
+                through the repeated fusion of A and B graphs.
+            Default: 25
+        type_b_count (int): The number of B graphs (as defined above)
+                used in the construction of the graphs of interest
+                through the repeated fusion of A and B graphs.
+            Default: 75
+        n_colours (int): Strictly positive integer giving the number
+                of colours available for colouring vertices.
+        md (int or None): If specified as a strictly positive integer,
+                the modulus to which the final count is to be returned
+                (i.e. the answer is the remainder of the count when
+                divided by this value).
+            Default: 10 ** 8
+
+    Returns:
+    Integer (int) giving the sum over the number of vertex colourings
+    allowed for all graphs that can be constructed from type_a_count A
+    graphs and type_b_count B graphs as outlined above such that
+    n_colours different colours are available and no two adjacent vertices
+    can be the same colour, (with the count being given modulo md if md is
+    given as a strictly positive integer).
+
+    Outline of rationale:
+    TODO
     """
+    # Review- generalise to different graph structures
     since = time.time()
     if not type_a_count and not type_b_count: return 1
     if n_colours < 3: return 0
@@ -9269,7 +9335,7 @@ if __name__ == "__main__":
 
     if not to_evaluate or 165 in to_evaluate:
         res = blumBlumShubPseudoRandomTwoDimensionalLineSegmentsCountInternalCrossings(
-            n_line_segments=3000,
+            n_line_segments=5000,
             blumblumshub_s_0=290797,
             blumblumshub_s_mod=50515093,
             coord_min=0,
