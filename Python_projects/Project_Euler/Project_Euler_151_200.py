@@ -8006,7 +8006,114 @@ def allowedColouredConfigurationsCount(type_a_count: int=25, type_b_count: int=7
     given as a strictly positive integer).
 
     Outline of rationale:
-    TODO
+    We first observe that all of the n_colours different colours are
+    treated equivalently, so any valid colouring formed by taking a valid
+    colouring and permuting the colours in any way is also valid.
+    We further observe that in both graph A and graph B the vertices labelled
+    0 and 1 are adjacent and the vertices labelled 2 and 3 are connected,
+    in any valid colouring, for any A or B graph making up the graph, vertices
+    labelled 0 and 1 are of different colours from each other and the vertices
+    labelled 2 and 3 are also different colours from each other.
+    Combining these two observations, consider when constructing the graph
+    the step of fusing a new A or B graph to the existing graph, the only
+    restrictions on the new A or B graph is that vertices labelled 0 and
+    1 are already coloured, and are already guaranteed to have different
+    colours. Given that permutations of the colours on a valid colouring
+    result in a valid colouring, and the newly fused A or B graph does
+    not connect to the existing subgraph in any other way, regradless
+    of how the existing subgraph has been coloured, the number of ways
+    of colouring the A or B graph to get a valid colouring is simply
+    the number of ways to colour that type of graph where the colours of
+    vertices labelled 0 and 1 have already been chosen (and are necessarily
+    different colours). Furthermore, this number does not depend on which of
+    the available colours have been chosen (due to the invariance of colour
+    validity on permuting the colours). We therefore conclude that the
+    number of colourings of a subgraph constructed from A and B graphs
+    as described fused to a new A or B graph as per the described construction
+    is equal to the number of valid colourings of the existing
+    subgraph multiplied by the number of valid ways of colouring the A or
+    B graph being fused such that the colours of vertices labelled 0 and 1
+    have already been selected and are different from each other.
+    We can treat the first A or B graph used to construct the graph in the same
+    way by starting the graph with two connected vertices which are already
+    coloured (differently from each other) and fusing vertices 0 and 1 and
+    their connecting edge with the first A or B with these vertices and
+    edge in a similar manner to the connection to the vertices 2 and 3 of
+    another A or B graph. Similarly to previously, the number of valid ways
+    of colouring this graph is the number of ways of colouring the two
+    initial vertices (which is (n_colours * (n_colours - 1))) multiplied
+    by the number of valid ways of colouring an A or B graph (depending
+    on which type was chosen) such that the colours of vertices labelled
+    0 and 1 have already been selected and are different from each other.
+    These observations constitute an induction step and a basis for induction
+    respectively that allow us to conclude by induction that for graphs
+    constructed by the iterative fusion of the given numbers A and B graphs
+    in a particular order, the number of valid colourings is equal to:
+        n_colours * (n_colours - 1) *
+        (number of valid colourings of graph A where the colour of vertices
+        0 and 1 have been selected and are different) ** type_a_count *
+        (number of valid colourings of graph B where the colour of vertices
+        0 and 1 have been selected and are different) ** type_b_count
+    Note that this does not depend on the actual ordering of A and B graphs,
+    and all orderings are allowed. Accounting for the fact that all A graphs
+    are equivalent to each other and all B graphs are equivalent to each other,
+    but A and B graphs are distinct from each other, the number of possible
+    orderings is simply (type_a_count + type_b_count) choose type_a_count.
+    Therefore, the total is simply the above expression multiplied by
+    ((type_a_count + type_b_count) choose type_a_count).
+    All that remains is to find the number of valid colourings of each of
+    graph A and B where the colour of vertices 0 and 1 have been selected
+    and are different.
+    We refer to the colours by numbers, where by definition the already coloured
+    vertices 0 and 1 are also labelled 0 and 1.
+    We also exploit the equivalence of validity of colouring under permutations
+    of the colours by only considering colourings such that each vertex takes
+    a colour number which is either one already used by a vertex with a smaller
+    label or is exactly one greater than the largest number used, and multiplying
+    this number by the number of different assignments of colours to the number
+    labels this represents.
+    By categorising the different colourings based on the exact number of
+    colour labels used, we can deduce that if a number labelling uses exactly m
+    different numbers then the number of possible colourings this represents
+    (recalling that vertices 0 and 1 already have fixed colours) is given by:
+        (n_colours - 2)_(m - 2)
+    where integer a and non-negative integer b, a_b is the falling factorial:
+        a_b = (product i from 0 to (b - 1)) (a - i)
+    The restrictions on labelling given and the simplicity of graphs A and B
+    enable the number of possible labellings involving the differnt number of
+    colours to be counted by hand.
+    For graph A:
+        number of labellings with fewer than 3 different labels = 0
+        number of labellings with exactly 3 different labels = 4
+        number of labellings with exactly 4 different labels = 27
+        number of labellings with exactly 5 different labels = 33
+        number of labellings with exactly 6 different labels = 11
+        number of labellings with exactly 7 different labels = 1
+        number of labellings with more than 7 different labels = 0
+    For graph B:
+        number of labellings with fewer than 3 different labels = 0
+        number of labellings with exactly 3 different labels = 6
+        number of labellings with exactly 4 different labels = 38
+        number of labellings with exactly 5 different labels = 40
+        number of labellings with exactly 6 different labels = 12
+        number of labellings with exactly 7 different labels = 1
+        number of labellings with more than 7 different labels = 0
+    Combining these numbers and the number of colourings corresponding
+    to each labelling using a specific number of different labels
+    and appropriately inserting these into the formula found previously
+    for the total number of colourings, we find an explicit formula
+    for the sum over the different number of different valid colourings
+    from n_colours available different colours over all graphs
+    constructed as described by the fusion of type_a_count A graphs
+    and type_b_count B graphs in all posisble orders:
+        ((type_a_count + type_b_count) choose type_a_count) *
+        n_colours * (n_colours - 1) *
+        (4 * (n_colours - 2)_1 + 27 * (n_colours - 2)_2 +
+            33 * (n_colours - 2)_3 + 11 * (n_colours - 2)_4 +
+            (n_colours - 2)_5) ** type_a_count *
+        (6 * (n_colours - 2)_1 + 38 * (n_colours - 2)_2 +
+            40 * (n_colours - 2)_3 + 12 * (n_colours - 2)_4 +
+            (n_colours - 2)_5) ** type_b_count *
     """
     # Review- generalise to different graph structures
     since = time.time()
