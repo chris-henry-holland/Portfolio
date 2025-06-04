@@ -8627,6 +8627,47 @@ def numberTrianglePrimeTripletRowsSum(row_nums: List[int]=[5678027, 7208785]) ->
 
 # Problem 197
 def findFloorRecursiveSequenceLoop(u0: float, max_term: int, base: int=2, a: float=-1., b: float=0., c: float=30.403243784, div: int=10 ** 9) -> Tuple[int, Tuple[float], Tuple[float]]:
+    """
+    Identifies the initial terms and cycling terms of the sequence u_n
+    for non-negative n defined by the recurrence relation:
+        u_0 = u0
+        u_(n + 1) = f(u_n)
+    where for real x:
+        f(x) = floor(base ** (a * x ** 2 + b * x + c)) / div
+    where base is an integer strictly greater than 1, a is a strictly
+    negative float, b and c are floats and div is a strictly positive
+    integer.
+
+    It can be shown that for such values in the expression for f(x),
+    the sequence is guaranteed to eventually cycle through the same
+    finite subsequence of terms indefinitely.
+
+    Args:
+        Required positional:
+        u0 (float): The initial term of the sequence defined by the
+                above recurrence relation.
+
+        Optional named:
+        base (int): Integer strictly greater than 1 giving the value of
+                base in the above expression for f(x).
+            Default: 2
+        a (float): Strictly negaive integer giving the value of a in
+                the above expression for f(x).
+            Default: -1.
+        b (float): The value of b in the above expression for f(x).
+            Default: 0.f
+        c (float): The value of c in the above expression for f(x).
+            Default: 30.403243784
+        div (int): Strictly positive integer giving the value of div
+                in the above expression for f(x).
+            Default: 10 ** 9
+    
+    Returns:
+    3-tuple whose index 0 contains div, index 1 contains the sequence
+    of initial terms (those before the eventual sequence cycle has been
+    reached) in order, multiplied by div and given as integers, and
+    index 2 contains TODO
+    """
     seen = {}
     u = u0 * div
     i = 0
