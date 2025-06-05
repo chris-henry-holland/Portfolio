@@ -8640,7 +8640,8 @@ def findFloorRecursiveSequenceLoop(u0: float, max_term: int, base: int=2, a: flo
 
     It can be shown that for such values in the expression for f(x),
     the sequence is guaranteed to eventually cycle through the same
-    finite subsequence of terms indefinitely.
+    finite subsequence of terms indefinitely (see outline of rationale),
+    justifying this representation of the sequence.
 
     Args:
         Required positional:
@@ -8666,7 +8667,34 @@ def findFloorRecursiveSequenceLoop(u0: float, max_term: int, base: int=2, a: flo
     3-tuple whose index 0 contains div, index 1 contains the sequence
     of initial terms (those before the eventual sequence cycle has been
     reached) in order, multiplied by div and given as integers, and
-    index 2 contains TODO
+    index 2 contains the sequence of cycling terms in order starting
+    with the first term encountered in the cycle, also multiplied by
+    div and given as integers.
+
+    Outline of rationale:
+    For any quadratic equation in real numbers with a negative square
+    coefficient, there is a finite global maximum. Additionally, a
+    positive number to the power of a real number is always strictly
+    positive, implying that the floor of a positive number to the power
+    of a real number is non-negative.
+    Consequently, for real x, strictly positive base, real a, b and
+    c and negative a the expression:
+        floor(base ** (a * x ** 2 + b * x + c))
+    is an integer bounded above and below, and thus can only take
+    a finite number of values, and thus there must exist some
+    positive integer n for which there is some positive integer m < n
+    such that u_n = u_m.
+    Given that for integer n > 0 u_(n + 1) only depends on the value
+    of u_n, if two for positive integers m and n such that m < n,
+    u_n and u_m are equal then for any non-negative integer a,
+    u_(n + a) = u_(m + a). Furthermore, this implies that for any
+    strictly positive integer b, u_(m + b * (n - m)) = u_m, and
+    so for any non-negative integer a and strictly positive integer
+    b, u_(m + b * (n - m) + a) = u_(m + a), in other words there
+    exists a cycle in the sequence of length b * (n - m).
+    As previously established, such values of n and m exist for this
+    sequence, and so this sequence must eventually end up in a finite
+    subsequence of terms that cycle indefinitely.
     """
     seen = {}
     u = u0 * div
