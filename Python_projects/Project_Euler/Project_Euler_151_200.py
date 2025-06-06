@@ -8629,7 +8629,7 @@ def numberTrianglePrimeTripletRowsSum(row_nums: List[int]=[5678027, 7208785]) ->
 def findFloorRecursiveSequenceLoop(u0: float, max_term: int, base: int=2, a: float=-1., b: float=0., c: float=30.403243784, div: int=10 ** 9) -> Tuple[int, Tuple[float], Tuple[float]]:
     """
     Identifies the initial terms and cycling terms of the sequence u_n
-    for non-negative n defined by the recurrence relation:
+    for strictly positive n defined by the recurrence relation:
         u_0 = u0
         u_(n + 1) = f(u_n)
     where for real x:
@@ -8714,9 +8714,57 @@ def findFloorRecursiveSequenceLoop(u0: float, max_term: int, base: int=2, a: flo
     
     return (div, tuple(res[:i0]), tuple(res[i0:]))
         
-def findFloorRecursiveSequenceTermSum(term_numbers: list=[10 ** 12, 10 ** 12 + 1], u0: float=-1, base: int=2, a: float=-1., b: float=0., c: float=30.403243784, div: int=10 ** 9) -> float:
+def findFloorRecursiveSequenceTermSum(term_numbers: List[int]=[10 ** 12, 10 ** 12 + 1], u0: float=-1, base: int=2, a: float=-1., b: float=0., c: float=30.403243784, div: int=10 ** 9) -> float:
     """
     Solution to Project Euler #197
+
+    Identifies the sum of the terms u_k for the values of nkin the
+    list term_numbers, where for strictly positive integers n,
+    u_n is a term in the sequence defined by the recurrence relation:
+        u_0 = u0
+        u_(n + 1) = f(u_n)
+    where for real x:
+        f(x) = floor(base ** (a * x ** 2 + b * x + c)) / div
+    where base is an integer strictly greater than 1, a is a strictly
+    negative float, b and c are floats and div is a strictly positive
+    integer.
+
+    Args:
+        Optional named:
+        term_numbers (list of ints): The values of k for which the sum
+                over u_k is to be found.
+            Default: [10 ** 12, 10 ** 12 + 1]
+        u0 (float): The initial term of the sequence defined by the
+                above recurrence relation.
+            Default: -1.
+        base (int): Integer strictly greater than 1 giving the value of
+                base in the above expression for f(x).
+            Default: 2
+        a (float): Strictly negaive integer giving the value of a in
+                the above expression for f(x).
+            Default: -1.
+        b (float): The value of b in the above expression for f(x).
+            Default: 0.f
+        c (float): The value of c in the above expression for f(x).
+            Default: 30.403243784
+        div (int): Strictly positive integer giving the value of div
+                in the above expression for f(x).
+            Default: 10 ** 9
+    
+    Returns:
+    Float giving the sum over k in term_numbers of the terms of the
+    sequence u_k defined by the above recurrence relation.
+
+    Outline of rationale:
+    As explained in the outline of rationale for the function
+    findFloorRecursiveSequenceLoop(), for the given restrictions on
+    the values of a, b, c, base and div, the sequence eventually
+    cycles indefinitely. We can therefore find the terms by using
+    findFloorRecursiveSequenceLoop() to find the initial terms and
+    the cycle terms, and for each value of k, if k is one of the
+    initial terms, returning that, otherwise returning the index:
+        (k - (number of initial terms) % len(number of cycle_terms)
+    (0-indexed) from the list of cycle terms.
     """
     since = time.time()
     _, init_terms, loop_terms = findFloorRecursiveSequenceLoop(u0, max_term=max(term_numbers), base=base, a=a, b=b, c=c, div=div)
