@@ -2923,15 +2923,43 @@ def triominoStateComplementRotated(state: Tuple[Tuple[int, bool]]) -> Tuple[Tupl
         else: state2.append((h - x - 2, True))
     return (tuple(state2[::-1]), h)
 
-def triominoAreaFillCombinations(n_rows: int=9, n_cols: int=12) -> int:
+def triominoAreaFillCombinations(grid_width: int=9, grid_height: int=12) -> int:
     """
     Solution to Project Euler #161
+
+    Calculates the number of distinct ways a rectangular grid with dimensions
+    n_rows x n_cols can be completely filled by non-overlapping triominos
+    constructed from squares of unit length.
+
+    A triomino is a shape consisting of exactly three squares, all with the
+    same dimensions, connected edge to edge such that it is possible traverse
+    from any of the three squares to any other via these edge to edge
+    connections.
+
+    Args:
+        Optional named:
+        grid_width (int): Strictly positive integer giving the width of the
+                rectangular grid in terms of the dimensions of the squares
+                from which the triominos are constructed.
+            Default: 9
+        grid_height (int): Strictly positive integer giving the height of the
+                rectangular grid in terms of the dimensions of the squares
+                from which the triominos are constructed.
+            Default: 12
+    
+    Returns:
+    Integer (int) giving the number of distinct ways a rectangular grid with
+    dimensions width x height can be completely filled with non-overlapping
+    triominos constructed from squares of unit length.
+
+    Outline of rationale:
+    TODO
     """
     since = time.time()
-    n_triominos, r = divmod(n_rows * n_cols, 3)
+    n_triominos, r = divmod(grid_width * grid_height, 3)
     if r: return 0
     #print(n_triominos)
-    n_cols, n_rows = sorted([n_rows, n_cols])
+    n_cols, n_rows = sorted([grid_width, grid_height])
     #n_crow, n_rows = sorted([n_rows, n_cols])
     states_counts = {(tuple((0, False) for _ in range(n_cols)), 0, 0): 1}
     
