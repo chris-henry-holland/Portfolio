@@ -2807,6 +2807,10 @@ def factorialFinalDigitsBeforeTrailingZeros(n: int=10 ** 12, n_digs: int=5, base
 
 # Problem 161
 def nextTriominoStates(state: Tuple[Tuple[int, bool]], rows_remain: int=-1, nxt_insert: Optional[int]=None) -> List[Tuple[List[Tuple[int, bool]], int, int]]:
+    """
+    State transition function for filling of a triomino grid.
+    """
+    
     # Boolean represents whether there is an overhang caused by
     # an L-piece
     if rows_remain < 0:
@@ -2913,7 +2917,7 @@ def nextTriominoStates(state: Tuple[Tuple[int, bool]], rows_remain: int=-1, nxt_
         addState(state2, mn, (nxt_insert - 1, nxt_insert))
     
     return res
-
+"""
 def triominoStateComplementRotated(state: Tuple[Tuple[int, bool]]) -> Tuple[Tuple[Tuple[int, bool]], int]:
     # Assumes state1 has at least one entry at level 0
     h = max(x[0] for x in state)
@@ -2922,7 +2926,7 @@ def triominoStateComplementRotated(state: Tuple[Tuple[int, bool]]) -> Tuple[Tupl
         if not b: state2.append((h - x, False))
         else: state2.append((h - x - 2, True))
     return (tuple(state2[::-1]), h)
-
+"""
 def triominoAreaFillCombinations(grid_width: int=9, grid_height: int=12) -> int:
     """
     Solution to Project Euler #161
