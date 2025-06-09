@@ -2808,7 +2808,27 @@ def factorialFinalDigitsBeforeTrailingZeros(n: int=10 ** 12, n_digs: int=5, base
 # Problem 161
 def nextTriominoStates(state: Tuple[Tuple[int, bool]], rows_remain: int=-1, nxt_insert: Optional[int]=None) -> List[Tuple[List[Tuple[int, bool]], int, int]]:
     """
-    State transition function for filling of a triomino grid.
+    For filling a series of rows of fixed width with triominos
+    without gaps, finds the possible states of the rows after
+    the insertions of the possible triominos that fills the
+    leftmost empty square on the first row with unfilled squares
+    (such that no unfillable gaps are left).
+
+    For rows of width n units (where n is an integer), the state
+    of the rows is described by a, n-tuple of 2-tuples, with index
+    i (for non-negative integer i < n) representing the i:th column
+    from the left (starting at 0 for the leftmost column), where
+    index 0 of the 2-tuple contains an integer giving the number
+    of consecutive squares filled in that column starting from the
+    first row with unfilled squares, and index 1 contains a boolean
+    representing whether for this column, there exists a filled
+    square after a non-filled square in the previous row (described
+    as an overhang).
+
+    Args:
+        Required positional:
+
+    TODO
     """
     
     # Boolean represents whether there is an overhang caused by
@@ -2842,6 +2862,7 @@ def nextTriominoStates(state: Tuple[Tuple[int, bool]], rows_remain: int=-1, nxt_
         #if state2 == ((1, False), (1, False), (0, False), (0, False), (0, False), (1, False)):
         #    print(piece_rng, piece_mn, mn)
         res.append((state2, lvl_delta0 + mn[0], mn[1]))
+        return
     
     # Pieces that can fill in an overhang space
     #if state == ((1, False), (1, False), (0, False), (0, False), (0, False), (1, False)):
