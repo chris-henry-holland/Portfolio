@@ -2806,7 +2806,7 @@ def factorialFinalDigitsBeforeTrailingZeros(n: int=10 ** 12, n_digs: int=5, base
     return res
 
 # Problem 161
-def nextTriominoStates(state: Tuple[Tuple[int, bool]], rows_remain: int=-1, nxt_insert: Optional[int]=None) -> List[Tuple[List[Tuple[int, bool]], int, int]]:
+def nextTriominoStates(state: List[Tuple[int, bool]], rows_remain: int=-1, nxt_insert: Optional[int]=None) -> List[Tuple[List[Tuple[int, bool]], int, int]]:
     """
     For filling a series of rows of fixed width with triominos
     without gaps, finds the possible states of the rows after
@@ -2815,7 +2815,7 @@ def nextTriominoStates(state: Tuple[Tuple[int, bool]], rows_remain: int=-1, nxt_
     (such that no unfillable gaps are left).
 
     For rows of width n units (where n is an integer), the state
-    of the rows is described by a, n-tuple of 2-tuples, with index
+    of the rows is described by a length n list of 2-tuples, with index
     i (for non-negative integer i < n) representing the i:th column
     from the left (starting at 0 for the leftmost column), where
     index 0 of the 2-tuple contains an integer giving the number
@@ -2827,10 +2827,41 @@ def nextTriominoStates(state: Tuple[Tuple[int, bool]], rows_remain: int=-1, nxt_
 
     Args:
         Required positional:
+        state (list of 2-tuples of an ordered int bool pair): The
+                initial state from which the possible states reached
+                by inserting a triomino are to be calculated (see
+                above for the representation of a state).
+        
+        Optional named:
+        rows_remain (int): Integer which, if non-negative, gives the
+                number of rows that remain to be filled (starting with
+                the row labelled 0 in state). If negative then there is
+                no limit on the number of rows to fill.
+            Default: -1
+        nxt_insert (int or None): If specified as an integer, gives the
+                index of the leftmost column for which the square in the
+                first row with any unfilled quares is unfilled, (assumed
+                to be correct and have been calculated previously, to
+                reduce repeated calculation). If given as None, this
+                will be directly calculated from state.
+            Default: None
 
-    TODO
+    Returns:
+    List of 3-tuples, representing the possible states that can be reached
+    from the initial state by inserting a triomino in such a way that the
+    leftmost unfilled square of the first row with unfilled squares of the
+    original state is filled and no gaps are left that are unfillable by
+    triominos.
+    Each 3-tuple representing such a state contains in index 0 a list of
+    2-tuples of an ordered int bool pair representing the state reached
+    (see above), in index 1 the number of rows the row labelled 0 is displaced
+    relative to that of the initial state (note that this shift is calculated
+    such that the row labelled 0 is the first row with any unfilled squares),
+    and in index 2 the index of the leftmost column for which the square in
+    the row labelled 0 (i.e. the first row with any unfilled squares) is
+    unfilled.
     """
-    
+    # TODO- review documentation for clarity
     # Boolean represents whether there is an overhang caused by
     # an L-piece
     if rows_remain < 0:
