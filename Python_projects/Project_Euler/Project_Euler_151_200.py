@@ -3688,7 +3688,7 @@ def blumBlueShubPseudoRandomLineSegmentGenerator(
     """
     Generator yielding pseudo-random line segments in n_dim-dimensional
     space whose end points have integer Cartesian coordinates based
-    nn the terms in a Blum Blum Shub sequence for a given seed value,
+    on the terms in a Blum Blum Shub sequence for a given seed value,
     modulus and value range.
 
     Each group of consecutive (2 * n_dim) values in the specified Blum Blum
@@ -7383,9 +7383,76 @@ def laggedFibonacciGraphEdgeGenerator(
     l_fib_poly_coeffs: Tuple[int]=(100003, -200003, 0, 300007),
     l_fib_lags: Tuple[int]=(24, 55),
 ) -> Generator[Tuple[int, int], None, None]:
+    """
+    Generator yielding edges in an unweighted undirected graph consisting
+    of n_vertices vertices labelled with the integers from 0 to
+    (n_vertices - 1) inclusive based on the terms of a generalisation of
+    a lagged Fibonacci generator sequence for given polynomial coefficients
+    and lags. If n_edges is specified as a non-negative integer, this gives
+    the number of edges yielded, otherwise the iterator does not of itself
+    terminate.
+
+    Each pair of consecutive values in the generalisation of a lagged Fibonacci
+    generator sequence with the specified parameters represents an edge by the
+    integer labels of the vertices the edge connects.
+
+    The generalisation of the lagged Fibonacci generator sequence for the
+    given tuple of integers l_fib_poly_coeffs, tuple of strictly positive integers
+    l_fib_lags, and the integers min_val and max_val is the sequence such that
+    for integer i >= 1, the i:th term in the sequence is:
+        t_i = (sum j from 0 to len(l_fib_poly_coeffs) - 1) (l_fib_poly_coeffs[j] * i ** j) % n_vertices
+                for i <= max(l_fib_lags)
+              ((sum j fro 0 to len(l_fib_lags) - 1) (t_(i - l_fib_lags[i]))) % n_vertices
+                otherwise
+    where % signifies modular division (i.e. the remainder of the integer
+    preceding that symbol by the integer succeeding it). This sequence contains
+    integer values between 0 and (n_vertices - 1) inclusive.
+
+    The terms where i <= max(l_fib_lags) are referred as the polynomial
+    terms and the terms where i > max(l_fib_lags) are referred to as the
+    recursive terms.
+
+    Note that if n_edges is not specified, the generator never terminates and
+    thus any iterator over this generator must include provision to terminate
+    (e.g. a break or return statement), otherwise it would result in an infinite
+    loop.
+
+    Args:
+        Optional named:
+        n_vertices (int): Strictly positive integer giving the number of
+                vertices in the graph whose edges are to be generated.
+        n_edges (int or None): If given as a non-negative integer, the
+                number of edges the generator should yield before
+                terminating, otherwise the generator does not of itself
+                terminate
+        l_fib_poly_coeffs (tuple of ints): Tuple of integers giving the
+                coefficients of the polynomial used to generate the
+                polynomial terms of the generalisation of the lagged
+                Fibonacci generator sequence used to generate the
+                edges.
+            Default: (100003, -200003, 0, 300007)
+        l_fib_lags (tuple of ints): Tuple of strictly positive integers,
+                which when generating the recursive terms of the lagged
+                Fibonacci generator sequence used to generate the edges,
+                indicates how many steps back in the sequence the previous
+                terms summed should each be from the position of the term
+                being generated. Additionally, the maximum value determines
+                at which term the transition from the polynomial terms to
+                the recursive terms will occur in this sequence.
+            Default: (24, 55)
     
+    Yields:
+    2-tuple of ints between 0 and (n_vertices - 1) inclusive representing
+    an edge of the graph, where the two integers give the labels of the
+    two vertices the edge connects, based on the generalisation of the
+    given generalisation of the lagged Fibonacci generator sequence as
+    specified above.
+    If n_edges is specified as a non-negative integer then (unless
+    externally terminated first) exactly n_edges such values are yielded,
+    otherwise the generator never of itself terminates.
+    """
     it = generalisedLaggedFibonacciGenerator(poly_coeffs=l_fib_poly_coeffs, lags=l_fib_lags, min_val=0, max_val=n_vertices - 1)
-    it2 = itertools.count(0) if n_edges is None else range(n_edges)
+    it2 = range(n_edges) if isinstance(n_edges, int) and n_edges >= 0 else itertools.count(0)
     for _ in it2:
         edge = []
         edge.append(next(it))
