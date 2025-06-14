@@ -17,6 +17,7 @@ sys.path.append(os.path.join(os.path.dirname(__file__), "../Algorithms_and_Datas
 sys.path.append(os.path.join(os.path.dirname(__file__), "../Algorithms_and_Datastructures/Data_structures"))
 from misc_mathematical_algorithms import CustomFraction, gcd, lcm
 
+# Problem 201
 def subsetsWithUniqueSumTotal(nums: Set[int], k: int) -> int:
     """
     Given a set of integers nums, finds the sum of all integers for
@@ -111,15 +112,91 @@ def subsetsOfSquaresWithUniqueSumTotal(n_max: int=100, k: int=50) -> int:
     res = subsetsWithUniqueSumTotal(nums, k)
     return res
 
+# Problem 202
+def equilateralTriangleReflectionCountNumberOfWays(n_reflect: int=12017639147) -> int:
+    """
+    Solution to Project Euler #202
+
+    TODO
+    """
+    if not n_reflect & 1: return 0
+    md3 = n_reflect % 3
+    if not md3: return 0
+    if n_reflect == 1: return 1
+
+    def primeFactors(num: int) -> Set[int]:
+        res = set()
+        num2 = num
+        if not num2 & 1:
+            res.add(2)
+            num2 >>= 1
+            while not num2 & 1:
+                num2 >>= 1
+        for p in range(3, num + 1, 2):
+            if p ** 2 > num2: break
+            num3, r = divmod(num2, p)
+            if r: continue
+            res.add(p)
+            num2 = num3
+            num3, r = divmod(num2, p)
+            while not r:
+                num2 = num3
+                num3, r = divmod(num2, p)
+        if num2 != 1: res.add(num2)
+        return res
+
+    res = 0
+    target = (n_reflect + 3) >> 1
+
+    pf = sorted(primeFactors(target))
+    print("factored")
+    print(pf)
+    pf_md3 = {p: p % 3 for p in pf}
+
+    res = 0
+    for bm in range(1 << len(pf)):
+        neg = False
+        num = 1
+        bm2 = bm
+        md3_2 = 1
+        for i, p in enumerate(pf):
+            if not bm2: break
+            if bm2 & 1:
+                neg = not neg
+                num *= p
+                md3_2 = (md3_2 * pf_md3[p]) % 3
+            bm2 >>= 1
+        ans = target // num
+        md3_2 = (md3_2 * md3) % 3
+        ans = (ans - md3_2) // 3
+
+        res += -ans if neg else ans
+    return res
+    """
+    cnt = 0
+    for m in range(md3, target >> 1, 3):
+        cnt += 1
+        if not cnt % 1000000: print(m, target >> 1)
+        for p in pf:
+            if not m % p: break
+        else: res += 1
+    return res << 1
+    """
+
 if __name__ == "__main__":
-    to_evaluate = {201}
+    to_evaluate = {202}
     since0 = time.time()
 
     if not to_evaluate or 201 in to_evaluate:
         since = time.time()
         res = subsetsOfSquaresWithUniqueSumTotal(n_max=100, k=50)
         #res = subsetsWithUniqueSumTotal({1, 3, 6, 8, 10, 11}, 3)
-        print(f"Solution to Project Euler #151 = {res}, calculated in {time.time() - since:.4f} seconds")
+        print(f"Solution to Project Euler #201 = {res}, calculated in {time.time() - since:.4f} seconds")
+
+    if not to_evaluate or 202 in to_evaluate:
+        since = time.time()
+        res = equilateralTriangleReflectionCountNumberOfWays(n_reflect=12017639147)
+        print(f"Solution to Project Euler #202 = {res}, calculated in {time.time() - since:.4f} seconds")
 
 
     print(f"Total time taken = {time.time() - since0:.4f} seconds")
