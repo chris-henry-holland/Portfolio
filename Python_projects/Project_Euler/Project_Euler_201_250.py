@@ -16,6 +16,7 @@ from typing import Dict, List, Tuple, Set, Union, Generator, Callable, Optional,
 sys.path.append(os.path.join(os.path.dirname(__file__), "../Algorithms_and_Datastructures/Algorithms"))
 sys.path.append(os.path.join(os.path.dirname(__file__), "../Algorithms_and_Datastructures/Data_structures"))
 from misc_mathematical_algorithms import CustomFraction, gcd, lcm
+from prime_sieves import PrimeSPFsieve, SimplePrimeSieve
 
 # Problem 201
 def subsetsWithUniqueSumTotal(nums: Set[int], k: int) -> int:
@@ -183,8 +184,117 @@ def equilateralTriangleReflectionCountNumberOfWays(n_reflect: int=12017639147) -
     return res << 1
     """
 
+def distinctSquareFreeBinomialCoefficientSum(n_max: int=51) -> int:
+    """
+    Solution to Project Euler #203
+
+    Calculates the sum of distinct square free integers that are equal
+    to a binomial coefficients (n choose k) for which n does not exceed
+    n_max and 0 <= k <= n.
+
+    An integer is square free if and only if it is strictly positive
+    and is not divisible by the square of any prime number.
+
+    Args:
+        Optional named:
+        n_max (int): The largest value of n for which square free integers
+                equal to a binomial coefficient (n choose k) is included
+                in the sum.
+            Default: 51
+    
+    Returns:
+    Integer (int) giving the sum of distinct square free integers that are
+    equal to a binomial coefficients (n choose k) for which n does not
+    exceed n_max and 0 <= k <= n.
+
+    Outline of rationale:
+    We simply iterate over the binomial coefficients in question, checking
+    whether it is square free, utilising the following optimisations:
+     1) Given that (n choose k) = n! / (k! * (n - k)!), and n! is not
+        divisible by any prime greater than n, such a binomial coefficient
+        cannot be divisible by any prime greater than n, and so cannot
+        be divisible by the square of any prime number greater than n.
+        Therefore, to check if a binomial coefficient is square free
+        we only need to check if it is divisible by the square of the
+        primes not exceeding n.
+     2) Given that (n choose (n - k)) = (n choose k), for each n we
+        need only check the values of k not exceeding n / 2.
+    """
+    if n_max < 0: return 0
+    ps = SimplePrimeSieve(n_max - 1)
+    p_lst = ps.p_lst
+    res = {1}
+    curr = [1]
+    for n in range(1, n_max):
+        
+        prev = curr
+        curr = [1]
+        i_mx = bisect.bisect_right(p_lst, n)
+        for k in range(1, len(prev)):
+            num = prev[k - 1] + prev[k]
+            curr.append(num)
+            if num in res: continue
+            for i in range(i_mx):
+                p = p_lst[i]
+                if not num % p ** 2: break
+            else: res.add(num)
+        #print(curr)
+        if n & 1: curr.append(curr[-1])
+    return sum(res)
+
+# Problem 204
+def generalisedHammingNumberCount(typ: int=100, n_max: int=10 ** 9) -> int:
+    """
+    Solution to Project Euler #204
+
+    Calculates the number of generalised Hamming numbers of type typ not
+    exceeding n_max.
+
+    A generalised Hamming number of type n (where n is a strictly positive
+    integer) is a strictly positive integer with no prime factor greater than
+    n.
+
+    Args:
+        Optional named:
+        typ (int): The type of generalised Hamming number to be counted.
+            Default: 100
+        n_max (int): Integer giving the upper bound on the generalised Hamming
+                numbers of type typ to be included in the count.
+            Default: 10 ** 9
+    
+    Returns:
+    Integer (int) giving the number of generalised Hamming numbers of type
+    typ not exceeding n_max.
+    """
+    if n_max <= 0: return 0
+    ps = SimplePrimeSieve(typ)
+    p_lst = ps.p_lst
+    if not p_lst: return 1
+
+    n_p = len(p_lst)
+    print(p_lst)
+
+    memo = {}
+    def recur(idx: int, mx: int) -> int:
+        if idx == n_p: return 1
+        args = (idx, mx)
+        if args in memo.keys(): return memo[args]
+        p = p_lst[idx]
+        mx2 = mx
+        res = 0
+        while mx2 > 0:
+            res += recur(idx + 1, mx2)
+            mx2 //= p
+        memo[args] = res
+        return res
+    
+    res = recur(0, n_max)
+    #print(memo)
+    return res
+
+
 if __name__ == "__main__":
-    to_evaluate = {202}
+    to_evaluate = {204}
     since0 = time.time()
 
     if not to_evaluate or 201 in to_evaluate:
@@ -198,5 +308,14 @@ if __name__ == "__main__":
         res = equilateralTriangleReflectionCountNumberOfWays(n_reflect=12017639147)
         print(f"Solution to Project Euler #202 = {res}, calculated in {time.time() - since:.4f} seconds")
 
+    if not to_evaluate or 203 in to_evaluate:
+        since = time.time()
+        res = distinctSquareFreeBinomialCoefficientSum(n_max=51)
+        print(f"Solution to Project Euler #203 = {res}, calculated in {time.time() - since:.4f} seconds")
+
+    if not to_evaluate or 204 in to_evaluate:
+        since = time.time()
+        res = generalisedHammingNumberCount(typ=100, n_max=10 ** 9)
+        print(f"Solution to Project Euler #204 = {res}, calculated in {time.time() - since:.4f} seconds")
 
     print(f"Total time taken = {time.time() - since0:.4f} seconds")
