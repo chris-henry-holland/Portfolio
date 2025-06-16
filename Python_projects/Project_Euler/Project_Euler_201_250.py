@@ -292,9 +292,76 @@ def generalisedHammingNumberCount(typ: int=100, n_max: int=10 ** 9) -> int:
     #print(memo)
     return res
 
+# Problem 205
+def probabilityDieOneSumWinsFraction(die1_face_values: Tuple[int], n_die1: int, die2_face_values: Tuple[int], n_die2: int) -> CustomFraction:
+    """
+    
+    """
+    d1 = {}
+    for num in die1_face_values:
+        d1[num] = d1.get(num, 0) + 1
+    d2 = {}
+    for num in die2_face_values:
+        d2[num] = d2.get(num, 0) + 1
+    n1, n2 = len(die1_face_values), len(die2_face_values)
+
+    def dieSumValues(d: Dict[int, int], n_d: int) -> Dict[int, int]:
+        #print(d, n_d)
+        res = {0: 1}
+        curr_bin = d
+        n_d2 = n_d
+        while n_d2:
+            if n_d2 & 1:
+                prev = res
+                res = {}
+                for num1, f1 in prev.items():
+                    for num2, f2 in curr_bin.items():
+                        sm = num1 + num2
+                        res[sm] = res.get(sm, 0) + f1 * f2
+            prev_bin = curr_bin
+            curr_bin = {}
+            vals = sorted(prev_bin)
+            for i1, num1 in enumerate(vals):
+                f1 = prev_bin[num1]
+                sm = num1 * 2
+                curr_bin[sm] = curr_bin.get(sm, 0) + f1 ** 2
+                for i2 in range(i1):
+                    num2 = vals[i2]
+                    f2 = prev_bin[num2]
+                    sm = num1 + num2
+                    curr_bin[sm] = curr_bin.get(sm, 0) + f1 * f2 * 2
+            n_d2 >>= 1
+        return res
+
+    sms1 = dieSumValues(d1, n_die1)
+    sms2 = dieSumValues(d2, n_die2)
+    #print(sms1)
+    #print(sms2)
+    sm_vals1 = sorted(sms1.keys())
+    sm_vals2 = sorted(sms2.keys())
+    n_v2 = len(sm_vals2)
+    i2 = 0
+    res = 0
+    cnt2 = 0
+    for num1 in sm_vals1:
+        f1 = sms1[num1]
+        for i2 in range(i2, n_v2):
+            if sm_vals2[i2] >= num1: break
+            cnt2 += sms2[sm_vals2[i2]]
+        res += cnt2 * f1
+    return CustomFraction(res, n1 ** n_die1 * n2 ** n_die2)
+
+def probabilityDieOneSumWinsFloat(die1_face_values: Tuple[int]=(1, 2, 3, 4), n_die1: int=9, die2_face_values: Tuple[int]=(1, 2, 3, 4, 5, 6), n_die2: int=6) -> float:
+    """
+    Solution to Project Euler #205
+    """
+    res = probabilityDieOneSumWinsFraction(die1_face_values, n_die1, die2_face_values, n_die2)
+    #print(res)
+    return res.numerator / res.denominator
+
 
 if __name__ == "__main__":
-    to_evaluate = {204}
+    to_evaluate = {205}
     since0 = time.time()
 
     if not to_evaluate or 201 in to_evaluate:
@@ -317,5 +384,10 @@ if __name__ == "__main__":
         since = time.time()
         res = generalisedHammingNumberCount(typ=100, n_max=10 ** 9)
         print(f"Solution to Project Euler #204 = {res}, calculated in {time.time() - since:.4f} seconds")
+
+    if not to_evaluate or 205 in to_evaluate:
+        since = time.time()
+        res = probabilityDieOneSumWinsFloat(die1_face_values=(1, 2, 3, 4), n_die1=9, die2_face_values=(1, 2, 3, 4, 5, 6), n_die2=6)
+        print(f"Solution to Project Euler #205 = {res}, calculated in {time.time() - since:.4f} seconds")
 
     print(f"Total time taken = {time.time() - since0:.4f} seconds")
