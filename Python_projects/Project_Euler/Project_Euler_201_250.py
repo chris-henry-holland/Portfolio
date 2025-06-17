@@ -15,7 +15,7 @@ from typing import Dict, List, Tuple, Set, Union, Generator, Callable, Optional,
 
 sys.path.append(os.path.join(os.path.dirname(__file__), "../Algorithms_and_Datastructures/Algorithms"))
 sys.path.append(os.path.join(os.path.dirname(__file__), "../Algorithms_and_Datastructures/Data_structures"))
-from misc_mathematical_algorithms import CustomFraction, gcd, lcm
+from misc_mathematical_algorithms import CustomFraction, gcd, lcm, isqrt
 from prime_sieves import PrimeSPFsieve, SimplePrimeSieve
 
 # Problem 201
@@ -359,9 +359,97 @@ def probabilityDieOneSumWinsFloat(die1_face_values: Tuple[int]=(1, 2, 3, 4), n_d
     #print(res)
     return res.numerator / res.denominator
 
+# Problem 206
+def concealedSquare(pattern: List[Optional[int]]=[1, None, 2, None, 3, None, 4, None, 5, None, 6, None, 7, None, 8, None, 9, None, 0], base: int=10) -> List[int]:
+    """
+    Solution to Project Euler #206
+
+    Calculates all the possible strictly positive integers whose squares,
+    when expressed in the chosen base, are consistent with pattern, where
+    pattern gives the digit values when read from left to right, with
+    an integer representing the digit value that must go at the corresponding
+    location in the representation of the square and None representing that
+    in that position any digit is allowed.
+
+    Args:
+        Optional named:
+        pattern (list of ints/None): The pattern that the square of any
+                returned value must be consistent with, as outlined above.
+            Default: [1, None, 2, None, 3, None, 4, None, 5, None, 6, None, 7, None, 8, None, 9, None, 0]
+        base (int): Integer strictly greater than 1 giving the base in which
+                the squares of integers should be expressed when assessing
+                whether they are consistent with pattern.
+            Defualt: 10
+    
+    Returns:
+    List of integers (int) giving all the strictly positive integers whose
+    squares, when expressed in the chosen base, are consistent with pattern
+    (as outlined above) in strictly increasing order of size.
+    """
+    mn = 0
+    mx = 0
+    for i, d in enumerate(pattern):
+        mn *= base
+        mx *= base
+        if d is None:
+            mx += base - 1
+            if not i: mn += 1
+        else:
+            mn += d
+            mx += d
+    sqrt_mn = isqrt(mn)
+    sqrt_mx = isqrt(mx)
+    print(sqrt_mn, sqrt_mx)
+    
+    def isMatch(num: int) -> bool:
+        for i in reversed(range(len(pattern))):
+            if pattern[i] is None:
+                num //= base
+                continue
+            num, d = divmod(num, base)
+            if d != pattern[i]: return False
+        if num: return False
+        return True
+    
+    def isPartialMatch(num: int, n_digs: int) -> bool:
+        for i in range(n_digs):
+            if pattern[~i] is None:
+                num //= base
+                continue
+            num, d = divmod(num, base)
+            if d != pattern[~i]: return False
+        return True
+
+    poss_tails = []
+    n_tail_digs = len(pattern) >> 2
+    for num_sqrt in range(base ** n_tail_digs):
+        num = num_sqrt ** 2
+        if isPartialMatch(num, n_tail_digs):
+            poss_tails.append(num_sqrt)
+    #print(f"n possible tails = {len(poss_tails)}")
+    #print(poss_tails)
+    res = []
+    div = base ** n_tail_digs
+    for num_sqrt_head in range(sqrt_mn // div, (sqrt_mx // div) + 1):
+        for num_sqrt_tail in poss_tails:
+            num_sqrt = num_sqrt_head * div + num_sqrt_tail
+            num = num_sqrt ** 2
+            if isMatch(num):
+                print(num_sqrt, num)
+                res.append(num_sqrt)
+    return res
+    """
+    for num_sqrt in range(sqrt_mn, sqrt_mx + 1):
+        #print(num_sqrt)
+        num = num_sqrt ** 2
+        if isMatch(num):
+            print(num)
+            res.append(num)
+    return res
+    """
 
 if __name__ == "__main__":
-    to_evaluate = {205}
+    to_evaluate = {206}
     since0 = time.time()
 
     if not to_evaluate or 201 in to_evaluate:
@@ -389,5 +477,10 @@ if __name__ == "__main__":
         since = time.time()
         res = probabilityDieOneSumWinsFloat(die1_face_values=(1, 2, 3, 4), n_die1=9, die2_face_values=(1, 2, 3, 4, 5, 6), n_die2=6)
         print(f"Solution to Project Euler #205 = {res}, calculated in {time.time() - since:.4f} seconds")
+
+    if not to_evaluate or 206 in to_evaluate:
+        since = time.time()
+        res = concealedSquare(pattern=[1, None, 2, None, 3, None, 4, None, 5, None, 6, None, 7, None, 8, None, 9, None, 0], base=10)
+        print(f"Solution to Project Euler #206 = {res}, calculated in {time.time() - since:.4f} seconds")
 
     print(f"Total time taken = {time.time() - since0:.4f} seconds")
