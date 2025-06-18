@@ -448,8 +448,36 @@ def concealedSquare(pattern: List[Optional[int]]=[1, None, 2, None, 3, None, 4, 
     return res
     """
 
+# Problem 207
+def findSmallestPartitionBelowGivenProportion(proportion: CustomFraction=CustomFraction(1, 12345)) -> int:
+    """
+    Solution to Project Euler #207
+    """
+    def findExponent(proportion: CustomFraction) -> int:
+        comp = lambda m: m * proportion.denominator < 2 * (2 ** m - 1) * proportion.numerator
+        if comp(0): return 0
+        n = 1
+        while True:
+            if comp(n):
+                break
+            n <<= 1
+        lft, rgt = n >> 1, n
+        #print(lft, rgt)
+        while lft < rgt:
+            mid = lft + ((rgt - lft) >> 1)
+            if comp(mid): rgt = mid
+            else: lft = mid + 1
+        #print(lft)
+        return lft
+    
+    n = findExponent(proportion)
+    l = ((n * proportion.denominator) // proportion.numerator) + 1
+    #print(n, l)
+    return ((2 * l + 1) ** 2 - 1) >> 2
+
+
 if __name__ == "__main__":
-    to_evaluate = {206}
+    to_evaluate = {207}
     since0 = time.time()
 
     if not to_evaluate or 201 in to_evaluate:
@@ -482,5 +510,10 @@ if __name__ == "__main__":
         since = time.time()
         res = concealedSquare(pattern=[1, None, 2, None, 3, None, 4, None, 5, None, 6, None, 7, None, 8, None, 9, None, 0], base=10)
         print(f"Solution to Project Euler #206 = {res}, calculated in {time.time() - since:.4f} seconds")
+
+    if not to_evaluate or 207 in to_evaluate:
+        since = time.time()
+        res = findSmallestPartitionBelowGivenProportion(proportion=CustomFraction(1, 12345))
+        print(f"Solution to Project Euler #207 = {res}, calculated in {time.time() - since:.4f} seconds")
 
     print(f"Total time taken = {time.time() - since0:.4f} seconds")
