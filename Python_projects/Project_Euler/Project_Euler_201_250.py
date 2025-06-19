@@ -475,9 +475,41 @@ def findSmallestPartitionBelowGivenProportion(proportion: CustomFraction=CustomF
     #print(n, l)
     return ((2 * l + 1) ** 2 - 1) >> 2
 
+# Problem 208
+def robotWalks(reciprocal: int=5, n_steps: int=70) -> int:
+    """
+    Solution to Project Euler #208
+    """
+    # Review- attempt more efficient solution with either binary lifting
+    # or double ended approach
+    # Review- does reciprocal need to be prime for this to work?
+    if n_steps % reciprocal: return 0
+    curr = {}
+    start = tuple([1] + [0] * (reciprocal - 2))
+    curr[(0, start)] = 1
+    target = n_steps // reciprocal
+    for step in range(n_steps - 1):
+        prev = curr
+        curr = {}
+        for (i, cnts), f in prev.items():
+            for j in ((i + 1) % reciprocal, (i - 1) % reciprocal):
+                if j == reciprocal - 1:
+                    cnt = step - sum(cnts)
+                    if cnt > target: continue
+                    k = (j, cnts)
+                else:
+                    cnts2 = list(cnts)
+                    cnts2[j] += 1
+                    if cnts2[j] > target: continue
+                    k = (j, tuple(cnts2))
+                curr[k] = curr.get(k, 0) + f
+        #print(step, curr)
+    target_cnts = tuple([target] * (reciprocal - 1))
+    #print(curr)
+    return curr.get((1, target_cnts), 0) + curr.get(((reciprocal - 1), target_cnts), 0)
 
 if __name__ == "__main__":
-    to_evaluate = {207}
+    to_evaluate = {208}
     since0 = time.time()
 
     if not to_evaluate or 201 in to_evaluate:
@@ -515,5 +547,10 @@ if __name__ == "__main__":
         since = time.time()
         res = findSmallestPartitionBelowGivenProportion(proportion=CustomFraction(1, 12345))
         print(f"Solution to Project Euler #207 = {res}, calculated in {time.time() - since:.4f} seconds")
+
+    if not to_evaluate or 208 in to_evaluate:
+        since = time.time()
+        res = robotWalks(reciprocal=5, n_steps=70)
+        print(f"Solution to Project Euler #208 = {res}, calculated in {time.time() - since:.4f} seconds")
 
     print(f"Total time taken = {time.time() - since0:.4f} seconds")
