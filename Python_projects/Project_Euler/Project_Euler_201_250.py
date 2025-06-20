@@ -509,10 +509,18 @@ def robotWalks(reciprocal: int=5, n_steps: int=70) -> int:
     return curr.get((1, target_cnts), 0) + curr.get(((reciprocal - 1), target_cnts), 0)
 
 # Problem 214
-def primesOfTotientChainLengthSum(p_max: int=4 * 10 ** 7, chain_len: int=25) -> int:
+def primesOfTotientChainLengthSum(p_max: int=4 * 10 ** 7 - 1, chain_len: int=25) -> int:
+    """
+    Solution to Project Euler #214
+    """
+    # It appear that for chain lengths len no less than 2, the last integer
+    # with that chain length is 2 * 3 ** (len - 2). Can this be proved?
     ps = PrimeSPFsieve(p_max)
+    print("calculated prime sieve")
     totient_vals = [0, 1, 2]
     totient_lens = [0, 1, 2]
+    last_chain_lens = [0, 1, 2]
+    last_prime_chain_lens = [-1, -1, 2]
     
     res = 0
     for num in range(3, p_max + 1):
@@ -523,13 +531,18 @@ def primesOfTotientChainLengthSum(p_max: int=4 * 10 ** 7, chain_len: int=25) -> 
             totient_vals.append(num - 1)
             totient_lens.append(totient_lens[totient_vals[-1]] + 1)
             if totient_lens[-1] == chain_len:
-                print(num)
+                #print(num)
                 res += num
-            continue
-        totient_vals.append(totient_vals[num2] * (p - 1) * p ** (exp - 1))
-        totient_lens.append(totient_lens[totient_vals[-1]] + 1)
+            last_prime_chain_lens += [-1] * max(0, totient_lens[-1] + 1 - len(last_prime_chain_lens))
+            last_prime_chain_lens[totient_lens[-1]] = num
+        else:
+            totient_vals.append(totient_vals[num2] * (p - 1) * p ** (exp - 1))
+            totient_lens.append(totient_lens[totient_vals[-1]] + 1)
+        last_chain_lens += [-1] * max(0, totient_lens[-1] + 1 - len(last_chain_lens))
+        last_chain_lens[totient_lens[-1]] = num
     #print(totient_vals)
     #print(totient_lens)
+    print(last_chain_lens)
     return res
 
 if __name__ == "__main__":
@@ -579,7 +592,7 @@ if __name__ == "__main__":
 
     if not to_evaluate or 214 in to_evaluate:
         since = time.time()
-        res = primesOfTotientChainLengthSum(p_max=30, chain_len=4)
+        res = primesOfTotientChainLengthSum(p_max=4 * 10 ** 7 - 1, chain_len=25)
         print(f"Solution to Project Euler #214 = {res}, calculated in {time.time() - since:.4f} seconds")
 
     print(f"Total time taken = {time.time() - since0:.4f} seconds")
