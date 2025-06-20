@@ -508,8 +508,32 @@ def robotWalks(reciprocal: int=5, n_steps: int=70) -> int:
     #print(curr)
     return curr.get((1, target_cnts), 0) + curr.get(((reciprocal - 1), target_cnts), 0)
 
+# Problem 214
+def primesOfTotientChainLengthSum(p_max: int=4 * 10 ** 7, chain_len: int=25) -> int:
+    ps = PrimeSPFsieve(p_max)
+    totient_vals = [0, 1, 2]
+    totient_lens = [0, 1, 2]
+    
+    res = 0
+    for num in range(3, p_max + 1):
+        p, exp, num2 = ps.sieve[num]
+        #print(num, (p, exp, num2), totient_vals)
+        if p == num:
+            # num is prime
+            totient_vals.append(num - 1)
+            totient_lens.append(totient_lens[totient_vals[-1]] + 1)
+            if totient_lens[-1] == chain_len:
+                print(num)
+                res += num
+            continue
+        totient_vals.append(totient_vals[num2] * (p - 1) * p ** (exp - 1))
+        totient_lens.append(totient_lens[totient_vals[-1]] + 1)
+    #print(totient_vals)
+    #print(totient_lens)
+    return res
+
 if __name__ == "__main__":
-    to_evaluate = {208}
+    to_evaluate = {214}
     since0 = time.time()
 
     if not to_evaluate or 201 in to_evaluate:
@@ -552,5 +576,10 @@ if __name__ == "__main__":
         since = time.time()
         res = robotWalks(reciprocal=5, n_steps=70)
         print(f"Solution to Project Euler #208 = {res}, calculated in {time.time() - since:.4f} seconds")
+
+    if not to_evaluate or 214 in to_evaluate:
+        since = time.time()
+        res = primesOfTotientChainLengthSum(p_max=30, chain_len=4)
+        print(f"Solution to Project Euler #214 = {res}, calculated in {time.time() - since:.4f} seconds")
 
     print(f"Total time taken = {time.time() - since0:.4f} seconds")
