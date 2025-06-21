@@ -508,6 +508,41 @@ def robotWalks(reciprocal: int=5, n_steps: int=70) -> int:
     #print(curr)
     return curr.get((1, target_cnts), 0) + curr.get(((reciprocal - 1), target_cnts), 0)
 
+# Problem 209
+def countZeroMappings(n_inputs: int=6) -> int:
+    """
+    Solution to Project Euler #209
+    """
+    def bitmaskFunction(bm: int) -> int:
+        res = (bm & ((1 << (n_inputs - 1)) - 1)) << 1
+        bm2 = bm >> (n_inputs - 3)
+        res |= ((bm2 & 4) >> 2) ^ (((bm2 & 2) >> 1) & (bm2 & 1))
+        return res
+    
+    bm_mapping = [bitmaskFunction(bm) for bm in range(1 << n_inputs)]
+    #print(bm_mapping)
+    #print(len(bm_mapping))
+
+    seen = set()
+    cycle_lens = {}
+    for bm in range(1 << n_inputs):
+        if bm in seen: continue
+        l = 0
+        bm2 = bm
+        while bm2 not in seen:
+            seen.add(bm2)
+            l += 1
+            bm2 = bm_mapping[bm2]
+        cycle_lens[l] = cycle_lens.get(l, 0) + 1
+    mx_cycle_len = max(cycle_lens.keys())
+    n_opts = [0, 1, 3]
+    for _ in range(3, mx_cycle_len + 1):
+        n_opts.append(n_opts[-1] + n_opts[-2])
+    res = 1
+    for l, f in cycle_lens.items():
+        res *= n_opts[l] ** f
+    return res
+
 # Problem 214
 def primesOfTotientChainLengthSum(p_max: int=4 * 10 ** 7 - 1, chain_len: int=25) -> int:
     """
@@ -546,7 +581,7 @@ def primesOfTotientChainLengthSum(p_max: int=4 * 10 ** 7 - 1, chain_len: int=25)
     return res
 
 if __name__ == "__main__":
-    to_evaluate = {214}
+    to_evaluate = {209}
     since0 = time.time()
 
     if not to_evaluate or 201 in to_evaluate:
@@ -589,6 +624,11 @@ if __name__ == "__main__":
         since = time.time()
         res = robotWalks(reciprocal=5, n_steps=70)
         print(f"Solution to Project Euler #208 = {res}, calculated in {time.time() - since:.4f} seconds")
+
+    if not to_evaluate or 209 in to_evaluate:
+        since = time.time()
+        res = countZeroMappings(n_inputs=6)
+        print(f"Solution to Project Euler #209 = {res}, calculated in {time.time() - since:.4f} seconds")
 
     if not to_evaluate or 214 in to_evaluate:
         since = time.time()
