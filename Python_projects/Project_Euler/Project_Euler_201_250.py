@@ -543,6 +543,38 @@ def countZeroMappings(n_inputs: int=6) -> int:
         res *= n_opts[l] ** f
     return res
 
+# Problem 210
+def countObtuseTriangles(r: Union[int, float]=10 ** 9, div: Union[int, float]=4) -> int:
+    """
+    Solution to Project Euler #210
+    """
+    r2 = math.floor(r)
+    d = math.floor(2 * r / div)
+    tot = ((r2 * (r2 + 1)) << 1) + 1
+    diag1_cnt = ((r2 >> 1) << 1) + 1
+    diag2_cnt = (((r2 + 1) >> 1) << 1)
+    strip_n_diag1 = (d >> 1) + 1
+    strip_n_diag2 = (d + 1) >> 1
+    strip_cnt_wo_diag = (diag1_cnt - 1) * strip_n_diag1 + diag2_cnt * strip_n_diag2
+    print(f"tot = {tot}, strip_cnt_wo_diag = {strip_cnt_wo_diag}, diag1_cnt = {diag1_cnt}")
+    res = tot - strip_cnt_wo_diag - diag1_cnt
+    
+    
+    # small triangles
+    d2 = r / div
+    c = d2 / 2
+    small_cnt = 0
+    for x in range(math.floor((1 - math.sqrt(2)) * c) + 1, math.ceil((1 + math.sqrt(2)) * c)):
+        discr = c ** 2 - x ** 2 + 2 * c * x
+        discr_sqrt = math.sqrt(discr)
+        y_mn = math.floor(c - discr_sqrt) + 1
+        y_mx = math.ceil(c + discr_sqrt) - 1
+        small_cnt += y_mx - y_mn + 1
+    small_cnt -= math.ceil(d2) - 1
+    print(f"small count = {small_cnt}")
+    
+    return res + small_cnt
+
 # Problem 214
 def primesOfTotientChainLengthSum(p_max: int=4 * 10 ** 7 - 1, chain_len: int=25) -> int:
     """
@@ -581,7 +613,7 @@ def primesOfTotientChainLengthSum(p_max: int=4 * 10 ** 7 - 1, chain_len: int=25)
     return res
 
 if __name__ == "__main__":
-    to_evaluate = {209}
+    to_evaluate = {210}
     since0 = time.time()
 
     if not to_evaluate or 201 in to_evaluate:
@@ -629,6 +661,11 @@ if __name__ == "__main__":
         since = time.time()
         res = countZeroMappings(n_inputs=6)
         print(f"Solution to Project Euler #209 = {res}, calculated in {time.time() - since:.4f} seconds")
+
+    if not to_evaluate or 210 in to_evaluate:
+        since = time.time()
+        res = countObtuseTriangles(r=10 ** 9, div=4)
+        print(f"Solution to Project Euler #210 = {res}, calculated in {time.time() - since:.4f} seconds")
 
     if not to_evaluate or 214 in to_evaluate:
         since = time.time()
