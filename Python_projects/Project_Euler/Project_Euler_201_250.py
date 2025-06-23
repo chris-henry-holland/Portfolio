@@ -585,7 +585,7 @@ def divisorSquareSumIsSquareTotal(n_max: int=64 * 10 ** 6 - 1) -> int:
         return num_sqrt ** 2 == num
 
     arr = [1] * (n_max + 1)
-    res = 0
+    res = 1
     for num in range(2, n_max + 1):
         if not num % 500: print(num)
         num_sq = num ** 2
