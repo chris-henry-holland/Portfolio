@@ -575,6 +575,28 @@ def countObtuseTriangles(r: Union[int, float]=10 ** 9, div: Union[int, float]=4)
     
     return res + small_cnt
 
+# Problem 211
+def divisorSquareSumIsSquareTotal(n_max: int=64 * 10 ** 6 - 1) -> int:
+    """
+    Solution to Project Euler #211
+    """
+    def isSquare(num: int) -> bool:
+        num_sqrt = isqrt(num)
+        return num_sqrt ** 2 == num
+
+    arr = [1] * (n_max + 1)
+    res = 0
+    for num in range(2, n_max + 1):
+        if not num % 500: print(num)
+        num_sq = num ** 2
+        for num2 in range(num, n_max + 1, num):
+            arr[num2] += num_sq
+        if isSquare(arr[num]):
+            print(num, arr[num])
+            res += num
+    return res
+
+
 # Problem 214
 def primesOfTotientChainLengthSum(p_max: int=4 * 10 ** 7 - 1, chain_len: int=25) -> int:
     """
@@ -613,7 +635,7 @@ def primesOfTotientChainLengthSum(p_max: int=4 * 10 ** 7 - 1, chain_len: int=25)
     return res
 
 if __name__ == "__main__":
-    to_evaluate = {210}
+    to_evaluate = {211}
     since0 = time.time()
 
     if not to_evaluate or 201 in to_evaluate:
@@ -666,6 +688,11 @@ if __name__ == "__main__":
         since = time.time()
         res = countObtuseTriangles(r=10 ** 9, div=4)
         print(f"Solution to Project Euler #210 = {res}, calculated in {time.time() - since:.4f} seconds")
+
+    if not to_evaluate or 211 in to_evaluate:
+        since = time.time()
+        res = divisorSquareSumIsSquareTotal(n_max=64 * 10 ** 6 - 1)
+        print(f"Solution to Project Euler #211 = {res}, calculated in {time.time() - since:.4f} seconds")
 
     if not to_evaluate or 214 in to_evaluate:
         since = time.time()
