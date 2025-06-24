@@ -580,6 +580,7 @@ def divisorSquareSumIsSquareTotal(n_max: int=64 * 10 ** 6 - 1) -> int:
     """
     Solution to Project Euler #211
     """
+    # Review- try to speed up
     def isSquare(num: int) -> bool:
         num_sqrt = isqrt(num)
         return num_sqrt ** 2 == num
@@ -596,6 +597,135 @@ def divisorSquareSumIsSquareTotal(n_max: int=64 * 10 ** 6 - 1) -> int:
             res += num
     return res
 
+# Problem 213
+def fleaCircusExpectedNumberOfUnoccupiedSquaresFraction(dims: Tuple[int, int], n_steps: int) -> CustomFraction:
+
+    def transferFunction(pos: Tuple[int, int]) -> Tuple[Set[Tuple[int, int]], CustomFraction]:
+        denom = 4
+        denom -= (pos[0] == 0) + (pos[0] == (dims[0] - 1)) + (pos[1] == 0) + (pos[1] == (dims[1] - 1))
+        p = CustomFraction(1, denom)
+        res = set()
+        if pos[0] > 0: res.add((pos[0] - 1, pos[1]))
+        if pos[0] < dims[0] - 1: res.add((pos[0] + 1, pos[1]))
+        if pos[1] > 0: res.add((pos[0], pos[1] - 1))
+        if pos[1] < dims[1] - 1: res.add((pos[0], pos[1] + 1))
+        return (res, p)
+
+    is_square = (dims[0] == dims[1])
+
+    p_arr = [[CustomFraction(1, 1)] * dims[1] for _ in range(dims[0])]
+    sym_funcs = []
+    sym_funcs.append(lambda pos: pos)
+    sym_funcs.append(lambda pos: (dims[0] - 1 - pos[0], pos[1]))
+    sym_funcs.append(lambda pos: (pos[0], dims[1] - 1 - pos[1]))
+    sym_funcs.append(lambda pos: (dims[0] - 1 - pos[0], dims[1] - 1 - pos[1]))
+    if is_square:
+        sym_funcs.append(lambda pos: (pos[1], pos[0]))
+        sym_funcs.append(lambda pos: (dims[0] - 1 - pos[1], pos[0]))
+        sym_funcs.append(lambda pos: (pos[1], dims[1] - 1 - pos[0]))
+        sym_funcs.append(lambda pos: (dims[0] - 1 - pos[1], dims[1] - 1 - pos[0]))
+
+    for i1 in range((dims[0] + 1) >> 1):
+        for i2 in range(i1 if is_square else 0, (dims[1] + 1) >> 1):
+            arr = [[0] * dims[1] for _ in range(dims[0])]
+            arr[i1][i2] = 1
+            for m in range(n_steps):
+                arr0 = arr
+                arr = [[0] * dims[1] for _ in range(dims[0])]
+                for j1 in range(dims[0]):
+                    odd = (i1 + i2 + j1 + m) & 1
+                    for j2 in range(odd, dims[1], 2):
+                        if arr0[j1][j2] == 0: continue
+                        t_set, p = transferFunction((j1, j2))
+                        for pos in t_set:
+                            arr[pos[0]][pos[1]] += arr0[j1][j2] * p
+            seen = set()
+            sym_funcs2 = []
+            for sym_func in sym_funcs:
+                pos = sym_func((i1, i2))
+                if pos in seen: continue
+                seen.add(pos)
+                sym_funcs2.append(sym_func)
+            
+            for j1 in range(dims[0]):
+                odd = (i1 + i2 + j1 + n_steps) & 1
+                for j2 in range(odd, dims[1], 2):
+                    if arr[j1][j2] == 0: continue
+                    for sym_func in sym_funcs2:
+                        pos2 = sym_func((j1, j2))
+                        p_arr[pos2[0]][pos2[1]] *= 1 - arr[j1][j2]
+    res = sum(sum(row) for row in p_arr)
+    return res
+
+def fleaCircusExpectedNumberOfUnoccupiedSquaresFloatDirect(dims: Tuple[int, int], n_steps: int) -> float:
+    """
+    Solution to Project Euler #213
+    """
+
+    def transferFunction(pos: Tuple[int, int]) -> Tuple[Set[Tuple[int, int]], float]:
+        denom = 4
+        denom -= (pos[0] == 0) + (pos[0] == (dims[0] - 1)) + (pos[1] == 0) + (pos[1] == (dims[1] - 1))
+        p = 1 / denom
+        res = set()
+        if pos[0] > 0: res.add((pos[0] - 1, pos[1]))
+        if pos[0] < dims[0] - 1: res.add((pos[0] + 1, pos[1]))
+        if pos[1] > 0: res.add((pos[0], pos[1] - 1))
+        if pos[1] < dims[1] - 1: res.add((pos[0], pos[1] + 1))
+        return (res, p)
+
+    is_square = (dims[0] == dims[1])
+
+    p_arr = [[1] * dims[1] for _ in range(dims[0])]
+    sym_funcs = []
+    sym_funcs.append(lambda pos: pos)
+    sym_funcs.append(lambda pos: (dims[0] - 1 - pos[0], pos[1]))
+    sym_funcs.append(lambda pos: (pos[0], dims[1] - 1 - pos[1]))
+    sym_funcs.append(lambda pos: (dims[0] - 1 - pos[0], dims[1] - 1 - pos[1]))
+    if is_square:
+        sym_funcs.append(lambda pos: (pos[1], pos[0]))
+        sym_funcs.append(lambda pos: (dims[0] - 1 - pos[1], pos[0]))
+        sym_funcs.append(lambda pos: (pos[1], dims[1] - 1 - pos[0]))
+        sym_funcs.append(lambda pos: (dims[0] - 1 - pos[1], dims[1] - 1 - pos[0]))
+
+    for i1 in range((dims[0] + 1) >> 1):
+        for i2 in range(i1 if is_square else 0, (dims[1] + 1) >> 1):
+            arr = [[0] * dims[1] for _ in range(dims[0])]
+            arr[i1][i2] = 1
+            for m in range(n_steps):
+                arr0 = arr
+                arr = [[0] * dims[1] for _ in range(dims[0])]
+                for j1 in range(dims[0]):
+                    odd = (i1 + i2 + j1 + m) & 1
+                    for j2 in range(odd, dims[1], 2):
+                        if arr0[j1][j2] == 0: continue
+                        t_set, p = transferFunction((j1, j2))
+                        for pos in t_set:
+                            arr[pos[0]][pos[1]] += arr0[j1][j2] * p
+            seen = set()
+            sym_funcs2 = []
+            for sym_func in sym_funcs:
+                pos = sym_func((i1, i2))
+                if pos in seen: continue
+                seen.add(pos)
+                sym_funcs2.append(sym_func)
+            
+            for j1 in range(dims[0]):
+                odd = (i1 + i2 + j1 + n_steps) & 1
+                for j2 in range(odd, dims[1], 2):
+                    if arr[j1][j2] == 0: continue
+                    for sym_func in sym_funcs2:
+                        pos2 = sym_func((j1, j2))
+                        p_arr[pos2[0]][pos2[1]] *= 1 - arr[j1][j2]
+    res = sum(sum(row) for row in p_arr)
+    return res
+
+def fleaCircusExpectedNumberOfUnoccupiedSquaresFloatFromFraction(dims: Tuple[int, int]=(30, 30), n_steps: int=50) -> float:
+    """
+    Alternative (more precise) solution to Project Euler #213
+    """
+    res = fleaCircusExpectedNumberOfUnoccupiedSquaresFraction(dims, n_steps)
+    print(res)
+    return res.numerator / res.denominator
 
 # Problem 214
 def primesOfTotientChainLengthSum(p_max: int=4 * 10 ** 7 - 1, chain_len: int=25) -> int:
@@ -635,7 +765,7 @@ def primesOfTotientChainLengthSum(p_max: int=4 * 10 ** 7 - 1, chain_len: int=25)
     return res
 
 if __name__ == "__main__":
-    to_evaluate = {211}
+    to_evaluate = {213}
     since0 = time.time()
 
     if not to_evaluate or 201 in to_evaluate:
@@ -693,6 +823,11 @@ if __name__ == "__main__":
         since = time.time()
         res = divisorSquareSumIsSquareTotal(n_max=64 * 10 ** 6 - 1)
         print(f"Solution to Project Euler #211 = {res}, calculated in {time.time() - since:.4f} seconds")
+
+    if not to_evaluate or 213 in to_evaluate:
+        since = time.time()
+        res = fleaCircusExpectedNumberOfUnoccupiedSquaresFloatDirect(dims=(30, 30), n_steps=50)
+        print(f"Solution to Project Euler #213 = {res}, calculated in {time.time() - since:.4f} seconds")
 
     if not to_evaluate or 214 in to_evaluate:
         since = time.time()
