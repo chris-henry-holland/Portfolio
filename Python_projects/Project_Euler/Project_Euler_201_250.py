@@ -601,6 +601,10 @@ def divisorSquareSumIsSquareTotal(n_max: int=64 * 10 ** 6 - 1) -> int:
 # Problem 212
 def cuboidUnionVolume(cuboids: List[Tuple[Tuple[int, int, int], Tuple[int, int, int]]]) -> int:
 
+    # Review- try to speed up
+    # TODO- investigate why repeats occur for triple or more intersections
+    # where the two cuboids with the largest x0-value have the same x0-value.
+
     def cuboidVolume(cuboid: Tuple[Tuple[int, int, int], Tuple[int, int, int]]) -> int:
         res = 1
         for l in cuboid[1]:
@@ -621,8 +625,20 @@ def cuboidUnionVolume(cuboids: List[Tuple[Tuple[int, int, int], Tuple[int, int, 
 
     res = 0
     i1 = 0
+    seen = set()
+    cnt = 0
     while cuboids2:
         cuboid, inds = cuboids2.pop(0)
+        cnt += 1
+        if not cnt % 1000:
+            print(f"seen {cnt}, x0 = {cuboid[0][0]}, list length currently {len(cuboids2)}")
+        inds_tup = tuple(sorted(inds))
+        if inds_tup in seen:
+            print(f"repeated index combination: {inds_tup}")
+            for idx in inds_tup:
+                print(cuboids[idx])
+            continue
+        seen.add(inds_tup)
         vol = cuboidVolume(cuboid)
         # Inclusion-exclusion
         res += vol if (len(inds) & 1) else -vol
@@ -638,6 +654,7 @@ def cuboidUnionVolume(cuboids: List[Tuple[Tuple[int, int, int], Tuple[int, int, 
             add_lst.append((intersect, inds.union(inds2)))
         for tup in add_lst: cuboids2.add(tup)
         i1 += 1
+    print(f"total seen = {cnt}, unique seen = {len(seen)}")
     return res
 
 def laggedFibonacciNDimensionalHyperCuboidGenerator(
@@ -969,7 +986,7 @@ if __name__ == "__main__":
             l_fib_poly_coeffs=(100003, -200003, 0, 300007),
             l_fib_lags=(24, 55),
         )
-        print(f"Solution to Project Euler #211 = {res}, calculated in {time.time() - since:.4f} seconds")
+        print(f"Solution to Project Euler #212 = {res}, calculated in {time.time() - since:.4f} seconds")
 
     if not to_evaluate or 213 in to_evaluate:
         since = time.time()
