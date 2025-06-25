@@ -17,6 +17,7 @@ sys.path.append(os.path.join(os.path.dirname(__file__), "../Algorithms_and_Datas
 sys.path.append(os.path.join(os.path.dirname(__file__), "../Algorithms_and_Datastructures/Data_structures"))
 from misc_mathematical_algorithms import CustomFraction, gcd, lcm, isqrt
 from prime_sieves import PrimeSPFsieve, SimplePrimeSieve
+from pseudorandom_number_generators import generalisedLaggedFibonacciGenerator
 
 # Problem 201
 def subsetsWithUniqueSumTotal(nums: Set[int], k: int) -> int:
@@ -597,6 +598,140 @@ def divisorSquareSumIsSquareTotal(n_max: int=64 * 10 ** 6 - 1) -> int:
             res += num
     return res
 
+# Problem 212
+def cuboidUnionVolume(cuboids: List[Tuple[Tuple[int, int, int], Tuple[int, int, int]]]) -> int:
+
+    def cuboidVolume(cuboid: Tuple[Tuple[int, int, int], Tuple[int, int, int]]) -> int:
+        res = 1
+        for l in cuboid[1]:
+            res *= l
+        return res
+
+    def cuboidIntersection(cuboid1: Tuple[Tuple[int, int, int], Tuple[int, int, int]], cuboid2: Tuple[Tuple[int, int, int], Tuple[int, int, int]]) -> Optional[Tuple[Tuple[int, int, int], Tuple[int, int, int]]]:
+        res = [[], []]
+        for i in range(len(cuboid1[0])):
+            x1 = max(cuboid1[0][i], cuboid2[0][i])
+            x2 = min(cuboid1[0][i] + cuboid1[1][i], cuboid2[0][i] + cuboid2[1][i])
+            if x1 >= x2: return None
+            res[0].append(x1)
+            res[1].append(x2 - x1)
+        return tuple(tuple(x) for x in res)
+
+    cuboids2 = SortedList([(x, {i}) for i, x in enumerate(cuboids)])
+
+    res = 0
+    i1 = 0
+    while cuboids2:
+        cuboid, inds = cuboids2.pop(0)
+        vol = cuboidVolume(cuboid)
+        # Inclusion-exclusion
+        res += vol if (len(inds) & 1) else -vol
+        add_lst = []
+        mx_x = cuboid[0][0] + cuboid[1][0]
+        if len(inds) > 1: continue
+        for i2 in range(len(cuboids2)):
+            cuboid2, inds2 = cuboids2[i2]
+            if cuboid2[0][0] >= mx_x: break
+            elif not inds.isdisjoint(inds2): continue
+            intersect = cuboidIntersection(cuboid, cuboid2)
+            if intersect is None: continue
+            add_lst.append((intersect, inds.union(inds2)))
+        for tup in add_lst: cuboids2.add(tup)
+        i1 += 1
+    return res
+
+def laggedFibonacciNDimensionalHyperCuboidGenerator(
+    hypercuboid_smallest_coord_ranges: Tuple[Tuple[int, int]]=((0, 9999), (0, 9999), (0, 9999)),
+    hypercuboid_dim_ranges: Tuple[Tuple[int, int]]=((1, 399), (1, 399), (1, 399)),
+    n_hypercuboids: Optional[int]=None,
+    l_fib_modulus: int=10 ** 6,
+    l_fib_poly_coeffs: Tuple[int]=(100003, -200003, 0, 300007),
+    l_fib_lags: Tuple[int]=(24, 55),
+) -> Generator[Tuple[Tuple[int, int, int], Tuple[int, int, int]], None, None]:
+    """
+    Generator yielding TODO
+
+    The generalisation of the lagged Fibonacci generator sequence for the
+    given tuple of integers l_fib_poly_coeffs, tuple of strictly positive integers
+    l_fib_lags, and the integers min_val and max_val is the sequence such that
+    for integer i >= 1, the i:th term in the sequence is:
+        t_i = (sum j from 0 to len(l_fib_poly_coeffs) - 1) (l_fib_poly_coeffs[j] * i ** j) % n_vertices
+                for i <= max(l_fib_lags)
+              ((sum j fro 0 to len(l_fib_lags) - 1) (t_(i - l_fib_lags[i]))) % n_vertices
+                otherwise
+    where % signifies modular division (i.e. the remainder of the integer
+    preceding that symbol by the integer succeeding it). This sequence contains
+    integer values between 0 and (n_vertices - 1) inclusive.
+
+    The terms where i <= max(l_fib_lags) are referred as the polynomial
+    terms and the terms where i > max(l_fib_lags) are referred to as the
+    recursive terms.
+
+    Note that if n_hypercuboids is not specified, the generator never terminates and
+    thus any iterator over this generator must include provision to terminate
+    (e.g. a break or return statement), otherwise it would result in an infinite
+    loop.
+
+    Args:
+        Optional named:
+        TODO
+        l_fib_poly_coeffs (tuple of ints): Tuple of integers giving the
+                coefficients of the polynomial used to calculate the
+                polynomial terms of the generalisation of the lagged
+                Fibonacci generator sequence used to generate the
+                edges.
+            Default: (100003, -200003, 0, 300007)
+        l_fib_lags (tuple of ints): Tuple of strictly positive integers,
+                which when calculating the recursive terms of the
+                generlisation of the lagged Fibonacci generator sequence
+                used to generate the edges, indicates how many steps back
+                in the sequence the previous terms summed should each be
+                from the position of the term being generated. Additionally,
+                the maximum value determines at which term the transition
+                from the polynomial terms to the recursive terms will occur
+                in this sequence.
+            Default: (24, 55)
+    
+    Yields:
+    TODO
+    If n_hypercuboids is specified as a non-negative integer then (unless
+    externally terminated first) exactly n_edges such values are yielded,
+    otherwise the generator never of itself terminates.
+    """
+    n_dim = len(hypercuboid_smallest_coord_ranges)
+    it = generalisedLaggedFibonacciGenerator(poly_coeffs=l_fib_poly_coeffs, lags=l_fib_lags, min_val=0, max_val=l_fib_modulus - 1)
+    it2 = range(n_hypercuboids) if isinstance(n_hypercuboids, int) and n_hypercuboids >= 0 else itertools.count(0)
+    for _ in it2:
+        cuboid = [[], []]
+        for rng in hypercuboid_smallest_coord_ranges:
+            cuboid[0].append(rng[0] + (next(it) % (rng[1] - rng[0] + 1)))
+        for rng in hypercuboid_dim_ranges:
+            cuboid[1].append(rng[0] + (next(it) % (rng[1] - rng[0] + 1)))
+        yield tuple(tuple(x) for x in cuboid)
+    return 
+
+def laggedFibonacciCuboidUnionVolume(
+    n_cuboids: int=50000,
+    cuboid_smallest_coord_ranges: Tuple[Tuple[int, int]]=((0, 9999), (0, 9999), (0, 9999)),
+    cuboid_dim_ranges: Tuple[Tuple[int, int]]=((1, 399), (1, 399), (1, 399)),
+    l_fib_modulus: int=10 ** 6,
+    l_fib_poly_coeffs: Tuple[int]=(100003, -200003, 0, 300007),
+    l_fib_lags: Tuple[int]=(24, 55),
+) -> int:
+    """
+    Solution to Project Euler #212
+    """
+    cuboids = [c for c in laggedFibonacciNDimensionalHyperCuboidGenerator(
+        hypercuboid_smallest_coord_ranges=cuboid_smallest_coord_ranges,
+        hypercuboid_dim_ranges=cuboid_dim_ranges,
+        n_hypercuboids=n_cuboids,
+        l_fib_modulus=l_fib_modulus,
+        l_fib_poly_coeffs=l_fib_poly_coeffs,
+        l_fib_lags=l_fib_lags,
+    )]
+    res = cuboidUnionVolume(cuboids)
+    return res
+
 # Problem 213
 def fleaCircusExpectedNumberOfUnoccupiedSquaresFraction(dims: Tuple[int, int], n_steps: int) -> CustomFraction:
 
@@ -765,7 +900,7 @@ def primesOfTotientChainLengthSum(p_max: int=4 * 10 ** 7 - 1, chain_len: int=25)
     return res
 
 if __name__ == "__main__":
-    to_evaluate = {213}
+    to_evaluate = {212}
     since0 = time.time()
 
     if not to_evaluate or 201 in to_evaluate:
@@ -822,6 +957,18 @@ if __name__ == "__main__":
     if not to_evaluate or 211 in to_evaluate:
         since = time.time()
         res = divisorSquareSumIsSquareTotal(n_max=64 * 10 ** 6 - 1)
+        print(f"Solution to Project Euler #211 = {res}, calculated in {time.time() - since:.4f} seconds")
+
+    if not to_evaluate or 212 in to_evaluate:
+        since = time.time()
+        res = laggedFibonacciCuboidUnionVolume(
+            n_cuboids=50000,
+            cuboid_smallest_coord_ranges=((0, 9999), (0, 9999), (0, 9999)),
+            cuboid_dim_ranges=((1, 399), (1, 399), (1, 399)),
+            l_fib_modulus=10 ** 6,
+            l_fib_poly_coeffs=(100003, -200003, 0, 300007),
+            l_fib_lags=(24, 55),
+        )
         print(f"Solution to Project Euler #211 = {res}, calculated in {time.time() - since:.4f} seconds")
 
     if not to_evaluate or 213 in to_evaluate:
