@@ -916,8 +916,81 @@ def primesOfTotientChainLengthSum(p_max: int=4 * 10 ** 7 - 1, chain_len: int=25)
     print(last_chain_lens)
     return res
 
+# Problem 215
+def crackFreeWalls(n_rows: int=32, n_cols: int=10) -> int:
+    """
+    Solution to Project Euler #215
+    """
+    if not n_rows or not n_cols: return 1
+    row_opts = []
+    row_opts_dict = {}
+    transfer = []
+
+    step_opts = {2, 3}
+    mn_step_opt = min(step_opts)
+
+    #memo = {}
+    def recur(mn_remain: int=n_cols, diff: int=0) -> Generator[Tuple[Tuple[int], Tuple[int]], None, None]:
+        if not mn_remain:
+            if not diff:
+                yield ((), ())
+                return
+            elif diff in step_opts:
+                ans = ((), (diff,))
+                yield ans
+                return
+            return
+        elif mn_remain < mn_step_opt: return
+        #args = (mn_remain, diff)
+        #if args in memo.keys():
+        #    return memo[args]
+        res = []
+        for step in step_opts:
+            diff2 = diff - step
+            if not diff2: continue
+            if diff2 > 0:
+                for ans in recur(mn_remain=mn_remain, diff=diff2):
+                    ans2 = (ans[0], tuple([step] + list(ans[1])))
+                    #print(1, mn_remain, diff, ans2)
+                    yield ans2
+            else:
+                diff3 = -diff2
+                mn_remain2 = mn_remain + diff2
+                for ans in recur(mn_remain=mn_remain2, diff=-diff2):
+                    ans2 = (ans[1], tuple([step] + list(ans[0])))
+                    #print(2, mn_remain, diff, ans2)
+                    yield ans2
+
+        #res = tuple(res)
+        #memo[args] = res
+        #return res
+        return
+
+    transfer = []
+    for pair in recur(mn_remain=n_cols, diff=0):
+        #print(pair)
+        for tup in pair:
+            if tup in row_opts_dict.keys(): continue
+            row_opts_dict[tup] = len(row_opts)
+            row_opts.append(tup)
+            transfer.append(set())
+        idx1, idx2 = row_opts_dict[pair[0]], row_opts_dict[pair[1]]
+        transfer[idx1].add(idx2)
+    
+    print(row_opts)
+    print(transfer)
+    n_opts = len(row_opts)
+    curr = [1] * n_opts
+    for _ in range(n_rows - 1):
+        prev = curr
+        curr =  [0] * n_opts
+        for i1 in range(n_opts):
+            for i2 in transfer[i1]:
+                curr[i2] += prev[i1]
+    return sum(curr)
+
 if __name__ == "__main__":
-    to_evaluate = {212}
+    to_evaluate = {215}
     since0 = time.time()
 
     if not to_evaluate or 201 in to_evaluate:
@@ -997,5 +1070,10 @@ if __name__ == "__main__":
         since = time.time()
         res = primesOfTotientChainLengthSum(p_max=4 * 10 ** 7 - 1, chain_len=25)
         print(f"Solution to Project Euler #214 = {res}, calculated in {time.time() - since:.4f} seconds")
+
+    if not to_evaluate or 215 in to_evaluate:
+        since = time.time()
+        res = crackFreeWalls(n_rows=10, n_cols=32)
+        print(f"Solution to Project Euler #215 = {res}, calculated in {time.time() - since:.4f} seconds")
 
     print(f"Total time taken = {time.time() - since0:.4f} seconds")
