@@ -954,7 +954,6 @@ def crackFreeWalls(n_rows: int=32, n_cols: int=10) -> int:
                     #print(1, mn_remain, diff, ans2)
                     yield ans2
             else:
-                diff3 = -diff2
                 mn_remain2 = mn_remain + diff2
                 for ans in recur(mn_remain=mn_remain2, diff=-diff2):
                     ans2 = (ans[1], tuple([step] + list(ans[0])))
@@ -977,9 +976,10 @@ def crackFreeWalls(n_rows: int=32, n_cols: int=10) -> int:
         idx1, idx2 = row_opts_dict[pair[0]], row_opts_dict[pair[1]]
         transfer[idx1].add(idx2)
     
-    print(row_opts)
-    print(transfer)
+    #print(row_opts)
+    #print(transfer)
     n_opts = len(row_opts)
+    #print(f"n_opts = {n_opts}")
     curr = [1] * n_opts
     for _ in range(n_rows - 1):
         prev = curr
@@ -989,8 +989,26 @@ def crackFreeWalls(n_rows: int=32, n_cols: int=10) -> int:
                 curr[i2] += prev[i1]
     return sum(curr)
 
+def countPrimesOneLessThanTwiceASquare(n_max: int=5 * 10 ** 7) -> int:
+    """
+    Solution to Project Euler #216
+    """
+    # Review- look into the more efficient methods as outlined in
+    # the PDF document accompanying the problem.
+    ps = SimplePrimeSieve()
+    def primeCheck(num: int) -> bool:
+        res = ps.millerRabinPrimalityTestWithKnownBounds(num, max_n_additional_trials_if_above_max=10)
+        return res[0]
+
+    res = 0
+    for num in range(2, n_max + 1):
+        if not num % 10000: print(num)
+        res += primeCheck(2 * num ** 2 - 1)
+    return res
+
+
 if __name__ == "__main__":
-    to_evaluate = {215}
+    to_evaluate = {216}
     since0 = time.time()
 
     if not to_evaluate or 201 in to_evaluate:
@@ -1075,5 +1093,10 @@ if __name__ == "__main__":
         since = time.time()
         res = crackFreeWalls(n_rows=10, n_cols=32)
         print(f"Solution to Project Euler #215 = {res}, calculated in {time.time() - since:.4f} seconds")
+
+    if not to_evaluate or 216 in to_evaluate:
+        since = time.time()
+        res = countPrimesOneLessThanTwiceASquare(n_max=5 * 10 ** 7)
+        print(f"Solution to Project Euler #216 = {res}, calculated in {time.time() - since:.4f} seconds")
 
     print(f"Total time taken = {time.time() - since0:.4f} seconds")

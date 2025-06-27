@@ -94,19 +94,35 @@ class SimplePrimeSieve:
                 i2 = p * i
                 sieve[i2] = False
         return
+
+    @staticmethod
+    def _millerRabinTrial(n: int, s: int, d: int, a: int) -> bool:
+        x = pow(a, d, n)
+        for _ in range(s):
+            y = pow(x, 2, n)
+            if y == 1 and x != 1 and x != n - 1:
+                return False
+            x = y
+        if y != 1: return False
+        return True
     
-    def millerRabinPrimalityTest(self, n: int, n_trials: int=3) -> bool:
+    def millerRabinPrimalityTest(self, n: int, a_vals: List[int], max_n_additional_trials: int=3) -> bool:
         seen = {0}
         s = 1
         d = (n - 1) >> 1
         while not d & 1:
             d >>= 1
             s += 1
-        for _ in range(min(n_trials, n - 3)):
+        for a in set(a_vals):
+            seen.add(a)
+            if not self._millerRabinTrial(n, s, d, a): return False
+        for _ in range(min(max_n_additional_trials, n - len(seen) - 2)):
             a = 0
             while a in seen:
                 a = random.randrange(2, n - 1)
             seen.add(a)
+            if not self._millerRabinTrial(n, s, a): return False
+            """
             x = pow(a, d, n)
             for _ in range(s):
                 y = pow(x, 2, n)
@@ -114,7 +130,45 @@ class SimplePrimeSieve:
                     return False
                 x = y
             if y != 1: return False
+            """
         return True
+    
+    def millerRabinPrimalityTestWithKnownBounds(self, n: int, max_n_additional_trials_if_above_max: int=10) -> Tuple[bool, bool]:
+        # List from https://en.wikipedia.org/wiki/Miller%E2%80%93Rabin_primality_test
+        # index 0 signifies if the test shows n is a prime, index
+        # 1 signifies whether that test definitely gave the correct
+        # answer
+        mx = 2 ** 64 - 1
+        thresholds = [
+            (0, [2]),
+            (2047, [3]),
+            (1373653, [5]),
+            (25326001, [7]),
+            (3215031751, [11]),
+            (2152302898747, [13]),
+            (3474749660383, [17]),
+            (341550071728321, [19, 23]),
+            (3825123056546413051, [31, 37]),
+        ]
+        seen = {0}
+        s = 1
+        d = (n - 1) >> 1
+        while not d & 1:
+            d >>= 1
+            s += 1
+        for m, a_lst in thresholds:
+            if n < m: return (True, True)
+            for a in a_lst:
+                seen.add(a)
+                if not self._millerRabinTrial(n, s, d, a): return (False, True)
+        if n <= mx: return (True, True)
+        for _ in range(min(max_n_additional_trials_if_above_max, n - len(seen) - 2)):
+            a = 0
+            while a in seen:
+                a = random.randrange(2, n - 1)
+            seen.add(a)
+            if not self._millerRabinTrial(n, s, d, a): return (False, True)
+        return (True, False)
     
     def isPrime(self, n: int, extend_sieve: bool=False,\
             extend_sieve_sqrt: bool=False,\
