@@ -18,6 +18,7 @@ sys.path.append(os.path.join(os.path.dirname(__file__), "../Algorithms_and_Datas
 from misc_mathematical_algorithms import CustomFraction, gcd, lcm, isqrt
 from prime_sieves import PrimeSPFsieve, SimplePrimeSieve
 from pseudorandom_number_generators import generalisedLaggedFibonacciGenerator
+from Pythagorean_triple_generators import pythagoreanTripleGeneratorByHypotenuse
 
 # Problem 201
 def subsetsWithUniqueSumTotal(nums: Set[int], k: int) -> int:
@@ -989,6 +990,7 @@ def crackFreeWalls(n_rows: int=32, n_cols: int=10) -> int:
                 curr[i2] += prev[i1]
     return sum(curr)
 
+# Problem 216
 def countPrimesOneLessThanTwiceASquare(n_max: int=5 * 10 ** 7) -> int:
     """
     Solution to Project Euler #216
@@ -1006,9 +1008,92 @@ def countPrimesOneLessThanTwiceASquare(n_max: int=5 * 10 ** 7) -> int:
         res += primeCheck(2 * num ** 2 - 1)
     return res
 
+# Problem 218
+def perfectRightAngledTriangleGenerator(max_hypotenuse: Optional[int]=None) -> Generator[Tuple[Tuple[int, int, int], bool], None, None]:
+
+    #m = 1
+    heap = []
+    if max_hypotenuse is None: max_hypotenuse = float("inf")
+    perfect_cnt = 0
+    for m in itertools.count(1):
+        m += 1
+        m_odd = m & 1
+        n_mn = 1 + m_odd
+        m_sq = m ** 2
+
+        #m2_mn
+        min_hyp = (m_sq + n_mn ** 2) ** 2
+        while heap and heap[0][0] < min_hyp:
+            ans = heapq.heappop(heap)
+            yield tuple(ans[::-1])
+            perfect_cnt += 1
+        if min_hyp > max_hypotenuse: break
+        n_mx = min(m - 1, isqrt(isqrt(max_hypotenuse) - m_sq)) if max_hypotenuse != float("inf") else m - 1
+        # Note that since m and n are coprime and not both can be odd,
+        # m and n must have different parity (as if they were both
+        # even then they would not be coprime)
+        n = 1 + m_odd
+        for n in range(n_mn, n_mx + 1, 2):
+            if gcd(m, n) != 1:
+                n += 1
+                continue
+            m2, n2 = m_sq - n ** 2, 2 * m * n
+            if m2 ** 2 + n2 ** 2 > max_hypotenuse: break
+            # Note that since m and n are of different parity and coprime, m2 and n2
+            # are also guaranteed to be of different parit and coprime
+            #if m2 & 1 == n2 & 1: continue
+            if m2 < n2: m2, n2 = n2, m2
+            m2_sq, n2_sq = m2 * m2, n2 * n2
+            a, b, c = m2_sq - n2_sq, 2 * m2 * n2, m2_sq + n2_sq
+            if b < a: a, b = b, a
+            heapq.heappush(heap, (c, b, a))
+            n += 1
+        #for n in range(1 + m_odd, max_n + 1, 2):
+        #    if gcd(m, n) != 1: continue
+        #    a, b, c = m_sq - n ** 2, 2 * m * n, m_sq + n ** 2
+        #    if b < a: a, b = b, a
+        #    heapq.heappush(heap, ((c, b, a), (c, b, a), True))
+    print(f"perfect count = {perfect_cnt}")
+    return
+
+    """
+    def isSquare(num: int) -> bool:
+        rt = isqrt(num)
+        if rt * rt == num: return True
+    tot_cnt = 0
+    perfect_cnt = 0
+    for tri in pythagoreanTripleGeneratorByHypotenuse(primitive_only=True, max_hypotenuse=max_hypotenuse):
+        tot_cnt += 1
+        if isSquare(tri[0][2]):
+            print(tri)
+            perfect_cnt += 1
+            yield tri[0]
+    print(f"perfect count = {perfect_cnt} of {tot_cnt}")
+    return
+    """
+
+def nonSuperPerfectPerfectRightAngledTriangleCount(max_hypotenuse: int=10 ** 16) -> int:
+    """
+    Solution to Project Euler #218
+    """
+    # Note that it can be proved that there are no perfect right angled triangles
+    # that are not also super-perfect, and therefore for any max_hypotenuse the
+    # solution is 0
+    mults = [6, 28]
+    m = 1
+    for num in mults:
+        m = lcm(m, num)
+    m <<= 1
+
+    res = 0
+    perfect_cnt = 0
+    for tri in perfectRightAngledTriangleGenerator(max_hypotenuse=max_hypotenuse):
+        #print(tri)
+        res += ((tri[0] * tri[1]) % m)
+    return res
 
 if __name__ == "__main__":
-    to_evaluate = {216}
+    to_evaluate = {218}
     since0 = time.time()
 
     if not to_evaluate or 201 in to_evaluate:
@@ -1098,5 +1183,10 @@ if __name__ == "__main__":
         since = time.time()
         res = countPrimesOneLessThanTwiceASquare(n_max=5 * 10 ** 7)
         print(f"Solution to Project Euler #216 = {res}, calculated in {time.time() - since:.4f} seconds")
+
+    if not to_evaluate or 218 in to_evaluate:
+        since = time.time() 
+        res = nonSuperPerfectPerfectRightAngledTriangleCount(max_hypotenuse=10 ** 16)
+        print(f"Solution to Project Euler #218 = {res}, calculated in {time.time() - since:.4f} seconds")
 
     print(f"Total time taken = {time.time() - since0:.4f} seconds")

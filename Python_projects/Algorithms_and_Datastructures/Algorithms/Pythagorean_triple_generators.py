@@ -45,11 +45,9 @@ def pythagoreanTripleGeneratorByHypotenuse(primitive_only: bool=False, max_hypot
     hypotenuse, with triples with the same hypotenuse yielded
     in increasing order of their next longest side.
     """
-    m = 1
     heap = []
     if max_hypotenuse is None: max_hypotenuse = float("inf")
-    while True:
-        m += 1
+    for m in itertools.count(1):
         m_odd = m & 1
         n_mn = 1 + m_odd
         m_sq = m ** 2
@@ -58,11 +56,11 @@ def pythagoreanTripleGeneratorByHypotenuse(primitive_only: bool=False, max_hypot
             ans = heapq.heappop(heap) if primitive_only or heap[0][0][0] + heap[0][1][0] > max_hypotenuse else heapq.heappushpop(heap, (tuple(x + y for x, y in zip(*heap[0][:2])), heap[0][1], False))
             yield (tuple(ans[0][::-1]), ans[2])
         if min_hyp > max_hypotenuse: break
-        max_n = min(m - 1, isqrt(max_hypotenuse - m_sq)) if max_hypotenuse != float("inf") else m - 1
+        n_mx = min(m - 1, isqrt(max_hypotenuse - m_sq)) if max_hypotenuse != float("inf") else m - 1
         # Note that since m and n are coprime and not both can be odd,
         # m and n must have different parity (as if they were both
         # even then they would not be coprime)
-        for n in range(1 + m_odd, max_n + 1, 2):
+        for n in range(n_mn, n_mx+ 1, 2):
             if gcd(m, n) != 1: continue
             a, b, c = m_sq - n ** 2, 2 * m * n, m_sq + n ** 2
             if b < a: a, b = b, a
