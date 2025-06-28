@@ -107,11 +107,9 @@ def pythagoreanTripleGeneratorByPerimeter(primitive_only: bool=False, max_perime
     same perimeter and hypotenuse yielded in increasing order
     of their next longest side.
     """
-    m = 1
     heap = []
     if max_perimeter is None: max_perimeter = float("inf")
-    while True:
-        m += 1
+    for m in itertools.count(1):
         m_odd = m & 1
         n_mn = 1 + m_odd
         m_sq = m ** 2
@@ -121,8 +119,8 @@ def pythagoreanTripleGeneratorByPerimeter(primitive_only: bool=False, max_perime
             ans = heapq.heappop(heap) if primitive_only or new_perim > max_perimeter else heapq.heappushpop(heap, (new_perim, tuple(x + y for x, y in zip(*heap[0][1:3])), heap[0][2], False))
             yield (tuple(ans[1][::-1]), ans[0], ans[3])
         if min_perim > max_perimeter: break
-        max_n = min(m - 1, max_perimeter // (2 * m) - m) if max_perimeter != float("inf") else m - 1
-        for n in range(1 + m_odd, max_n + 1, 2):
+        n_mx = min(m - 1, max_perimeter // (2 * m) - m) if max_perimeter != float("inf") else m - 1
+        for n in range(n_mn, n_mx + 1, 2):
             if gcd(m, n) != 1: continue
             a, b, c = m_sq - n ** 2, 2 * m * n, m_sq + n ** 2
             if b < a: a, b = b, a
