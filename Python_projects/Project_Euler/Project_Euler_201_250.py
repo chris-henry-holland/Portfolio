@@ -1008,6 +1008,96 @@ def countPrimesOneLessThanTwiceASquare(n_max: int=5 * 10 ** 7) -> int:
         res += primeCheck(2 * num ** 2 - 1)
     return res
 
+# Problem 217
+def balancedNumberCount(max_n_dig: int=47, base: int=10, md: Optional[int]=3 ** 15) -> int:
+    """
+    Solution to Project Euler #217
+    """
+    # Review- see if it can be made more efficient using cumulative totals
+    if max_n_dig < 1: return 0
+    dig_sum = (base * (base - 1)) >> 1
+    #if max_n_dig == 1:
+    #    res = dig_sum
+    #    return res if md is None else res % md
+    #elif max_n_dig == 2:
+    #    res = dig_sum * (base + 1)
+    #    return res if md is None else res % md
+    #elif max_n_dig == 3:
+    #    res = dig_sum * (base ** 2 + 1) + base * 
+
+    def calculateRunningTotalWithoutMod(i: int, res_init: int=0) -> int:
+        res = res_init
+        if (i << 1) + 1 > max_n_dig:
+            for j in range(1, len(row_lft)):
+                res += row_lft[j][1] * (base ** i) * row_rgt[j][0] + row_rgt[j][1] * row_lft[j][0]
+            return res
+        for j in range(1, len(row_lft)):
+            res += (row_lft[j][1] * (base ** 2 + 1) + dig_sum * row_lft[j][0])* (base ** i) * row_rgt[j][0] + (base + 1) * row_rgt[j][1] * row_lft[j][0]
+        return res
+    
+    def calculateRunningTotalWithMod(i: int, res_init: int=0) -> int:
+        res = res_init
+        if (i << 1) + 1 > max_n_dig:
+            for j in range(1, len(row_lft)):
+                res = (res + row_lft[j][1] * pow(base, i, md) * row_rgt[j][0] + row_rgt[j][1] * row_lft[j][0]) % md
+            return res
+        for j in range(1, len(row_lft)):
+            res = (res + (row_lft[j][1] * (base ** 2 + 1) + dig_sum * row_lft[j][0])* pow(base, i, md) * row_rgt[j][0] + (base + 1) * row_rgt[j][1] * row_lft[j][0]) % md
+        return res
+    
+    calculateRunningTotal = calculateRunningTotalWithoutMod if md is None else calculateRunningTotalWithMod
+    
+    m = max_n_dig >> 1
+    #print(f"m = {m}")
+    row_rgt = [[1, x] for x in range(base)]
+    row_lft = [[1, x] for x in range(base)]
+    row_lft[0] = [0, 0]
+    
+    res = dig_sum
+    if max_n_dig == 1:
+        return res
+    res = calculateRunningTotal(1, res_init=res)
+    #print(1)
+    #print(row_lft)
+    #print(row_rgt)
+    #print(res)
+    for i in range(2, m + 1):
+        prev_rgt = row_rgt
+        row_rgt = [[0, 0] for x in range(len(prev_rgt) + base - 1)]
+        prev_lft = row_lft
+        row_lft = [[0, 0] for x in range(len(prev_lft) + base - 1)]
+        for row, prev, mn in [(row_lft, prev_lft, 1), (row_rgt, prev_rgt, 0)]:
+            for j in range(0, len(prev)):
+                for d in range(base):
+                    j2 = j + d
+                    row[j2][0] += prev[j][0]
+                    row[j2][1] += (prev[j][1] * base) + d * prev[j][0]
+        res = calculateRunningTotal(i, res_init=res)
+        #print(f"i = {i}")
+        #print(row_lft)
+        #print(row_rgt)
+        #print(res)
+        
+        """
+        if md is None:
+            if (i << 1) + 1 > max_n_dig:
+                for j in range(1, len(row_lft)):
+                    res += row_lft[j][1] * (base ** m) * row_rgt[j][0] + row_rgt[j][1] * row_lft[j][0]
+                continue
+            for j in range(1, len(row_lft)):
+                res += (row_lft[j][1] * (base ** 2 + 1) + dig_sum * row_lft[j][0])* (base ** m) * row_rgt[j][0] + 2 * row_rgt[j][1] * row_lft[j][0]
+            continue
+        if (i << 1) + 1 > max_n_dig:
+            for j in range(1, len(row_lft)):
+                res = (res + row_lft[j][1] * pow(base, m, md) * row_rgt[j][0] + row_rgt[j][1] * row_lft[j][0]) % md
+            continue
+        for j in range(1, len(row_lft)):
+            res = (res + (row_lft[j][1] * (base ** 2 + 1) + dig_sum * row_lft[j][0])* pow(base, m, md) * row_rgt[j][0] + 2 * row_rgt[j][1] * row_lft[j][0]) % md
+        """
+            
+    return res
+
+
 # Problem 218
 def perfectRightAngledTriangleGenerator(max_hypotenuse: Optional[int]=None) -> Generator[Tuple[Tuple[int, int, int], bool], None, None]:
 
@@ -1093,7 +1183,7 @@ def nonSuperPerfectPerfectRightAngledTriangleCount(max_hypotenuse: int=10 ** 16)
     return res
 
 if __name__ == "__main__":
-    to_evaluate = {218}
+    to_evaluate = {217}
     since0 = time.time()
 
     if not to_evaluate or 201 in to_evaluate:
@@ -1183,6 +1273,11 @@ if __name__ == "__main__":
         since = time.time()
         res = countPrimesOneLessThanTwiceASquare(n_max=5 * 10 ** 7)
         print(f"Solution to Project Euler #216 = {res}, calculated in {time.time() - since:.4f} seconds")
+
+    if not to_evaluate or 217 in to_evaluate:
+        since = time.time()
+        res = balancedNumberCount(max_n_dig=47, base=10, md=3 ** 15)
+        print(f"Solution to Project Euler #217 = {res}, calculated in {time.time() - since:.4f} seconds")
 
     if not to_evaluate or 218 in to_evaluate:
         since = time.time() 
