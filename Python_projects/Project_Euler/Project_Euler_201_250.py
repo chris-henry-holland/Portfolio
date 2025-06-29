@@ -1182,8 +1182,37 @@ def nonSuperPerfectPerfectRightAngledTriangleCount(max_hypotenuse: int=10 ** 16)
         res += ((tri[0] * tri[1]) % m)
     return res
 
+# Problem 219
+def prefixFreeCodeMinimumTotalSkewCost(n_words: int=10 ** 9, cost1: int=1, cost2: int=4) -> int:
+    """
+    Solution to Project Euler #219
+    """
+    # Using Huffman enconding
+    if n_words < 1: return 0
+    elif n_words == 1: return min(cost1, cost2)
+
+    remain = n_words - 2
+    cost_sm = cost1 + cost2
+    g = gcd(cost1, cost2)
+    curr = {cost1: 1}
+    curr[cost2] = curr.get(cost2, 0) + 1
+    res = cost_sm
+    for c in itertools.count(min(cost1, cost2), step=g):
+        f = curr.pop(c, 0)
+        if not f: continue
+        if remain < f:
+            res += (cost_sm + c) * remain
+            break
+        res += (cost_sm + c) * f
+        remain -= f
+        for add in (cost1, cost2):
+            c2 = c + add
+            curr[c2] = curr.get(c2, 0) + f
+    return res
+
+
 if __name__ == "__main__":
-    to_evaluate = {217}
+    to_evaluate = {219}
     since0 = time.time()
 
     if not to_evaluate or 201 in to_evaluate:
@@ -1283,5 +1312,10 @@ if __name__ == "__main__":
         since = time.time() 
         res = nonSuperPerfectPerfectRightAngledTriangleCount(max_hypotenuse=10 ** 16)
         print(f"Solution to Project Euler #218 = {res}, calculated in {time.time() - since:.4f} seconds")
+
+    if not to_evaluate or 219 in to_evaluate:
+        since = time.time() 
+        res = prefixFreeCodeMinimumTotalSkewCost(n_words=10 ** 100, cost1=1, cost2=4)
+        print(f"Solution to Project Euler #219 = {res}, calculated in {time.time() - since:.4f} seconds")
 
     print(f"Total time taken = {time.time() - since0:.4f} seconds")
