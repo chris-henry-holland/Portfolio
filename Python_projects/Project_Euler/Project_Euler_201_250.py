@@ -1210,9 +1210,72 @@ def prefixFreeCodeMinimumTotalSkewCost(n_words: int=10 ** 9, cost1: int=1, cost2
             curr[c2] = curr.get(c2, 0) + f
     return res
 
+# Problem 220
+def heighwayDragon(order: int=50, n_steps: int=10 ** 12, init_pos: Tuple[int, int]=(0, 0), init_direct: Tuple[int, int]=(0, 1), initial_str: str="Fa", recursive_strs: Dict[str, str]={"a": "aRbFR", "b": "LFaLb"}) -> Optional[Tuple[int, int]]:
+    """
+    Solution to Project Euler #220
+    """
+    if n_steps <= 0: return init_pos
+    direct_dict = {(1, 0): 0, (0, 1): 1, (-1, 0): 2, (0, -1): 3}
+    if init_direct not in direct_dict.keys(): raise ValueError("The initial direction given is not valid")
+    state0 = (init_pos, direct_dict[init_direct])
+
+    basic_effects = {"L": (((0, 0), 1), 0), "R": (((0, 0), -1), 0), "F": (((1, 0), 0), 1)}
+    recursive_effects = [{l: (((0, 0), 0), 0) for l in recursive_strs.keys()}]
+
+    def applyCharacter(curr_state: Tuple[Tuple[int, int], int], l: str, curr_order: int) -> Tuple[Tuple[int, int], int, int]:
+        effect, n_steps = basic_effects[l] if l in basic_effects.keys() else recursive_effects[curr_order][l]
+        #print(l, effect)
+        new_direct = (curr_state[1] + effect[1]) % 4
+        if effect[0] == (0, 0): return ((curr_state[0], new_direct), n_steps)
+        if curr_state[1] == 0:
+            pos_effect = effect[0]
+        elif curr_state[1] == 1:
+            pos_effect = (-effect[0][1], effect[0][0])
+        elif curr_state[1] == 2:
+            pos_effect = (-effect[0][0], -effect[0][1])
+        elif curr_state[1] == 3:
+            pos_effect = (effect[0][1], -effect[0][0])
+        return ((tuple(x + y for x, y in zip(curr_state[0], pos_effect)), new_direct), n_steps)
+
+    for ordr in range(1, order + 1):
+        recursive_effects.append({})
+        for l, s in recursive_strs.items():
+            ordr2 = ordr - 1
+            state = ((0, 0), 0)
+            tot_steps = 0
+            for l2 in s:
+                state, add_steps = applyCharacter(state, l2, ordr2)
+                tot_steps += add_steps
+            recursive_effects[-1][l] = (state, tot_steps)
+    #print(recursive_effects)
+    remain_steps = n_steps
+    ordr = order
+    state = state0
+
+    for l in initial_str:
+        state2, add_steps = applyCharacter(state, l, ordr)
+        if add_steps == remain_steps: return state2[0]
+        elif add_steps > remain_steps: break
+        state = state2
+        remain_steps -= add_steps
+    else: return None
+    
+    while ordr > 0:
+        ordr -= 1
+        for l2 in recursive_strs[l]:
+            state2, add_steps = applyCharacter(state, l2, ordr)
+            if add_steps == remain_steps: return state2[0]
+            elif add_steps > remain_steps:
+                l = l2
+                break
+            state = state2
+            remain_steps -= add_steps
+    return None
+
 
 if __name__ == "__main__":
-    to_evaluate = {219}
+    to_evaluate = {220}
     since0 = time.time()
 
     if not to_evaluate or 201 in to_evaluate:
@@ -1315,7 +1378,12 @@ if __name__ == "__main__":
 
     if not to_evaluate or 219 in to_evaluate:
         since = time.time() 
-        res = prefixFreeCodeMinimumTotalSkewCost(n_words=10 ** 100, cost1=1, cost2=4)
+        res = prefixFreeCodeMinimumTotalSkewCost(n_words=10 ** 9, cost1=1, cost2=4)
         print(f"Solution to Project Euler #219 = {res}, calculated in {time.time() - since:.4f} seconds")
+
+    if not to_evaluate or 220 in to_evaluate:
+        since = time.time() 
+        res = heighwayDragon(order=50, n_steps=10 ** 12, init_pos=(0, 0), init_direct=(0, 1), initial_str="Fa", recursive_strs={"a": "aRbFR", "b": "LFaLb"})
+        print(f"Solution to Project Euler #220 = {res}, calculated in {time.time() - since:.4f} seconds")
 
     print(f"Total time taken = {time.time() - since0:.4f} seconds")
