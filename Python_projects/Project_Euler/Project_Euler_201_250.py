@@ -1273,9 +1273,94 @@ def heighwayDragon(order: int=50, n_steps: int=10 ** 12, init_pos: Tuple[int, in
             remain_steps -= add_steps
     return None
 
+# Problem 121
+def calculatePrimeFactorisation(num: int) -> Dict[int, int]:
+    """
+    For a strictly positive integer, calculates its prime
+    factorisation.
+
+    This is performed using direct division.
+
+    Args:
+        Required positional:
+        num (int): The strictly positive integer whose prime
+                factorisation is to be calculated.
+    
+    Returns:
+    Dictionary (dict) giving the prime factorisation of num, whose
+    keys are strictly positive integers (int) giving the prime
+    numbers that appear in the prime factorisation of num, with the
+    corresponding value being a strictly positive integer (int)
+    giving the number of times that prime appears in the
+    factorisation (i.e. the power of that prime in the prime
+    factorisation of the factor num). An empty dictionary is
+    returned if and only if num is the multiplicative identity
+    (i.e. 1).
+    """
+    exp = 0
+    while not num & 1:
+        num >>= 1
+        exp += 1
+    res = {2: exp} if exp else {}
+    for p in range(3, num, 2):
+        if p ** 2 > num: break
+        exp = 0
+        while not num % p:
+            num //= p
+            exp += 1
+        if exp: res[p] = exp
+    if num > 1:
+        res[num] = 1
+    return res
+
+def calculateFactorsUpToMax(num: int, fact_max: Optional[int]) -> Set[int]:
+    pf = calculatePrimeFactorisation(num)
+    #print(num, pf)
+    if fact_max is None: fact_max = num
+    curr = {1}
+    for p, f in pf.items():
+        prev = set(curr)
+        for m in prev:
+            m2 = m
+            for i in range(f + 1):
+                if m2 > fact_max: break
+                curr.add(m2)
+                m2 *= p
+    return curr
+
+
+def alexandrianIntegerGenerator() -> Generator[int, None, None]:
+    h = []
+    cnt = 0
+    for m in itertools.count(1):
+        #print(f"m = {m}, count = {cnt}")
+        m2 = m ** 2 + 1
+        mn = 2 * m * m2
+        while h and h[0] <= mn:
+            cnt += 1
+            yield heapq.heappop(h)
+        #print(f"heap size = {len(h)}")
+        d_set = calculateFactorsUpToMax(m2, fact_max=m)
+        #print(m2, d_set)
+        for d in d_set:
+            heapq.heappush(h, m * (m + d) * (m + m2 // d))
+        #for d in range(1, m + 1):
+        #    d2, r = divmod(m2, d)
+        #    if r: continue
+        #    heapq.heappush(h, m * (m + d) * (m + d2))
+    return
+
+def nthAlexandrianInteger(n: int=15 * 10 ** 4) -> int:
+    """
+    Solution to Project Euler #221
+    """
+    it = iter(alexandrianIntegerGenerator())
+    for _ in range(n):
+        num = next(it)
+    return num
 
 if __name__ == "__main__":
-    to_evaluate = {220}
+    to_evaluate = {223}
     since0 = time.time()
 
     if not to_evaluate or 201 in to_evaluate:
@@ -1386,4 +1471,23 @@ if __name__ == "__main__":
         res = heighwayDragon(order=50, n_steps=10 ** 12, init_pos=(0, 0), init_direct=(0, 1), initial_str="Fa", recursive_strs={"a": "aRbFR", "b": "LFaLb"})
         print(f"Solution to Project Euler #220 = {res}, calculated in {time.time() - since:.4f} seconds")
 
+    if not to_evaluate or 221 in to_evaluate:
+        since = time.time() 
+        res = nthAlexandrianInteger(n=15 * 10 ** 4)
+        print(f"Solution to Project Euler #221 = {res}, calculated in {time.time() - since:.4f} seconds")
+
     print(f"Total time taken = {time.time() - since0:.4f} seconds")
+
+"""
+mx = 10 ** 3
+cnt = 0
+for b in range(2, mx + 1):
+    b_sq = b * b
+    for a in range(2, b + 1):
+        c_sq = a * a + b_sq - 1
+        c = isqrt(c_sq)
+        if c * c == c_sq:
+            cnt += 1
+            #print(a, b, c)
+print(cnt)
+"""
