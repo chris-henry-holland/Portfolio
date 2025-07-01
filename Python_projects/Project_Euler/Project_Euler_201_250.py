@@ -9,7 +9,7 @@ import random
 import sys
 import time
 
-from collections import deque
+from collections import deque, defaultdict
 from sortedcontainers import SortedDict, SortedList
 from typing import Dict, List, Tuple, Set, Union, Generator, Callable, Optional, Any, Hashable, Iterable
 
@@ -1361,31 +1361,70 @@ def nthAlexandrianInteger(n: int=15 * 10 ** 4) -> int:
 
 # Problem 222
 def shortestSpherePackingInTube(tube_radius: int=50, radii: List[int]=list(range(30, 51))) -> float:
+    """
+    Solution to Project Euler #222
+    """
     n = len(radii)
     if not n: return 0.
 
     radii.sort()
-    if radii[0] * 2 < tube_radius or radii[-1] > tube_radius:
+    if radii[0] * 2 < tube_radius or (n > 1 and radii[1] * 2 <= tube_radius) or radii[-1] > tube_radius:
         raise ValueError("Radii must be no less than half of tube_diameter and "
             "no more than tube_diameter")
-    print(radii)
     d = tube_radius * 2
     
-
     if n == 1: return 2 * radii[0]
 
     def packingAddDistance(r1: int, r2: int) -> float:
         return math.sqrt(d * (2 * (r1 + r2) - d))
 
     res = packingAddDistance(radii[0], radii[1])
-    print(res)
 
     for i in range(2, n):
         res += packingAddDistance(radii[i], radii[i - 2])
     return res + radii[-1] + radii[-2]
 
+# Problem 225
+def tribonacciOddNonDivisorGenerator(init_terms: Tuple[int, int, int]=(1, 1, 1)) -> Generator[int, None, None]:
+
+    #Trie = lambda: defaultdict(Trie)
+    ref = list(init_terms)
+    for num in itertools.count(3, step=2):
+        #seen_triples = Trie()
+        curr = [x % num for x in init_terms]
+        #t = seen_triples
+        #for m in curr:
+        #    t = t[m]
+        #t[True] = True
+        while True:
+            curr = [curr[1], curr[2], sum(curr) % num]
+            if not curr[-1]:
+                break
+            if curr == ref:
+                yield num
+                break
+            #t = seen_triples
+            #for m in curr:
+            #    t = t[m]
+            #if True in t.keys():
+            #    yield num
+            #    break
+            #t[True] = True
+    return
+
+def nthSmallestTribonacciOddNonDivisors(odd_non_divisor_number: int=124, init_terms: Tuple[int, int, int]=(1, 1, 1)) -> int:
+    """
+    Solution to Project Euler #225
+    """
+    it = iter(tribonacciOddNonDivisorGenerator(init_terms=init_terms))
+    num = -1
+    for i in range(odd_non_divisor_number):
+        num = next(it)
+        #print(i + 1, num)
+    return num
+
 if __name__ == "__main__":
-    to_evaluate = {222}
+    to_evaluate = {225}
     since0 = time.time()
 
     if not to_evaluate or 201 in to_evaluate:
@@ -1505,6 +1544,12 @@ if __name__ == "__main__":
         since = time.time() 
         res = shortestSpherePackingInTube(tube_radius=50, radii=list(range(30, 51)))
         print(f"Solution to Project Euler #222 = {res}, calculated in {time.time() - since:.4f} seconds")
+
+
+    if not to_evaluate or 225 in to_evaluate:
+        since = time.time() 
+        res = nthSmallestTribonacciOddNonDivisors(odd_non_divisor_number=124, init_terms=(1, 1, 1)) 
+        print(f"Solution to Project Euler #225 = {res}, calculated in {time.time() - since:.4f} seconds")
 
     print(f"Total time taken = {time.time() - since0:.4f} seconds")
 
