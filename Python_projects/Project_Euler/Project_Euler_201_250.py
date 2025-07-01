@@ -1359,8 +1359,33 @@ def nthAlexandrianInteger(n: int=15 * 10 ** 4) -> int:
         num = next(it)
     return num
 
+# Problem 222
+def shortestSpherePackingInTube(tube_radius: int=50, radii: List[int]=list(range(30, 51))) -> float:
+    n = len(radii)
+    if not n: return 0.
+
+    radii.sort()
+    if radii[0] * 2 < tube_radius or radii[-1] > tube_radius:
+        raise ValueError("Radii must be no less than half of tube_diameter and "
+            "no more than tube_diameter")
+    print(radii)
+    d = tube_radius * 2
+    
+
+    if n == 1: return 2 * radii[0]
+
+    def packingAddDistance(r1: int, r2: int) -> float:
+        return math.sqrt(d * (2 * (r1 + r2) - d))
+
+    res = packingAddDistance(radii[0], radii[1])
+    print(res)
+
+    for i in range(2, n):
+        res += packingAddDistance(radii[i], radii[i - 2])
+    return res + radii[-1] + radii[-2]
+
 if __name__ == "__main__":
-    to_evaluate = {223}
+    to_evaluate = {222}
     since0 = time.time()
 
     if not to_evaluate or 201 in to_evaluate:
@@ -1475,6 +1500,11 @@ if __name__ == "__main__":
         since = time.time() 
         res = nthAlexandrianInteger(n=15 * 10 ** 4)
         print(f"Solution to Project Euler #221 = {res}, calculated in {time.time() - since:.4f} seconds")
+
+    if not to_evaluate or 222 in to_evaluate:
+        since = time.time() 
+        res = shortestSpherePackingInTube(tube_radius=50, radii=list(range(30, 51)))
+        print(f"Solution to Project Euler #222 = {res}, calculated in {time.time() - since:.4f} seconds")
 
     print(f"Total time taken = {time.time() - since0:.4f} seconds")
 
