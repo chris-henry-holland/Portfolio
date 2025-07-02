@@ -4,6 +4,7 @@ import bisect
 import heapq
 import itertools
 import math
+import numpy as np
 import os
 import random
 import sys
@@ -1384,6 +1385,186 @@ def shortestSpherePackingInTube(tube_radius: int=50, radii: List[int]=list(range
         res += packingAddDistance(radii[i], radii[i - 2])
     return res + radii[-1] + radii[-2]
 
+# Problem 223
+def barelyAcuteIntegerSidedTrianglesAscendingPerimeterGenerator(max_perim: Optional[int]=None) -> Generator[Tuple[int, int, int], None, None]:
+
+    if max_perim is None: max_perim = float("inf")
+    if max_perim < 3: return
+
+    A = [[1, -2, 2], [2, -1, 2], [2, -2, 3]]
+    B = [[1, 2, 2], [2, 1, 2], [2, 2, 3]]
+    C = [[-1, 2, 2], [-2, 1, 2], [-2, 2, 3]]
+
+    def matrixMultiplyVector(M: List[List[int]], v: List[int]) -> List[int]:
+        return [sum(x * y for x, y in zip(row, v)) for row in M]
+
+    #seen = {(1, 0, 0), (1, 1, 1)}
+    h = [[1, (1, 0, 0)], [3, (1, 1, 1)]]
+    while h:
+        triple = heapq.heappop(h)[1]
+        #seen.remove(triple)
+        if min(triple) > 0: yield triple
+        seen = set()
+        for M in (A, B, C):
+            triple2 = tuple(sorted(matrixMultiplyVector(M, triple)))
+            if triple2[0] <= 0:
+                continue
+            elif triple2 in seen:
+                print(f"repeat: {triple2}")
+                continue
+            seen.add(triple2)
+            perim = sum(triple2)
+            if perim > max_perim: continue
+            heapq.heappush(h, [perim, triple2])
+            """
+            triple2 = tuple(sorted(matrixMultiplyVector(M, triple)))
+            triple3 = tuple(sorted(matrixMultiplyVector(M, [triple[1], triple[0], triple[2]])))
+            for t in (triple2, triple3):
+                if t[0] <= 0 or t in seen:
+                    continue
+                seen.add(t)
+                heapq.heappush(h, [sum(t), t])
+            """
+    return
+
+def countBarelyAcuteIntegerSidedTrianglesUpToMaxPerimeter(max_perimeter: int=25 * 10 ** 6) -> int:
+    """
+    Solution to Project Euler #223
+    """
+    # Review- give proof that this approach works
+
+    # Review- look into method using factorisation (a - 1)(a + 1) = (c - b)(c + 1)
+    """
+    #it = barelyAcuteIntegerSidedTrianglesAscendingPerimeterGenerator(max_perim=max_perimeter)
+    print_intvl = 10 ** 4
+    nxt_perim = print_intvl
+    for i, triple in enumerate(barelyAcuteIntegerSidedTrianglesAscendingPerimeterGenerator(max_perim=max_perimeter), start=1):
+        perim = sum(triple)
+        if perim > nxt_perim:
+            print(triple, perim, i)
+            nxt_perim += print_intvl
+    return i
+    """
+    if max_perimeter < 3: return
+
+    A = [[1, -2, 2], [2, -1, 2], [2, -2, 3]]
+    B = [[1, 2, 2], [2, 1, 2], [2, 2, 3]]
+    C = [[-1, 2, 2], [-2, 1, 2], [-2, 2, 3]]
+
+    def matrixMultiplyVector(M: List[List[int]], v: List[int]) -> List[int]:
+        return [sum(x * y for x, y in zip(row, v)) for row in M]
+
+    #seen = {(1, 0, 0), (1, 1, 1)}
+    #h = [[1, (1, 0, 0)], [3, (1, 1, 1)]]
+    stk = [(1, 0, 0), (1, 1, 1)]
+    res = 1
+    while stk:
+        triple = stk.pop()
+        seen = set()
+        for M in (A, B, C):
+            triple2 = matrixMultiplyVector(M, triple)
+            triple3 = tuple(sorted(triple2))
+            if triple3[0] <= 0: continue
+            elif triple3 in seen:
+                print(f"repeat: {triple2}")
+                continue
+            seen.add(triple3)
+            perim = sum(triple2)
+            if perim > max_perimeter: continue
+            stk.append(triple2)
+            res += 1
+    return res
+
+# Problem 224
+def barelyObtuseIntegerSidedTrianglesAscendingPerimeterGenerator(max_perim: Optional[int]=None) -> Generator[Tuple[int, int, int], None, None]:
+
+    
+    if max_perim is None: max_perim = float("inf")
+    if max_perim < 3: return
+
+    A = [[1, -2, 2], [2, -1, 2], [2, -2, 3]]
+    B = [[1, 2, 2], [2, 1, 2], [2, 2, 3]]
+    C = [[-1, 2, 2], [-2, 1, 2], [-2, 2, 3]]
+
+    def matrixMultiplyVector(M: List[List[int]], v: List[int]) -> List[int]:
+        return [sum(x * y for x, y in zip(row, v)) for row in M]
+
+    #seen = {(1, 0, 0), (1, 1, 1)}
+    h = [[1, (0, 0, 1)]]
+    while h:
+        triple = heapq.heappop(h)[1]
+        #seen.remove(triple)
+        if min(triple) > 0: yield triple
+        seen = set()
+        for M in (A, B, C):
+            triple2 = tuple(sorted(matrixMultiplyVector(M, triple)))
+            if triple2[0] <= 0:
+                continue
+            elif triple2 in seen:
+                print(f"repeat: {triple2}")
+                continue
+            seen.add(triple2)
+            perim = sum(triple2)
+            if perim > max_perim: continue
+            heapq.heappush(h, [perim, triple2])
+            """
+            triple2 = tuple(sorted(matrixMultiplyVector(M, triple)))
+            triple3 = tuple(sorted(matrixMultiplyVector(M, [triple[1], triple[0], triple[2]])))
+            for t in (triple2, triple3):
+                if t[0] <= 0 or t in seen:
+                    continue
+                seen.add(t)
+                heapq.heappush(h, [sum(t), t])
+            """
+    return
+
+def countBarelyObtuseIntegerSidedTrianglesUpToMaxPerimeter(max_perimeter: int=75 * 10 ** 6) -> int:
+    """
+    Solution to Project Euler #224
+    """
+    # Review- give proof that this approach works including justification
+    # of the initial values
+
+    """
+    print_intvl = 10 ** 4
+    nxt_perim = print_intvl
+    for i, triple in enumerate(barelyObtuseIntegerSidedTrianglesAscendingPerimeterGenerator(max_perim=max_perimeter), start=1):
+        perim = sum(triple)
+        if perim > nxt_perim:
+            print(triple, perim, i)
+            nxt_perim += print_intvl
+    return i
+    """
+    if max_perimeter < 3: return
+
+    A = [[1, -2, 2], [2, -1, 2], [2, -2, 3]]
+    B = [[1, 2, 2], [2, 1, 2], [2, 2, 3]]
+    C = [[-1, 2, 2], [-2, 1, 2], [-2, 2, 3]]
+
+    def matrixMultiplyVector(M: List[List[int]], v: List[int]) -> List[int]:
+        return [sum(x * y for x, y in zip(row, v)) for row in M]
+
+    #seen = {(1, 0, 0), (1, 1, 1)}
+    #h = [[1, (1, 0, 0)], [3, (1, 1, 1)]]
+    stk = [(0, 0, 1)]
+    res = 0
+    while stk:
+        triple = stk.pop()
+        seen = set()
+        for M in (A, B, C):
+            triple2 = matrixMultiplyVector(M, triple)
+            triple3 = tuple(sorted(triple2))
+            if triple3[0] <= 0: continue
+            elif triple3 in seen:
+                print(f"repeat: {triple2}")
+                continue
+            seen.add(triple3)
+            perim = sum(triple2)
+            if perim > max_perimeter: continue
+            stk.append(triple2)
+            res += 1
+    return res    
+
 # Problem 225
 def tribonacciOddNonDivisorGenerator(init_terms: Tuple[int, int, int]=(1, 1, 1)) -> Generator[int, None, None]:
 
@@ -1423,8 +1604,109 @@ def nthSmallestTribonacciOddNonDivisors(odd_non_divisor_number: int=124, init_te
         #print(i + 1, num)
     return num
 
+# Problem 227
+def chaseGameExpectedNumberOfTurns(die_n_faces: int=6, n_opts_left: int=1, n_opts_right: int=1, n_players: int=100, separation_init: int=50) -> float:
+    m = n_players >> 1
+    n_opts_still = die_n_faces - n_opts_left - n_opts_right
+    n_unchanged = (n_opts_still ** 2 + n_opts_left ** 2 + n_opts_right ** 2)
+    n_shift1 = (n_opts_left + n_opts_right) * n_opts_still
+    n_shift2 = n_opts_left * n_opts_right
+    #print(n_unchanged, n_shift1, n_shift2, n_unchanged + 2 * (n_shift1 + n_shift2), die_n_faces ** 2)
+    T = np.zeros([m, m])
+    for i in range(m):
+        T[i, i] = n_unchanged
+    T[0, 0] += n_shift2
+    for i in range(1, m):
+        T[i, i - 1] += n_shift1
+    for i in range(2, m):
+        T[i, i - 2] += n_shift2
+    for i in range(m):
+        #print(i)
+        j1 = min(i + 1, n_players - i - 3)
+        j2 = min(i + 2, n_players - i - 4)
+        #print(i, j1, j2)
+        T[i, j1] += n_shift1
+        T[i, j2] += n_shift2
+    T /= die_n_faces ** 2
+    #print(T)
+    eig_vals, eig_vecs = np.linalg.eig(T)
+    #print(eig_vals)
+    #print(eig_vals)
+    #print(eig_vecs)
+    P = np.zeros([m, m])
+    D = np.zeros([m, m])
+    D2 = np.zeros([m, m])
+    for i in range(m):
+        D[i, i] = eig_vals[i]
+        D2[i, i] = 1 / (1 - eig_vals[i])
+        P[i] = eig_vecs[i]
+    P = P.transpose()
+    P_inv = np.linalg.inv(P)
+    #print(P, P_inv, D)
+    #print(np.matmul(P, P_inv))
+    #print(np.dot(eig_vecs[0], eig_vecs[1]))
+    #print(P)
+    #print(D2)
+    M = np.matmul(P_inv, np.matmul(D2, P))
+    #print(T)
+    #print(M)
+    v = np.zeros([m])
+    i = min(separation_init, n_players - separation_init) - 1
+    #print(f"i = {i}")
+    v[i] = 1
+    #print(v)
+    v2 = np.matmul(M, v)
+    #print(v2)
+    res = sum(v2)
+    #print(res2)
+    return res
+
+# Problem 229
+def fourRepresentationsUsingSquaresCount(mults: Tuple[int]=(1, 2, 3, 7), num_max: int=2 * 10 ** 9) -> int:
+    part_size = 10 ** 8
+    n_mults = len(mults)
+    mults = sorted(set(mults))
+    bm_target = (1 << n_mults) - 1
+    res = 0
+    md168_set = set()
+    for part_start in range(0, num_max + 1, part_size):
+        print(part_start, res)
+        part_end = min(part_start + part_size - 1, num_max)
+        bm_sieve = [0] * (part_end - part_start + 1)
+        part_end_sqrt = isqrt(part_end)
+        for a in range(1, part_end_sqrt + 1):
+            a_sq = a ** 2
+            b_mn = max(1, isqrt((part_start - a_sq - 1) // mults[-1]) + 1 if a_sq < part_start else 0)
+            b_mx = isqrt(num_max - a_sq)
+            #if not a % 100: print(f"a = {a} of {part_end_sqrt}, b_max = {b_mx}")
+            j_mn = len(mults) - 1
+            j_mx = len(mults)
+            for b in range(b_mn, b_mx + 1):
+                b_sq = b ** 2
+                #print(a, b)
+                for j_mn in reversed(range(1, j_mn + 1)):
+                    if a_sq + mults[j_mn - 1] * b_sq < part_start: break
+                else: j_mn = 0
+                
+                for j in range(j_mn, j_mx):
+                    m = mults[j]
+                    num = a_sq + m * b_sq
+                    if num > part_end:
+                        j_mx = j
+                        break
+                    bm2 = 1 << j
+                    num2 = num - part_start
+                    #print(num, part_start, num2, len(bm_sieve))
+                    if bm_sieve[num2] & bm2: continue
+                    bm_sieve[num2] |= bm2
+                    if (bm_sieve[num2] == bm_target):
+                        res += 1
+                        md168_set.add(num % 168)
+    print(sorted(md168_set))
+    return res
+
 if __name__ == "__main__":
-    to_evaluate = {225}
+    to_evaluate = {229}
     since0 = time.time()
 
     if not to_evaluate or 201 in to_evaluate:
@@ -1545,11 +1827,30 @@ if __name__ == "__main__":
         res = shortestSpherePackingInTube(tube_radius=50, radii=list(range(30, 51)))
         print(f"Solution to Project Euler #222 = {res}, calculated in {time.time() - since:.4f} seconds")
 
+    if not to_evaluate or 223 in to_evaluate:
+        since = time.time() 
+        res = countBarelyAcuteIntegerSidedTrianglesUpToMaxPerimeter(max_perimeter=25 * 10 ** 6)
+        print(f"Solution to Project Euler #223 = {res}, calculated in {time.time() - since:.4f} seconds")
+
+    if not to_evaluate or 224 in to_evaluate:
+        since = time.time() 
+        res = countBarelyObtuseIntegerSidedTrianglesUpToMaxPerimeter(max_perimeter=75 * 10 ** 6)
+        print(f"Solution to Project Euler #224 = {res}, calculated in {time.time() - since:.4f} seconds")
 
     if not to_evaluate or 225 in to_evaluate:
         since = time.time() 
         res = nthSmallestTribonacciOddNonDivisors(odd_non_divisor_number=124, init_terms=(1, 1, 1)) 
         print(f"Solution to Project Euler #225 = {res}, calculated in {time.time() - since:.4f} seconds")
+
+    if not to_evaluate or 227 in to_evaluate:
+        since = time.time() 
+        res = chaseGameExpectedNumberOfTurns(die_n_faces=6, n_opts_left=1, n_opts_right=1, n_players=100, separation_init=50)
+        print(f"Solution to Project Euler #227 = {res}, calculated in {time.time() - since:.4f} seconds")
+
+    if not to_evaluate or 229 in to_evaluate:
+        since = time.time() 
+        res = fourRepresentationsUsingSquaresCount(mults=(1, 2, 3, 7), num_max=2 * 10 ** 9)
+        print(f"Solution to Project Euler #229 = {res}, calculated in {time.time() - since:.4f} seconds")
 
     print(f"Total time taken = {time.time() - since0:.4f} seconds")
 
