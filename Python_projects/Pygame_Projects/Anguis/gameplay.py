@@ -26,10 +26,12 @@ from pygame.locals import (
     K_KP_ENTER,
 )
 
-sys.path.append(os.path.abspath('../../bin/Algorithms/'))
-from graphs.utils import randomKTupleGenerator, findKthMissing
+sys.path.append(os.path.join(os.path.dirname(__file__), "../../"))
+#sys.path.append(os.path.abspath('../../bin/Algorithms/'))
+from Graph_classes.utils import randomKTupleGenerator, findKthMissing
 
-sys.path.append(os.path.abspath('../'))
+sys.path.append(os.path.join(os.path.dirname(__file__), "../"))
+#sys.path.append(os.path.abspath('../'))
 from General_tools import (
     checkEvents,
     checkKeysPressed,
