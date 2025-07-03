@@ -1,40 +1,19 @@
 #!/usr/bin/env python
-from collections import deque
-import random
 import sys
 import os
-import copy
-
-from sortedcontainers import SortedSet, SortedDict
 
 from typing import Union, Tuple, List, Set, Dict, Optional, Callable, Any
 
 import pygame as pg
-import pygame.freetype
 
 from pygame.locals import (
-    RLEACCEL,
     K_UP,
     K_DOWN,
-    K_LEFT,
-    K_RIGHT,
-    K_ESCAPE,
-    KEYDOWN,
-    QUIT,
-    K_RETURN,
-    K_KP_ENTER,
 )
 
 sys.path.append(os.path.join(os.path.dirname(__file__), "../"))
 from General_tools import (
-    checkEvents,
-    checkKeysPressed,
-    createNavkeyDict,
-    getMouseStatus,
-    Real,
     enter_keys_def_glob,
-    navkeys_def_glob,
-    mouse_lclicks,
     named_colors_def,
     font_def_func,
     MenuOverlay,

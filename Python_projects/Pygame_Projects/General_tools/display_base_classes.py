@@ -266,6 +266,8 @@ class ComponentBaseClass(ABC):
         
         for cls2 in cls.mro():
             for attr1, attr2_dict in getattr(cls2, "reset_graph_edges", {}).items():
+                #if attr1 == "val" or attr1 == "val_str":
+                #    print(attr1, attr2_dict)
                 idx1 = attr2Index(attr1)
                 for attr2, func_new in attr2_dict.items():
                     idx2 = attr2Index(attr2)
@@ -345,6 +347,7 @@ class ComponentBaseClass(ABC):
             for component_attr, attrs in component_dict.get("container_attr_derivation", {}).items():
                 for attr in attrs:
                     if attr in attr_calcfunc_dict.keys(): continue
+                    if attr == "val": print(f"adding slider attribute {component_attr} to slider plus attribute {attr} in attr_calcfunc_dict")
                     attr_calcfunc_dict[attr] = (functools.partial((lambda cn, ca, obj: obj.getComponentAttribute(cn, ca)), component_nm, component_attr), False)
         cls.attr_calcfunc_dict = attr_calcfunc_dict
         return attr_calcfunc_dict
@@ -470,7 +473,7 @@ class ComponentBaseClass(ABC):
         return component
     
     def calculateAndSetAttribute(self, attr: str) -> bool:
-        #print(f"calculating and setting attribute {attr}")
+        #print(f"calculating and setting attribute {attr} for object {self.__str__()}")
         cls = type(self)
         attr_calcfunc_dict = cls.__dict__.get("attr_calcfunc_dict", cls.createAttributeCalculationFunctionDictionary())
         if attr not in attr_calcfunc_dict.keys():
@@ -481,9 +484,14 @@ class ComponentBaseClass(ABC):
         res = calcfunc(self)
         if not b:
             self.__dict__[f"_{attr}"] = res
+            #print(f"attribute {attr} new value = {res}")
         return True
     
     def setAttributes(self, setattr_dict: Dict[str, Any], _from_container: bool=False, **kwargs) -> None:
+        #print("using setAttributes()")
+        #print(setattr_dict)
+        if "val" in setattr_dict.keys():
+            print(setattr_dict)
         #print(f"\nsetting attributes {list(setattr_dict.keys())}")
         #print(setattr_dict)
         #print(type(self).__name__)
@@ -492,9 +500,10 @@ class ComponentBaseClass(ABC):
         #    if attr in setattr_dict.keys():
         #        print(f"{attr} = {setattr_dict[attr]}")
         cls = type(self)
-        attr_calcfunc_dict = cls.__dict__.get("attr_calcfunc_dict", cls.createAttributeCalculationFunctionDictionary())
-        fixed_attr_set = cls.__dict__.get("fixed_attr_set", cls.createFixedAttributeSet())
-        
+        cls._attr_calcfunc_dict = cls.__dict__.get("attr_calcfunc_dict", cls.createAttributeCalculationFunctionDictionary())
+        cls._fixed_attr_set = cls.__dict__.get("fixed_attr_set", cls.createFixedAttributeSet())
+        attr_calcfunc_dict = cls._attr_calcfunc_dict
+        fixed_attr_set = cls._fixed_attr_set
         
         self.__dict__.setdefault("is_default_set", set())
         is_default_set = self.is_default_set
@@ -517,8 +526,8 @@ class ComponentBaseClass(ABC):
         inds = []
         
         def setAttrCustom(attr: str, val: Any) -> None:
-            #if attr.lstrip("_") == "max_shape":
-            #    print(f"setting attribute {attr} to {val}")
+            if attr.lstrip("_") in {"val", "val_str", "val_text_surf"}:
+                print(f"setting attribute {attr} to {val}")
             self.__dict__[attr] = val
             #print(f"self.__dict__['{attr}'] = {val}")
             return
@@ -667,7 +676,8 @@ class ComponentBaseClass(ABC):
                     return (cls.__dict__[attr], True)
             return (None, False)
         
-        
+        #if attr in {"val", "val_str", "val_text_surf"}:
+        #    print(f"attempting to get attribute {attr}")
         val, b = findAttribute(attr)
         #if attr == "init_val":
         #    print(attr)

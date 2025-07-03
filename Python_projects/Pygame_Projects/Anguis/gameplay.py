@@ -11,7 +11,6 @@ from sortedcontainers import SortedSet, SortedDict
 from typing import Union, Tuple, List, Set, Dict, Optional, Callable, Any, Generator
 
 import pygame as pg
-import pygame.freetype
 
 from pygame.locals import (
     RLEACCEL,
@@ -33,14 +32,10 @@ from Graph_classes.utils import randomKTupleGenerator, findKthMissing
 sys.path.append(os.path.join(os.path.dirname(__file__), "../"))
 #sys.path.append(os.path.abspath('../'))
 from General_tools import (
-    checkEvents,
-    checkKeysPressed,
     createNavkeyDict,
-    getMouseStatus,
     Real,
     enter_keys_def_glob,
     navkeys_def_glob,
-    mouse_lclicks,
     named_colors_def,
     font_def_func,
     MenuOverlay,
@@ -687,7 +682,7 @@ class GamePlay:
             max_score //= 10
             max_n_dig += 1
         max_n_dig = max(max_n_dig, 1)
-        nums = [str(d) * max_n_dig for d in range(10)]
+        #nums = [str(d) * max_n_dig for d in range(10)]
         
         num_max_width = self.arena_shape[0] * 0.1
         num_max_width_pixel = num_max_width * self.head_size
@@ -706,7 +701,6 @@ class GamePlay:
         for d in range(10):
             s = str(d) * max_n_dig
             text_list.append({"text": s, "max_shape": (None, num_max_width_pixel)})
-        
         text_group = TextGroup([], max_h_pixel, font=None,\
                 font_size=None, min_lowercase=True)
         text_objs = text_group.addTextObjects(text_list)
@@ -725,7 +719,9 @@ class GamePlay:
         return res
     
     def createTextImageConstructor(self, text_obj) -> Callable[["pg.Surface"], None]:
-        def func(surf) -> None:
+        def func(surf: "pg.Surface") -> None:
+            #surf.set_alpha(255)
+            #surf.fill((0, 255, 255))
             text_obj._screen = surf
             text_obj.draw(surf)
         return func

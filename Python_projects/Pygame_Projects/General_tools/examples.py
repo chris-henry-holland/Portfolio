@@ -21,7 +21,7 @@ from pygame.locals import (
     K_KP_ENTER,
 )
 
-sys.path.append(os.path.abspath('../../'))
+sys.path.append(os.path.join(os.path.dirname(__file__), "../"))
 from General_tools import (
     Slider,
     SliderGroup,
@@ -292,12 +292,12 @@ def runExampleSliderPlus1() -> None:
     """
     slider_plus = SliderPlus(
         title="Slider 1",
-        shape=(600, 300),
-        anchor_pos=(300, 200),
+        shape=(300, 100),#(600, 300),
+        anchor_pos=(0, 0),#(300, 200),
         val_range=(0, 100),
         increment_start=15,
         increment=5,
-        anchor_type="center",
+        anchor_type="topleft",
         screen_topleft_offset=None,
         init_val=None,
         demarc_numbers_text_group=None,
@@ -320,8 +320,9 @@ def runExampleSliderPlus1() -> None:
         title_anchor_type="bottomright",
         title_text_color=None,
         val_text_group=None,
-        val_anchor_type=None,
-        val_number_color=None,
+        val_text_anchor_type="midright",
+        val_text_color=(named_colors_def["blue"], 1),
+        val_text_dp=None,
         
         name=None,
     )
@@ -337,6 +338,7 @@ def runExampleSliderPlus1() -> None:
     ttg = slider_plus.title_text_group
     tto = slider_plus.title_text_obj
     slider_plus.shape = (500, 150)
+
     #print(slider_plus.shape)
     #print(ttg.max_font_size_given_heights)
     #print(ttg.max_font_size_given_widths)

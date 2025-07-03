@@ -1,9 +1,8 @@
 #!/usr/bin/env python3
-import ctypes
 import os
 import sys
-sys.path.append(os.path.abspath('../../'))
 
+sys.path.append(os.path.join(os.path.dirname(__file__), "../"))
 from General_tools import (
     runExampleSlider1,
     runExampleSliderGroup1,
@@ -16,7 +15,7 @@ from General_tools import (
 
 #address = runExampleSlider1()
 #print(f"reference count = {ctypes.c_long.from_address(address)}")
-runExampleSliderGroup1()
+#runExampleSliderGroup1()
 runExampleSliderPlus1()
 #runExampleSliders1()
 #runExampleButton1()

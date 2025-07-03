@@ -1225,7 +1225,7 @@ class TextGroup(ComponentGroupBaseClass):
         return res
         """
     
-    def addTextObjects(self, add_text_dicts: List[dict]) -> List[Tuple]:
+    def addTextObjects(self, add_text_dicts: List[dict]) -> List[Text]:
         return self.replaceTextObjects(rm_text_objs=[], add_text_dicts=add_text_dicts)
     
     def removeTextObjects(self, rm_text_objs: List["Text"]) -> None:

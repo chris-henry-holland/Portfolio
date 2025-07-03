@@ -1,8 +1,5 @@
 #!/usr/bin/env python
-import functools
 import math
-import sys
-import weakref
 
 from typing import Any, Tuple, Union, List, Optional, Callable
 
@@ -16,7 +13,6 @@ from .utils import Real, ColorOpacity
 
 from .display_base_classes import (
     InteractiveDisplayComponentBase,
-    ComponentBaseClass,
     ComponentGroupBaseClass,
     ComponentGroupElementBaseClass,
     checkHiddenKwargs,
@@ -45,6 +41,9 @@ def sliderDemarcationsDPDefault(obj: "Slider") -> int:
         return 0
     res = max(0, -math.floor(math.log(obj.demarc_intervals[0], 10) - 1.5))
     return res
+
+def sliderPlusDemarcationsDPDefault(obj: "SliderPlus") -> int:
+    return sliderDemarcationsDPDefault(obj.slider)
 
 class Slider(InteractiveDisplayComponentBase):
     slider_names = set()
@@ -731,7 +730,6 @@ class Slider(InteractiveDisplayComponentBase):
         else: screen_changed = False
         return quit, running, screen_changed, self.val
 
-
 class SliderGroupElement(ComponentGroupElementBaseClass, Slider):
     
     group_cls_func = lambda: SliderGroup
@@ -925,15 +923,22 @@ class SliderPlus(InteractiveDisplayComponentBase):
     unnamed_count = 0
     
     reset_graph_edges = {
-        "shape": {"slider_shape": True, "slider_bottomleft": True},
+        "shape": {"slider_shape": True, "slider_bottomleft": True, "title_shape": True, "val_text_shape": True},
         "slider_shape_rel": {"slider_shape": True},
         "slider_borders_rel": {"slider_borders": True},
         "slider_shape": {"title_shape": True},
         "slider_borders": {"title_shape": True},
-        "title_shape": {"title_anchor_pos": (lambda obj: obj.title_anchor_type != "topleft")},
-        "title_anchor_type": {"title_anchor_pos": True},
+        "title_shape": {"title_anchor_pos": (lambda obj: obj.title_anchor_type != "topleft"), "title_surf": True},
+        "title_anchor_type": {"title_anchor_pos": True, "title_surf": True},
+
+        "val": {"val_str": True},
+        "val_str": {"val_text_surf": True},
+
+        "val_text_shape": {"val_text_anchor_pos": (lambda obj: obj.val_text_anchor_type != "topleft"), "val_text_surf": True},
+        "val_text_anchor_type": {"val_text_anchor_pos": True, "val_text_surf": True},
         
         "title_surf": {"static_bg_surf": True},
+        "val_text_surf": {"display_surf": True},
         "static_bg_surf": {"display_surf": True},
     }
     
@@ -946,21 +951,39 @@ class SliderPlus(InteractiveDisplayComponentBase):
         "slider_shape": "calculateSliderShape",
         "slider_bottomleft": "calculateSliderBottomLeft",
         "slider_borders": "calculateSliderBorders",
+
+        "val": "calculateValue",
+        "val_str": "calculateValueString",
+
+        "title_text_group": "createTitleTextGroup",
         "title_shape": "calculateTitleShape",
         "title_anchor_pos": "calculateTitleAnchorPosition",
         "title_text_obj": "createTitleTextObject",
+
+        "val_text_group": "createValueTextGroup",
+        "val_text_shape": "calculateValueTextShape",
+        "val_text_anchor_pos": "calculateValueTextAnchorPosition",
         
         "title_surf": "createTitleSurface",
+        "val_text_surf": "createValueTextSurface",
         "static_bg_surf": "createStaticBackgroundSurface",
         "display_surf": "createDisplaySurface",
         
         "title_img_constructor": "createTitleImageConstructor",
+        "val_text_img_constructor": "createValueTextImageConstructor",
         "static_bg_img_constructor": "createStaticBackgroundImageConstructor",
         "slider_img_constructor": "createSliderImageConstructor",
     }
     
     attribute_default_functions = {
-        "title_text_group": ((lambda obj: SliderPlus.createTitleTextGroup()),),
+        "slider_shape_rel": ((lambda obj: (0.7, 0.6)),),
+        "slider_borders_rel": ((lambda obj: (0., 0.)),),
+        #"title_text_group": ((lambda obj: SliderPlus.createTitleTextGroup()),),
+        "title_anchor_type": ((lambda obj: "topleft"),),
+        "title_text_color": ((lambda obj: text_color_def),),
+        "val_text_anchor_type": ((lambda obj: "topleft"),),
+        "val_text_color": ((lambda obj: text_color_def),),
+        "val_text_dp": (sliderPlusDemarcationsDPDefault, ("slider",)),
     }
     
     fixed_attributes = set()
@@ -1010,7 +1033,7 @@ class SliderPlus(InteractiveDisplayComponentBase):
     }
     
     static_bg_components = ["title"]
-    displ_component_attrs = ["static_bg", "slider"]
+    displ_component_attrs = ["static_bg", "slider", "val_text"]
     
     def __init__(self,
         title: str,
@@ -1042,9 +1065,9 @@ class SliderPlus(InteractiveDisplayComponentBase):
         title_anchor_type: Optional[str]=None,
         title_text_color: Optional[ColorOpacity]=None,
         val_text_group: Optional["TextGroup"]=None,
-        val_anchor_type: Optional[str]=None,
-        val_number_color: Optional[ColorOpacity]=None,
-        
+        val_text_anchor_type: Optional[str]=None,
+        val_text_color: Optional[ColorOpacity]=None,
+        val_text_dp: Optional[int]=None,
         
         name: Optional[str]=None,
         **kwargs,
@@ -1114,6 +1137,11 @@ class SliderPlus(InteractiveDisplayComponentBase):
             name: Optional[str]=None,
         )
     """
+    def calculateValue(self) -> Real:
+        print("Using calculateValue()")
+        print(f"slider value = {self.slider.val}")
+        return self.slider.val
+
     def calculateSliderShape(self) -> Tuple[int]:
         return tuple(math.floor(x * y) for x, y in zip(self.shape, self.slider_shape_rel)) 
     
@@ -1122,6 +1150,21 @@ class SliderPlus(InteractiveDisplayComponentBase):
     
     def calculateSliderBorders(self) -> Tuple[int]:
         return tuple(round(x * y) for x, y in zip(self.shape, self.slider_borders_rel))
+
+    def _setTitleTextObjectAttribute(self, attr: str, text_obj_attr: str) -> None:
+        #print("hi1")
+        title_text_obj = self.__dict__.get("_title_text_obj", None)
+        if title_text_obj is None: return
+        #print("hi2")
+        val = getattr(self, attr)
+        #print(attr, val)
+        orig_val = getattr(title_text_obj, text_obj_attr, None)
+        setattr(title_text_obj, text_obj_attr, val)
+        chng_val = getattr(title_text_obj, text_obj_attr, None)
+        #print(orig_val, chng_val)
+        if orig_val != chng_val:
+            self.title_surf = None
+        return
     
     def calculateTitleShape(self) -> Tuple[int]:
         shape = self.shape
@@ -1168,28 +1211,9 @@ class SliderPlus(InteractiveDisplayComponentBase):
         #text_obj.max_shape = self.title_shape
         return text_obj
     
-    def _setTextObjectAttribute(self, attr: str, text_obj_attr: str) -> None:
-        #print("hi1")
-        title_text_obj = self.__dict__.get("_title_text_obj", None)
-        if title_text_obj is None: return
-        #print("hi2")
-        val = getattr(self, attr)
-        #print(attr, val)
-        orig_val = getattr(title_text_obj, text_obj_attr, None)
-        setattr(title_text_obj, text_obj_attr, val)
-        chng_val = getattr(title_text_obj, text_obj_attr, None)
-        #print(orig_val, chng_val)
-        if orig_val != chng_val:
-            self.title_surf = None
-        return
-    
     def setTitleShape(self, prev_val: Optional[Tuple[int, int]]) -> None:
         #print("setting title shape for text object")
-        return self._setTextObjectAttribute("title_shape", "max_shape")
-    
-    
-    def calculateValue(self) -> Real:
-        return self.slider.val
+        return self._setTitleTextObjectAttribute("title_shape", "max_shape")
     
     def createTitleSurface(self)\
             -> Union["pg.Surface", tuple]:
@@ -1200,7 +1224,7 @@ class SliderPlus(InteractiveDisplayComponentBase):
         #print("hello2")
         surf = pg.Surface(self.title_shape, pg.SRCALPHA)
         surf.set_alpha(255)
-        surf.fill((0, 0, 255))
+        #surf.fill((0, 0, 255))
         #print(self.title_anchor_pos, self.title_anchor_type)
         title_text_obj.draw(surf, anchor_pos=self.title_anchor_pos, anchor_type=self.title_anchor_type)
         return surf
@@ -1208,6 +1232,7 @@ class SliderPlus(InteractiveDisplayComponentBase):
     def createTitleImageConstructor(self)\
             -> Callable[["pg.Surface"], None]:
         return lambda obj, surf: (None if obj.title_surf == () else surf.blit(obj.title_surf, (0, 0)))
+    
     
     def createStaticBackgroundSurface(self)\
             -> Union["pg.Surface", tuple]:
@@ -1232,12 +1257,205 @@ class SliderPlus(InteractiveDisplayComponentBase):
     def createSliderImageConstructor(self) -> Callable[["pg.Surface"], None]:
         #print("creating slider image constructor")
         return lambda obj, surf: obj.slider.draw(surf)
+
+
+
+    #################
+    def _setValueTextObjectAttribute(self, attr: str, text_obj_attr: str) -> None:
+        #print("hi1")
+        val_text_objs = self.__dict__.get("_val_text_objs", None)
+        if val_text_objs is None: return
+        #print("hi2")
+        val = getattr(self, attr)
+        #print(attr, val)
+        orig_val = getattr(val_text_objs[0], text_obj_attr, None)
+        it = [0] if attr == "text" else range(len(val_text_objs))
+        for i in it:
+            setattr(val_text_objs[i], text_obj_attr, val)
+        chng_val = getattr(val_text_objs[0], text_obj_attr, None)
+        #print(orig_val, chng_val)
+        if orig_val != chng_val:
+            self.val_text_surf = None
+        return
+
+    #@property
+    #def val_text_group(self):
+    #    res = getattr(self, "_val_text_group", None)
+    #    if res is None:
+    #        res = self.createValueTextGroup()
+    #        self._val_text_group = res
+    #    return res
     
-    def createDisplaySurface(self) -> Optional["pg.Surface"]:
-        #print("creating display surface")
+    @property
+    def val_text_objs(self):
+        res = getattr(self, "_val_text_objs", None)
+        #print(res)
+        if res is None:
+            res = self.createValueTextObjects()
+            self._val_text_objs = res
+        #print("hello")
+        #print(res)
+        return res
+    
+    def createValueTextGroup(self) -> TextGroup:
+        return TextGroup([], max_height0=None, font=None,\
+                font_size=None, min_lowercase=True)
+
+    def createValueTextObjects(self) -> List[Text]:
+        print("Using createValueTextObjects()")
+        max_val = self.slider.val_range_actual[1]
+        max_val_int = math.floor(max_val)
+        max_int_n_dig = 0
+        while max_val_int:
+            max_val_int //= 10
+            max_int_n_dig += 1
+        max_int_n_dig = max(max_int_n_dig, 1)
+        dp = self.val_text_dp
+        #print(f"max_val_int = {max_val_int}, max_int_n_dig {max_int_n_dig}")
+        def repeatedDigitString(d: int) -> str:
+            l = str(d)
+            res = l * max_int_n_dig if dp <= 0 else ".".join([l * max_int_n_dig, l * dp])
+            #print(res)
+            return res
+            #return ".".join([l * max_int_n_dig, l * ])
+
+        #nums = [str(d) * max_n_dig for d in range(10)]
+        """
+        val_max_width = self.arena_shape[0] * 0.1
+        val_max_width_pixel = num_max_width * self.head_size
+        num_anchor_pos = (self.border[0][0] + self.arena_shape[0] - num_max_width, self.border[1][0] * 0.9)
+        num_anchor_pos_pixel = tuple(x * self.head_size for x in num_anchor_pos)
+        txt_max_width = self.arena_shape[0] * 0.3
+        txt_max_width_pixel = txt_max_width * self.head_size
+        txt_anchor_pos = num_anchor_pos
+        txt_anchor_pos_pixel = tuple(x * self.head_size for x in txt_anchor_pos)
+
+        
+        
+        max_h = self.border[1][0] * 0.25
+        max_h_pixel = max_h * self.head_size
+        """
+        #txt_shape = (10, 10)
+        #add_text_dicts = [{"text": txt, "font_color": color, "max_shape": self.title_shape, "_attr_reset_funcs": {"updated": [lambda obj, prev_val: setattr(obj, "title_surf", None)]}}]
+        text_dict = {"text": self.val_str, "anchor_pos0": self.val_text_anchor_pos, "anchor_type0": self.val_text_anchor_type, "max_shape": self.val_text_shape, "font_color": self.val_text_color, "_attr_reset_funcs": {"updated": [lambda obj, prev_val: setattr(obj, "val_text_surf", None)]}}
+        text_list = []
+        
+        text_list.append(dict(text_dict))
+        text_dict.pop("_attr_reset_funcs")
+        for d in range(10):
+            text_dict["text"] = repeatedDigitString(d)
+            #print(text_dict["text"])
+            text_list.append(dict(text_dict))
+        grp = self.val_text_group
+        text_objs = grp.addTextObjects(text_list)
+        #print(text_objs)
+        return text_objs
+
+    def calculateValueString(self) -> str:
+        print("Using calculateValueString()")
+        dp = self.val_text_dp
+        print(f"val_text_dp = {dp}")
+        s = f"{self.val:.{dp}f}"
+        print(f"value string = {s}")
+        return f"{s}"
+
+    @property
+    def val_text_obj(self):
+        return self.val_text_objs[0]
+
+    def calculateValueTextShape(self) -> Tuple[int]:
+        print("Using calculateValueTextShape()")
+        shape = self.shape
+        print(f"object shape = {shape}")
+        slider_shape = self.slider_shape
+        slider_borders = self.slider_borders
+        res = (shape[0] - (slider_shape[0] + slider_borders[0]), shape[1])
+        print(f"value shape = {res}")
+        return res 
+    
+    def calculateValueTextAnchorPosition(self) -> Tuple[int]:
+        slider_shape = self.slider_shape
+        slider_borders = self.slider_borders
+        res = tuple([slider_shape[0] + slider_borders[0], 0])
+        print(f"value text anchor position = {res}")
+        return res
+    
+    def setValueTextShape(self, prev_val: Optional[Tuple[int, int]]) -> None:
+        #print("setting title shape for text object")
+        return self._setValueTextObjectAttribute("val_text_shape", "max_shape")
+    
+    def createValueTextImageConstructor(self):
+        #print("creating text image constructors")
+        res = []
+        def textImageConstructor(obj: SliderPlus, surf: "pg.Surface") -> None:
+            obj.val_text_obj.font_color = obj.val_text_color
+            obj.val_text_obj.text = obj.val_str
+            obj.val_text_obj.max_shape = obj.val_text_shape
+            print(f"value text shape = {obj.val_text_shape}, text object max text shape = {obj.val_text_obj.max_shape}")
+            print(f"number of val_text_objs = {len(obj.val_text_objs)}")
+            for i in range(1, len(obj.val_text_objs)):
+                print(f"i = {i}, text = {obj.val_text_objs[i].text}")
+                obj.val_text_objs[i].max_shape = obj.val_text_shape
+            text_img = obj.val_text_surf
+            if text_img == (): return
+            surf.blit(text_img, obj.val_text_anchor_pos)
+            #return lambda obj, surf: (None if obj.static_bg_surf == () else surf.blit(obj.static_bg_surf, (0, 0)))
+            #obj.val_text_obj.draw(surf, anchor_pos=obj.val_text_anchor_pos, anchor_type=obj.val_text_anchor_type)
+            #print("hello2")
+            return
+        return textImageConstructor
+
+    #def createValueTextImageConstructor(self)\
+    #        -> Callable[["pg.Surface"], None]:
+    #    print("calling createValueTextImageConstructor()")
+    #    return lambda obj, surf: (None if obj.val_text_surf == () else surf.blit(obj.val_text_surf, (0, 0)))
+
+    def createValueTextSurface(self)\
+            -> Union["pg.Surface", tuple]:
+        print("Using createValueTextSurface()")
+        #print("hello1")
+        #print("about to get val_text_obj")
+        val_text_obj = self.val_text_obj
+        #print(val_text_obj)
+        #print(title_text_obj)
+        if not val_text_obj: return ()
+        #print("hello2")
+        surf = pg.Surface(self.val_text_shape, pg.SRCALPHA)
+        #surf.set_alpha(100)
+        #surf.fill((0, 255, 255))
+        print(self.title_anchor_pos, self.title_anchor_type)
+        anchor_offset = topLeftAnchorOffset(self.val_text_shape, self.val_text_anchor_type)
+        print(f"anchor offset = {anchor_offset}")
+        val_text_obj.draw(surf, anchor_pos=anchor_offset, anchor_type=self.val_text_anchor_type)
+        return surf
+    
+    #################
+    """
+    def createStaticBackgroundSurface(self)\
+            -> Union["pg.Surface", tuple]:
+        #print("creating static background surface")
         surf = pg.Surface(self.shape, pg.SRCALPHA)
+        surf.set_alpha(255)
+        surf.fill((0, 255, 0))
+        
+        constructor_attrs = [f"{attr}_img_constructor"\
+                for attr in self.static_bg_components]
+        for constructor_attr in constructor_attrs:
+            #print(f"adding {constructor_attr}")
+            constructor_func =\
+                    getattr(self, constructor_attr, (lambda obj, surf: None))
+            constructor_func(self, surf)
+        return surf
+    """
+    def createDisplaySurface(self) -> Optional["pg.Surface"]:
+        print("creating display surface")
+        print(f"shape = {self.shape}")
+        surf = pg.Surface(self.shape, pg.SRCALPHA)
+        #surf.set_alpha(100)
+        #surf.fill((255, 0, 0))
+        print(self.displ_component_attrs)
         for attr in self.displ_component_attrs:
-            #print(f"{attr}_img_constructor")
+            print(f"{attr}_img_constructor")
             constructor_func = getattr(self, f"{attr}_img_constructor", (lambda obj, surf: None))
             #print(attr, surf)
             constructor_func(self, surf)
@@ -1261,7 +1479,7 @@ class SliderPlus(InteractiveDisplayComponentBase):
         running = not quit and not esc_pressed
         screen_changed = False
         
-        (quit2, running2, screen_changed2, val_dict) = super().eventLoopComponents(
+        (quit2, running2, screen_changed2, val_dict) = self.eventLoopComponents(
             events=events,
             keys_down=keys_down,
             mouse_status=mouse_status,
@@ -1282,7 +1500,7 @@ class SliderVerticalBattery:
             numbers_color=None, demarc_line_colors=None,
             thumb_outline_color=None, slider_w_prop=0.75,
             title_size_rel=0.4, title_color=None, title_gap_rel=0.2,
-            val_number_size_rel=0.4, val_number_color=None):
+            val_text_size_rel=0.4, val_text_color=None):
         self.screen = screen
         self.dims = (x, y, w, h)
         self.slider_gap_rel = slider_gap_rel
@@ -1295,7 +1513,7 @@ class SliderVerticalBattery:
         self.slider_w_prop = slider_w_prop
         self.title_size_rel = title_size_rel
         self.title_gap_rel = title_gap_rel
-        self.val_number_size_rel = val_number_size_rel
+        self.val_text_size_rel = val_text_size_rel
 
         self.track_color = track_color_def if track_color is None else\
             track_color
@@ -1311,8 +1529,8 @@ class SliderVerticalBattery:
         self.thumb_outline_color = thumb_outline_color
         self.title_color = text_color_def if title_color is None\
                 else title_color
-        self.val_number_color = self.title_color if val_number_color is None\
-                else val_number_color
+        self.val_text_color = self.title_color if val_text_color is None\
+                else val_text_color
          
         self.sliderPlus_objects = []
         self.sliderPlus_dims_set = True
@@ -1334,8 +1552,8 @@ class SliderVerticalBattery:
                 slider_w_prop=self.slider_w_prop,
                 title_size_rel=self.title_size_rel,
                 title_color=self.title_color, title_gap_rel=self.title_gap_rel,
-                val_number_size_rel=self.val_number_size_rel,
-                val_number_color=self.val_number_color
+                val_text_size_rel=self.val_text_size_rel,
+                val_text_color=self.val_text_color
             )
         )
         self.sliderPlus_dims_set = False
