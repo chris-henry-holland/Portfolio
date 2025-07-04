@@ -575,7 +575,7 @@ class Slider(InteractiveDisplayComponentBase):
         #print("creating static background surface")
         surf = pg.Surface(self.shape, pg.SRCALPHA)
         surf.set_alpha(255)
-        surf.fill((255, 0, 0))
+        #surf.fill((255, 0, 0))
         
         constructor_attrs = [f"{attr}_img_constructor"\
                 for attr in self.static_bg_components]
@@ -855,7 +855,7 @@ class SliderGroup(ComponentGroupBaseClass):
         ]
     }
     
-    fixed_attributes = {"sliders"}
+    #fixed_attributes = {"sliders"}
     
     element_inherited_attributes = {
         "slider_shape": "shape",
@@ -901,6 +901,7 @@ class SliderGroup(ComponentGroupBaseClass):
         demarc_intervals: Optional[Tuple[Real]]=None,
         demarc_start_val: Optional[Real]=None,
         name: Optional[str]=None,
+        **kwargs,
     ) -> "SliderGroupElement":
         
         res = self._addElement(
@@ -997,7 +998,7 @@ class SliderPlus(InteractiveDisplayComponentBase):
                 "val_range": "val_range",
                 "increment_start": "increment_start",
                 "increment": "increment",
-                "anchor_type": ("bottomleft",),
+                "anchor_type": ((), lambda: "bottomleft"),
                 "screen_topleft_offset": "topleft_screen",
                 "init_val": "init_val",
                 "demarc_numbers_text_group": "demarc_numbers_text_group",
@@ -1021,6 +1022,24 @@ class SliderPlus(InteractiveDisplayComponentBase):
                 "anchor_pos": None,
                 "val_range": None,
                 "increment_start": None,
+                "increment": None,
+                "anchor_type": None,
+                "screen_topleft_offset": None,
+                "init_val": None,
+                "demarc_numbers_text_group": None,
+                "demarc_numbers_dp": None,
+                "thumb_radius_rel": None,
+                "demarc_line_lens_rel": None,
+                "demarc_intervals": None,
+                "demarc_start_val": None,
+                "demarc_numbers_max_height_rel": None,
+                "track_color": None,
+                "thumb_color": None,
+                "demarc_numbers_color": None,
+                "demarc_line_colors": None,
+                "thumb_outline_color": None,
+                "mouse_enabled": None,
+                "name": None,
             },
             "container_attr_resets": {
                 "display_surf": {"display_surf": True},
@@ -1142,8 +1161,12 @@ class SliderPlus(InteractiveDisplayComponentBase):
         print(f"slider value = {self.slider.val}")
         return self.slider.val
 
-    def calculateSliderShape(self) -> Tuple[int]:
-        return tuple(math.floor(x * y) for x, y in zip(self.shape, self.slider_shape_rel)) 
+    @staticmethod
+    def sliderShapeCalculator(slider_plus_shape: Tuple[int, int], slider_shape_rel: Tuple[float, float]) -> Tuple[int, int]:
+        return tuple(math.floor(x * y) for x, y in zip(slider_plus_shape, slider_shape_rel)) 
+
+    def calculateSliderShape(self) -> Tuple[int, int]:
+        return self.sliderShapeCalculator(self.shape, self.slider_shape_rel)
     
     def calculateSliderBottomLeft(self) -> Tuple[int]:
         return (0, self.shape[1])
@@ -1152,11 +1175,14 @@ class SliderPlus(InteractiveDisplayComponentBase):
         return tuple(round(x * y) for x, y in zip(self.shape, self.slider_borders_rel))
 
     def _setTitleTextObjectAttribute(self, attr: str, text_obj_attr: str) -> None:
-        #print("hi1")
+        print(f"Using _setTitleTextObjectAttribute() to set title text object attribute {text_obj_attr}")
         title_text_obj = self.__dict__.get("_title_text_obj", None)
-        if title_text_obj is None: return
+        if title_text_obj is None:
+            print("title_text_obj is None")
+            return
         #print("hi2")
         val = getattr(self, attr)
+        print(f"setting title object attribute {text_obj_attr} to {val}")
         #print(attr, val)
         orig_val = getattr(title_text_obj, text_obj_attr, None)
         setattr(title_text_obj, text_obj_attr, val)
@@ -1167,9 +1193,11 @@ class SliderPlus(InteractiveDisplayComponentBase):
         return
     
     def calculateTitleShape(self) -> Tuple[int]:
+        print("Using calculateTitleShape()")
         shape = self.shape
         slider_shape = self.slider_shape
         slider_borders = self.slider_borders
+        print(f"overall shape = {shape}, slider_shape = {slider_shape}, slider_borders = {slider_borders}")
         res = (slider_shape[0], shape[1] - (slider_shape[1] + slider_borders[1]))
         #print(f"title shape = {res}")
         return res 
@@ -1197,14 +1225,14 @@ class SliderPlus(InteractiveDisplayComponentBase):
     
     def createTitleTextObject(self, title_text_group: Optional["TextGroup"]=None)\
             -> Union["Text", tuple]:
-        #print("creating title text object")
+        print("creating title text object")
         txt = self.title
         if not txt: return ()
         if title_text_group is None:
             title_text_group = self.title_text_group
         color = self.title_text_color
         txt = self.title
-        #print(f"self.title_shape = {self.title_shape}")
+        print(f"self.title_shape = {self.title_shape}")
         add_text_dicts = [{"text": txt, "font_color": color, "max_shape": self.title_shape, "_attr_reset_funcs": {"updated": [lambda obj, prev_val: setattr(obj, "title_surf", None)]}}]
         text_obj = title_text_group.addTextObjects(add_text_dicts)[0]
         #print(f"text_obj.max_shape_actual = {text_obj.max_shape_actual}")
@@ -1224,7 +1252,7 @@ class SliderPlus(InteractiveDisplayComponentBase):
         #print("hello2")
         surf = pg.Surface(self.title_shape, pg.SRCALPHA)
         surf.set_alpha(255)
-        #surf.fill((0, 0, 255))
+        surf.fill((0, 0, 255))
         #print(self.title_anchor_pos, self.title_anchor_type)
         title_text_obj.draw(surf, anchor_pos=self.title_anchor_pos, anchor_type=self.title_anchor_type)
         return surf
@@ -1239,7 +1267,7 @@ class SliderPlus(InteractiveDisplayComponentBase):
         #print("creating static background surface")
         surf = pg.Surface(self.shape, pg.SRCALPHA)
         surf.set_alpha(255)
-        surf.fill((0, 255, 0))
+        #surf.fill((0, 255, 0))
         
         constructor_attrs = [f"{attr}_img_constructor"\
                 for attr in self.static_bg_components]
@@ -1259,8 +1287,6 @@ class SliderPlus(InteractiveDisplayComponentBase):
         return lambda obj, surf: obj.slider.draw(surf)
 
 
-
-    #################
     def _setValueTextObjectAttribute(self, attr: str, text_obj_attr: str) -> None:
         #print("hi1")
         val_text_objs = self.__dict__.get("_val_text_objs", None)
@@ -1422,14 +1448,13 @@ class SliderPlus(InteractiveDisplayComponentBase):
         #print("hello2")
         surf = pg.Surface(self.val_text_shape, pg.SRCALPHA)
         #surf.set_alpha(100)
-        #surf.fill((0, 255, 255))
+        surf.fill((0, 255, 255))
         print(self.title_anchor_pos, self.title_anchor_type)
         anchor_offset = topLeftAnchorOffset(self.val_text_shape, self.val_text_anchor_type)
         print(f"anchor offset = {anchor_offset}")
         val_text_obj.draw(surf, anchor_pos=anchor_offset, anchor_type=self.val_text_anchor_type)
         return surf
     
-    #################
     """
     def createStaticBackgroundSurface(self)\
             -> Union["pg.Surface", tuple]:
@@ -1493,7 +1518,278 @@ class SliderPlus(InteractiveDisplayComponentBase):
         #print(quit, running, screen_changed, self.slider.val)
         return quit, running, screen_changed, self.val
 
-class SliderVerticalBattery:
+class SliderPlusGroupElement(ComponentGroupElementBaseClass, SliderPlus):
+    
+    group_cls_func = lambda: SliderPlusGroup
+    group_obj_attr = "slider_plus_group"
+    #fixed_attributes = {group_obj_attr}
+
+    #sub_components = dict(SliderPlus.sub_components)
+    #sub_components["slider"]["class"] = SliderGroupElement
+
+    sub_components = {
+        "slider": {
+            "class": SliderGroupElement,
+            "attribute_correspondence": {
+                "val_range": "val_range",
+                "increment_start": "increment_start",
+                "increment": "increment",
+                "screen_topleft_offset": "topleft_screen",
+                "init_val": "init_val",
+                "demarc_numbers_dp": "demarc_numbers_dp",
+                "demarc_intervals": "demarc_intervals",
+                "demarc_start_val": "demarc_start_val",
+                "name": "name",
+            },
+            "creation_function": (lambda slider_plus_group, **kwargs: slider_plus_group.slider_group.addSlider(**kwargs)),
+            "creation_function_args": {
+                "slider_plus_group": "slider_plus_group",
+                #"shape": (("shape", "slider_shape_rel"), SliderPlus.sliderShapeCalculator),
+                "anchor_pos": "slider_bottomleft",
+                "val_range": None,
+                "increment_start": None,
+                "increment": None,
+                "anchor_type": ((), (lambda: "bottomleft")),
+                "screen_topleft_offset": None,
+                "init_val": None,
+                "demarc_numbers_dp": None,
+                "demarc_intervals": None,
+                "demarc_start_val": None,
+                "name": None,
+            },
+            "container_attr_resets": {
+                "display_surf": {"display_surf": True},
+            },
+            #"attr_reset_component_funcs": {},
+            "container_attr_derivation": {
+                "val": ["val"],
+            }
+        }
+    }
+
+    def __init__(
+        self,
+        slider_plus_group: "SliderPlusGroup",
+        title: str,
+        anchor_pos: Tuple[Real],
+        val_range: Tuple[Real],
+        increment_start: Real,
+        increment: Optional[Real]=None,
+        anchor_type: Optional[str]=None,
+        screen_topleft_offset: Optional[Tuple[Real]]=None,
+        init_val: Optional[Real]=None,
+        demarc_numbers_dp: Optional[int]=None,
+        demarc_intervals: Optional[Tuple[Real]]=None,
+        demarc_start_val: Optional[Real]=None,
+        
+        val_text_dp: Optional[int]=None,
+        
+        name: Optional[str]=None,
+        **kwargs,
+    ) -> None:
+        
+        checkHiddenKwargs(type(self), kwargs)
+        
+        #self.__dict__[f"_{self.group_obj_attr}"] = slider_group
+        super().__init__(
+            shape=slider_plus_group.shape,
+            title=title,
+            anchor_pos=anchor_pos,
+            val_range=val_range,
+            increment_start=increment_start,
+            increment=increment,
+            anchor_type=anchor_type,
+            screen_topleft_offset=screen_topleft_offset,
+            init_val=init_val,
+            demarc_numbers_text_group=slider_plus_group.demarc_numbers_text_group,
+            demarc_numbers_dp=demarc_numbers_dp,
+            thumb_radius_rel=slider_plus_group.thumb_radius_rel,
+            demarc_line_lens_rel=slider_plus_group.demarc_line_lens_rel,
+            demarc_intervals=demarc_intervals,
+            demarc_start_val=demarc_start_val,
+            demarc_numbers_max_height_rel=slider_plus_group.demarc_numbers_max_height_rel,
+            track_color=slider_plus_group.track_color,
+            thumb_color=slider_plus_group.thumb_color,
+            demarc_numbers_color=slider_plus_group.demarc_numbers_color,
+            demarc_line_colors=slider_plus_group.demarc_line_colors,
+            thumb_outline_color=slider_plus_group.thumb_outline_color,
+            mouse_enabled=slider_plus_group.mouse_enabled,
+            name=name,
+            _group=slider_plus_group,
+            **kwargs,
+        )
+
+    def calculateSliderShape(self) -> Tuple[int, int]:
+        return self.slider.shape
+
+class SliderPlusGroup(ComponentGroupBaseClass):
+    group_element_cls_func = lambda: SliderPlusGroupElement
+    
+    reset_graph_edges = {}
+    
+    """
+    custom_reset_methods = {
+        "slider_shape": "setSliderShape",
+        "demarc_numbers_text_group": "setDemarcationNumbersTextGroup",
+        "thumb_radius_rel": "setThumbRadiusRelative",
+        "demarc_line_lens_rel": "setDemarcationLineLengthsRelative",
+        "demarc_numbers_max_height_rel": "setDemarcationNumbersMaxHeightRelative",
+        "track_color": "setTrackColor",
+        "thumb_color": "setThumbColor",
+        "demarc_numbers_color": "setDemarcationNumbersColor",
+        "demarc_line_colors": "setDemarcationLineColors",
+        "thumb_outline_color": "setThumbOutlineColor",
+        "mouse_enabled": "setMouseEnabled",
+    }
+    """
+    attribute_calculation_methods = {}
+    
+    # Review- account for using element_inherited_attributes in ComponentGroupBaseClass
+    attribute_default_functions = {
+        attr: SliderPlus.attribute_default_functions.get(attr) for attr in
+        [
+            "slider_shape_rel",
+            "slider_borders_rel",
+            "title_anchor_type",
+            "title_text_color",
+            "val_text_anchor_type",
+            "val_text_color",
+            "val_text_dp",
+        ]
+    }
+    
+    #fixed_attributes = {"sliders"}
+
+    """
+    slider_shape: Tuple[Real],
+        demarc_numbers_text_group: Optional["TextGroup"]=None,
+        thumb_radius_rel: Optional[Real]=None,
+        demarc_line_lens_rel: Optional[Tuple[Real]]=None,
+        demarc_numbers_max_height_rel: Optional[Real]=None,
+        track_color: Optional[ColorOpacity]=None,
+        thumb_color: Optional[ColorOpacity]=None,
+        demarc_numbers_color: Optional[ColorOpacity]=None,
+        demarc_line_colors: Optional[ColorOpacity]=None,
+        thumb_outline_color: Optional[ColorOpacity]=None,
+        mouse_enabled
+    """
+
+    sub_components = {
+        "slider_group": {
+            "class": SliderGroup,
+            "attribute_correspondence": {
+                "slider_shape": (("shape", "slider_shape_rel"), SliderPlus.sliderShapeCalculator),
+                "demarc_numbers_text_group": "demarc_numbers_text_group",
+                "thumb_radius_rel": "thumb_radius_rel",
+                "demarc_line_lens_rel": "demarc_line_lens_rel",
+                "demarc_numbers_max_height_rel": "demarc_numbers_max_height_rel",
+                "track_color": "track_color",
+                "thumb_color": "thumb_color",
+                "demarc_numbers_color": "demarc_numbers_color",
+                "demarc_line_colors": "demarc_line_colors",
+                "thumb_outline_color": "thumb_outline_color",
+                "mouse_enabled": "mouse_enabled",
+            },
+            #"creation_function": SliderGroup,
+            "creation_function_args": {
+                "slider_shape": (("shape", "slider_shape_rel"), SliderPlus.sliderShapeCalculator),
+                "demarc_numbers_text_group": None,
+                "thumb_radius_rel": None,
+                "demarc_line_lens_rel": None,
+                "demarc_numbers_max_height_rel": None,
+                "track_color": None,
+                "thumb_color": None,
+                "demarc_numbers_color": None,
+                "demarc_line_colors": None,
+                "thumb_outline_color": None,
+                "mouse_enabled": None,
+            },
+        }
+    }
+    
+    element_inherited_attributes = {
+        "shape": "shape",
+        "demarc_numbers_text_group": "demarc_numbers_text_group",
+        "thumb_radius_rel": "thumb_radius_rel",
+        "demarc_line_lens_rel": "demarc_line_lens_rel",
+        "demarc_numbers_max_height_rel": "demarc_numbers_max_height_rel",
+        "track_color": "track_color",
+        "demarc_numbers_color": "demarc_numbers_color",
+        "demarc_line_colors": "demarc_line_colors",
+        "thumb_outline_color": "thumb_outline_color",
+        "mouse_enabled": "mouse_enabled",
+        "title_text_group": "title_text_group",
+        "title_anchor_type": "title_anchor_type",
+        "title_text_color": "title_text_color",
+        "val_text_group": "val_text_group",
+        "val_text_anchor_type": "val_text_anchor_type",
+        "val_text_color": "val_text_color",
+    }
+
+    def __init__(self, 
+        shape: Tuple[Real],
+        demarc_numbers_text_group: Optional["TextGroup"]=None,
+        thumb_radius_rel: Optional[Real]=None,
+        demarc_line_lens_rel: Optional[Tuple[Real]]=None,
+        demarc_intervals: Optional[Tuple[Real]]=None,
+        demarc_start_val: Optional[Real]=None,
+        demarc_numbers_max_height_rel: Optional[Real]=None,
+        track_color: Optional[ColorOpacity]=None,
+        thumb_color: Optional[ColorOpacity]=None,
+        demarc_numbers_color: Optional[ColorOpacity]=None,
+        demarc_line_colors: Optional[ColorOpacity]=None,
+        thumb_outline_color: Optional[ColorOpacity]=None,
+        mouse_enabled: Optional[bool]=None,
+        slider_shape_rel: Optional[Tuple[Real]]=None,
+        slider_borders_rel: Optional[Tuple[Real]]=None,
+        title_text_group: Optional["TextGroup"]=None,
+        title_anchor_type: Optional[str]=None,
+        title_text_color: Optional[ColorOpacity]=None,
+        val_text_group: Optional["TextGroup"]=None,
+        val_text_anchor_type: Optional[str]=None,
+        val_text_color: Optional[ColorOpacity]=None,
+        **kwargs,
+    ) -> None:
+        checkHiddenKwargs(type(self), kwargs)
+
+        super().__init__(**self.initArgsManagement(locals(), kwargs=kwargs))
+
+    def addSliderPlus(
+        self,
+        title: str,
+        anchor_pos: Tuple[Real],
+        val_range: Tuple[Real],
+        increment_start: Real,
+        increment: Optional[Real]=None,
+        anchor_type: Optional[str]=None,
+        screen_topleft_offset: Optional[Tuple[Real]]=None,
+        init_val: Optional[Real]=None,
+        demarc_numbers_dp: Optional[int]=None,
+        demarc_intervals: Optional[Tuple[Real]]=None,
+        demarc_start_val: Optional[Real]=None,
+        val_text_dp: Optional[int]=None,
+        name: Optional[str]=None,
+        **kwargs,
+    ) -> "SliderGroupElement":
+        
+        res = self._addElement(
+            title=title,
+            anchor_pos=anchor_pos,
+            val_range=val_range,
+            increment_start=increment_start,
+            increment=increment,
+            anchor_type=anchor_type,
+            screen_topleft_offset=screen_topleft_offset,
+            init_val=init_val,
+            demarc_numbers_dp=demarc_numbers_dp,
+            demarc_intervals=demarc_intervals,
+            demarc_start_val=demarc_start_val,
+            val_text_dp=val_text_dp,
+            name=name,
+        )
+        return res
+
+class SliderPlusVerticalBattery:
     def __init__(self, screen, x, y, w, h, slider_gap_rel=0.2, track_color=None,
             thumb_color=None, thumb_radius_rel=1, font=None,
             demarc_line_lens_rel=None, number_size_rel=2,

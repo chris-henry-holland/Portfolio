@@ -285,20 +285,28 @@ class ComponentBaseClass(ABC):
                 custom_reset_funcs.setdefault(idx, [])
                 custom_reset_funcs[idx].append(functools.partial(meth))
         
-        def setComponentAttribute(component_name: str, component_attr_to_set: str, val_attr: str, obj: "ComponentBaseClass", prev_val: Any) -> None:
+        def setComponentAttribute(component_name: str, component_attr_to_set: str, attr_calc: Union[str, Tuple[tuple, Callable]], obj: "ComponentBaseClass", prev_val: Any) -> None:
             component = obj.__dict__.get(f"_{component_name}", None)
             if component is None: return
-            val = getattr(obj, val_attr)
+            val = getattr(obj, attr_calc) if isinstance(attr_calc, str) else attr_calc[1](*[getattr(obj, x) for x in attr_calc[0]])
             return component.setAttributes({component_attr_to_set: val}, _from_container=True)
         
         sub_components_dict = cls.__dict__.get("sub_components_dict", cls._createSubComponentDictionary())
         for component_name, sc_dict in sub_components_dict.items():
             attr_dict2 = sc_dict["attribute_correspondence"]
-            for component_attr, val_attr in attr_dict2.items():
-                if not isinstance(val_attr, str): continue
-                idx = attr2Index(val_attr)
-                custom_reset_funcs.setdefault(idx, [])
-                custom_reset_funcs[idx].append(functools.partial(setComponentAttribute, component_name, component_attr, val_attr))
+            for component_attr, attr_calc in attr_dict2.items():
+                parent_attr_lst = [attr_calc] if isinstance(attr_calc, str) else attr_calc[0]
+                for parent_attr in parent_attr_lst:
+                    
+                    idx = attr2Index(parent_attr)
+                    #print(parent_attr, idx)
+                    custom_reset_funcs.setdefault(idx, [])
+                    custom_reset_funcs[idx].append(functools.partial(setComponentAttribute, component_name, component_attr, attr_calc))
+                #if not isinstance(val_attr, str): continue
+                #for parent_attr in attr_lst:
+                #    idx = attr2Index(parent_attr)
+                #    custom_reset_funcs.setdefault(idx, [])
+                #    custom_reset_funcs[idx].append(functools.partial(setComponentAttribute, component_name, component_attr, parent_attr))
         
         def updateFinalizerAttributeValue(attr: str, obj: "ComponentBaseClass", prev_val: Any) -> None:
             cls = type(obj)
@@ -357,6 +365,7 @@ class ComponentBaseClass(ABC):
         attr_deffunc_dict = {}
         for cls2 in cls.mro():
             for attr, def_func_tup in cls2.__dict__.get("attribute_default_functions", {}).items():
+                #print(attr, def_func_tup)
                 if callable(def_func_tup):
                     def_func_tup = (def_func_tup, ())
                 elif len(def_func_tup) == 1:
@@ -459,15 +468,18 @@ class ComponentBaseClass(ABC):
         for arg, val_repr in creation_function_args.items():
             if val_repr is None:
                 # Consider adding specific error in case arg not in attr_corresp_dict
-                val_repr = attr_corresp_dict[arg]
-            kwargs[arg] = getattr(self, val_repr) if isinstance(val_repr, str) else val_repr[0]
+                val_repr = attr_corresp_dict.get(arg, None)
+                #if val_repr is None: continue
+            #print(arg, val_repr, len(val_repr))
+            kwargs[arg] = getattr(self, val_repr) if isinstance(val_repr, str) else val_repr[1](*[getattr(self, x) for x in val_repr[0]])
+            #kwargs[arg] = getattr(self, val_repr) if isinstance(val_repr, str) else val_repr[0]
         kwargs["_container_obj"] = self
         if container_attr_resets:
             kwargs["_container_attr_reset_dict"] = container_attr_resets
         #print(f"subcomponent kwargs = {kwargs}")
         
         component = creation_function(**kwargs)
-        setattr_dict = {arg: (getattr(self, attr) if isinstance(attr, str) else attr[0]) for arg, attr in attr_corresp_dict.items()}
+        setattr_dict = {arg: (getattr(self, attr) if isinstance(attr, str) else attr[1](*[getattr(self, x) for x in attr[0]])) for arg, attr in attr_corresp_dict.items()}
         component.setAttributes(setattr_dict)
         component._attr_container_dependent_set = {x for x in attr_corresp_dict.values() if isinstance(x, str)}
         return component
@@ -490,8 +502,8 @@ class ComponentBaseClass(ABC):
     def setAttributes(self, setattr_dict: Dict[str, Any], _from_container: bool=False, **kwargs) -> None:
         #print("using setAttributes()")
         #print(setattr_dict)
-        if "val" in setattr_dict.keys():
-            print(setattr_dict)
+        #if "val" in setattr_dict.keys():
+        #    print(setattr_dict)
         #print(f"\nsetting attributes {list(setattr_dict.keys())}")
         #print(setattr_dict)
         #print(type(self).__name__)
@@ -526,8 +538,8 @@ class ComponentBaseClass(ABC):
         inds = []
         
         def setAttrCustom(attr: str, val: Any) -> None:
-            if attr.lstrip("_") in {"val", "val_str", "val_text_surf"}:
-                print(f"setting attribute {attr} to {val}")
+            #if attr.lstrip("_") in {"val", "val_str", "val_text_surf"}:
+            #    print(f"setting attribute {attr} to {val}")
             self.__dict__[attr] = val
             #print(f"self.__dict__['{attr}'] = {val}")
             return

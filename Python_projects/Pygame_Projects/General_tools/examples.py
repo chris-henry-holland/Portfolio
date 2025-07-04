@@ -26,7 +26,8 @@ from General_tools import (
     Slider,
     SliderGroup,
     SliderPlus,
-    SliderVerticalBattery,
+    SliderPlusGroup,
+    SliderPlusVerticalBattery,
     Button,
     ButtonGrid,
     MenuOverlay,
@@ -190,6 +191,7 @@ def runExampleSliderGroup1() -> None:
             name=None,
         )
     )
+    """
     sliders.append(
         slider_group.addSlider(
             anchor_pos=(300, 400),
@@ -205,11 +207,13 @@ def runExampleSliderGroup1() -> None:
             name=None,
         )
     )
+    """
     #print("hello3")
     #print(type(sliders[0]).mro())
     #print(sliders[0].track_shape)
     #print(slider_group.is_default_set)
     #print(slider_group.demarc_line_colors)
+    #slider_group.slider_shape = (600, 600)
     
     def drawSliders(screen: "pg.Surface", sliders: List["Slider"]) -> None:
         for slider in sliders:
@@ -229,7 +233,7 @@ def runExampleSliderGroup1() -> None:
     """
     drawSliders(screen, sliders)
     #sliders[0].shape = (300, 70)
-    slider_group.slider_shape = (400, 70)
+    #slider_group.slider_shape = (600, 600)
     #print("hello")
     slider_group.track_color = (named_colors_def["black"], 0.5)
     screen_changed = True
@@ -292,16 +296,16 @@ def runExampleSliderPlus1() -> None:
     """
     slider_plus = SliderPlus(
         title="Slider 1",
-        shape=(300, 100),#(600, 300),
-        anchor_pos=(0, 0),#(300, 200),
+        shape=(600, 300),
+        anchor_pos=(300, 200),
         val_range=(0, 100),
         increment_start=15,
-        increment=5,
-        anchor_type="topleft",
+        increment=None,
+        anchor_type="center",
         screen_topleft_offset=None,
         init_val=None,
         demarc_numbers_text_group=None,
-        demarc_numbers_dp=None,
+        demarc_numbers_dp=2,
         thumb_radius_rel=1,
         demarc_line_lens_rel=None,
         demarc_intervals=(20, 10, 5),
@@ -314,15 +318,15 @@ def runExampleSliderPlus1() -> None:
         thumb_outline_color=None,
         mouse_enabled=True,
         
-        slider_shape_rel=(0.7, 0.6),
-        slider_borders_rel=(0.05, 0.02),
+        slider_shape_rel=(0.7, 0.5),
+        slider_borders_rel=(0.05, 0.03),
         title_text_group=None,
-        title_anchor_type="bottomright",
+        title_anchor_type="topleft",
         title_text_color=None,
         val_text_group=None,
         val_text_anchor_type="midright",
-        val_text_color=(named_colors_def["blue"], 1),
-        val_text_dp=None,
+        val_text_color=(named_colors_def["black"], 1),
+        val_text_dp=2,
         
         name=None,
     )
@@ -395,6 +399,141 @@ def runExampleSliderPlus1() -> None:
     #print(f"reference count = {ctypes.c_long.from_address(address)}")
     return address
 
+def runExampleSliderPlusGroup1() -> None:
+    screen_size = (500, 200)
+    framerate = 5
+    pg.init()
+    screen = pg.display.set_mode(screen_size)
+    screenColor = named_colors_def["white"]
+    screen.fill(screenColor)
+    pg.display.update(pg.Rect(0, 0, *screen_size))
+    screen_cp = pg.Surface.copy(screen)
+
+    slider_group = SliderPlusGroup(
+        shape=(500, 200),
+        demarc_numbers_text_group=None,
+        thumb_radius_rel=1,
+        demarc_line_lens_rel=None,
+        demarc_numbers_max_height_rel=1,
+        track_color=(named_colors_def["gray"], 1),
+        thumb_color=(named_colors_def["silver"], 1),
+        demarc_numbers_color=None,
+        demarc_line_colors=None,
+        thumb_outline_color=None,
+        mouse_enabled=True,
+        slider_shape_rel=(.7, .7),
+        slider_borders_rel=(.05, .05),
+        title_text_group=None,
+        title_anchor_type="topleft",
+        title_text_color=(named_colors_def["black"], 1.),
+        val_text_group=None,
+        val_text_anchor_type="midright",
+        val_text_color=(named_colors_def["black"], 1.),
+    )
+
+    sliders = []
+    sliders.append(
+        slider_group.addSliderPlus(
+            title="Slider 1",
+            anchor_pos=(0, 0),
+            val_range=(0, 100),
+            increment_start=15,
+            increment=0,
+            anchor_type="topleft",
+            screen_topleft_offset=None,
+            init_val=50,
+            demarc_numbers_dp=None,
+            demarc_intervals=(20, 10, 5),
+            demarc_start_val=None,
+            val_text_dp=None,
+            name=None,
+        )
+    )
+    """
+    sliders.append(
+        slider_group.addSliderPlus(
+            title="Slider 2",
+            anchor_pos=(300, 400),
+            val_range=(0, 100),
+            increment_start=15,
+            increment=5,
+            anchor_type="center",
+            screen_topleft_offset=None,
+            init_val=None,
+            demarc_numbers_dp=3,
+            demarc_intervals=(20,),
+            demarc_start_val=1,
+            val_text_dp=0,
+            name=None,
+        )
+    )
+    """
+    #print("hello3")
+    #print(type(sliders[0]).mro())
+    #print(sliders[0].track_shape)
+    #print(slider_group.is_default_set)
+    #print(slider_group.demarc_line_colors)
+    
+    def drawSliders(screen: "pg.Surface", sliders: List["SliderPlus"]) -> None:
+        for slider in sliders:
+            slider.draw(screen)
+        return
+    """
+    slider = Slider((500, 70), (300, 200), anchor_type="center",
+            demarc_numbers_text_group=None,
+            screen_topleft_offset=(0, 0), val_range=(0, 100),
+            demarc_intervals=(20, 10, 5), demarc_start_val=35,
+            increment=10, increment_start=15, track_color=(named_colors_def["gray"], 1),
+            thumb_color=(named_colors_def["silver"], 1), thumb_radius_rel=1, init_val=None,
+            name=None, demarc_line_lens_rel=None, demarc_numbers_dp=0,
+            demarc_numbers_max_height_rel=2, demarc_numbers_color=None,
+            demarc_line_colors=None, thumb_outline_color=None,
+            mouse_enabled=True)
+    """
+    drawSliders(screen, sliders)
+    #sliders[0].shape = (300, 70)
+    #slider_group.slider_shape = (600, 600)
+    #print("hello")
+    #slider_group.track_color = (named_colors_def["black"], 0.5)
+    screen_changed = True
+    #print(slider.__dict__.keys())
+    #print(slider.mouse_enabled)
+    #print(slider.mouse_enablement)
+    #print(slider_group.is_default_set)
+    #print(slider_group.demarc_line_colors)
+    #print(sliders[0].demarc_line_colors)
+    #slider_group.shape = (1200, 600)
+    slider_group.track_color = (named_colors_def["black"], .5)
+    slider_group.title_text_color = (named_colors_def["silver"], 1)
+    
+    clock = pg.time.Clock()
+    
+    while True:
+        
+        quit, esc_pressed, event_loop_kwargs =\
+                sliders[0].getRequiredInputs()
+        #print(event_loop_kwargs)
+        running = not esc_pressed
+        if quit or not running:
+            pg.quit()
+            return
+        for slider in sliders:
+            quit, running, chng, val = slider.eventLoop(check_axes=(0, 1),\
+                **event_loop_kwargs)
+            if quit or not running:
+                pg.quit()
+                break
+            if not chng: continue
+            screen_changed = True
+            print(f"new slider value for {slider.name} = {val}")
+        if screen_changed:
+            screen.blit(screen_cp, (0, 0))
+            drawSliders(screen, sliders)
+            pg.display.flip()
+        clock.tick(framerate)
+        screen_changed = False
+    return
+
 def runExampleSliders1() -> None:
     screen_size = (600, 600)
     framerate = 60
@@ -405,7 +544,7 @@ def runExampleSliders1() -> None:
     pg.display.update(pg.Rect(0, 0, *screen_size))
     
     screen_cp = pg.Surface.copy(screen)
-    slider_battery = SliderVerticalBattery(screen, 50, 50, 500, 400, demark_colors=((255,0,0), (0, 255, 0)), slider_gap_rel=0.3, number_size_rel=1.5)
+    slider_battery = SliderPlusVerticalBattery(screen, 50, 50, 500, 400, demark_colors=((255,0,0), (0, 255, 0)), slider_gap_rel=0.3, number_size_rel=1.5)
     slider_battery.addSliderPlus("discrete1", val_range=(0, 100),
             demark_intervals=(20, 10, 5), demark_start_val=0,
             increment=2, default_val=30, numbers_dp=0)

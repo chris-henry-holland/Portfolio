@@ -7,6 +7,7 @@ from General_tools import (
     runExampleSlider1,
     runExampleSliderGroup1,
     runExampleSliderPlus1,
+    runExampleSliderPlusGroup1,
     runExampleSliders1,
     runExampleButton1,
     runExampleButtonGrid1,
@@ -16,7 +17,8 @@ from General_tools import (
 #address = runExampleSlider1()
 #print(f"reference count = {ctypes.c_long.from_address(address)}")
 #runExampleSliderGroup1()
-runExampleSliderPlus1()
+#runExampleSliderPlus1()
+runExampleSliderPlusGroup1()
 #runExampleSliders1()
 #runExampleButton1()
 #runExampleButtonGrid1()

@@ -8,7 +8,8 @@ from .sliders import (
     Slider,
     SliderGroup,
     SliderPlus,
-    SliderVerticalBattery
+    SliderPlusGroup,
+    SliderPlusVerticalBattery
 )
 from .buttons import (
     Button,
@@ -57,6 +58,7 @@ from .examples import (
     runExampleSlider1,
     runExampleSliderGroup1,
     runExampleSliderPlus1,
+    runExampleSliderPlusGroup1,
     runExampleSliders1,
     runExampleButton1,
     runExampleButtonGrid1,
