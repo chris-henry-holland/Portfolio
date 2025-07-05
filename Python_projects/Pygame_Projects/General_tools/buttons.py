@@ -1087,28 +1087,40 @@ class ButtonGrid(InteractiveDisplayComponentBase):
     
     n_state = Button.n_state
 
-    def __init__(self, shape: Tuple[Real], button_text: List[List[str]],\
-            text_groups: Tuple[Union[Optional[Tuple["TextGroup"]], int]],\
-            anchor_pos: Tuple[Real],\
-            anchor_type: str="topleft",\
-            screen_topleft_offset: Tuple[Real]=(0, 0),\
-            button_gap_rel_shape=(0.2, 0.2),\
-            font_colors=None, text_borders_rel=None,\
-            fill_colors=None, outline_widths=None, outline_colors=None,\
-            mouse_enabled: bool=True, navkeys_enabled: bool=True,\
-            navkeys: Optional[Tuple[Tuple[Set[int]]]]=None,\
-            navkey_cycle_delay_frame: Tuple[int]=(30, 10),\
-            enter_keys: Optional[Set[int]]=None):
+    def __init__(
+        self, 
+        shape: Tuple[Real],
+        button_text: List[List[str]],
+        text_groups: Tuple[Union[Optional[Tuple["TextGroup"]], int]],
+        anchor_pos: Tuple[Real],
+        anchor_type: str="topleft",
+        screen_topleft_offset: Tuple[Real]=(0, 0),
+        button_gap_rel_shape=(0.2, 0.2),
+        font_colors=None,
+        text_borders_rel=None,
+        fill_colors=None,
+        outline_widths=None,
+        outline_colors=None,
+        mouse_enabled: bool=True,
+        navkeys_enabled: bool=True,
+        navkeys: Optional[Tuple[Tuple[Set[int]]]]=None,
+        navkey_cycle_delay_frame: Tuple[int]=(30, 10),
+        enter_keys: Optional[Set[int]]=None,
+    ):
         
         self.button_shape_fixed = False
         
-        super().__init__(shape, anchor_pos, anchor_type=anchor_type,\
-            screen_topleft_offset=screen_topleft_offset,\
-            mouse_enablement=(mouse_enabled, False, mouse_enabled),\
-            navkeys_enablement=(navkeys_enabled, navkeys_enabled, False),\
-            navkeys=navkeys,\
-            enter_keys_enablement=(False, navkeys_enabled, False),\
-            enter_keys=enter_keys)
+        super().__init__(
+            shape,
+            anchor_pos,
+            anchor_type=anchor_type,
+            screen_topleft_offset=screen_topleft_offset,
+            mouse_enablement=(mouse_enabled, False, mouse_enabled),
+            navkeys_enablement=(navkeys_enabled, navkeys_enabled, False),
+            navkeys=navkeys,
+            enter_keys_enablement=(False, navkeys_enabled, False),
+            enter_keys=enter_keys,
+        )
         
         #self.n_state = 4
         self.selected = 0
@@ -1163,7 +1175,10 @@ class ButtonGrid(InteractiveDisplayComponentBase):
             get_mouse_status=self.mouse_enabled)
         """
     
-    def _setupText(self, button_text: List[List]) -> List[List[List[Optional["Text"]]]]:
+    def _setupText(
+        self,
+        button_text: List[List]
+    ) -> List[List[List[Optional["Text"]]]]:
         res = [[[None] * self.n_state for _ in range(self.button_array_shape[1])] for _ in range(self.button_array_shape[0])]
         #anchor_type = "center"
         button_shape = self.button_shape

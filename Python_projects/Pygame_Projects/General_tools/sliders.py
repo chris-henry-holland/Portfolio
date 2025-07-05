@@ -223,9 +223,12 @@ class Slider(InteractiveDisplayComponentBase):
         return self.findNearestValue(self.val_raw)
     
     def calculateThumbX(self) -> int:
+        print("Using calculateThumbX()")
+        print(f"new thumb x value = {self.val2X(self.val)}")
         return self.val2X(self.val)
     
     def calculateThumbXScreen(self) -> int:
+        print("Using calculateThumbXScreen()")
         return () if self.thumb_x == () else self.thumb_x + self.topleft_screen[0]
     
     #def createDemarcationNumbersTextGroup(self, max_height: Optional[Real]=None) -> "TextGroup":
@@ -614,7 +617,7 @@ class Slider(InteractiveDisplayComponentBase):
         return thumbRenderer
     
     def createDisplaySurface(self) -> Optional["pg.Surface"]:
-        #print("\ncreating display surface")
+        print("creating display surface")
         surf = pg.Surface(self.shape, pg.SRCALPHA)
         for attr in self.displ_component_attrs:
             #print(f"{attr}_img_constructor")
@@ -625,7 +628,7 @@ class Slider(InteractiveDisplayComponentBase):
         return surf
     
     def draw(self, surf: "pg.Surface") -> None:
-        #print("\ndrawing slider")
+        print("\ndrawing slider")
         #print("display_surf" in self.__dict__.keys())
         #print(self.__dict__.get("display_surf", None))
         #print("_display_surf" in self.__dict__.keys())
@@ -726,8 +729,8 @@ class Slider(InteractiveDisplayComponentBase):
             thumb_x0 = self.thumb_x
             self.thumb_x_screen_raw = thumb_x_screen_raw
             screen_changed = (self.thumb_x != thumb_x0)
-            
         else: screen_changed = False
+        #print(screen_changed, self.slider_held, self.val)
         return quit, running, screen_changed, self.val
 
 class SliderGroupElement(ComponentGroupElementBaseClass, Slider):
@@ -916,6 +919,7 @@ class SliderGroup(ComponentGroupBaseClass):
             demarc_intervals=demarc_intervals,
             demarc_start_val=demarc_start_val,
             name=name,
+            **kwargs,
         )
         return res
 
@@ -943,9 +947,9 @@ class SliderPlus(InteractiveDisplayComponentBase):
         "static_bg_surf": {"display_surf": True},
     }
     
-    custom_reset_methods = {
-        "title_shape": "setTitleShape",
-    }
+    #custom_reset_methods = {
+    #    "title_shape": "setTitleShape",
+    #}
     
     attribute_calculation_methods = {
         #"slider": "createSlider",
@@ -1172,7 +1176,12 @@ class SliderPlus(InteractiveDisplayComponentBase):
         return (0, self.shape[1])
     
     def calculateSliderBorders(self) -> Tuple[int]:
-        return tuple(round(x * y) for x, y in zip(self.shape, self.slider_borders_rel))
+        print("Using calculateSliderBorders()")
+        print(f"self.shape = {self.shape}")
+        print(f"self.slider_borders_rel = {self.slider_borders_rel}")
+        res = tuple(round(x * y) for x, y in zip(self.shape, self.slider_borders_rel))
+        print(f"calculated slider borders = {res}")
+        return res
 
     def _setTitleTextObjectAttribute(self, attr: str, text_obj_attr: str) -> None:
         print(f"Using _setTitleTextObjectAttribute() to set title text object attribute {text_obj_attr}")
@@ -1395,6 +1404,8 @@ class SliderPlus(InteractiveDisplayComponentBase):
         print(f"object shape = {shape}")
         slider_shape = self.slider_shape
         slider_borders = self.slider_borders
+        print(f"slider shape = {slider_shape}")
+        print(f"slider borders = {slider_borders}")
         res = (shape[0] - (slider_shape[0] + slider_borders[0]), shape[1])
         print(f"value shape = {res}")
         return res 
@@ -1513,7 +1524,7 @@ class SliderPlus(InteractiveDisplayComponentBase):
         quit = quit or quit2
         running = running and running2
         screen_changed = screen_changed or screen_changed2
-        
+        #print(screen_changed, self.val)
         #print()
         #print(quit, running, screen_changed, self.slider.val)
         return quit, running, screen_changed, self.val
@@ -1614,6 +1625,7 @@ class SliderPlusGroupElement(ComponentGroupElementBaseClass, SliderPlus):
             demarc_line_colors=slider_plus_group.demarc_line_colors,
             thumb_outline_color=slider_plus_group.thumb_outline_color,
             mouse_enabled=slider_plus_group.mouse_enabled,
+            val_text_dp=val_text_dp,
             name=name,
             _group=slider_plus_group,
             **kwargs,
@@ -1718,6 +1730,8 @@ class SliderPlusGroup(ComponentGroupBaseClass):
         "demarc_line_colors": "demarc_line_colors",
         "thumb_outline_color": "thumb_outline_color",
         "mouse_enabled": "mouse_enabled",
+        "slider_shape_rel": "slider_shape_rel",
+        "slider_borders_rel": "slider_borders_rel",
         "title_text_group": "title_text_group",
         "title_anchor_type": "title_anchor_type",
         "title_text_color": "title_text_color",
@@ -1771,7 +1785,8 @@ class SliderPlusGroup(ComponentGroupBaseClass):
         name: Optional[str]=None,
         **kwargs,
     ) -> "SliderGroupElement":
-        
+        print("using addSliderPlus()")
+        print(kwargs)
         res = self._addElement(
             title=title,
             anchor_pos=anchor_pos,
@@ -1786,9 +1801,360 @@ class SliderPlusGroup(ComponentGroupBaseClass):
             demarc_start_val=demarc_start_val,
             val_text_dp=val_text_dp,
             name=name,
+            **kwargs,
         )
         return res
 
+
+class SliderPlusGrid(InteractiveDisplayComponentBase):
+    sliderplus_names = set()
+    unnamed_count = 0
+    
+    reset_graph_edges = {
+        "grid_dims": {"slider_geometry": True},
+        "shape": {"slider_geometry": True},
+        "slider_gaps_rel_shape": {"slider_geometry": True},
+        "slider_geometry": {"slider_shape": True, "slider_gaps": True, "slider_topleft_locations": True, "display_surf": True},
+        "slider_shape": {"display_surf": True},
+        "slider_gaps": {"display_surf": True},
+        "slider_topleft_locations": {"slider_topleft_locations": True},
+    }
+    
+    #custom_reset_methods = {
+    #    "title_shape": "setTitleShape",
+    #}
+    
+    attribute_calculation_methods = {
+        #"slider": "createSlider",
+        "slider_geometry": "calculateSliderGeometry",
+        "slider_shape": "calculateSliderShape",
+        "slider_gaps": "calculateSliderGaps",
+        "slider_topleft_locations": "calculateSliderTopleftLocations",
+
+        "display_surf": "createDisplaySurface",
+
+        "slider_grid_img_constructor": "createSliderImageConstructor",
+    }
+    
+    attribute_default_functions = {
+        **{
+            attr: SliderPlusGroup.attribute_default_functions.get(attr) for attr in
+            [
+                "demarc_numbers_text_group",
+                "thumb_radius_rel",
+                "demarc_line_lens_rel",
+                "demarc_intervals",
+                "demarc_start_val",
+                "demarc_numbers_max_height_rel",
+                "track_color",
+                "thumb_color",
+                "demarc_numbers_color",
+                "demarc_line_colors",
+                "thumb_outline_color",
+                "mouse_enabled",
+                "slider_shape_rel",
+                "slider_borders_rel",
+                "title_text_group",
+                "title_anchor_type",
+                "title_text_color",
+                "val_text_group",
+                "val_text_anchor_type",
+                "val_text_color",
+            ]
+        },
+        **{
+            "slider_gaps_rel_shape": ((lambda obj: (0., 0.)),),
+        }
+    }
+    
+    fixed_attributes = set()
+    
+    sub_components = {
+        "slider_plus_group": {
+            "class": SliderPlusGroup,
+            "attribute_correspondence": {
+                "shape": "slider_shape",
+                "demarc_numbers_text_group": "demarc_numbers_text_group",
+                "thumb_radius_rel": "thumb_radius_rel",
+                "demarc_line_lens_rel": "demarc_line_lens_rel",
+                "demarc_intervals": "demarc_intervals",
+                "demarc_start_val": "demarc_start_val",
+                "demarc_numbers_max_height_rel": "demarc_numbers_max_height_rel",
+                "track_color": "track_color",
+                "thumb_color": "thumb_color",
+                "demarc_numbers_color": "demarc_numbers_color",
+                "demarc_line_colors": "demarc_line_colors",
+                "thumb_outline_color": "thumb_outline_color",
+                "mouse_enabled": "mouse_enabled",
+                "slider_shape_rel": "slider_shape_rel",
+                "slider_borders_rel": "slider_borders_rel",
+                "title_text_group": "title_text_group",
+                "title_anchor_type": "title_anchor_type",
+                "title_text_color": "title_text_color",
+                "val_text_group": "val_text_group",
+                "val_text_anchor_type": "val_text_anchor_type",
+                "val_text_color": "val_text_color",
+            },
+            "creation_function_args": {
+                "shape": None,
+                "demarc_numbers_text_group": None,
+                "thumb_radius_rel": None,
+                "demarc_line_lens_rel": None,
+                "demarc_intervals": None,
+                "demarc_start_val": None,
+                "demarc_numbers_max_height_rel": None,
+                "track_color": None,
+                "thumb_color": None,
+                "demarc_numbers_color": None,
+                "demarc_line_colors": None,
+                "thumb_outline_color": None,
+                "mouse_enabled": None,
+                "slider_shape_rel": None,
+                "slider_borders_rel": None,
+                "title_text_group": None,
+                "title_anchor_type": None,
+                "title_text_color": None,
+                "val_text_group": None,
+                "val_text_anchor_type": None,
+                "val_text_color": None,
+            },
+            #"container_attr_resets": {
+            #    "display_surf": {"display_surf": True},
+            #},
+            #"attr_reset_component_funcs": {},
+            #"container_attr_derivation": {
+            #    "val": ["val"],
+            #},
+        }
+    }
+    
+    #static_bg_components = []#["title"]
+    #displ_component_attrs = []#["static_bg", "slider", "val_text"]
+
+    def __init__(
+        self,
+        grid_dims: Tuple[int],
+        shape: Tuple[Real],
+        slider_gaps_rel_shape: Optional[Tuple[Real, Real]]=None,
+        anchor_pos: Tuple[Real]=None,
+        anchor_type: Optional[str]=None,
+        screen_topleft_offset: Optional[Tuple[Real]]=None,
+        demarc_numbers_text_group: Optional["TextGroup"]=None,
+        thumb_radius_rel: Optional[Real]=None,
+        demarc_line_lens_rel: Optional[Tuple[Real]]=None,
+        demarc_intervals: Optional[Tuple[Real]]=None,
+        demarc_start_val: Optional[Real]=None,
+        demarc_numbers_max_height_rel: Optional[Real]=None,
+        track_color: Optional[ColorOpacity]=None,
+        thumb_color: Optional[ColorOpacity]=None,
+        demarc_numbers_color: Optional[ColorOpacity]=None,
+        demarc_line_colors: Optional[ColorOpacity]=None,
+        thumb_outline_color: Optional[ColorOpacity]=None,
+        slider_shape_rel: Optional[Tuple[Real]]=None,
+        slider_borders_rel: Optional[Tuple[Real]]=None,
+        title_text_group: Optional["TextGroup"]=None,
+        title_anchor_type: Optional[str]=None,
+        title_text_color: Optional[ColorOpacity]=None,
+        val_text_group: Optional["TextGroup"]=None,
+        val_text_anchor_type: Optional[str]=None,
+        val_text_color: Optional[ColorOpacity]=None,
+        mouse_enabled: Optional[bool]=None,
+        **kwargs,
+    ):
+        
+        self.slider_shape_fixed = False
+
+        checkHiddenKwargs(type(self), kwargs)
+        
+        kwargs2 = self.initArgsManagement(locals(), kwargs=kwargs)
+        super().__init__(**kwargs2)
+        
+        """
+        super().__init__(
+            shape,
+            anchor_pos,
+            anchor_type=anchor_type,
+            screen_topleft_offset=screen_topleft_offset,
+            mouse_enablement=(mouse_enabled, False, mouse_enabled),
+        )
+        
+        #print(button_text)
+        self._grid_dims = grid_dims
+
+        shape = (100, 100) # Placeholder
+
+        self._slider_group = SliderPlusGroup(
+            shape=self.slider_shape,
+            demarc_numbers_text_group: Optional["TextGroup"]=None,
+            thumb_radius_rel: Optional[Real]=None,
+            demarc_line_lens_rel: Optional[Tuple[Real]]=None,
+            demarc_intervals: Optional[Tuple[Real]]=None,
+            demarc_start_val: Optional[Real]=None,
+            demarc_numbers_max_height_rel: Optional[Real]=None,
+            track_color: Optional[ColorOpacity]=None,
+            thumb_color: Optional[ColorOpacity]=None,
+            demarc_numbers_color: Optional[ColorOpacity]=None,
+            demarc_line_colors: Optional[ColorOpacity]=None,
+            thumb_outline_color: Optional[ColorOpacity]=None,
+            mouse_enabled: Optional[bool]=None,
+            slider_shape_rel: Optional[Tuple[Real]]=None,
+            slider_borders_rel: Optional[Tuple[Real]]=None,
+            title_text_group: Optional["TextGroup"]=None,
+            title_anchor_type: Optional[str]=None,
+            title_text_color: Optional[ColorOpacity]=None,
+            val_text_group: Optional["TextGroup"]=None,
+            val_text_anchor_type: Optional[str]=None,
+            val_text_color: Optional[ColorOpacity]=None,
+        )
+
+        self._text_groups = text_groups
+        
+        self._button_gap_rel_shape = tuple(button_gap_rel_shape)
+        
+        """
+    def calculateSliderGeometry(self) -> Tuple[Tuple[int, int], Tuple[int, int], List[List[Tuple[int, int]]]]:
+        pass
+    
+    def calculateSliderShape(self) -> Tuple[int, int]:
+        return self.slider_geometry[0]
+
+    def calculateSliderGaps(self) -> Tuple[int, int]:
+        return self.slider_geometry[1]
+    
+    def calculateSliderTopleftLocations(self) -> List[List[Tuple[int, int]]]:
+        return self.slider_geometry[2]
+
+    def createDisplaySurface(self) -> "pg.Surface":
+        pass
+
+    def createSliderImageConstructor(self) -> Callable:
+        pass
+    
+    
+    def draw(self, surf: "pg.Surface") -> None:
+        #self.button_grid_img_constructor(surf)
+        return
+    
+    
+    def processEvents(self, b_inds0: Optional[Tuple[int]], b_inds0_mouse: Optional[Tuple[int]], b_inds1_mouse: Optional[Tuple[int]], events: List[Tuple[int]]) -> Tuple[Union[List[int], List[Tuple[int]], bool]]:
+        """
+        #print(b_inds0, b_inds0_mouse, b_inds1_mouse, events)
+        if not self.mouse_enabled and not self.navkeys_enabled:
+            return None, [], False, None
+        #enter_pressed = False
+        selected_b_inds = []
+        idx1 = 0
+        b_inds_mouse = b_inds0_mouse
+        b_inds = b_inds0
+        b_reset = False
+        last_navkey = None
+        for tup in events:
+            if tup[1] == 3 and self.mouse_enabled:
+                pos = tup[0].pos
+                b_inds2 = self.mouseOverButton(pos)
+                if b_inds2 is None: continue
+                b_inds = b_inds2
+                b_reset = True
+                last_navkey = None
+                if b_inds == b_inds_mouse:
+                    for idx in range(idx1, len(selected_b_inds)):
+                        selected_b_inds[idx] = b_inds_mouse
+                    idx1 = len(selected_b_inds)
+                else: b_inds_mouse = b_inds
+                if tup[0].button != 1:
+                    continue
+                #print("hi1")
+                selected_b_inds.append(b_inds)
+                continue
+            elif tup[1] != 0 or not self.navkeys_enabled:
+                continue
+            #print(tup)
+            if tup[0].key in self.enter_keys:
+                #enter_pressed = True
+                #print("hi2")
+                b_reset = True
+                last_navkey = None
+                selected_b_inds.append(b_inds)
+            elif tup[0].key in self.navkeys_dict.keys():
+                b_reset = True
+                last_navkey = tup[0].key
+                b_inds = self.navkeyMoveCalculator(tup[0].key, b_inds)
+        if b_inds1_mouse is not None:
+            b_reset = True
+            last_navkey = None
+            b_inds = b_inds1_mouse
+            if b_inds_mouse == b_inds1_mouse:
+                for idx in range(idx1, len(selected_b_inds)):
+                    selected_b_inds[idx] = b_inds_mouse
+        #if selected_b_inds:
+        #    print(selected_b_inds)
+        return b_inds, selected_b_inds, b_reset, last_navkey
+        """
+    
+    def eventLoop(self, events: Optional[List[int]]=None,\
+            keys_down: Optional[List[int]]=None,\
+            mouse_status: Optional[Tuple[int]]=None,\
+            check_axes: Tuple[int]=(0, 1))\
+            -> Tuple[Union[bool, Tuple[bool]]]:
+        pass
+        """
+        quit = False
+        running = True
+        screen_changed = False
+        
+        mouse_enabled = self.mouse_enabled and pg.mouse.get_focused()
+        
+        if mouse_enabled:
+            if mouse_status is None:
+                mouse_status = self.user_input_processor.getMouseStatus()
+            b_inds0_mouse = self.mouse_over
+            b_inds1_mouse = self.mouseOverButton(mouse_status[0])
+            lmouse_down = mouse_status[1][0]
+        else:
+            b_inds0_mouse = None
+            b_inds1_mouse = None
+        
+        if events is None:
+            quit, esc_pressed, events = user_input_processor.getEvents()
+            if quit or esc_pressed:
+                running = False
+        
+        b_inds0 = b_inds0_mouse
+        if b_inds0 is None and self.navkeys_enabled:
+            b_inds0 = self.navkey_button
+        b_inds1, selected_b_inds, b_reset, last_navkey = self.processEvents(b_inds0, b_inds0_mouse, b_inds1_mouse, events)
+        
+        # Checking for navkeys that are held down and have not yet
+        # been overridden by new inputs
+        #print(self._navkey_status)
+        #print(keys_down)
+        if b_reset:
+            self._navkey_status = [last_navkey, [0, 0]]
+        else:
+            status = self._navkey_status
+            if keys_down is None:
+                keys_down = self.user_input_processor.getKeysHeldDown()
+            if status[0] in keys_down:
+                delay_lst = self.navkey_cycle_delay_frame
+                status[1][1] += 1
+                if status[1][1] == delay_lst[status[1][0]]:
+                    b_inds1 = self.navkeyMoveCalculator(status[0], b_inds1)
+                    status[1][1] = 0
+                    status[1][0] += (status[1][0] < len(delay_lst) - 1)
+            else:
+                self._navkey_status = [None, [0, 0]]
+        #print(self.navkey_status)
+        if (mouse_enabled and self.setMouseOver(b_inds1_mouse, lmouse_down))\
+                or (self.navkeys_enabled and self.setNavkeyButton(b_inds1)):
+            screen_changed = True
+        #print(quit, esc_pressed, (screen_changed, selected))
+        if screen_changed:
+            self._button_grid_surf = None
+        return quit, running, (screen_changed, selected_b_inds)
+        """
+
+
+"""
 class SliderPlusVerticalBattery:
     def __init__(self, screen, x, y, w, h, slider_gap_rel=0.2, track_color=None,
             thumb_color=None, thumb_radius_rel=1, font=None,
@@ -1910,7 +2276,7 @@ class SliderPlusVerticalBattery:
         pygame.draw.rect(self.screen, (0, 100, 255), self.dims, 1)
         return
 
-        
+"""
         
         
         

@@ -8,7 +8,7 @@ from General_tools import (
     runExampleSliderGroup1,
     runExampleSliderPlus1,
     runExampleSliderPlusGroup1,
-    runExampleSliders1,
+    #runExampleSliders1,
     runExampleButton1,
     runExampleButtonGrid1,
     runExampleMenuOverlay1,

@@ -27,7 +27,7 @@ from General_tools import (
     SliderGroup,
     SliderPlus,
     SliderPlusGroup,
-    SliderPlusVerticalBattery,
+    #SliderPlusVerticalBattery,
     Button,
     ButtonGrid,
     MenuOverlay,
@@ -342,6 +342,7 @@ def runExampleSliderPlus1() -> None:
     ttg = slider_plus.title_text_group
     tto = slider_plus.title_text_obj
     slider_plus.shape = (500, 150)
+    #slider_plus.slider_borders_rel = (0, 0)
 
     #print(slider_plus.shape)
     #print(ttg.max_font_size_given_heights)
@@ -400,7 +401,7 @@ def runExampleSliderPlus1() -> None:
     return address
 
 def runExampleSliderPlusGroup1() -> None:
-    screen_size = (500, 200)
+    screen_size = (600, 600)
     framerate = 5
     pg.init()
     screen = pg.display.set_mode(screen_size)
@@ -410,7 +411,7 @@ def runExampleSliderPlusGroup1() -> None:
     screen_cp = pg.Surface.copy(screen)
 
     slider_group = SliderPlusGroup(
-        shape=(500, 200),
+        shape=(400, 150),
         demarc_numbers_text_group=None,
         thumb_radius_rel=1,
         demarc_line_lens_rel=None,
@@ -422,7 +423,7 @@ def runExampleSliderPlusGroup1() -> None:
         thumb_outline_color=None,
         mouse_enabled=True,
         slider_shape_rel=(.7, .7),
-        slider_borders_rel=(.05, .05),
+        slider_borders_rel=(0, 0),
         title_text_group=None,
         title_anchor_type="topleft",
         title_text_color=(named_colors_def["black"], 1.),
@@ -435,17 +436,17 @@ def runExampleSliderPlusGroup1() -> None:
     sliders.append(
         slider_group.addSliderPlus(
             title="Slider 1",
-            anchor_pos=(0, 0),
+            anchor_pos=(50, 50),
             val_range=(0, 100),
             increment_start=15,
             increment=0,
             anchor_type="topleft",
             screen_topleft_offset=None,
-            init_val=50,
+            init_val=None,
             demarc_numbers_dp=None,
             demarc_intervals=(20, 10, 5),
             demarc_start_val=None,
-            val_text_dp=None,
+            val_text_dp=0,
             name=None,
         )
     )
@@ -473,6 +474,7 @@ def runExampleSliderPlusGroup1() -> None:
     #print(sliders[0].track_shape)
     #print(slider_group.is_default_set)
     #print(slider_group.demarc_line_colors)
+    #slider_group.shape = (300, 300)
     
     def drawSliders(screen: "pg.Surface", sliders: List["SliderPlus"]) -> None:
         for slider in sliders:
@@ -503,8 +505,11 @@ def runExampleSliderPlusGroup1() -> None:
     #print(slider_group.demarc_line_colors)
     #print(sliders[0].demarc_line_colors)
     #slider_group.shape = (1200, 600)
-    slider_group.track_color = (named_colors_def["black"], .5)
-    slider_group.title_text_color = (named_colors_def["silver"], 1)
+    #slider_group.shape = (500, 100)
+    #slider_group.track_color = (named_colors_def["black"], 1)
+    #slider_group.val_text_color = (named_colors_def["white"], 1)
+    #slider_group.shape = (300, 200)
+    #slider_group.slider_borders = (0, 0)
     
     clock = pg.time.Clock()
     
@@ -534,6 +539,7 @@ def runExampleSliderPlusGroup1() -> None:
         screen_changed = False
     return
 
+"""
 def runExampleSliders1() -> None:
     screen_size = (600, 600)
     framerate = 60
@@ -578,7 +584,7 @@ def runExampleSliders1() -> None:
         pg.display.flip()
         screen_changed = False
     return
-
+"""
 def runExampleButton1() -> None:
     screen_size = (700, 700)
     framerate = 60
@@ -653,7 +659,7 @@ def runExampleButton1() -> None:
         clock.tick(framerate)
         screen_changed = False
     return
-
+    
 def runExampleButtonGrid1() -> None:
     screen_size = (700, 700)
     framerate = 60

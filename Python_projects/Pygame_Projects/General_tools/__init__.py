@@ -9,7 +9,7 @@ from .sliders import (
     SliderGroup,
     SliderPlus,
     SliderPlusGroup,
-    SliderPlusVerticalBattery
+    SliderPlusGrid
 )
 from .buttons import (
     Button,
@@ -59,7 +59,7 @@ from .examples import (
     runExampleSliderGroup1,
     runExampleSliderPlus1,
     runExampleSliderPlusGroup1,
-    runExampleSliders1,
+    #runExampleSliders1,
     runExampleButton1,
     runExampleButtonGrid1,
     runExampleMenuOverlay1
