@@ -1877,8 +1877,38 @@ def fourSquaresRepresentationCountSpecialised(num_max: int=2 * 10 ** 9) -> int:
         res += 1
     return res
 
+# Problem 231
+def binomialCoefficientPrimeFactorisation(n: int, k: int) -> Dict[int, int]:
+
+    ps = SimplePrimeSieve(n)
+    k2 = n - k
+    res = {}
+    if n < 0 or k < 0 or k2 < 0:
+        return res
+    for p in ps.p_lst:
+        cnt = 0
+        n2 = n
+        while n2:
+            n2 //= p
+            cnt += n2
+        for num in (k, k2):
+            while num:
+                num //= p
+                cnt -= num
+        res[p] = cnt
+    return res
+
+def binomialCoefficientPrimeFactorisationSum(n: int=20 * 10 ** 6, k: int=15 * 10 ** 6) -> int:
+    """
+    Solution to Project Euler #231
+    """
+
+    res = sum(p * f for p, f in binomialCoefficientPrimeFactorisation(n, k).items())
+    return res
+
+
 if __name__ == "__main__":
-    to_evaluate = {226}
+    to_evaluate = {231}
     since0 = time.time()
 
     if not to_evaluate or 201 in to_evaluate:
@@ -2029,6 +2059,11 @@ if __name__ == "__main__":
         #res = fourRepresentationsUsingSquaresCount(mults=(1, 2, 3, 7), num_max=2 * 10 ** 6)
         res = fourSquaresRepresentationCountSpecialised(num_max=2 * 10 ** 9) 
         print(f"Solution to Project Euler #229 = {res}, calculated in {time.time() - since:.4f} seconds")
+
+    if not to_evaluate or 231 in to_evaluate:
+        since = time.time() 
+        res = binomialCoefficientPrimeFactorisationSum(n=20 * 10 ** 6, k=15 * 10 ** 6)
+        print(f"Solution to Project Euler #231 = {res}, calculated in {time.time() - since:.4f} seconds")
 
     print(f"Total time taken = {time.time() - since0:.4f} seconds")
 
