@@ -1877,6 +1877,71 @@ def fourSquaresRepresentationCountSpecialised(num_max: int=2 * 10 ** 9) -> int:
         res += 1
     return res
 
+# Problem 230
+def fibonacciWordsSum(
+    A: int=1415926535897932384626433832795028841971693993751058209749445923078164062862089986280348253421170679,
+    B: int=8214808651328230664709384460955058223172535940812848111745028410270193852110555964462294895493038196,
+    poly_coeffs: Tuple[int]=(127, 19),
+    exp_base: int=7,
+    n_max: int=17,
+    base: int=10
+) -> int:
+    
+    def evaluateTermNumber(n: int) -> int:
+        res = 0
+        for c in reversed(poly_coeffs):
+            res = res * n + c
+        return res * exp_base ** n
+
+    mx_term = 0
+    for n in range(0, n_max + 1):
+        mx_term = max(mx_term, evaluateTermNumber(n))
+    
+    A_digs = []
+    A2 = A
+    while A2:
+        A2, r = divmod(A2, base)
+        A_digs.append(r)
+    A_digs = A_digs[::-1]
+    B_digs = []
+    B2 = B
+    while B2:
+        B2, r = divmod(B2, base)
+        B_digs.append(r)
+    B_digs = B_digs[::-1]
+
+    A_len = len(A_digs)
+    B_len = len(B_digs)
+    len_lst = [B_len, A_len + B_len]
+    while len_lst[-1] < mx_term:
+        len_lst.append(len_lst[-2] + len_lst[-1])
+    
+    #print(mx_term)
+    #print(len_lst)
+    
+    def findDigit(term: int) -> int:
+        #print(f"term = {term}")
+        i = term - 1
+        if i <= A_len:
+            return A_digs[i]
+        j = bisect.bisect_right(len_lst, i)
+        while j > 1:
+            #print(j, i, len_lst[j])
+            if i >= len_lst[j - 2]:
+                i -= len_lst[j - 2]
+                j -= 1
+            else: j -= 2
+        if j == 1:
+            #print(i)
+            return B_digs[i - A_len] if i >= A_len else A_digs[i]
+        return B_digs[i]
+
+    res = 0
+    for n in reversed(range(0, n_max + 1)):
+        res = res * base + findDigit(evaluateTermNumber(n))
+    return res
+
+
 # Problem 231
 def binomialCoefficientPrimeFactorisation(n: int, k: int) -> Dict[int, int]:
 
@@ -1908,7 +1973,7 @@ def binomialCoefficientPrimeFactorisationSum(n: int=20 * 10 ** 6, k: int=15 * 10
 
 
 if __name__ == "__main__":
-    to_evaluate = {231}
+    to_evaluate = {230}
     since0 = time.time()
 
     if not to_evaluate or 201 in to_evaluate:
@@ -2059,6 +2124,18 @@ if __name__ == "__main__":
         #res = fourRepresentationsUsingSquaresCount(mults=(1, 2, 3, 7), num_max=2 * 10 ** 6)
         res = fourSquaresRepresentationCountSpecialised(num_max=2 * 10 ** 9) 
         print(f"Solution to Project Euler #229 = {res}, calculated in {time.time() - since:.4f} seconds")
+
+    if not to_evaluate or 230 in to_evaluate:
+        since = time.time() 
+        res = fibonacciWordsSum(
+            A=1415926535897932384626433832795028841971693993751058209749445923078164062862089986280348253421170679,
+            B=8214808651328230664709384460955058223172535940812848111745028410270193852110555964462294895493038196,
+            poly_coeffs=(127, 19),
+            exp_base=7,
+            n_max=17,
+            base=10
+        )
+        print(f"Solution to Project Euler #230 = {res}, calculated in {time.time() - since:.4f} seconds")
 
     if not to_evaluate or 231 in to_evaluate:
         since = time.time() 
