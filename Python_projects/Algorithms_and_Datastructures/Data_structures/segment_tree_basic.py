@@ -2,13 +2,16 @@
 
 from typing import Callable, Dict, List, Optional, Tuple, Union, Any
 
+import math
 from sortedcontainers import SortedSet
 
 class SegmentTree(object):
-    
     """
-    Creates a segment tree for an integer sequence based around
-    a specified associative binary operation.
+    Creates a segment tree for a sequence consisting of elements
+    of a set based around a specified associative (and possibly
+    commutative) binary operation on that set (i.e. an operation
+    that takes as input an ordered pair of elements of the set
+    and outputs an element of the same set).
 
     On initialization, the sequence is entirely populated with the
     identity element of the given binary operation
@@ -19,12 +22,14 @@ class SegmentTree(object):
         end_idx (int): Upper bound for sequence index values
         
         Optional named:
-        op (string 2-tuple): Specifies the associative binary
-                operation to be applied and its identity, either as
-                a string identifying a standard binary operation or
-                a 2-tuple giving the binary operation at index 0
-                and the identity at index 1.
-                The standard binary operations implemented are:
+        op (string or 3-tuple of a function on two variables, a
+                numeric value and a boolean): Specifies the
+                associative binary operation to be applied, its
+                identity and whether the operation is commutative,
+                either as a 3-tuple giving each of these in order or
+                a string identifying a pre-implemented standard
+                binary operation.
+                The standard binary operations pre-implemented are:
                  "sum" (gives the interval sums for real numeric values-
                     identity 0)
                  "product" (gives the interval products for
@@ -33,12 +38,18 @@ class SegmentTree(object):
                     values- identity -float("inf"))
                  "min" (gives the interval minima for real numeric
                     values- identity float("inf"))
+                 "gcd" (gives the greatest common divisor over all integers
+                    in the interval for integer values- identity 0)
                  "union" (gives the union of sets over the intervals
                     for sets- identity set(), the empty set)
                  "bitwise and" (gives the interval bitwise and for
-                    integers- identity -1).
+                    integers- identity -1)
+                 "bitwise or" (gives the interval bitwise or for
+                    integers- identity 0)
+                 "bitwise xor" (gives the interval bitwise excluisve
+                    or for integers- identity 0)
             Default: "sum", or equivalently:
-                    {"sum": (lambda x, y: x + y, 0)}
+                    {"sum": (lambda x, y: x + y, 0, True)}
     
     Attributes:
         start_idx (int): The index of the first term in the sequence
@@ -71,10 +82,13 @@ class SegmentTree(object):
     
     std_ops = {"sum": (lambda x, y: x + y, 0, True),
                "product": (lambda x, y: x * y, 1, True),
-                "max": (lambda x, y: max(x, y), -float("inf"), True),
-                "min": (lambda x, y: min(x, y), float("inf"), True),
+                "max": (max, -float("inf"), True),
+                "min": (min, float("inf"), True),
+                "gcd": (math.gcd, 0, True),
                 "union": (lambda x, y: x.union(y), set(), True),
                 "bitwise_and": (lambda x, y: x & y, -1, True),
+                "bitwise_or": (lambda x, y: x | y, 0, True),
+                "bitwise_xor": (lambda x, y: x ^ y, 0, True),
     }
     
     def __init__(self, start_idx: int, end_idx: int, op: Union[str, Tuple[Callable[[Any, Any], Any], Any, bool]]="sum"):
@@ -220,8 +234,11 @@ class SegmentTree(object):
 class SegmentTreeWithLazyPropogation(object):
     
     """
-    Creates a segment tree for an integer sequence based around
-    a specified associative binary operation, with lazy propogation
+    Creates a segment tree for a sequence consisting of elements
+    of a set based around a specified associative (and possibly
+    commutative) binary operation on that set (i.e. an operation
+    that takes as input an ordered pair of elements of the set
+    and outputs an element of the same set), with lazy propogation.
 
     On initialization, the sequence is entirely populated with the
     identity element of the given binary operation
@@ -232,11 +249,14 @@ class SegmentTreeWithLazyPropogation(object):
         end_idx (int): Upper bound for sequence index values
         
         Optional named:
-        op (string 2-tuple): Specifies the associative binary
-                operation to be applied and its identity, either as
-                a string identifying a standard binary operation or
-                a 2-tuple giving the binary operation at index 0
-                and the identity at index 1.
+        op (string or 3-tuple of a function on two variables, a
+                numeric value and a boolean): Specifies the
+                associative binary operation to be applied, its
+                identity and whether the operation is commutative,
+                either as a 3-tuple giving each of these in order or
+                a string identifying a pre-implemented standard
+                binary operation.
+                The standard binary operations pre-implemented are:
                 The standard binary operations implemented are:
                  "sum" (gives the interval sums for real numeric values-
                     identity 0)
@@ -246,6 +266,8 @@ class SegmentTreeWithLazyPropogation(object):
                     values- identity -float("inf"))
                  "min" (gives the interval minima for real numeric
                     values- identity float("inf"))
+                 "gcd" (gives the greatest common divisor over all integers
+                    in the interval for integer values- identity 0)
                  "union" (gives the union of sets over the intervals
                     for sets- identity set(), the empty set)
                  "bitwise and" (gives the interval bitwise and for
@@ -288,8 +310,9 @@ class SegmentTreeWithLazyPropogation(object):
     
     std_ops = {"sum": (lambda x, y: x + y, 0, True),
                "product": (lambda x, y: x * y, 1, True),
-                "max": (lambda x, y: max(x, y), -float("inf"), True),
-                "min": (lambda x, y: min(x, y), float("inf"), True),
+                "max": (max, -float("inf"), True),
+                "min": (min, float("inf"), True),
+                "gcd": (math.gcd, 0, True),
                 "union": (lambda x, y: x.union(y), set(), True),
                 "bitwise_and": (lambda x, y: x & y, -1, True),
                 "bitwise_or": (lambda x, y: x | y, 0, True),
