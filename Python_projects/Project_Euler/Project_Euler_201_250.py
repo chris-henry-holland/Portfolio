@@ -11,7 +11,7 @@ import sys
 import time
 
 from collections import deque, defaultdict
-from sortedcontainers import SortedDict, SortedList
+from sortedcontainers import SortedDict, SortedList, SortedSet
 from typing import Dict, List, Tuple, Set, Union, Generator, Callable, Optional, Any, Hashable, Iterable
 
 sys.path.append(os.path.join(os.path.dirname(__file__), "../Algorithms_and_Datastructures/Algorithms"))
@@ -1604,6 +1604,117 @@ def nthSmallestTribonacciOddNonDivisors(odd_non_divisor_number: int=124, init_te
         #print(i + 1, num)
     return num
 
+# Problem 226
+def findBlacmangeValue(x: CustomFraction) -> CustomFraction:
+    x -= x.numerator // x.denominator
+    if x.denominator < 2 * x.numerator:
+        x = 1 - x
+    a0, b0 = 0, CustomFraction(1, 1)
+    while x != 0 and not x.denominator & 1:
+        a0 += b0 * x
+        b0 /= 2
+        x.denominator >>= 1
+        if x.denominator < 2 * x.numerator:
+            x = 1 - x
+    if x == 0: return a0
+    a, b = x, CustomFraction(1, 2)
+    x2 = 2 * x
+    if x2.denominator < 2 * x2.numerator:
+        x2 = 1 - x2
+    while x2 != x and x2 != 0:
+        #print(x2, x)
+        a += b * x2
+        b /= 2
+        x2 = 2 * x2
+        if x2.denominator < 2 * x2.numerator:
+            x2 = 1 - x2
+    
+    res = a if x2 == 0 else a / (1 - b)
+    #print(a0, b0, res)
+    return a0 + b0 * res
+    #return res
+
+def findBlacmangeIntegralValue(x: CustomFraction) -> CustomFraction:
+    q = CustomFraction(x.numerator // x.denominator, 1)
+    x -= q
+    a0, b0 = 0, CustomFraction(1, 1)
+    if x.denominator < 2 * x.numerator:
+        x = 1 - x
+        a0 += b0 / 2
+        b0 = -b0
+    a0, b0 = 0, CustomFraction(1, 1)
+    while x != 0 and not x.denominator & 1:
+        a0 += b0 * x * x / 2
+        b0 /= 4
+        x.denominator >>= 1
+        if x.denominator < 2 * x.numerator:
+            x = 1 - x
+            a0 += b0 / 2
+            b0 = -b0
+    if x == 0: return a0 + q / 2
+    a, b = x * x / 2, CustomFraction(1, 4)
+    x2 = 2 * x
+    if x2.denominator < 2 * x2.numerator:
+        x2 = 1 - x2
+        a += b / 2
+        b = -b
+    while x2 != x and x2 != 0:
+        #print(x2, x)
+        a += b * x2 * x2 / 2
+        b /= 4
+        x2 = 2 * x2
+        if x2.denominator < 2 * x2.numerator:
+            x2 = 1 - x2
+            a += b / 2
+            b = -b
+    
+    res = a if x2 == 0 else a / (1 - b)
+    #print(a0, b0, res)
+    return a0 + b0 * res + q / 2
+
+def blacmangeCircleIntersectionArea(eps: float=10 ** -9) -> float:
+
+    # Review- try to generalise to any circle
+
+    # Rightmost intersection point is at (1 / 2, 1 / 2)
+    # Find leftmost intersection point
+    centre = (CustomFraction(1, 4), CustomFraction(1, 2))
+    rad = CustomFraction(1, 4)
+    rad_sq = rad * rad
+
+    lft, rgt = CustomFraction(0, 1), CustomFraction(1, 4)
+    while rgt - lft >= eps:
+        x = lft + (rgt - lft) / 2
+        y = findBlacmangeValue(x)
+        v = (x - centre[0], y - centre[1])
+        d_sq = v[0] * v[0] + v[1] * v[1]
+        if d_sq == rad_sq:
+            print("exact found")
+            break
+        elif d_sq > rad_sq:
+            lft = x
+        else: rgt = x
+    else:
+        x = lft + (rgt - lft) / 2
+        y = findBlacmangeValue(x)
+        v = (x - centre[0], y - centre[1])
+        d_sq = v[0] * v[0] + v[1] * v[1]
+        print(d_sq, d_sq.numerator / d_sq.denominator)
+    #print(lft, rgt)
+    #print((x, y), (x.numerator / x.denominator, y.numerator / y.denominator))
+    b_area = findBlacmangeIntegralValue(CustomFraction(1, 2)) - findBlacmangeIntegralValue(x)
+    x2 = CustomFraction(1, 2)
+    y2 = findBlacmangeValue(x2)
+    trap_area = (y + y2) * (x2 - x) / 2
+    area1 = (b_area - trap_area)
+    area1 = area1.numerator / area1.denominator
+    angle = math.acos((v[0].numerator / v[0].denominator) * (rad.denominator / rad.numerator))
+    #print(area1)
+    #print(angle * 180 / math.pi)
+    res = area1 + .5 * (angle - math.sin(angle)) * (rad_sq.numerator / rad_sq.denominator)
+    return res
+
+
 # Problem 227
 def chaseGameExpectedNumberOfTurns(die_n_faces: int=6, n_opts_left: int=1, n_opts_right: int=1, n_players: int=100, separation_init: int=50) -> float:
     m = n_players >> 1
@@ -1669,6 +1780,7 @@ def fourRepresentationsUsingSquaresCount(mults: Tuple[int]=(1, 2, 3, 7), num_max
     bm_target = (1 << n_mults) - 1
     res = 0
     md168_set = set()
+    sq_cnt = 0
     for part_start in range(0, num_max + 1, part_size):
         print(part_start, res)
         part_end = min(part_start + part_size - 1, num_max)
@@ -1701,12 +1813,72 @@ def fourRepresentationsUsingSquaresCount(mults: Tuple[int]=(1, 2, 3, 7), num_max
                     bm_sieve[num2] |= bm2
                     if (bm_sieve[num2] == bm_target):
                         res += 1
+                        if isqrt(num) ** 2 == num:
+                            #print(num)
+                            sq_cnt += 1
+                        #sq_cnt += (isqrt(num) ** 2 == num)
                         md168_set.add(num % 168)
     print(sorted(md168_set))
+    print(f"square count = {sq_cnt}")
+    return res
+
+def fourSquaresRepresentationCountSpecialised(num_max: int=2 * 10 ** 9) -> int:
+
+    # Try to generalise to arbitrary k using the Legendre/Jacobi symbol
+    # and quadratic reciprocity. Possibly in first instance, restricting
+    # to either prime or unit values of k allowed.
+
+    ps = SimplePrimeSieve()
+    def primeCheck(num: int) -> bool:
+        return ps.millerRabinPrimalityTestWithKnownBounds(num, max_n_additional_trials_if_above_max=10)[0]
+
+    p_prods = SortedSet()
+    res = 0
+    for num in range(0, num_max, 168):
+        for r in (1, 25, 121):
+            p = num + r
+            b = primeCheck(p)
+            #print(p, b)
+            if not b: continue
+            add_set = {p}
+            res += isqrt(num_max // p)
+            for p_prod in p_prods:
+                num2 = p * p_prod
+                if num2 > num_max: break
+                res += isqrt(num_max // num2)
+                add_set.add(num2)
+            for num2 in add_set:
+                p_prods.add(num2)
+            #print(p, res)
+    #print(res)
+    for num in range(1, isqrt(num_max) + 1):
+        pf = calculatePrimeFactorisation(num)
+        remain_criterion = {0, 1, 2, 3}
+        if 2 in pf.keys():
+            remain_criterion.remove(2)
+            if pf[2] >= 2: remain_criterion.remove(3)
+        for p in pf.keys() - {2}:
+            if 0 in remain_criterion and p % 4 == 1:
+                remain_criterion.remove(0)
+                if not remain_criterion:
+                    break
+            if 1 in remain_criterion and p % 8 in {1, 3}:
+                remain_criterion.remove(1)
+                if not remain_criterion: break
+            if 2 in remain_criterion and p % 3 == 1:
+                remain_criterion.remove(2)
+                if not remain_criterion: break
+            if 3 in remain_criterion and p % 7 in {1, 2, 4}:
+                remain_criterion.remove(3)
+                if not remain_criterion: break
+        else:
+            continue
+        #print(num, num ** 2)
+        res += 1
     return res
 
 if __name__ == "__main__":
-    to_evaluate = {229}
+    to_evaluate = {226}
     since0 = time.time()
 
     if not to_evaluate or 201 in to_evaluate:
@@ -1842,6 +2014,11 @@ if __name__ == "__main__":
         res = nthSmallestTribonacciOddNonDivisors(odd_non_divisor_number=124, init_terms=(1, 1, 1)) 
         print(f"Solution to Project Euler #225 = {res}, calculated in {time.time() - since:.4f} seconds")
 
+    if not to_evaluate or 226 in to_evaluate:
+        since = time.time() 
+        res = blacmangeCircleIntersectionArea(eps=10 ** -9)
+        print(f"Solution to Project Euler #226 = {res}, calculated in {time.time() - since:.4f} seconds")
+
     if not to_evaluate or 227 in to_evaluate:
         since = time.time() 
         res = chaseGameExpectedNumberOfTurns(die_n_faces=6, n_opts_left=1, n_opts_right=1, n_players=100, separation_init=50)
@@ -1849,7 +2026,8 @@ if __name__ == "__main__":
 
     if not to_evaluate or 229 in to_evaluate:
         since = time.time() 
-        res = fourRepresentationsUsingSquaresCount(mults=(1, 2, 3, 7), num_max=2 * 10 ** 9)
+        #res = fourRepresentationsUsingSquaresCount(mults=(1, 2, 3, 7), num_max=2 * 10 ** 6)
+        res = fourSquaresRepresentationCountSpecialised(num_max=2 * 10 ** 9) 
         print(f"Solution to Project Euler #229 = {res}, calculated in {time.time() - since:.4f} seconds")
 
     print(f"Total time taken = {time.time() - since0:.4f} seconds")
@@ -1867,3 +2045,6 @@ for b in range(2, mx + 1):
             #print(a, b, c)
 print(cnt)
 """
+
+#for frac in (CustomFraction(1, 1), CustomFraction(1, 2), CustomFraction(1, 3), CustomFraction(1, 4), CustomFraction(1, 5), CustomFraction(2, 5), CustomFraction(1, 6), CustomFraction(1, 7), CustomFraction(1, 8), CustomFraction(3, 8)):
+#    print(frac, findBlacmangeValue(frac), findBlacmangeIntegralValue(frac))
