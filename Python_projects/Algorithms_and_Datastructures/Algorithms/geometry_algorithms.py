@@ -180,7 +180,7 @@ def smallestCircularEnclosure(trees: List[List[int]]) -> List[float]:
     centre, rad_sq = welzl(trees, eps=eps)
     return [*centre, math.sqrt(rad_sq)]
 
-def grahamScan(points: List[Tuple[Union[int, float]]], include_border_points: bool=False) -> List[Tuple[int]]:
+def grahamScan(points: List[Tuple[Union[int, float]]], include_border_points: bool=False) -> List[Tuple[Union[int, float]]]:
     """
     Implementation of the Graham scan to find the convex hull of a set
     of points in 2 dimensional space expressed in Cartesian coordinates.

@@ -20,6 +20,7 @@ from misc_mathematical_algorithms import CustomFraction, gcd, lcm, isqrt
 from prime_sieves import PrimeSPFsieve, SimplePrimeSieve
 from pseudorandom_number_generators import generalisedLaggedFibonacciGenerator
 from Pythagorean_triple_generators import pythagoreanTripleGeneratorByHypotenuse
+from geometry_algorithms import grahamScan
 
 # Problem 201
 def subsetsWithUniqueSumTotal(nums: Set[int], k: int) -> int:
@@ -1772,6 +1773,89 @@ def chaseGameExpectedNumberOfTurns(die_n_faces: int=6, n_opts_left: int=1, n_opt
     #print(res2)
     return res
 
+# Problem 228
+def convexPolygonsAroundOriginMinkowskiSum(poly1: List[Tuple[float, Tuple[float, float]]], poly2: List[Tuple[float, Tuple[float, float]]]) -> List[Tuple[float, float]]:
+    poly1.sort()
+    poly2.sort()
+    if poly1[0][0] > poly2[0][0]: poly1, poly2 = poly2, poly1
+    n1, n2 = len(poly1), len(poly2)
+    i1 = 0
+    v_lst = []
+    for i2 in range(n2):
+        for i1 in range(i1, n1 - 1):
+            if poly1[i1 + 1][0] >= poly2[i2][0]:
+                break
+        else: break
+        v_lst.append(tuple(x + y for x, y in zip(poly1[i1][1], poly2[i2][1])))
+        v_lst.append(tuple(x + y for x, y in zip(poly1[i1 + 1][1], poly2[i2][1])))
+    for i2 in range(i2, n2):
+        v_lst.append(tuple(x + y for x, y in zip(poly1[-1][1], poly2[i2][1])))
+        v_lst.append(tuple(x + y for x, y in zip(poly1[0][1], poly2[i2][1])))
+    
+    return grahamScan(v_lst, include_border_points=True)
+
+def regularPolygonMinkowskiSum(vertex_counts: List[int]) -> List[Tuple[float, float]]:
+
+    poly_lst = []
+    for cnt in vertex_counts:
+        lst = []
+        for i in range(cnt):
+            angle = (2 * i + 1) * math.pi / cnt
+            lst.append((angle, (math.cos(angle), math.sin(angle))))
+        poly_lst.append(lst)
+    
+    curr = poly_lst[0]
+    for i in range(1, len(poly_lst)):
+        print(i, len(curr))
+        lst = convexPolygonsAroundOriginMinkowskiSum(curr, poly_lst[i])
+        curr = []
+        for v in lst:
+            angle = math.atan2(v[1], v[0])
+            if angle < 0: angle += 2 * math.pi
+            curr.append((angle, v))
+    return [x[1] for x in curr]
+
+    """
+    while len(poly_lst) > 1:
+        print(len(poly_lst))
+        print([len(x) for x in poly_lst])
+        prev = poly_lst
+        poly_lst = []
+        for i in range(0, len(prev) - 1, 2):
+            lst = convexPolygonsAroundOriginMinkowskiSum(prev[i], prev[i + 1])
+            #print(lst)
+            lst2 = []
+            for v in lst:
+                angle = math.atan2(v[1], v[0])
+                if angle < 0: angle += 2 * math.pi
+                lst2.append((angle, v))
+            poly_lst.append(lst2)
+        if len(prev) & 1:
+            poly_lst.append(prev[-1])
+    return [x[1] for x in poly_lst[0]]
+    """
+
+def regularPolygonMinkowskiSumSideCount(vertex_counts: List[int]=list(range(1864, 1910))) -> int:
+
+    #res = regularPolygonMinkowskiSum(vertex_counts)
+    #for v in res:
+    #    print(v[0], v[1])
+    #return res
+    mn, mx = min(vertex_counts), max(vertex_counts)
+    rng = mx - mn
+    
+    res = sum(vertex_counts) - (len(vertex_counts) - 1)
+    for num in range(2, rng + 1):
+        d_cnt = 0
+        for v_cnt in vertex_counts:
+            d_cnt += (not v_cnt % num)
+        if d_cnt == 1: continue
+        euler_tot = 1
+        for num2 in range(2, num):
+            euler_tot += (gcd(num2, num) == 1)
+        res -= euler_tot * (d_cnt - 1)
+    return res
+
 # Problem 229
 def fourRepresentationsUsingSquaresCount(mults: Tuple[int]=(1, 2, 3, 7), num_max: int=2 * 10 ** 9) -> int:
     part_size = 10 ** 8
@@ -1973,7 +2057,7 @@ def binomialCoefficientPrimeFactorisationSum(n: int=20 * 10 ** 6, k: int=15 * 10
 
 
 if __name__ == "__main__":
-    to_evaluate = {230}
+    to_evaluate = {228}
     since0 = time.time()
 
     if not to_evaluate or 201 in to_evaluate:
@@ -2118,6 +2202,11 @@ if __name__ == "__main__":
         since = time.time() 
         res = chaseGameExpectedNumberOfTurns(die_n_faces=6, n_opts_left=1, n_opts_right=1, n_players=100, separation_init=50)
         print(f"Solution to Project Euler #227 = {res}, calculated in {time.time() - since:.4f} seconds")
+
+    if not to_evaluate or 228 in to_evaluate:
+        since = time.time() 
+        res = regularPolygonMinkowskiSumSideCount(vertex_counts=list(range(1864, 1910)))
+        print(f"Solution to Project Euler #228 = {res}, calculated in {time.time() - since:.4f} seconds")
 
     if not to_evaluate or 229 in to_evaluate:
         since = time.time() 
