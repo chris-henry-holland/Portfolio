@@ -2156,8 +2156,51 @@ def probabilityPlayer2WinsFloat(points_required: int=100) -> CustomFraction:
     #print(res)
     return res.numerator / res.denominator
 
+
+# Problem 135
+def arithmeticGeometricSeries(a: float=900, b: int=-3, n: int=5000, val: float=-6 * 10 ** 11, eps: float=10 ** -13) -> float:
+
+    if b < 0:
+        a, b, val = -a, -b, -val
+    #r0 = -a / b
+    print(a, b, val)
+
+    def func(r: float, n: int) -> float:
+        #print(r)
+        if r == 1: return 900 * n - 1.5 * n * (n + 1)
+        res = (a + b * n) * r ** (n + 1) - (a + b * (n + 1)) * r ** n - a * r + (a + b)
+        return float(res) / (r - 1) ** 2
+
+    print(f"values at 1 - 10 ** -10, 1 and 1 + 10 ** -10")
+    print(func(1 - 10 ** -9, n), func(1, n), func(1 + 10 ** -11, n))
+
+    r0 = 0
+    r = 0
+    diff = 1
+    while True:
+        r2 = r0 + diff
+        y = func(r2, n)
+        if y >= val: break
+        r = r2
+        print(r, y)
+        diff *= 1.1
+    print(r, y)
+    diff0 = 0 if diff == 1 else diff / 2
+    lft, rgt = r, r2
+    while rgt - lft >= eps:
+        mid = lft + (rgt - lft) * .5
+        
+        y = func(mid, n)
+        print(mid, y)
+        if y == val:
+            return mid
+        elif y < val: lft = mid
+        else: rgt = mid
+    return lft + (rgt - lft) * .5
+
+
 if __name__ == "__main__":
-    to_evaluate = {232}
+    to_evaluate = {235}
     since0 = time.time()
 
     if not to_evaluate or 201 in to_evaluate:
@@ -2335,6 +2378,11 @@ if __name__ == "__main__":
         since = time.time() 
         res = probabilityPlayer2WinsFloat(points_required=100)
         print(f"Solution to Project Euler #232 = {res}, calculated in {time.time() - since:.4f} seconds")
+
+    if not to_evaluate or 235 in to_evaluate:
+        since = time.time() 
+        res = arithmeticGeometricSeries(a=900, b=-3, n=5000, val=-6 * 10 ** 11, eps=10 ** -13)
+        print(f"Solution to Project Euler #235 = {res}, calculated in {time.time() - since:.4f} seconds")
 
     print(f"Total time taken = {time.time() - since0:.4f} seconds")
 
