@@ -2055,9 +2055,109 @@ def binomialCoefficientPrimeFactorisationSum(n: int=20 * 10 ** 6, k: int=15 * 10
     res = sum(p * f for p, f in binomialCoefficientPrimeFactorisation(n, k).items())
     return res
 
+# Problem 232
+def probabilityPlayer2WinsFractionGivenSuccessProbabilitiesAndScores(
+    points_required: int,
+    player1_success_prob: CustomFraction=CustomFraction(1, 2),
+    player1_success_points: int=1,
+    player2_success_prob: CustomFraction=CustomFraction(1, 2),
+    player2_success_points: int=1,
+) -> CustomFraction:
+    # Used in related problem where the value of T for Player 2 cannot be
+    # changed
+    memo = {}  
+    def recur(player1_remain: int, player2_remain: int) -> CustomFraction:
+        if player1_remain <= 0: return CustomFraction(0, 1)
+        elif player2_remain <= 0: return CustomFraction(1, 1)
+        
+        args = (player1_remain, player2_remain)
+        if args in memo.keys(): return memo[args]
+
+        # At least one player succeeds on this turn
+        #print("hi")
+        res = player1_success_prob * (player2_success_prob * recur(player1_remain - player1_success_points, player2_remain - player2_success_points) +\
+                                       (1 - player2_success_prob) * recur(player1_remain - player1_success_points, player2_remain)) +\
+                (1 - player1_success_prob) *  player2_success_prob * recur(player1_remain, player2_remain - player2_success_points)
+
+        unchanged_prob = (1 - player1_success_prob) * (1 - player2_success_prob)
+        res /= (1 - unchanged_prob)
+
+        memo[args] = res
+        #print("hi2", memo)
+        return res
+    #print(player2_success_points, memo)
+    res = recur(points_required, points_required)
+    print(player2_success_points, memo)
+    return res
+
+def probabilityPlayer2WinsFraction(points_required: int=100) -> CustomFraction:
+    res = 0
+    player1_success_prob = CustomFraction(1, 2)
+    player1_success_points = 1
+
+    memo = {}  
+    def recur(player1_remain: int, player2_remain: int) -> CustomFraction:
+        if player2_remain <= 0: return CustomFraction(1, 1)
+        if player1_remain <= 0: return CustomFraction(0, 1)
+        
+        args = (player1_remain, player2_remain)
+        if args in memo.keys(): return memo[args]
+
+        # At least one player succeeds on this turn
+        #print("hi")
+        res = 0
+        for T in itertools.count(1):
+            player2_success_prob = CustomFraction(1, 2 ** T)
+            player2_success_points = 2 ** (T - 1)
+            ans = player1_success_prob * (player2_success_prob * recur(player1_remain - player1_success_points, player2_remain - player2_success_points) +\
+                                        (1 - player2_success_prob) * recur(player1_remain - player1_success_points, player2_remain)) +\
+                    (1 - player1_success_prob) *  player2_success_prob * recur(player1_remain, player2_remain - player2_success_points)
+
+            unchanged_prob = (1 - player1_success_prob) * (1 - player2_success_prob)
+            ans /= (1 - unchanged_prob)
+            res = max(res, ans)
+            if player2_success_points >= player2_remain: break
+
+        memo[args] = res
+        #print("hi2", memo)
+        return res
+    #print(player2_success_points, memo)
+
+    # Transpose problem into one where each turn player 2 goes first, so we
+    # can avoid at each step accounting for player 2 responding to the outcome
+    # of player 1's turn
+    res = player1_success_prob * recur(points_required - 1, points_required) + (1 - player1_success_prob) * recur(points_required, points_required)
+    #print(player2_success_points, memo)
+    #print(memo)
+    return res
+
+    """
+    for T in itertools.count(1):
+        player2_success_prob = CustomFraction(1, 2 ** T)
+        player2_success_points = 2 ** (T - 1)
+        frac = probabilityPlayer2WinsFractionGivenSuccessProbabilitiesAndScores(
+            points_required=points_required,
+            player1_success_prob=player1_success_prob,
+            player1_success_points=player1_success_points,
+            player2_success_prob=player2_success_prob,
+            player2_success_points=player2_success_points,
+        )
+        print(T, frac.numerator / frac.denominator)
+        res = max(res, frac)
+        if player2_success_points >= points_required: break
+    return res
+    """
+
+def probabilityPlayer2WinsFloat(points_required: int=100) -> CustomFraction:
+    """
+    Solution to Project Euler #132
+    """
+    res = probabilityPlayer2WinsFraction(points_required=points_required)
+    #print(res)
+    return res.numerator / res.denominator
 
 if __name__ == "__main__":
-    to_evaluate = {228}
+    to_evaluate = {232}
     since0 = time.time()
 
     if not to_evaluate or 201 in to_evaluate:
@@ -2230,6 +2330,11 @@ if __name__ == "__main__":
         since = time.time() 
         res = binomialCoefficientPrimeFactorisationSum(n=20 * 10 ** 6, k=15 * 10 ** 6)
         print(f"Solution to Project Euler #231 = {res}, calculated in {time.time() - since:.4f} seconds")
+
+    if not to_evaluate or 232 in to_evaluate:
+        since = time.time() 
+        res = probabilityPlayer2WinsFloat(points_required=100)
+        print(f"Solution to Project Euler #232 = {res}, calculated in {time.time() - since:.4f} seconds")
 
     print(f"Total time taken = {time.time() - since0:.4f} seconds")
 
