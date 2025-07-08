@@ -16,7 +16,7 @@ from typing import Dict, List, Tuple, Set, Union, Generator, Callable, Optional,
 
 sys.path.append(os.path.join(os.path.dirname(__file__), "../Algorithms_and_Datastructures/Algorithms"))
 sys.path.append(os.path.join(os.path.dirname(__file__), "../Algorithms_and_Datastructures/Data_structures"))
-from misc_mathematical_algorithms import CustomFraction, gcd, lcm, isqrt
+from misc_mathematical_algorithms import CustomFraction, gcd, lcm, isqrt, integerNthRoot
 from prime_sieves import PrimeSPFsieve, SimplePrimeSieve
 from pseudorandom_number_generators import generalisedLaggedFibonacciGenerator
 from Pythagorean_triple_generators import pythagoreanTripleGeneratorByHypotenuse
@@ -2157,7 +2157,211 @@ def probabilityPlayer2WinsFloat(points_required: int=100) -> CustomFraction:
     return res.numerator / res.denominator
 
 
-# Problem 135
+# Problem 233
+def factorisationsGenerator(num: int) -> Generator[Dict[int, int], None, None]:
+    pf = calculatePrimeFactorisation(num)
+    print(pf)
+    p_lst = sorted(pf.keys())
+    n_p = len(p_lst)
+    f_lst = [pf[p] for p in p_lst]
+    z_cnt = [0]
+
+    print(p_lst, f_lst)
+
+    curr = {}
+    def recur(idx: int, num: int, prev: int=2) -> Generator[Dict[int, int], None, None]:
+        #print(idx, num, prev, curr)
+        if idx == n_p:
+            #print("hi2")
+            if num < prev: return
+            #print(idx, num, prev, f_lst, curr, z_cnt[0])
+            curr[num] = curr.get(num, 0) + 1
+            if z_cnt[0] == n_p:
+                yield dict(curr)
+            else:
+                yield from recur(0, 1, prev=num)
+            curr[num] -= 1
+            if not curr[num]: curr.pop(num)
+            return
+        f0 = f_lst[idx]
+        num0 = num
+        #print(f"idx = {idx}, f0 = {f0}, f_lst = {f_lst}, z_cnt = {z_cnt}, curr = {curr}")
+        if not f0:
+            yield from recur(idx + 1, num, prev=prev)
+            return
+        for i in range(f0):
+            #print(f"i = {i}")
+            yield from recur(idx + 1, num, prev=prev)
+            #print(f"i = {i}, idx = {idx}, f_lst[idx] = {f_lst[idx]}")
+            num *= p_lst[idx]
+            f_lst[idx] -= 1
+        #print("finished loop")
+        z_cnt[0] += 1
+        #print(idx, num, prev)
+        yield from recur(idx + 1, num, prev=prev)
+        num = num0
+        z_cnt[0] -= 1
+        f_lst[idx] = f0
+        return
+    
+    yield from recur(0, 1, prev=2)
+    return
+
+def circleInscribedSquareSideLengthWithLatticePointCount(n_lattice_points: int=420, max_inscribed_square_side_length: int=10 ** 11) -> int:
+    """
+    Solution to Project Euler #233
+    """
+    q, r = divmod(n_lattice_points, 8)
+    if r != 4: return 0
+    
+    target = (q << 1) + 1
+    print(target)
+    p_pow_opts = []
+    mx_n_p = 0
+    for fact in factorisationsGenerator(target):
+        #print(fact)
+        p_pows = {}
+        for num, f in fact.items():
+            if not num & 1: break
+            num2 = num >> 1
+            p_pows[num2] = f
+        else:
+            p_pow_opts.append(p_pows)
+            mx_n_p = max(mx_n_p, len(p_pows))
+    print(p_pow_opts)
+
+    ps = SimplePrimeSieve()
+    p_gen = iter(ps.endlessPrimeGenerator())
+    
+    p_r1_lst = []
+    p_other_lst = []
+    while True:
+        p = next(p_gen)
+        r = p & 3
+        if r == 1:
+            p_r1_lst.append(p)
+            if len(p_r1_lst) >= mx_n_p: break
+            continue
+        p_other_lst.append(p)
+    p_pow_opts2 = []
+    print(p_r1_lst)
+    mx_p_r1 = 0
+    for opts in p_pow_opts:
+        print(opts)
+        i_p = 0#sum(opts.values()) - 1
+        num = 1
+        opts2 = sorted(opts.keys())
+        for j in reversed(range(1, len(opts2))):
+            m = opts2[j]
+            f = opts[m]
+            for _ in range(f):
+                num *= p_r1_lst[i_p] ** m
+                print(i_p, p_r1_lst[i_p], m, num)
+                i_p += 1
+                if num > max_inscribed_square_side_length: break
+            else: continue
+            break
+        else:
+            j = 0
+            m = opts2[j]
+            f = opts[m]
+            for _ in range(f - 1):
+                num *= p_r1_lst[i_p] ** m
+                print(i_p, p_r1_lst[i_p], m, num)
+                i_p += 1
+                if num > max_inscribed_square_side_length: break
+            else:
+                mx_p_r1 = max(mx_p_r1, integerNthRoot(max_inscribed_square_side_length // num, m))
+                num *= p_r1_lst[i_p] ** m
+                print(i_p, p_r1_lst[i_p], m, num)
+                i_p += 1
+                if num > max_inscribed_square_side_length: continue
+                p_pow_opts2.append((num, opts))
+    
+    p_pow_opts = sorted(p_pow_opts2)
+    print(p_pow_opts)
+    print(mx_p_r1)
+    if not p_pow_opts: return 0
+    mult_mx = max_inscribed_square_side_length // p_pow_opts[0][0]
+    print(mult_mx)
+
+    mults = SortedList([1])
+    for p in p_other_lst:
+        #mults.add(p)
+        for i in itertools.count(0):
+            num = mults[i] * p
+            if num > mult_mx: break
+            mults.add(num)
+    while True:
+        p = next(p_gen)
+        if p & 3 == 1:
+            if p <= mx_p_r1:
+                p_r1_lst.append(p)
+            continue
+        if p > mult_mx: break
+        #mults.add(p)
+        for i in itertools.count(0):
+            num = mults[i] * p
+            if num > mult_mx: break
+            mults.add(num)
+    
+    print(len(mults))
+    print(mults[:50])
+    mults_cumu = [0]
+    for num in mults:
+        mults_cumu.append(mults_cumu[-1] + num)
+
+    while True:
+        p = next(p_gen)
+        if p > mx_p_r1: break
+        if p & 3 == 1:
+            p_r1_lst.append(p)
+    print(len(p_r1_lst))
+    #n_p_r1 = len(p_r1_lst)
+
+    def primeProductGenerator(pow_opts: Dict[int, int], p_lst: List[int], mx: int) -> Generator[int, None, None]:
+        pow_lst = []
+        for num in reversed(sorted(pow_opts.keys())):
+            f = pow_opts[num]
+            for f_ in range(f - 1):
+                pow_lst.append((num, True))
+            pow_lst.append((num, False))
+        n_pow = len(pow_lst)
+        n_p = len(p_lst)
+        print(pow_opts, pow_lst)
+
+        curr_incl = set()
+        def recur(idx: int=0, curr: int=1, mn_p_idx: int=0) -> Generator[int, None, None]:
+            if idx == n_pow:
+                yield curr
+                return
+            for p_idx in range(mn_p_idx, n_p):
+                if p_idx in curr_incl: continue
+                p = p_lst[p_idx]
+                exp, b = pow_lst[idx]
+                nxt = curr * p ** exp
+                if nxt > mx: break
+                curr_incl.add(p_idx)
+                yield from recur(idx=idx + 1, curr=nxt, mn_p_idx=p_idx + 1 if b else 0)
+                curr_incl.remove(p_idx)
+            return
+
+        yield from recur(idx=0, curr=1, mn_p_idx=0)
+        return
+
+    res = 0
+    cnt = 0
+    for opts in p_pow_opts:
+        for num in primeProductGenerator(opts[1], p_r1_lst, max_inscribed_square_side_length):
+            j = mults.bisect_right(max_inscribed_square_side_length // num)
+            #print(num, max_inscribed_square_side_length // num, mults[j - 1])
+            cnt += j
+            res += num * mults_cumu[j]
+    print(f"total count = {cnt}")
+    return res
+
+
+# Problem 235
 def arithmeticGeometricSeries(a: float=900, b: int=-3, n: int=5000, val: float=-6 * 10 ** 11, eps: float=10 ** -13) -> float:
 
     if b < 0:
@@ -2200,7 +2404,7 @@ def arithmeticGeometricSeries(a: float=900, b: int=-3, n: int=5000, val: float=-
 
 
 if __name__ == "__main__":
-    to_evaluate = {235}
+    to_evaluate = {233}
     since0 = time.time()
 
     if not to_evaluate or 201 in to_evaluate:
@@ -2379,6 +2583,11 @@ if __name__ == "__main__":
         res = probabilityPlayer2WinsFloat(points_required=100)
         print(f"Solution to Project Euler #232 = {res}, calculated in {time.time() - since:.4f} seconds")
 
+    if not to_evaluate or 233 in to_evaluate:
+        since = time.time() 
+        res = circleInscribedSquareSideLengthWithLatticePointCount(n_lattice_points=420, max_inscribed_square_side_length=10 ** 11)
+        print(f"Solution to Project Euler #233 = {res}, calculated in {time.time() - since:.4f} seconds")
+
     if not to_evaluate or 235 in to_evaluate:
         since = time.time() 
         res = arithmeticGeometricSeries(a=900, b=-3, n=5000, val=-6 * 10 ** 11, eps=10 ** -13)
@@ -2402,3 +2611,30 @@ print(cnt)
 
 #for frac in (CustomFraction(1, 1), CustomFraction(1, 2), CustomFraction(1, 3), CustomFraction(1, 4), CustomFraction(1, 5), CustomFraction(2, 5), CustomFraction(1, 6), CustomFraction(1, 7), CustomFraction(1, 8), CustomFraction(3, 8)):
 #    print(frac, findBlacmangeValue(frac), findBlacmangeIntegralValue(frac))
+
+def func(n: int) -> int:
+    res = 0
+    for x in range(1, (n >> 1) + 1):
+        y_sq = 2 * n ** 2 - (2 * x - n) ** 2
+        res += (isqrt(y_sq) ** 2 == y_sq)
+    return res
+
+def func2(n: int) -> int:
+    pf = calculatePrimeFactorisation(n)
+    res = 1
+    for p, f in pf.items():
+        if p & 3 != 1: continue
+        #res1 += (f << 1) + 1
+        res *= (f << 1) + 1
+    return res >> 1
+
+print(func2(10000))
+
+"""
+n_max = 1000
+for n in range(1, n_max + 1):
+    res = func(n)
+    res2 = func2(n)
+    if res != res2:
+        print(n, res, res2)
+"""
