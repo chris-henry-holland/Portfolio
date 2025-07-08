@@ -2360,6 +2360,48 @@ def circleInscribedSquareSideLengthWithLatticePointCount(n_lattice_points: int=4
     print(f"total count = {cnt}")
     return res
 
+# Problem 234
+def semiDivisibleNumberCount(n_max: int=999966663333) -> int:
+    """
+    Solution to Project Euler #234
+    """
+    if n_max < 4: return 0
+
+    #sqrt_max = isqrt(n_max - 1) + 1
+    #print(f"sqrt_max = {sqrt_max}")
+    ps = SimplePrimeSieve()
+    p_gen = iter(ps.endlessPrimeGenerator())
+
+
+    def singleDivisibleCount(p1: int, p2: int, mn: int, mx: int) -> int:
+        if mn > mx: return 0
+        q = p1 * p2
+        i1, i2 = (mn - 1) // p1, mx // p1
+        j1, j2 = (mn - 1) // p2, mx // p2
+        k1, k2 = (mn - 1) // q, mx // q
+        ans1 = p1 * (i2 * (i2 + 1) - i1 * (i1 + 1)) >> 1
+        ans2 = p2 * (j2 * (j2 + 1) - j1 * (j1 + 1)) >> 1
+        ans3 = q * (k2 * (k2 + 1) - k1 * (k1 + 1))
+        #print(p1, p2, ans1, ans2, ans3)
+        return ans1 + ans2 - ans3
+
+    res = 0
+    p2 = next(p_gen)
+    p2_sq = p2 ** 2
+    while True:
+        p1, p1_sq = p2, p2_sq
+        p2 = next(p_gen)
+        p2_sq = p2 ** 2
+        if p2_sq > n_max:
+            ans = singleDivisibleCount(p1, p2, p1_sq + 1, n_max)
+            print(p1, p2, p1_sq + 1, n_max, ans)
+            res += ans
+            break
+        ans = singleDivisibleCount(p1, p2, p1_sq + 1, p2_sq - 1)
+        #print(p1, p2, p1_sq + 1, p2_sq - 1, ans)
+        res += ans
+    return res
+
 
 # Problem 235
 def arithmeticGeometricSeries(a: float=900, b: int=-3, n: int=5000, val: float=-6 * 10 ** 11, eps: float=10 ** -13) -> float:
@@ -2404,7 +2446,7 @@ def arithmeticGeometricSeries(a: float=900, b: int=-3, n: int=5000, val: float=-
 
 
 if __name__ == "__main__":
-    to_evaluate = {233}
+    to_evaluate = {234}
     since0 = time.time()
 
     if not to_evaluate or 201 in to_evaluate:
@@ -2588,6 +2630,11 @@ if __name__ == "__main__":
         res = circleInscribedSquareSideLengthWithLatticePointCount(n_lattice_points=420, max_inscribed_square_side_length=10 ** 11)
         print(f"Solution to Project Euler #233 = {res}, calculated in {time.time() - since:.4f} seconds")
 
+    if not to_evaluate or 234 in to_evaluate:
+        since = time.time()
+        res = semiDivisibleNumberCount(n_max=999966663333)
+        print(f"Solution to Project Euler #234 = {res}, calculated in {time.time() - since:.4f} seconds")
+
     if not to_evaluate or 235 in to_evaluate:
         since = time.time() 
         res = arithmeticGeometricSeries(a=900, b=-3, n=5000, val=-6 * 10 ** 11, eps=10 ** -13)
@@ -2628,7 +2675,7 @@ def func2(n: int) -> int:
         res *= (f << 1) + 1
     return res >> 1
 
-print(func2(10000))
+#print(func2(10000))
 
 """
 n_max = 1000
