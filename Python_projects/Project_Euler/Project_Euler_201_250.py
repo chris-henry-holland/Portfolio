@@ -2444,9 +2444,147 @@ def arithmeticGeometricSeries(a: float=900, b: int=-3, n: int=5000, val: float=-
         else: rgt = mid
     return lft + (rgt - lft) * .5
 
+# Problem 237
+def playingBoardTourCount(n_cols: int=10 ** 12, start_row: int=0, end_row: int=3, md: Optional[int]=10 ** 8) -> int:
+
+    # Review- try to generalise to arbitrary row numbers- at present only
+    # the transfer function is specialised to four rows, though being
+    # able to generalise this will probably be tricky.
+    n_rows = 4
+
+    if start_row == end_row: raise ValueError("start_row and end_row must be different")
+    init_state = [0] * n_rows
+    init_state[start_row] = 1
+    init_state[end_row] = 1
+    init_state = tuple(init_state)
+
+    def transferFunction(state: Tuple[int]) -> Generator[Tuple[Tuple[int], int], None, None]:
+        if state == (1, 1, 0, 0):
+            yield ((1, 1, 2, 2), 1)
+            yield ((1, 0, 0, 1), 1)
+            return
+        elif state == (1, 1, 2, 2):
+            yield ((1, 1, 2, 2), 1)
+            yield ((1, 0, 0, 1), 1)
+            return
+        elif state == (1, 0, 1, 0):
+            yield ((1, 0, 1, 0), 1) # Reflected from (0, 1, 0, 1)
+            return
+        elif state == (1, 0, 0, 1):
+            yield ((1, 1, 0, 0), 2) # One reflected from (0, 0, 1, 1)
+            yield ((0, 1, 1, 0), 1)
+            yield ((1, 2, 2, 1), 1)
+            return
+        elif state == (1, 2, 2, 1):
+            yield ((1, 2, 2, 1), 1)
+            yield ((1, 1, 0, 0), 2) # One reflected from (0, 0, 1, 1)
+            return
+        elif state == (0, 1, 1, 0):
+            yield ((1, 0, 0, 1), 1)
+            return
+        return
+    
+    #state_dict = {init_state: 1}
+
+    states = [(1, 1, 0, 0), (1, 1, 2, 2), (1, 0, 1, 0), (1, 0, 0, 1), (1, 2, 2, 1), (0, 1, 1, 0)]
+    states_dict = {x: i for i, x in enumerate(states)}
+    n_states = len(states)
+    state_adj = [{} for _ in range(n_states)]
+    for idx1 in range(n_states):
+        state1 = states[idx1]
+        for state2, f in transferFunction(state1):
+            idx2 = states_dict[state2]
+            state_adj[idx1][idx2] = f
+    
+    def multiplyStateAdj(state_adj1: List[Dict[int, int]], state_adj2: List[Dict[int, int]]) -> List[Dict[int, int]]:
+        res = [{} for _ in range(n_states)]
+        for idx1 in range(n_states):
+            for idx2, f2 in state_adj1[idx1].items():
+                for idx3, f3 in state_adj2[idx2].items():
+                    res[idx1][idx3] = (res[idx1].get(idx3, 0) + f2 * f3)
+                    if md is not None: res[idx1][idx3] %= md
+        return res
+    
+    def applyStateAdj(state_adj: List[Dict[int, int]], state_f_dict: Dict[int, int]) -> Dict[int, int]:
+        res = {}
+        for idx, f in state_f_dict.items():
+            for idx2, f2 in state_adj[idx].items():
+                res[idx2] = (res.get(idx2, 0) + f * f2)
+                if md is not None: res[idx2] %= md
+        return res
+
+    # binary lift
+    state_adj_bin = state_adj
+    curr = {states_dict[init_state]: 1}
+    m = n_cols - 1
+    while True:
+        if m & 1:
+            curr = applyStateAdj(state_adj_bin, curr)
+        m >>= 1
+        if not m: break
+        state_adj_bin = multiplyStateAdj(state_adj_bin, state_adj_bin)
+
+    """
+    curr = {init_state: 1}
+    for _ in range(n_cols - 1):
+        print(curr)
+        prev = curr
+        curr = {}
+        for state, f in prev.items():
+            for state2, f2 in transferFunction(state):
+                curr[state2] = curr.get(state2, 0) + f * f2
+    """
+    # Find which states reached can be connected up so that
+    # a single path visiting every square exactly once can
+    # be formed, and summing the frequencies of those states
+    # for the last column, as identified above
+    res = 0
+    #print(curr)
+    for idx, f in curr.items():
+        #if state == (1, 0, 0, 1):
+        #    res += state_dict[state]
+        pair_adj = {}
+        prev = None
+        state = states[idx]
+        for num in state:
+            if not num:
+                if prev is None: break
+                continue
+            if prev is None:
+                prev = num
+                continue
+            pair_adj.setdefault(prev, set())
+            pair_adj.setdefault(num, set())
+            pair_adj[prev].add(num)
+            pair_adj[num].add(prev)
+            #if num in pair_dict.keys():
+            #    if pair_dict[num] != prev: break
+            #else:
+            #    pair_dict[num] = prev
+            #    pair_dict[prev] = num
+            prev = None
+        else:
+            if prev is not None: continue
+            n_nums = len(pair_adj)
+            
+            num1 = next(iter(pair_adj.keys()))
+            if len(pair_adj[num1]) == 1:
+                cycle_len = 1 + (next(iter(pair_adj[num1])) != num1)
+            else:
+                num2 = next(iter(num1))
+                cycle = [num1]
+                while num2 != cycle[0]:
+                    cycle.append(num2)
+                    num1, num2 = num2, next(iter(pair_adj[num2] - {num1}))
+                cycle_len = len(cycle)
+            if cycle_len != n_nums: continue
+            #print(state)
+            res += f
+            if md is not None: res %= md
+    return res
 
 if __name__ == "__main__":
-    to_evaluate = {234}
+    to_evaluate = {237}
     since0 = time.time()
 
     if not to_evaluate or 201 in to_evaluate:
@@ -2639,6 +2777,11 @@ if __name__ == "__main__":
         since = time.time() 
         res = arithmeticGeometricSeries(a=900, b=-3, n=5000, val=-6 * 10 ** 11, eps=10 ** -13)
         print(f"Solution to Project Euler #235 = {res}, calculated in {time.time() - since:.4f} seconds")
+
+    if not to_evaluate or 237 in to_evaluate:
+        since = time.time() 
+        res = playingBoardTourCount(n_cols=10 ** 12, start_row=0, end_row=3, md=10 ** 8)
+        print(f"Solution to Project Euler #237 = {res}, calculated in {time.time() - since:.4f} seconds")
 
     print(f"Total time taken = {time.time() - since0:.4f} seconds")
 
