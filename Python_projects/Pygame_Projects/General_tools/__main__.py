@@ -8,6 +8,7 @@ from General_tools import (
     runExampleSliderGroup1,
     runExampleSliderPlus1,
     runExampleSliderPlusGroup1,
+    runExampleSliderPlusGrid1,
     #runExampleSliders1,
     runExampleButton1,
     runExampleButtonGrid1,
@@ -19,6 +20,7 @@ from General_tools import (
 #runExampleSliderGroup1()
 #runExampleSliderPlus1()
 runExampleSliderPlusGroup1()
+#runExampleSliderPlusGrid1()
 #runExampleSliders1()
 #runExampleButton1()
 #runExampleButtonGrid1()

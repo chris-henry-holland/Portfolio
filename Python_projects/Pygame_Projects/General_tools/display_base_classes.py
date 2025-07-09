@@ -266,7 +266,7 @@ class ComponentBaseClass(ABC):
         
         for cls2 in cls.mro():
             for attr1, attr2_dict in getattr(cls2, "reset_graph_edges", {}).items():
-                #if attr1 == "val" or attr1 == "val_str":
+                #if attr1 == "val":
                 #    print(attr1, attr2_dict)
                 idx1 = attr2Index(attr1)
                 for attr2, func_new in attr2_dict.items():
@@ -365,12 +365,12 @@ class ComponentBaseClass(ABC):
         #if "_attr_calcfunc_dict" not in cls.__dict__.keys():
         if cls.__dict__.get("_attr_calcfunc_dict", None) is None:
             cls._attr_calcfunc_dict = cls._createAttributeCalculationFunctionDictionary()
-            print(f"set attr_calcfunc_dict for class {cls.__name__}")
+            #print(f"set attr_calcfunc_dict for class {cls.__name__}")
         return cls._attr_calcfunc_dict
 
     @classmethod
     def _createAttributeDefaultFunctionDictionary(cls) -> Dict[str, Any]:
-        print(f"Using _createAttributeCalculationFunctionDictionary() for class {cls.__name__}")
+        #print(f"Using _createAttributeCalculationFunctionDictionary() for class {cls.__name__}")
         attr_deffunc_dict = {}
         for cls2 in cls.mro():
             for attr, def_func_tup in cls2.__dict__.get("attribute_default_functions", {}).items():
@@ -391,7 +391,7 @@ class ComponentBaseClass(ABC):
     
     @classmethod
     def _createFixedAttributeSet(cls) -> Set[str]:
-        print(f"Using _createFixedAttributeSet() for class {cls.__name__}")
+        #print(f"Using _createFixedAttributeSet() for class {cls.__name__}")
         fixed_attr_set = set()
         for cls2 in cls.mro():
             fixed_attr_set |= cls2.__dict__.get("fixed_attributes", set())
@@ -406,7 +406,7 @@ class ComponentBaseClass(ABC):
     
     @classmethod
     def _createAttributeProcessingDictionary(cls) -> Dict[str, Callable[[Any], Any]]:
-        print(f"Using _createAttributeProcessingDictionary() for class {cls.__name__}")
+        #print(f"Using _createAttributeProcessingDictionary() for class {cls.__name__}")
         attr_processing_dict = {}
         for cls2 in cls.mro():
             for attr, process_func in cls2.__dict__.get("attribute_processing", {}).items():
@@ -437,6 +437,8 @@ class ComponentBaseClass(ABC):
                 container_attr_resets2.setdefault(component_attr, {})
                 for container_attr in container_attrs:
                     container_attr_resets2[component_attr][container_attr] = True
+            #if container_attr_resets2:
+            #    print(f"container_attr_resets2 = {container_attr_resets2}")
             sub_components_processed[sc_nm] = {
                 "class": component_cls,
                 "attribute_correspondence": attr_corresp_dict,
@@ -503,7 +505,7 @@ class ComponentBaseClass(ABC):
         kwargs["_container_obj"] = self
         if container_attr_resets:
             kwargs["_container_attr_reset_dict"] = container_attr_resets
-        print(f"subcomponent creation kwargs = {kwargs}")
+        #print(f"subcomponent creation kwargs = {kwargs}")
         
         component = creation_function(**kwargs)
         setattr_dict = {arg: (getattr(self, attr) if isinstance(attr, str) else attr[1](*[getattr(self, x) for x in attr[0]])) for arg, attr in attr_corresp_dict.items()}
@@ -528,6 +530,10 @@ class ComponentBaseClass(ABC):
         return True
     
     def setAttributes(self, setattr_dict: Dict[str, Any], _from_container: bool=False, **kwargs) -> None:
+        #print("Using ComponentBaseClass method setAttributes()")
+        #print(setattr_dict)
+        #if "title_color" in setattr_dict.keys():
+        #    print(f"setting title_color attribute for {type(self).__name__}")
         #print("using setAttributes()")
         #print(setattr_dict)
         #if "val" in setattr_dict.keys():
@@ -585,6 +591,8 @@ class ComponentBaseClass(ABC):
             return func_lst
         
         container_attr_reset_dict = getattr(self, "_container_attr_reset_dict", {})
+        #if container_attr_reset_dict:
+        #    print(f"container_attr_reset_dict = {container_attr_reset_dict}")
         
         #print(container_attr_reset_dict)
         attr_processing_dict = cls.getAttributeProcessingDictionary()
@@ -594,17 +602,17 @@ class ComponentBaseClass(ABC):
         for attr, val in setattr_dict.items():
             #print(attr, val)
             
-            attr2 = attr if attr.startswith("_") else f"_{attr}"
-            #print(attr2)
-            #print(attr2 in self.__dict__.keys(), attr in self.__dict__.keys())
+            sub_attr = attr if attr.startswith("_") else f"_{attr}"
+            #print(sub_attr)
+            #print(sub_attr in self.__dict__.keys(), attr in self.__dict__.keys())
             if attr not in attr_dict.keys():
                 pass#setAttrCustom(*attr_tup)
-            elif getattr(self, attr2, None) != val:
+            elif getattr(self, sub_attr, None) != val:
                 inds.append(attr_dict[attr])
             elif val is not None:
                 continue
-            #attr2 = f"_{attr}"
-            val_prev = self.__dict__.get(attr2, None)
+            #sub_attr = f"_{attr}"
+            val_prev = self.__dict__.get(sub_attr, None)
             #if attr == "max_height0":
             #    print(f"max_height0 val_prev = {val_prev}, val = {val}")
             for func in custom_reset_funcs.get(attr_dict.get(attr, None), []):
@@ -612,9 +620,11 @@ class ComponentBaseClass(ABC):
                 #    print(f"reset function for max_height: {(func, val_prev)}")
                 reset_funcs.append((func, val_prev))
             if attr in container_attr_reset_dict.keys():
-                container_reset_attrs.add(container_attr_reset_dict[attr])
-            process_func = attr_processing_dict.get(attr, (lambda x: x))
-            setAttrCustom(attr2, val)
+                for attr2, func in container_attr_reset_dict[attr].items():
+                    func_lst = addBooleanFunction(container_reset_attrs.get(attr2, []), func)
+                    container_reset_attrs[attr2] = func_lst
+            #process_func = attr_processing_dict.get(attr, (lambda x: x))
+            setAttrCustom(sub_attr, val)
             #print(attr2 in self.__dict__.keys(), attr in self.__dict__.keys())
         #print("hello")
         def bfs(inds: List[int]) -> Tuple[List[Callable[["DisplayComponentBase"], None]]]:
@@ -703,7 +713,8 @@ class ComponentBaseClass(ABC):
         return self.setAttributes({attr: val})
     
     def __getattr__(self, attr: str) -> Any:
-        
+        #if attr == "display_surf":
+        #    print(f"Using ComponentBaseClass method __getattr__() for attribute {attr}")
         def notFoundError():
             raise AttributeError(f"'{type(self).__name__}' object has no attribute '{attr}'")
         
@@ -843,7 +854,7 @@ class ComponentGroupBaseClass(ComponentBaseClass):
     def getElementInheritedAttributesDictionary(cls) -> Dict[str, Any]:
         if cls.__dict__.get("_el_inherit_attr_dict", None) is None:
             cls._el_inherit_attr_dict = cls._createElementInheritedAttributesDictionary()
-            print(f"set el_inherit_attr_dict for class {cls.__name__}")
+            #print(f"set el_inherit_attr_dict for class {cls.__name__}")
         return cls._el_inherit_attr_dict
     
     @classmethod
@@ -1171,6 +1182,7 @@ class InteractiveDisplayComponentBase(DisplayComponentBase):
     
     def getRequiredInputs(self) -> Tuple[Union[bool, Dict[str, Union[List[int], Tuple[Union[Tuple[int], int]]]]]]:
         #print("Using InteractiveDisplayComponent method getRequiredInputs()")
+        #print(self.user_input_processor.get_mouse_status_func_actual(self), self.user_input_processor.get_mouse_status_func(self), self, getattr(self._user_input_processor, "get_mouse_status_func0", None))
         quit, esc_pressed, events = self.user_input_processor.getEvents(self)
         return quit, esc_pressed, {"events": events,\
                 "keys_down": self.user_input_processor.getKeysHeldDown(self),\

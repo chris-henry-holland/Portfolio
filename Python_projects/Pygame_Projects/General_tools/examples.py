@@ -27,6 +27,7 @@ from General_tools import (
     SliderGroup,
     SliderPlus,
     SliderPlusGroup,
+    SliderPlusGrid,
     #SliderPlusVerticalBattery,
     Button,
     ButtonGrid,
@@ -191,7 +192,7 @@ def runExampleSliderGroup1() -> None:
             name=None,
         )
     )
-    """
+    
     sliders.append(
         slider_group.addSlider(
             anchor_pos=(300, 400),
@@ -201,13 +202,13 @@ def runExampleSliderGroup1() -> None:
             anchor_type="center",
             screen_topleft_offset=None,
             init_val=None,
-            demarc_numbers_dp=3,
+            demarc_numbers_dp=0,
             demarc_intervals=(20,),
             demarc_start_val=1,
             name=None,
         )
     )
-    """
+    
     #print("hello3")
     #print(type(sliders[0]).mro())
     #print(sliders[0].track_shape)
@@ -322,7 +323,7 @@ def runExampleSliderPlus1() -> None:
         slider_borders_rel=(0.05, 0.03),
         title_text_group=None,
         title_anchor_type="topleft",
-        title_text_color=None,
+        title_color=None,
         val_text_group=None,
         val_text_anchor_type="midright",
         val_text_color=(named_colors_def["black"], 1),
@@ -426,7 +427,7 @@ def runExampleSliderPlusGroup1() -> None:
         slider_borders_rel=(0, 0),
         title_text_group=None,
         title_anchor_type="topleft",
-        title_text_color=(named_colors_def["black"], 1.),
+        title_color=(named_colors_def["black"], 1.),
         val_text_group=None,
         val_text_anchor_type="midright",
         val_text_color=(named_colors_def["black"], 1.),
@@ -435,7 +436,7 @@ def runExampleSliderPlusGroup1() -> None:
     sliders = []
     sliders.append(
         slider_group.addSliderPlus(
-            title="Slider 1",
+            title="Slider asdfsafdsdfdafasfsdafdsfdsafsad",
             anchor_pos=(50, 50),
             val_range=(0, 100),
             increment_start=15,
@@ -450,7 +451,7 @@ def runExampleSliderPlusGroup1() -> None:
             name=None,
         )
     )
-    """
+    
     sliders.append(
         slider_group.addSliderPlus(
             title="Slider 2",
@@ -464,17 +465,20 @@ def runExampleSliderPlusGroup1() -> None:
             demarc_numbers_dp=3,
             demarc_intervals=(20,),
             demarc_start_val=1,
-            val_text_dp=0,
+            val_text_dp=2,
             name=None,
         )
     )
-    """
+    
     #print("hello3")
     #print(type(sliders[0]).mro())
     #print(sliders[0].track_shape)
     #print(slider_group.is_default_set)
     #print(slider_group.demarc_line_colors)
     #slider_group.shape = (300, 300)
+    #slider_group.slider_shape_rel = (.5, .4)
+    slider_group.title_color = (named_colors_def["silver"], .7)
+    slider_group.val_text_color = (named_colors_def["white"], .7)
     
     def drawSliders(screen: "pg.Surface", sliders: List["SliderPlus"]) -> None:
         for slider in sliders:
@@ -530,7 +534,7 @@ def runExampleSliderPlusGroup1() -> None:
                 break
             if not chng: continue
             screen_changed = True
-            print(f"new slider value for {slider.name} = {val}")
+            #print(f"new slider value for {slider.name} = {val}")
         if screen_changed:
             screen.blit(screen_cp, (0, 0))
             drawSliders(screen, sliders)
@@ -538,6 +542,165 @@ def runExampleSliderPlusGroup1() -> None:
         clock.tick(framerate)
         screen_changed = False
     return
+
+
+def runExampleSliderPlusGrid1() -> None:
+    screen_size = (600, 600)
+    framerate = 5
+    pg.init()
+    screen = pg.display.set_mode(screen_size)
+    screenColor = named_colors_def["white"]
+    screen.fill(screenColor)
+    pg.display.update(pg.Rect(0, 0, *screen_size))
+    screen_cp = pg.Surface.copy(screen)
+
+    grid_dims = (1, 2)
+
+    slider_grid = SliderPlusGrid(
+        grid_dims=grid_dims,
+        shape=(400, 300),
+        slider_gaps_rel_shape=(0.1, 0.1),
+        anchor_pos=(50, 50),
+        anchor_type="topleft",
+        screen_topleft_offset=None,
+        demarc_numbers_text_group=None,
+        thumb_radius_rel=1,
+        demarc_line_lens_rel=None,
+        demarc_numbers_max_height_rel=1,
+        track_color=(named_colors_def["gray"], 1),
+        thumb_color=(named_colors_def["silver"], 1),
+        demarc_numbers_color=None,
+        demarc_line_colors=None,
+        thumb_outline_color=None,
+        slider_shape_rel=(.7, .7),
+        slider_borders_rel=(0, 0),
+        title_text_group=None,
+        title_anchor_type="topleft",
+        title_color=(named_colors_def["black"], 1.),
+        val_text_group=None,
+        val_text_anchor_type="midright",
+        val_text_color=(named_colors_def["black"], 1.),
+        mouse_enabled=True,
+    )
+    
+    slider_grid.setupSliderPlusGridElement(
+        grid_inds=(0, 0),
+        title="Slider 1",
+        val_range=(0, 100),
+        increment_start=15,
+        increment=0,
+        init_val=None,
+        demarc_numbers_dp=None,
+        demarc_intervals=(20, 10, 5),
+        demarc_start_val=None,
+        val_text_dp=0,
+        name=None,
+    )
+
+    slider_grid.setupSliderPlusGridElement(
+        grid_inds=(0, 1),
+        title="Slider 2",
+        val_range=(0, 200),
+        increment_start=15,
+        increment=0,
+        init_val=None,
+        demarc_numbers_dp=None,
+        demarc_intervals=(50, 25),
+        demarc_start_val=None,
+        val_text_dp=2,
+        name=None,
+    )
+
+    """
+    sliders.append(
+        slider_group.addSliderPlus(
+            title="Slider 2",
+            anchor_pos=(300, 400),
+            val_range=(0, 100),
+            increment_start=15,
+            increment=5,
+            anchor_type="center",
+            screen_topleft_offset=None,
+            init_val=None,
+            demarc_numbers_dp=3,
+            demarc_intervals=(20,),
+            demarc_start_val=1,
+            val_text_dp=0,
+            name=None,
+        )
+    )
+    """
+    #print("hello3")
+    #print(type(sliders[0]).mro())
+    #print(sliders[0].track_shape)
+    #print(slider_group.is_default_set)
+    #print(slider_group.demarc_line_colors)
+    #slider_group.shape = (300, 300)
+    #slider_group.slider_shape_rel = (.5, .4)
+    #slider_group.title_color = (named_colors_def["silver"], .7)
+    #slider_group.val_text_color = (named_colors_def["white"], .7)
+    
+    #def drawSliders(screen: "pg.Surface", sliders: List["SliderPlus"]) -> None:
+    #    for slider in sliders:
+    #        slider.draw(screen)
+    #    return
+    """
+    slider = Slider((500, 70), (300, 200), anchor_type="center",
+            demarc_numbers_text_group=None,
+            screen_topleft_offset=(0, 0), val_range=(0, 100),
+            demarc_intervals=(20, 10, 5), demarc_start_val=35,
+            increment=10, increment_start=15, track_color=(named_colors_def["gray"], 1),
+            thumb_color=(named_colors_def["silver"], 1), thumb_radius_rel=1, init_val=None,
+            name=None, demarc_line_lens_rel=None, demarc_numbers_dp=0,
+            demarc_numbers_max_height_rel=2, demarc_numbers_color=None,
+            demarc_line_colors=None, thumb_outline_color=None,
+            mouse_enabled=True)
+    """
+    slider_grid.draw(screen)
+    #sliders[0].shape = (300, 70)
+    #slider_group.slider_shape = (600, 600)
+    #print("hello")
+    #slider_group.track_color = (named_colors_def["black"], 0.5)
+    screen_changed = True
+    #print(slider.__dict__.keys())
+    #print(slider.mouse_enabled)
+    #print(slider.mouse_enablement)
+    #print(slider_group.is_default_set)
+    #print(slider_group.demarc_line_colors)
+    #print(sliders[0].demarc_line_colors)
+    #slider_group.shape = (1200, 600)
+    #slider_group.shape = (500, 100)
+    #slider_group.track_color = (named_colors_def["black"], 1)
+    #slider_group.val_text_color = (named_colors_def["white"], 1)
+    #slider_group.shape = (300, 200)
+    #slider_group.slider_borders = (0, 0)
+    
+    clock = pg.time.Clock()
+    
+    while True:
+        #print(slider_grid.mouse_enabled)
+        quit, esc_pressed, event_loop_kwargs =\
+                slider_grid.getRequiredInputs()
+        
+        #print(event_loop_kwargs)
+        running = not esc_pressed
+        if quit or not running:
+            pg.quit()
+            return
+        quit, running, screen_changed, val = slider_grid.eventLoop(check_axes=(0, 1),\
+                **event_loop_kwargs)
+        screen_changed = True
+        if quit or not running:
+            pg.quit()
+            break
+        if screen_changed:
+            screen.blit(screen_cp, (0, 0))
+            slider_grid.draw(screen)
+            pg.display.flip()
+        clock.tick(framerate)
+        screen_changed = False
+    return
+
 
 """
 def runExampleSliders1() -> None:

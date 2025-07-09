@@ -1927,7 +1927,7 @@ class ButtonGrid(InteractiveDisplayComponentBase):
             b_inds1_mouse = None
         
         if events is None:
-            quit, esc_pressed, events = user_input_processor.getEvents()
+            quit, esc_pressed, events = self.user_input_processor.getEvents()
             if quit or esc_pressed:
                 running = False
         

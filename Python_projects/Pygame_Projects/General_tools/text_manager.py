@@ -414,10 +414,10 @@ class TextGroupElement(ComponentGroupElementBaseClass, Text):
     #    self._setMaxFontSizeGivenWidths(res, prev_val: Optional[int], _update_textgroup_max_font_size_given_width=_update_textgroup_max_font_size_given_width)
     #    return res
     
-    def setMaxShape(self, prev_val: Optional[Tuple[Optional[Real]]]) -> None:
+    def setMaxShape(self, prev_val: Optional[Tuple[Optional[Real]]]=None) -> None:
         #print(f"Setting max shape for text {self.text}")
-        if hasattr(super(), "setMaxShape"):
-            super().setMaxShape(max_shape)
+        #if hasattr(super(), "setMaxShape"):
+        #    super().setMaxShape(max_shape)
         #print("setting max_width and max_height_local")
         #print(max_shape)
         #prev_val
