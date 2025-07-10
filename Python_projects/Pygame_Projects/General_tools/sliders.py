@@ -506,10 +506,10 @@ class Slider(InteractiveDisplayComponentBase):
         dp = self.demarc_numbers_dp
         color = self.demarc_numbers_color
         vals = []
-        def updateFunction(obj: "Slider", prev_val: Optional["Text"]) -> None:
-            #print("updated text")
-            setattr(obj, "demarc_surf", None)
-            return
+        #def updateFunction(obj: "Slider", prev_val: Optional["Text"]) -> None:
+        #    #print("updated text")
+        #    setattr(obj, "demarc_surf", None)
+        #    return
         
         while val <= self.val_range[1]:
             val_txt = f"{val:.{dp}f}"
@@ -518,7 +518,10 @@ class Slider(InteractiveDisplayComponentBase):
                 add_text_dict["max_shape"] = (None, max_height)
             if displ_text:
                 #print("hi")
-                add_text_dict["_attr_reset_funcs"] = {"updated": [updateFunction]}
+                #add_text_dict["_attr_reset_funcs"] = {"updated": [updateFunction]}
+                add_text_dict["_from_container"] = True
+                add_text_dict["_container_obj"] = self
+                add_text_dict["_container_attr_reset_dict"] = {"updated": {"demarc_surf": (lambda container_obj, obj: getattr(obj, "updated", False))}}
             add_text_dicts.append(add_text_dict)
             vals.append(val)
             val += self.demarc_intervals[0]
@@ -1294,7 +1297,32 @@ class SliderPlus(InteractiveDisplayComponentBase):
         color = self.title_color
         txt = self.title
         #print(f"self.title_shape = {self.title_shape}")
-        add_text_dicts = [{"text": txt, "font_color": color, "max_shape": self.title_shape, "_attr_reset_funcs": {"updated": [lambda obj, prev_val: setattr(obj, "title_surf", None)]}}]
+        #container_attr_resets = {"display_surf": {"display_surf": True}}
+        #self.sliders[grid_inds[0]][grid_inds[1]] = self.slider_plus_group.addSliderPlus(
+        #    _from_container=True,
+        #    _container_obj=self,
+        #    _container_attr_reset_dict=container_attr_resets,
+        #    **attr_dict,
+        #    **kwargs,
+        #)
+        #container_attr_resets = {"display_surf": {"display_surf": True}}
+        #def titleSurfReset(obj, prev_val):
+        #    print("resetting title surface")
+        #    print(obj)
+        #    setattr(obj, "title_surf", None)
+        #    return
+
+        add_text_dicts = [
+            {
+                "text": txt,
+                "font_color": color,
+                "max_shape": self.title_shape,
+                #"_attr_reset_funcs": {"updated": [titleSurfReset]},#[lambda obj, prev_val: setattr(obj, "title_surf", None)]},
+                "_from_container": True,
+                "_container_obj": self,
+                "_container_attr_reset_dict": {"updated": {"title_surf": (lambda container_obj, obj: getattr(obj, "updated", False))}},
+            }
+        ]
         text_obj = title_text_group.addTextObjects(add_text_dicts)[0]
         #print(f"text_obj.max_shape_actual = {text_obj.max_shape_actual}")
         #text_obj.max_shape = self.title_shape
@@ -1306,6 +1334,7 @@ class SliderPlus(InteractiveDisplayComponentBase):
     
     def createTitleSurface(self)\
             -> Union["pg.Surface", tuple]:
+        print(f"using createTitleSurface() for {self}")
         #print("hello1")
         title_text_obj = self.title_text_obj
         #print(title_text_obj)
@@ -1315,6 +1344,7 @@ class SliderPlus(InteractiveDisplayComponentBase):
         surf.set_alpha(255)
         surf.fill((0, 0, 255))
         #print(self.title_anchor_pos, self.title_anchor_type)
+        print(title_text_obj.font_size)
         title_text_obj.draw(surf, anchor_pos=self.title_anchor_pos, anchor_type=self.title_anchor_type)
         return surf
     
@@ -1438,11 +1468,23 @@ class SliderPlus(InteractiveDisplayComponentBase):
         """
         #txt_shape = (10, 10)
         #add_text_dicts = [{"text": txt, "font_color": color, "max_shape": self.title_shape, "_attr_reset_funcs": {"updated": [lambda obj, prev_val: setattr(obj, "title_surf", None)]}}]
-        text_dict = {"text": self.val_str, "anchor_pos0": self.val_text_anchor_pos, "anchor_type0": self.val_text_anchor_type, "max_shape": self.val_text_shape, "font_color": self.val_text_color, "_attr_reset_funcs": {"updated": [lambda obj, prev_val: setattr(obj, "val_text_surf", None)]}}
+        text_dict = {
+            "text": self.val_str,
+            "anchor_pos0": self.val_text_anchor_pos,
+            "anchor_type0": self.val_text_anchor_type,
+            "max_shape": self.val_text_shape,
+            "font_color": self.val_text_color,
+            #"_attr_reset_funcs": {"updated": [lambda obj, prev_val: setattr(obj, "val_text_surf", None)]},
+            "_from_container": True,
+            "_container_obj": self,
+            "_container_attr_reset_dict": {"updated": {"val_text_surf": (lambda container_obj, obj: getattr(obj, "updated", False))}},
+        }
         text_list = []
         
         text_list.append(dict(text_dict))
-        text_dict.pop("_attr_reset_funcs")
+        #text_dict.pop("_attr_reset_funcs")
+        for attr in ["_from_container", "_container_obj", "_container_attr_reset_dict"]:
+            text_dict.pop(attr)
         for d in range(10):
             text_dict["text"] = repeatedDigitString(d)
             #print(text_dict["text"])

@@ -434,6 +434,8 @@ def runExampleSliderPlusGroup1() -> None:
     )
 
     sliders = []
+    
+    
     sliders.append(
         slider_group.addSliderPlus(
             title="Slider asdfsafdsdfdafasfsdafdsfdsafsad",
