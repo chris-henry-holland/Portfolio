@@ -47,7 +47,7 @@ def sliderPlusDemarcationsDPDefault(obj: "SliderPlus") -> int:
 
 def createDefaultTextGroup():
     #print("\ncreating TextGroup for the final Slider object")
-    #res = SliderPlus.createTitleTextGroup(font=None, max_height=None)#self.demarc_numbers_height)
+    #res = SliderPlus.createTitleTextGroup(font=None, max_height=None)#self.demarc_numbers_max_height)
     #print("finished creating TextGroup for final Slider object")
     return TextGroup(
         text_list=[],
@@ -66,6 +66,9 @@ class Slider(InteractiveDisplayComponentBase):
         "topleft_screen": {"thumb_x_screen": True, "slider_ranges_screen": True},
         #"mouse_enabled": {"mouse_enablement": True},
         "track_color": {"track_surf": True},
+
+        #"component_dimensions": {"track_topleft": True, "track_shape": True, "thumb_radius": True, "demarc_numbers_max_height": True}
+
         "track_topleft": {"x_range": True, "static_bg_surf": True, "demarc_surf": True, "slider_ranges_surf": True},
         "track_shape": {"track_surf": True, "x_range": True, "demarc_surf": True, "slider_ranges_surf": True},
         "demarc_line_colors": {"demarc_surf": True},
@@ -96,12 +99,19 @@ class Slider(InteractiveDisplayComponentBase):
     }
     
     component_dim_determiners = ["shape", "demarc_numbers_max_height_rel", "demarc_numbers_dp", "val_range", "demarc_intervals", "demarc_start_val", "thumb_radius_rel", "demarc_line_lens_rel", "demarc_numbers_text_group", "demarc_numbers_text_objects"]
-    dim_dependent = ["track_shape", "track_topleft", "demarc_numbers_height", "thumb_radius"]
+    component_dim_dependent = ["track_shape", "track_topleft", "demarc_numbers_max_height", "thumb_radius"]
     
-    for attr1 in component_dim_determiners:
-        reset_graph_edges.setdefault(attr1, {})
-        for attr2 in dim_dependent:
-            reset_graph_edges[attr1][attr2] = True
+    #for attr1 in component_dim_determiners:
+    #    reset_graph_edges.setdefault(attr1, {})
+    #    for attr2 in dim_dependent:
+    #        reset_graph_edges[attr1][attr2] = True
+    comp_dim_attr_name = "component_dimensions"
+    for attr in component_dim_determiners:
+        reset_graph_edges.setdefault(attr, {})
+        reset_graph_edges[attr][comp_dim_attr_name] = True
+    reset_graph_edges.setdefault(comp_dim_attr_name, {})
+    for attr in component_dim_dependent:
+        reset_graph_edges[comp_dim_attr_name][attr] = True
     
     custom_reset_methods = {
         "val_raw": "setValueRaw",
@@ -109,10 +119,11 @@ class Slider(InteractiveDisplayComponentBase):
     
     attribute_calculation_methods = {
         "mouse_enablement": "calculateMouseEnablement",
-        "track_topleft": "calculateAndSetComponentDimensions",
-        "track_shape": "calculateAndSetComponentDimensions",
-        "thumb_radius": "calculateAndSetComponentDimensions",
-        "demarc_numbers_height": "calculateAndSetComponentDimensions",
+        comp_dim_attr_name: "calculateComponentDimensions",
+        "track_topleft": "calculateTrackTopleft",
+        "track_shape": "calculateTrackShape",
+        "thumb_radius": "calculateThumbRadius",
+        "demarc_numbers_max_height": "calculateDemarcNumbersMaxHeight",
         "val_range_actual": "calculateValueRangeActual",
         "x_range": "calculateXRange",
         "val": "calculateValue",
@@ -137,7 +148,7 @@ class Slider(InteractiveDisplayComponentBase):
     @staticmethod
     def demarcNumsTextGroup():
         #print("\ncreating TextGroup for the final Slider object")
-        res = Slider.createDemarcationNumbersTextGroup(max_height=None)#self.demarc_numbers_height)
+        res = Slider.createDemarcationNumbersTextGroup(max_height=None)#self.demarc_numbers_max_height)
         #print("finished creating TextGroup for final Slider object")
         return res
     
@@ -284,27 +295,44 @@ class Slider(InteractiveDisplayComponentBase):
             return val
         return vra[0] + round((val - vra[0]) / self.increment) * self.increment
     
-    def _calculateComponentDimensions(self, text_obj_lists: List[List[Tuple["TextGroupElement", Real]]]) -> Tuple[Union[Tuple[Real], Real]]:
+    @staticmethod
+    def _calculateMultipleSliderComponentDimensions(slider_objs: List["Slider"], slider_shape: Tuple[int, int], demarc_numbers_max_height_rel: Optional[Real], demarc_line_lens_rel: Tuple[Real], thumb_radius_rel: Real, demarc_numbers_min_gap_rel_height: Real=1, demarc_numbers_min_gap_pixel: int=0) -> Tuple[Union[Tuple[Real], Real]]:
         #print("using _calculateComponentDimensions()")
+        #text_obj_lists: List[Tuple[List[Tuple["TextGroupElement", Real]]]
         y0 = 0
-        h0 = self.shape[1]
-        h_ratio = self.demarc_numbers_max_height_rel + (3 * self.demarc_line_lens_rel[0] / 2) + 1 + max(self.thumb_radius_rel - 0.5, 0)
-        h = math.floor(h0 / h_ratio)
-        y = y0 + math.ceil(h * max(self.thumb_radius_rel - 0.5, 0))
-        thumb_radius = math.ceil(h * self.thumb_radius_rel)
+        y_sz0 = slider_shape[1]
+        y_sz_ratio = demarc_numbers_max_height_rel + (3 * demarc_line_lens_rel[0] / 2) + 1 + max(thumb_radius_rel - 0.5, 0)
+        track_y_sz = math.floor(y_sz0 / y_sz_ratio)
+        track_topleft_y = y0 + math.ceil(track_y_sz * max(thumb_radius_rel - 0.5, 0))
+        thumb_radius = math.ceil(track_y_sz * thumb_radius_rel)
         
         min_end_gaps = (thumb_radius, thumb_radius)
-        min_demarc_numbers_gap = 2
+        #min_demarc_numbers_gap = 10
+
+        text_h_max = math.floor(demarc_numbers_max_height_rel * track_y_sz)
+
+        slider_text_grp_lst = []
+        slider_text_objs_lst = []
+        for slider in slider_objs:
+            if slider is None: continue
+            text_grp = slider.createDemarcationNumbersTextGroupCurrentFont(max_height=text_h_max)
+            text_objs = slider._createDemarcationNumbersTextObjectsGivenTextGroupAndMaxHeight(demarc_numbers_text_group=text_grp, max_height=None)
+            #print(f"text_objs = {text_objs}")
+            slider_text_grp_lst.append((slider, text_grp))
+            slider_text_objs_lst.append((slider, text_objs))
         
-        #def maxXTrackDimensions(text_obj_lists: List[List[Tuple["TextGroupElement", Real]]], text_h: int) -> int:
-        #    return self._maxXTrackDimensionsGivenTextObjects(text_obj_lists, min_gaps=min_gaps)
+        def setTextHeight(new_text_height: int):
+            for (_, text_grp) in slider_text_grp_lst:
+                text_grp.max_height0 = new_text_height
+            return
         
-        text_h_max = math.floor(self.demarc_numbers_max_height_rel * h)
         #print(f"text_h_max = {text_h_max}")
         def textHeightAllowed(text_h: int) -> bool:
-            for text_objs in text_obj_lists:
-                track_width = self.maxXTrackDimensionsGivenTextHeight(text_h, min_gaps=min_end_gaps)[1]
-                if self.numbersOverlapGivenTrackWidthAndTextHeight(text_objs, track_width, text_h, min_gap=min_demarc_numbers_gap):
+            setTextHeight(text_h)
+            track_x_size = Slider._maxXTrackDimensionsGivenTextObjects(slider_text_objs_lst, max_x_size=slider_shape[0], min_gaps=min_end_gaps)[1]
+            min_demarc_gap = max(demarc_numbers_min_gap_rel_height * text_h, demarc_numbers_min_gap_pixel)
+            for (slider, text_objs) in slider_text_objs_lst:
+                if slider._numbersOverlapGivenTrackXSizeAndTextHeight(text_objs, val_range=slider.val_range, track_x_size=track_x_size, text_height=text_h, min_gap=min_demarc_gap):
                     return False
             return True
         lft, rgt = 0, text_h_max
@@ -313,10 +341,16 @@ class Slider(InteractiveDisplayComponentBase):
             if textHeightAllowed(mid):
                 lft = mid
             else: rgt = mid - 1
-        gaps, w = self.maxXTrackDimensionsGivenTextHeight(lft, min_gaps=min_end_gaps)
-        x = gaps[0]
-        return ((w, h), (x, y), thumb_radius, lft)
+        new_text_h = lft
+        setTextHeight(new_text_h)
+        end_gaps, track_x_sz = Slider._maxXTrackDimensionsGivenTextObjects(slider_text_objs_lst, max_x_size=slider_shape[0], min_gaps=min_end_gaps)
+        track_topleft_x = end_gaps[0]
+        return ((track_x_sz, track_y_sz), (track_topleft_x, track_topleft_y), thumb_radius, lft)
     
+    def calculateComponentDimensions(self) -> Tuple[Tuple[int, int], Tuple[int, int], Real]:
+        return self._calculateMultipleSliderComponentDimensions([self], slider_shape=self.shape, demarc_numbers_max_height_rel=self.demarc_numbers_max_height_rel, demarc_line_lens_rel=self.demarc_line_lens_rel, thumb_radius_rel=self.thumb_radius_rel, demarc_numbers_min_gap_rel_height=1, demarc_numbers_min_gap_pixel=0)
+
+    """
     #def calculateTrackDimensions(self) -> Tuple[Real]:
     def calculateComponentDimensions(self) -> Tuple[Union[Tuple[Real], Real]]:
         #print("using calculateComponentDimensions()")
@@ -332,8 +366,21 @@ class Slider(InteractiveDisplayComponentBase):
         res = self._calculateComponentDimensions([text_objs])
         #print(f"component dimensions = {res}")
         return res
-        
+    """
     
+    def calculateTrackShape(self) -> Tuple[int, int]:
+        return getattr(self, self.comp_dim_attr_name)[0]
+
+    def calculateTrackTopleft(self) -> Tuple[int, int]:
+        return getattr(self, self.comp_dim_attr_name)[1]
+
+    def calculateThumbRadius(self) -> Real:
+        return getattr(self, self.comp_dim_attr_name)[2]
+
+    def calculateDemarcNumbersMaxHeight(self) -> Real:
+        return getattr(self, self.comp_dim_attr_name)[3]
+    
+    """
     def setTrackDimensions(self, shape: Tuple[int], topleft: Tuple[int]) -> None:
         self._track_shape = shape
         self._track_topleft = topleft
@@ -343,83 +390,95 @@ class Slider(InteractiveDisplayComponentBase):
         self._thumb_radius = thumb_radius
         return
     
-    def setDemarcationNumbersHeight(self, height: int) -> None:
-        self._demarc_numbers_height = height
+    def setDemarcationNumbersMaxHeight(self, height: int) -> None:
+        self._demarc_numbers_max_height = height
         text_objs = getattr(self, "_demarc_numbers_text_objects", None)
         if text_objs is None:
             return
         for text_obj_tup in text_objs:
             text_obj_tup[0].max_height = height
         return
-    
-    def setComponentDimensions(self, track_shape: Tuple[int], track_topleft: Tuple[int], thumb_radius: int, text_height: int) -> None:
-        self.setTrackDimensions(track_shape, track_topleft)
-        self.setThumbRadius(thumb_radius)
-        self.setDemarcationNumbersHeight(text_height)
-        return
+    """
+    #def setComponentDimensions(self, track_shape: Tuple[int], track_topleft: Tuple[int], thumb_radius: int, text_height: int) -> None:
+    #    self.setTrackDimensions(track_shape, track_topleft)
+    #    self.setThumbRadius(thumb_radius)
+    #    self.setDemarcationNumbersMaxHeight(text_height)
+    #    return
     
     #def calculateAndSetTrackDimensions(self) -> None:
-    def calculateAndSetComponentDimensions(self) -> Optional[Tuple[Union[Tuple[Real], Real]]]:
-        res = self.calculateComponentDimensions()
-        self.setComponentDimensions(*res)
-        return res
+    #def calculateAndSetComponentDimensions(self) -> Optional[Tuple[Union[Tuple[Real], Real]]]:
+    #    res = self.calculateComponentDimensions()
+    #    self.setComponentDimensions(*res)
+    #    return res
     
-    def _maxXTrackDimensionsGivenTextObjects(self, text_obj_lists: List[List[Tuple["Text", Real]]], min_gaps: Tuple[int]=(0, 0)) -> Tuple[Union[Tuple[int], int]]:
-        mx_w = self.shape[0]
+    @staticmethod
+    def _maxXTrackDimensionsGivenTextObjects(slider_text_objs_list: List[Tuple["Slider", List[Tuple["Text", Real]]]], max_x_size: int, min_gaps: Tuple[int]=(0, 0)) -> Tuple[Union[Tuple[int], int]]:
+        #mx_w = self.shape[0]
+        #mx_w = max_width
         
         text_end_pairs = []
-        for text_objs in text_obj_lists:
+        for slider, text_objs in slider_text_objs_list:
             if not text_objs: continue
+            print(text_objs)
             text_obj1, val1 = text_objs[0]
             text_obj2, val2 = text_objs[-1]
-            text_end_pairs.append(((text_obj1, val1, -text_obj1.calculateTopleftEffective((0, 0), anchor_type="midtop")[0]),\
-                    (text_obj2, val2, text_obj2.calculateTopleftEffective((0, 0), anchor_type="midtop")[0] + text_obj2.shape_eff[0])))
+            text_end_pairs.append((slider, ((text_obj1, val1, -text_obj1.calculateTopleftEffective((0, 0), anchor_type="midtop")[0]),\
+                    (text_obj2, val2, text_obj2.calculateTopleftEffective((0, 0), anchor_type="midtop")[0] + text_obj2.shape_eff[0]))))
         if not text_end_pairs:
             gaps = tuple(math.ceil(gap) for gap in min_gaps)
-            return (gaps, mx_w - sum(gaps))
+            return (gaps, max_x_size - sum(gaps))
         
-        
+        print(text_end_pairs)
+        print(min_gaps)
         def trackEndGaps(track_width: int) -> Tuple[int]:
             gaps = list(min_gaps)
-            for (text_obj1, val1, gap1), (text_obj2, val2, gap2) in text_end_pairs:
-                gaps[0] = max(gaps[0], gap1 - self.val2TrackLeftDistGivenTrackWidth(val1, track_width))
-                gaps[1] = max(gaps[1], gap2 - track_width + self.val2TrackLeftDistGivenTrackWidth(val2, track_width))
+            for slider, pair in text_end_pairs:
+                (text_obj1, val1, gap1), (text_obj2, val2, gap2) = pair
+                gaps[0] = max(gaps[0], gap1 - slider.val2TrackLeftDistGivenTrackWidth(val1, track_width))
+                gaps[1] = max(gaps[1], gap2 - track_width + slider.val2TrackLeftDistGivenTrackWidth(val2, track_width))
             return tuple(math.ceil(gap) for gap in gaps)
         
-        lft, rgt = 0, mx_w - sum(min_gaps)
+        lft, rgt = 0, max_x_size - sum(min_gaps)
         while lft < rgt:
             mid = lft - ((lft - rgt) >> 1)
             gaps = trackEndGaps(mid)
-            #print(mid, gaps)
-            if mid + sum(gaps) <= mx_w:
+            print(mid, gaps, mid + sum(gaps))
+            if mid + sum(gaps) <= max_x_size:
                 lft = mid
             else: rgt = mid - 1
-        gaps = trackEndGaps(lft)
-        
-        return (gaps, lft)
+        x_sz_mx = lft
+        gaps = trackEndGaps(x_sz_mx)
+        print(f"max track x dimension calculated by _maxXTrackDimensionsGivenTextObjects() = {x_sz_mx}, max_x_size = {max_x_size}")
+        return (gaps, x_sz_mx)
     
+    """
     def maxXTrackDimensionsGivenTextHeight(self, text_height: int, min_gaps: Tuple[int]=(0, 0)) -> Tuple[Union[Tuple[int], int]]:
         #print("\nUsing maxXTrackDimensionsGivenTextHeight()")
         #print(f"text_height = {text_height}")
         #print("\ncreating TextGroup to calculate Slider x-dimension for a given text height")
         text_group = self.createDemarcationNumbersTextGroupCurrentFont(max_height=text_height)
+        #text_group = Slider.createDemarcationNumbersTextGroup(font, max_height=text_height)
         #print("finished creating TextGroup to calculate Slider x-dimension for a given text height")
         #print("creating TextGroup elements to calculate Slider x-dimension for a given text height")
-        text_obj_lists = [self._createDemarcationNumbersTextObjectsGivenTextGroupAndMaxHeight(demarc_numbers_text_group=text_group, max_height=None)]
+        text_obj_lists = [(self, self._createDemarcationNumbersTextObjectsGivenTextGroupAndMaxHeight(demarc_numbers_text_group=text_group, max_height=None))]
         #print("finished creating TextGroup elements to calculate Slider x-dimension for a given text height")
-        res = self._maxXTrackDimensionsGivenTextObjects(text_obj_lists, min_gaps=min_gaps)
+        #res = _maxXTrackDimensionsGivenTextObjects(text_obj_lists: List[Tuple["Slider", List[Tuple["Text", Real]]]], max_width: int, min_gaps: Tuple[int]=(0, 0))
+        res = self._maxXTrackDimensionsGivenTextObjects(text_obj_lists, max_x_size=self.shape[0], min_gaps=min_gaps)
         #print("finished calculating Slider x-dimension")
+        #print(f"calculated max track x dimension = {res}")
         return res
-    
-    def numbersOverlapGivenTrackWidthAndTextHeight(self, text_objs: List[Tuple["Text", Real]], track_width: int, text_height: int, min_gap: int=2) -> bool:
+    """
+    # Review- try to make a static method
+    def _numbersOverlapGivenTrackXSizeAndTextHeight(self, text_objs: List[Tuple["Text", Real]], val_range: Tuple[Real, Real], track_x_size: int, text_height: int, min_gap: int=2) -> bool:
         if not text_objs:
             return False
         text_group = text_objs[0][0].text_group
         text_group.max_height0 = text_height
         curr_right = -float("inf")
+        #_val2TrackLeftDistGivenTrackWidth(val: Real, track_width: int, val_range: Tuple[Real, Real])
         for text_obj_tup in text_objs:
             text_obj, val = text_obj_tup
-            curr_left = text_obj.calculateTopleftEffective((self.val2TrackLeftDistGivenTrackWidth(val, track_width), 0), anchor_type="midtop")[0]
+            curr_left = text_obj.calculateTopleftEffective((self._val2TrackLeftDistGivenTrackWidth(val, track_x_size, val_range), 0), anchor_type="midtop")[0]
             if curr_left <= curr_right + min_gap:
                 return True
             curr_right = curr_left + text_obj.shape_eff[0]
@@ -440,7 +499,7 @@ class Slider(InteractiveDisplayComponentBase):
         if not text_objs: return 0
         
         def numbersOverlap(text_height: int) -> bool:
-            return self.numbersOverlapGivenTrackWidthAndTextHeight(text_objs, track_width, text_height, min_gap=min_gap)
+            return self._numbersOverlapGivenTrackXSizeAndTextHeight(text_objs, track_width, text_height, min_gap=min_gap)
         
         if not numbersOverlap(text_height_max):
             return text_height_max
@@ -480,7 +539,7 @@ class Slider(InteractiveDisplayComponentBase):
             -> List[Tuple["Text", Real]]:
         #print("using createDemarcationNumbersTextObjects()")
         demarc_numbers_text_group = self.demarc_numbers_text_group
-        max_height = self.demarc_numbers_height
+        max_height = self.demarc_numbers_max_height
         #print(f"max_height = {max_height}")
         res = self._createDemarcationNumbersTextObjectsGivenTextGroupAndMaxHeight(demarc_numbers_text_group, max_height=max_height, displ_text=True)
         #if res:
@@ -510,7 +569,7 @@ class Slider(InteractiveDisplayComponentBase):
         #    #print("updated text")
         #    setattr(obj, "demarc_surf", None)
         #    return
-        
+        print(f"demarc numbers font size actual = {demarc_numbers_text_group.font_size_actual}, {self}")
         while val <= self.val_range[1]:
             val_txt = f"{val:.{dp}f}"
             add_text_dict = {"text": val_txt, "font_color": color}
@@ -546,7 +605,7 @@ class Slider(InteractiveDisplayComponentBase):
         
         numbers_color = self.demarc_numbers_color
         numbers_upper_y = int(line_upper_y + line_lens[0] * 1.5)
-        numbers_height = self.demarc_numbers_height #self.demarc_number_size_rel * self.track_shape[1]
+        numbers_height = self.demarc_numbers_max_height #self.demarc_number_size_rel * self.track_shape[1]
         
         seen_x = set()
         
@@ -657,8 +716,13 @@ class Slider(InteractiveDisplayComponentBase):
         surf.blit(self.display_surf, self.topleft)
         return
     
+    @staticmethod
+    def _val2TrackLeftDistGivenTrackWidth(val: Real, track_width: int, val_range: Tuple[Real, Real]) -> int:
+        return round(track_width * (val - val_range[0]) / (val_range[1] - val_range[0]))
+    
     def val2TrackLeftDistGivenTrackWidth(self, val: Real, track_width: int) -> int:
-        return round(track_width * (val - self.val_range[0]) / (self.val_range[1] - self.val_range[0]))
+        return self._val2TrackLeftDistGivenTrackWidth(val, track_width, self.val_range)
+        #return round(track_width * (val - self.val_range[0]) / (self.val_range[1] - self.val_range[0]))
     
     def val2X(self, val: Union[Real, tuple]) -> Union[int, tuple]:
         if isinstance(val, tuple): return ()
@@ -805,7 +869,7 @@ class SliderGroupElement(ComponentGroupElementBaseClass, Slider):
             **kwargs,
         )
     
-    
+    """
     def calculateComponentDimensions(self) -> Tuple[Union[Tuple[Real], Real]]:
         #print("\ncreating TextGroup to calculate SliderGroup component dimensions")
         text_group = self.createDemarcationNumbersTextGroupCurrentFont()
@@ -834,14 +898,20 @@ class SliderGroupElement(ComponentGroupElementBaseClass, Slider):
         #print("creating TextGroup elements to calculate SliderGroup x-dimension for a given text height")
         text_obj_lists = []
         for slider_weakref in self.slider_group._elements_weakref:
-            text_obj_lists.append(slider_weakref()._createDemarcationNumbersTextObjectsGivenTextGroupAndMaxHeight(demarc_numbers_text_group=text_group, max_height=None))
+            text_obj_lists.append((slider_weakref(), slider_weakref()._createDemarcationNumbersTextObjectsGivenTextGroupAndMaxHeight(demarc_numbers_text_group=text_group, max_height=None)))
         #print("finished creating TextGroup elements to calculate SliderGroup x-dimension for a given text height")
-        return self._maxXTrackDimensionsGivenTextObjects(text_obj_lists, min_gaps=min_gaps)
-
+        return self._maxXTrackDimensionsGivenTextObjects(text_obj_lists, max_x_size=self.shape[0], min_gaps=min_gaps)
+    """
+        
 class SliderGroup(ComponentGroupBaseClass):
     group_element_cls_func = lambda: SliderGroupElement
     
     reset_graph_edges = {}
+
+    component_dim_determiners = ["shape", "demarc_numbers_max_height_rel", "thumb_radius_rel", "demarc_line_lens_rel"]
+    for attr in component_dim_determiners:
+        reset_graph_edges.setdefault(attr, {})
+        reset_graph_edges[attr]["slider_component_dimensions"] = True
     
     """
     custom_reset_methods = {
@@ -858,7 +928,9 @@ class SliderGroup(ComponentGroupBaseClass):
         "mouse_enabled": "setMouseEnabled",
     }
     """
-    attribute_calculation_methods = {}
+    attribute_calculation_methods = {
+        "slider_component_dimensions": "calculateSliderComponentDimensions",
+    }
     
     # Review- account for using element_inherited_attributes in ComponentGroupBaseClass
     attribute_default_functions = {
@@ -881,6 +953,7 @@ class SliderGroup(ComponentGroupBaseClass):
     
     element_inherited_attributes = {
         "slider_shape": "shape",
+        Slider.comp_dim_attr_name: "slider_component_dimensions",
         "demarc_numbers_text_group": "demarc_numbers_text_group",
         "thumb_radius_rel": "thumb_radius_rel",
         "demarc_line_lens_rel": "demarc_line_lens_rel",
@@ -941,6 +1014,16 @@ class SliderGroup(ComponentGroupBaseClass):
             **kwargs,
         )
         return res
+    
+    def calculateSliderComponentDimensions(self):
+        #print("\ncreating TextGroup to calculate SliderGroup component dimensions")
+        text_group = Slider.createDemarcationNumbersTextGroup(font=self.demarc_numbers_text_group, max_height=None)
+        
+        #print("finished creating TextGroup to calculate SliderGroup component dimensions")
+        #print("creating TextGroup elements to calculate SliderGroup component dimensions")
+        text_obj_lists = [slider_weakref()._createDemarcationNumbersTextObjectsGivenTextGroupAndMaxHeight(demarc_numbers_text_group=text_group, max_height=None) for slider_weakref in self._elements_weakref if slider_weakref is not None]
+        #print("finished creating TextGroup elements to calculate SliderGroup component dimensions")
+        return self._calculateComponentDimensions(text_obj_lists)
 
 class SliderPlus(InteractiveDisplayComponentBase):
     sliderplus_names = set()
@@ -1007,7 +1090,7 @@ class SliderPlus(InteractiveDisplayComponentBase):
     #@staticmethod
     #def valueTextGroup():
     #    #print("\ncreating TextGroup for the final Slider object")
-    #    res = SliderPlus.createValueTextGroup(font=None, max_height=None)#self.demarc_numbers_height)
+    #    res = SliderPlus.createValueTextGroup(font=None, max_height=None)#self.demarc_numbers_max_height)
     #    #print("finished creating TextGroup for final Slider object")
     #    return res
 

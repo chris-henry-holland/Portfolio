@@ -196,7 +196,7 @@ def runExampleSliderGroup1() -> None:
     sliders.append(
         slider_group.addSlider(
             anchor_pos=(300, 400),
-            val_range=(0, 100),
+            val_range=(0, 50),
             increment_start=15,
             increment=5,
             anchor_type="center",
@@ -440,14 +440,14 @@ def runExampleSliderPlusGroup1() -> None:
         slider_group.addSliderPlus(
             title="Slider asdfsafdsdfdafasfsdafdsfdsafsad",
             anchor_pos=(50, 50),
-            val_range=(0, 100),
+            val_range=(0, 200),
             increment_start=15,
             increment=0,
             anchor_type="topleft",
             screen_topleft_offset=None,
             init_val=None,
-            demarc_numbers_dp=None,
-            demarc_intervals=(20, 10, 5),
+            demarc_numbers_dp=0,
+            demarc_intervals=(50, 10, 5),
             demarc_start_val=None,
             val_text_dp=0,
             name=None,
@@ -458,14 +458,14 @@ def runExampleSliderPlusGroup1() -> None:
         slider_group.addSliderPlus(
             title="Slider 2",
             anchor_pos=(300, 400),
-            val_range=(0, 100),
+            val_range=(0, 50),
             increment_start=15,
             increment=5,
             anchor_type="center",
             screen_topleft_offset=None,
             init_val=None,
-            demarc_numbers_dp=3,
-            demarc_intervals=(20,),
+            demarc_numbers_dp=1,
+            demarc_intervals=(25,),
             demarc_start_val=1,
             val_text_dp=2,
             name=None,
@@ -586,7 +586,7 @@ def runExampleSliderPlusGrid1() -> None:
     )
     
     slider_grid.setupSliderPlusGridElement(
-        grid_inds=(0, 0),
+        grid_inds=(0, 1),
         title="Slider 1",
         val_range=(0, 100),
         increment_start=15,
@@ -600,8 +600,8 @@ def runExampleSliderPlusGrid1() -> None:
     )
 
     slider_grid.setupSliderPlusGridElement(
-        grid_inds=(0, 1),
-        title="Slider 2",
+        grid_inds=(0, 0),
+        title="Slideradfsafdsafadsfdsaf",
         val_range=(0, 200),
         increment_start=15,
         increment=0,

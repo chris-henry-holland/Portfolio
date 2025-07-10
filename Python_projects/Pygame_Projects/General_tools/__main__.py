@@ -15,11 +15,11 @@ from General_tools import (
     runExampleMenuOverlay1,
 )
 
-#address = runExampleSlider1()
+address = runExampleSlider1()
 #print(f"reference count = {ctypes.c_long.from_address(address)}")
 #runExampleSliderGroup1()
 #runExampleSliderPlus1()
-runExampleSliderPlusGroup1()
+#runExampleSliderPlusGroup1()
 #runExampleSliderPlusGrid1()
 #runExampleSliders1()
 #runExampleButton1()

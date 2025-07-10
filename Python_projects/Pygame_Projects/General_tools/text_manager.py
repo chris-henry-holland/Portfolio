@@ -862,11 +862,11 @@ class TextGroup(ComponentGroupBaseClass):
                 add_heights.pop(k)
                 rm_heights.pop(k)
             elif d_f > 0:
-                add_heights = d
+                add_heights = d_f
                 rm_heights.pop(k)
             else:
                 add_heights.pop(k)
-                rm_heights = -d
+                rm_heights = -d_f
         #print("hi1")
         if not rm_heights and not add_heights:
             return False
@@ -1031,11 +1031,11 @@ class TextGroup(ComponentGroupBaseClass):
                 add_font_sizes.pop(k)
                 rm_font_sizes.pop(k)
             elif d_f > 0:
-                add_font_sizes = d
+                add_font_sizes = d_f
                 rm_font_sizes.pop(k)
             else:
                 add_font_sizes.pop(k)
-                rm_font_sizes = -d
+                rm_font_sizes = -d_f
         #print(rm_font_sizes, add_font_sizes)
         if not rm_font_sizes and not add_font_sizes:
             return False

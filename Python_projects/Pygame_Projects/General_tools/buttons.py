@@ -141,7 +141,7 @@ class Button(InteractiveDisplayComponentBase):
         
         "font_colors": ((lambda obj: tuple([(named_colors_def["white"], 1)] + [0] * (obj.n_state - 1))), ("n_state",)),
         "fill_colors": ((lambda obj: tuple([(named_colors_def["white"], 0)] + [0] * (obj.n_state - 1))), ("n_state",)),
-        "outline_colors": ((lambda obj: tuple([(named_colors_def["black"], 1)] + [0] * (self.n_state - 1))), ("n_state",)),
+        "outline_colors": ((lambda obj: tuple([(named_colors_def["black"], 1)] + [0] * (obj.n_state - 1))), ("n_state",)),
         
         "mouse_enabled": ((lambda obj: True),),
     }
@@ -881,7 +881,7 @@ class ButtonGroupElement(ComponentGroupElementBaseClass, Button):
         
         "font_colors": ((lambda obj: tuple([(named_colors_def["white"], 1)] + [0] * (obj.n_state - 1))), ("n_state",)),
         "fill_colors": ((lambda obj: tuple([(named_colors_def["white"], 0)] + [0] * (obj.n_state - 1))), ("n_state",)),
-        "outline_colors": ((lambda obj: tuple([(named_colors_def["black"], 1)] + [0] * (self.n_state - 1))), ("n_state",)),
+        "outline_colors": ((lambda obj: tuple([(named_colors_def["black"], 1)] + [0] * (obj.n_state - 1))), ("n_state",)),
         
         "mouse_enabled": ((lambda obj: True),),
     }
