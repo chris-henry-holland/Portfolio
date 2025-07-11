@@ -105,13 +105,13 @@ class Slider(InteractiveDisplayComponentBase):
     #    reset_graph_edges.setdefault(attr1, {})
     #    for attr2 in dim_dependent:
     #        reset_graph_edges[attr1][attr2] = True
-    comp_dim_attr_name = "component_dimensions"
+    
     for attr in component_dim_determiners:
         reset_graph_edges.setdefault(attr, {})
-        reset_graph_edges[attr][comp_dim_attr_name] = True
-    reset_graph_edges.setdefault(comp_dim_attr_name, {})
+        reset_graph_edges[attr]["slider_component_dimensions"] = True
+    reset_graph_edges.setdefault("slider_component_dimensions", {})
     for attr in component_dim_dependent:
-        reset_graph_edges[comp_dim_attr_name][attr] = True
+        reset_graph_edges["slider_component_dimensions"][attr] = True
     
     custom_reset_methods = {
         "val_raw": "setValueRaw",
@@ -119,7 +119,7 @@ class Slider(InteractiveDisplayComponentBase):
     
     attribute_calculation_methods = {
         "mouse_enablement": "calculateMouseEnablement",
-        comp_dim_attr_name: "calculateComponentDimensions",
+        "slider_component_dimensions": "calculateComponentDimensions",
         "track_topleft": "calculateTrackTopleft",
         "track_shape": "calculateTrackShape",
         "thumb_radius": "calculateThumbRadius",
@@ -297,8 +297,9 @@ class Slider(InteractiveDisplayComponentBase):
     
     @staticmethod
     def _calculateMultipleSliderComponentDimensions(slider_objs: List["Slider"], slider_shape: Tuple[int, int], demarc_numbers_max_height_rel: Optional[Real], demarc_line_lens_rel: Tuple[Real], thumb_radius_rel: Real, demarc_numbers_min_gap_rel_height: Real=1, demarc_numbers_min_gap_pixel: int=0) -> Tuple[Union[Tuple[Real], Real]]:
-        #print("using _calculateComponentDimensions()")
+        print("using _calculateMultipleSliderComponentDimensions()")
         #text_obj_lists: List[Tuple[List[Tuple["TextGroupElement", Real]]]
+        print(len(slider_objs))
         y0 = 0
         y_sz0 = slider_shape[1]
         y_sz_ratio = demarc_numbers_max_height_rel + (3 * demarc_line_lens_rel[0] / 2) + 1 + max(thumb_radius_rel - 0.5, 0)
@@ -345,9 +346,10 @@ class Slider(InteractiveDisplayComponentBase):
         setTextHeight(new_text_h)
         end_gaps, track_x_sz = Slider._maxXTrackDimensionsGivenTextObjects(slider_text_objs_lst, max_x_size=slider_shape[0], min_gaps=min_end_gaps)
         track_topleft_x = end_gaps[0]
-        return ((track_x_sz, track_y_sz), (track_topleft_x, track_topleft_y), thumb_radius, lft)
+        return ((track_x_sz, track_y_sz), (track_topleft_x, track_topleft_y), thumb_radius, new_text_h)
     
     def calculateComponentDimensions(self) -> Tuple[Tuple[int, int], Tuple[int, int], Real]:
+        print("Using Slider method calculateComponentDimensions()")
         return self._calculateMultipleSliderComponentDimensions([self], slider_shape=self.shape, demarc_numbers_max_height_rel=self.demarc_numbers_max_height_rel, demarc_line_lens_rel=self.demarc_line_lens_rel, thumb_radius_rel=self.thumb_radius_rel, demarc_numbers_min_gap_rel_height=1, demarc_numbers_min_gap_pixel=0)
 
     """
@@ -369,16 +371,16 @@ class Slider(InteractiveDisplayComponentBase):
     """
     
     def calculateTrackShape(self) -> Tuple[int, int]:
-        return getattr(self, self.comp_dim_attr_name)[0]
+        return getattr(self, "slider_component_dimensions")[0]
 
     def calculateTrackTopleft(self) -> Tuple[int, int]:
-        return getattr(self, self.comp_dim_attr_name)[1]
+        return getattr(self, "slider_component_dimensions")[1]
 
     def calculateThumbRadius(self) -> Real:
-        return getattr(self, self.comp_dim_attr_name)[2]
+        return getattr(self, "slider_component_dimensions")[2]
 
     def calculateDemarcNumbersMaxHeight(self) -> Real:
-        return getattr(self, self.comp_dim_attr_name)[3]
+        return getattr(self, "slider_component_dimensions")[3]
     
     """
     def setTrackDimensions(self, shape: Tuple[int], topleft: Tuple[int]) -> None:
@@ -419,7 +421,7 @@ class Slider(InteractiveDisplayComponentBase):
         text_end_pairs = []
         for slider, text_objs in slider_text_objs_list:
             if not text_objs: continue
-            print(text_objs)
+            #print(text_objs)
             text_obj1, val1 = text_objs[0]
             text_obj2, val2 = text_objs[-1]
             text_end_pairs.append((slider, ((text_obj1, val1, -text_obj1.calculateTopleftEffective((0, 0), anchor_type="midtop")[0]),\
@@ -428,8 +430,8 @@ class Slider(InteractiveDisplayComponentBase):
             gaps = tuple(math.ceil(gap) for gap in min_gaps)
             return (gaps, max_x_size - sum(gaps))
         
-        print(text_end_pairs)
-        print(min_gaps)
+        #print(text_end_pairs)
+        #print(min_gaps)
         def trackEndGaps(track_width: int) -> Tuple[int]:
             gaps = list(min_gaps)
             for slider, pair in text_end_pairs:
@@ -442,13 +444,13 @@ class Slider(InteractiveDisplayComponentBase):
         while lft < rgt:
             mid = lft - ((lft - rgt) >> 1)
             gaps = trackEndGaps(mid)
-            print(mid, gaps, mid + sum(gaps))
+            #print(mid, gaps, mid + sum(gaps))
             if mid + sum(gaps) <= max_x_size:
                 lft = mid
             else: rgt = mid - 1
         x_sz_mx = lft
         gaps = trackEndGaps(x_sz_mx)
-        print(f"max track x dimension calculated by _maxXTrackDimensionsGivenTextObjects() = {x_sz_mx}, max_x_size = {max_x_size}")
+        #print(f"max track x dimension calculated by _maxXTrackDimensionsGivenTextObjects() = {x_sz_mx}, max_x_size = {max_x_size}")
         return (gaps, x_sz_mx)
     
     """
@@ -569,7 +571,7 @@ class Slider(InteractiveDisplayComponentBase):
         #    #print("updated text")
         #    setattr(obj, "demarc_surf", None)
         #    return
-        print(f"demarc numbers font size actual = {demarc_numbers_text_group.font_size_actual}, {self}")
+        #print(f"demarc numbers font size actual = {demarc_numbers_text_group.font_size_actual}, {self}")
         while val <= self.val_range[1]:
             val_txt = f"{val:.{dp}f}"
             add_text_dict = {"text": val_txt, "font_color": color}
@@ -953,7 +955,7 @@ class SliderGroup(ComponentGroupBaseClass):
     
     element_inherited_attributes = {
         "slider_shape": "shape",
-        Slider.comp_dim_attr_name: "slider_component_dimensions",
+        "slider_component_dimensions": "slider_component_dimensions",
         "demarc_numbers_text_group": "demarc_numbers_text_group",
         "thumb_radius_rel": "thumb_radius_rel",
         "demarc_line_lens_rel": "demarc_line_lens_rel",
@@ -963,6 +965,13 @@ class SliderGroup(ComponentGroupBaseClass):
         "demarc_line_colors": "demarc_line_colors",
         "thumb_outline_color": "thumb_outline_color",
         "mouse_enabled": "mouse_enabled",
+    }
+
+    element_attributes_affecting_group_attributes = {
+        "val_range": "slider_component_dimensions",
+        "demarc_numbers_dp": "slider_component_dimensions",
+        "demarc_intervals": "slider_component_dimensions",
+        "demarc_start_val": "slider_component_dimensions",
     }
     
     def __init__(self, 
@@ -998,7 +1007,7 @@ class SliderGroup(ComponentGroupBaseClass):
         name: Optional[str]=None,
         **kwargs,
     ) -> "SliderGroupElement":
-        
+        print("Using SliderGroup method addSlider()")
         res = self._addElement(
             anchor_pos=anchor_pos,
             val_range=val_range,
@@ -1016,6 +1025,20 @@ class SliderGroup(ComponentGroupBaseClass):
         return res
     
     def calculateSliderComponentDimensions(self):
+        print("Using SliderGroup method calculateSliderComponentDimensions() here")
+        print(len(self._elements_weakref))
+        res = Slider._calculateMultipleSliderComponentDimensions(
+            [slider_weakref() for slider_weakref in self._elements_weakref if slider_weakref is not None],
+            slider_shape=self.slider_shape,
+            demarc_numbers_max_height_rel=self.demarc_numbers_max_height_rel,
+            demarc_line_lens_rel=self.demarc_line_lens_rel,
+            thumb_radius_rel=self.thumb_radius_rel,
+            demarc_numbers_min_gap_rel_height=1,
+            demarc_numbers_min_gap_pixel=0,
+        )
+        print(f"value = {res}")
+        return res
+        """
         #print("\ncreating TextGroup to calculate SliderGroup component dimensions")
         text_group = Slider.createDemarcationNumbersTextGroup(font=self.demarc_numbers_text_group, max_height=None)
         
@@ -1024,6 +1047,7 @@ class SliderGroup(ComponentGroupBaseClass):
         text_obj_lists = [slider_weakref()._createDemarcationNumbersTextObjectsGivenTextGroupAndMaxHeight(demarc_numbers_text_group=text_group, max_height=None) for slider_weakref in self._elements_weakref if slider_weakref is not None]
         #print("finished creating TextGroup elements to calculate SliderGroup component dimensions")
         return self._calculateComponentDimensions(text_obj_lists)
+        """
 
 class SliderPlus(InteractiveDisplayComponentBase):
     sliderplus_names = set()
@@ -1691,7 +1715,7 @@ class SliderPlus(InteractiveDisplayComponentBase):
         return surf
     
     def draw(self, surf: "pg.Surface") -> None:
-        #print("Using SliderPlus method draw()")
+        print("Using SliderPlus method draw()")
         #print(f"self._display_surf = {getattr(self, '_display_surf', None)}")
         #print(f"self.display_surf = {self.display_surf}")
         surf.blit(self.display_surf, self.topleft)
@@ -1719,6 +1743,8 @@ class SliderPlus(InteractiveDisplayComponentBase):
         quit = quit or quit2
         running = running and running2
         screen_changed = screen_changed or screen_changed2
+        if screen_changed:
+            print(f"slider {self} has attribute display_surf of {self.__dict__.get('_display_surf', None)}")
         #print(screen_changed, self.val)
         #print()
         #print("end of SliderPlus eventLoop()")
@@ -2257,6 +2283,7 @@ class SliderPlusGrid(InteractiveDisplayComponentBase):
             "name": name,
         }
         if self.sliders[grid_inds[0]][grid_inds[1]] is None:
+            print(f"creating slider plus at grid indices {grid_inds}")
             container_attr_resets = {"display_surf": {"display_surf": True}}
             self.sliders[grid_inds[0]][grid_inds[1]] = self.slider_plus_group.addSliderPlus(
                 _from_container=True,
@@ -2265,12 +2292,14 @@ class SliderPlusGrid(InteractiveDisplayComponentBase):
                 **attr_dict,
                 **kwargs,
             )
-            return self.sliders[grid_inds[0]][grid_inds[1]]
-        self.sliders[grid_inds[0]][grid_inds[1]].setAttributes(
-            attr_dict,
-            _from_container=True,
-            **kwargs,
-        )
+            print(self.sliders[grid_inds[0]][grid_inds[1]].__dict__.get("_display_surf", None))
+        else:
+            self.sliders[grid_inds[0]][grid_inds[1]].setAttributes(
+                attr_dict,
+                _from_container=True,
+                **kwargs,
+            )
+        #self.setAttributes({"display_surf": None}, _from_container=True)
         return self.sliders[grid_inds[0]][grid_inds[1]]
 
     def getSliderPlus(self, grid_inds: Tuple[int, int]) -> Optional[SliderPlus]:
@@ -2339,11 +2368,17 @@ class SliderPlusGrid(InteractiveDisplayComponentBase):
 
     def createSliderGridImageConstructor(self) -> Callable:
         def constructor(obj: SliderPlusGrid, surf: "pg.Surface") -> None:
+            print("using slider grid constructor")
+            n_slider = 0
             for slider, grid_inds in obj.sliderPlusIterator():
                 i1, i2 = grid_inds
+                #if i2 == 0: continue
+                print(f"grid inds {(i1, i2)}")
                 slider.anchor_type = "topleft"
                 slider.anchor_pos = (self.slider_topleft_locations[0][i1], self.slider_topleft_locations[1][i2])
                 slider.draw(surf)
+                n_slider += 1
+            print(f"n_slider = {n_slider}")
             """
             for i1, slider_row in enumerate(self.sliders):
                 x = self.slider_topleft_locations[0][i1]
@@ -2390,17 +2425,21 @@ class SliderPlusGrid(InteractiveDisplayComponentBase):
         #print(events)
         running = not quit and not esc_pressed
         screen_changed = False
-        
-        for slider, _ in self.sliderPlusIterator():
+        n_slider = 0
+        for slider, inds in self.sliderPlusIterator():
             (quit2, running2, screen_changed2, val_dict) = slider.eventLoop(
                 events=events,
                 keys_down=keys_down,
                 mouse_status=mouse_status,
                 check_axes=check_axes,
             )
+            if screen_changed2:
+                print(f"slider at {inds} changed")
             quit = quit or quit2
             running = running and running2
             screen_changed = screen_changed or screen_changed2
+            n_slider += 1
+        #print(f"the number of sliders in grid is {n_slider}")
         #print("end of SliderPlusGrid eventLoop()")
         #print(quit, running, screen_changed, None)
         #print(getattr(self, "_display_surf", None))

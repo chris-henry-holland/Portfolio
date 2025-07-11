@@ -175,8 +175,26 @@ def runExampleSliderGroup1() -> None:
         thumb_outline_color=None,
         mouse_enabled=True,
     )
-    
+
     sliders = []
+
+    sliders.append(
+        slider_group.addSlider(
+            anchor_pos=(300, 400),
+            val_range=(0, 50),
+            increment_start=15,
+            increment=5,
+            anchor_type="center",
+            screen_topleft_offset=None,
+            init_val=None,
+            demarc_numbers_dp=0,
+            demarc_intervals=(5,),
+            demarc_start_val=1,
+            name=None,
+        )
+    )
+    
+    
     sliders.append(
         slider_group.addSlider(
             anchor_pos=(300, 200),
@@ -189,22 +207,6 @@ def runExampleSliderGroup1() -> None:
             demarc_numbers_dp=None,
             demarc_intervals=(20, 10, 5),
             demarc_start_val=None,
-            name=None,
-        )
-    )
-    
-    sliders.append(
-        slider_group.addSlider(
-            anchor_pos=(300, 400),
-            val_range=(0, 50),
-            increment_start=15,
-            increment=5,
-            anchor_type="center",
-            screen_topleft_offset=None,
-            init_val=None,
-            demarc_numbers_dp=0,
-            demarc_intervals=(20,),
-            demarc_start_val=1,
             name=None,
         )
     )
@@ -464,8 +466,8 @@ def runExampleSliderPlusGroup1() -> None:
             anchor_type="center",
             screen_topleft_offset=None,
             init_val=None,
-            demarc_numbers_dp=1,
-            demarc_intervals=(25,),
+            demarc_numbers_dp=2,
+            demarc_intervals=(10,),
             demarc_start_val=1,
             val_text_dp=2,
             name=None,
@@ -556,11 +558,11 @@ def runExampleSliderPlusGrid1() -> None:
     pg.display.update(pg.Rect(0, 0, *screen_size))
     screen_cp = pg.Surface.copy(screen)
 
-    grid_dims = (1, 2)
+    grid_dims = (1, 3)
 
     slider_grid = SliderPlusGrid(
         grid_dims=grid_dims,
-        shape=(400, 300),
+        shape=(400, 400),
         slider_gaps_rel_shape=(0.1, 0.1),
         anchor_pos=(50, 50),
         anchor_type="topleft",
@@ -584,7 +586,7 @@ def runExampleSliderPlusGrid1() -> None:
         val_text_color=(named_colors_def["black"], 1.),
         mouse_enabled=True,
     )
-    
+    print("hi1")
     slider_grid.setupSliderPlusGridElement(
         grid_inds=(0, 1),
         title="Slider 1",
@@ -598,10 +600,10 @@ def runExampleSliderPlusGrid1() -> None:
         val_text_dp=0,
         name=None,
     )
-
+    print("hi2")
     slider_grid.setupSliderPlusGridElement(
         grid_inds=(0, 0),
-        title="Slideradfsafdsafadsfdsaf",
+        title="Slider 2asdfsadfsad",
         val_range=(0, 200),
         increment_start=15,
         increment=0,
@@ -612,7 +614,36 @@ def runExampleSliderPlusGrid1() -> None:
         val_text_dp=2,
         name=None,
     )
-
+    print("hi3")
+    """
+    slider_grid.setupSliderPlusGridElement(
+        grid_inds=(0, 2),
+        title="Slider 1",
+        val_range=(0, 100),
+        increment_start=15,
+        increment=0,
+        init_val=None,
+        demarc_numbers_dp=None,
+        demarc_intervals=(20, 10, 5),
+        demarc_start_val=None,
+        val_text_dp=0,
+        name=None,
+    )
+    """
+    slider_grid.setupSliderPlusGridElement(
+        grid_inds=(0, 2),
+        title="Slider 2asdfsadfsad",
+        val_range=(0, 200),
+        increment_start=15,
+        increment=0,
+        init_val=None,
+        demarc_numbers_dp=None,
+        demarc_intervals=(50, 25),
+        demarc_start_val=None,
+        val_text_dp=2,
+        name=None,
+    )
+    print("hi4")
     """
     sliders.append(
         slider_group.addSliderPlus(
@@ -689,12 +720,13 @@ def runExampleSliderPlusGrid1() -> None:
         if quit or not running:
             pg.quit()
             return
-        quit, running, screen_changed, val = slider_grid.eventLoop(check_axes=(0, 1),\
+        quit, running, chng, val = slider_grid.eventLoop(check_axes=(0, 1),\
                 **event_loop_kwargs)
-        screen_changed = True
+        
         if quit or not running:
             pg.quit()
             break
+        if chng: screen_changed = True
         if screen_changed:
             screen.blit(screen_cp, (0, 0))
             slider_grid.draw(screen)
