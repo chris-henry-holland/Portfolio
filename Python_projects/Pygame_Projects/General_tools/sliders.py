@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 import math
 
-from typing import Any, Tuple, Union, List, Optional, Callable, Generator
+from typing import Any, Tuple, Union, List, Optional, Callable, Generator, Dict
 
 import pygame as pg
 
@@ -215,6 +215,13 @@ class Slider(InteractiveDisplayComponentBase):
     #    self.mouse_enablement = (mouse_enabled, mouse_enabled, mouse_enabled)
     #    #print(f"self.mouse_enablement = {self.mouse_enablement}")
     #    return
+
+    def setAttributes(self, setattr_dict: Dict[str, Any], _from_container: bool=False, _calculated_override: bool=False, **kwargs) -> Dict[str, Tuple[Any, Any]]:
+        changed_attrs_dict = super().setAttributes(setattr_dict, _from_container=_from_container, _calculated_override=_calculated_override, **kwargs)
+        print(f"setAttributes() called for {self} with setattr_dict = {setattr_dict}\nchanged_attrs_dict = {changed_attrs_dict}")
+        if "_display_surf" in self.__dict__.keys():
+            print(f"self._display_surf = {self.__dict__['_display_surf']}")
+        return changed_attrs_dict
     
     def calculateMouseEnablement(self) -> None:
         #print("calculating mouse enablement")
@@ -694,7 +701,7 @@ class Slider(InteractiveDisplayComponentBase):
         return thumbRenderer
     
     def createDisplaySurface(self) -> Optional["pg.Surface"]:
-        #print("creating display surface")
+        print(f"creating display surface for Slider object {self}")
         surf = pg.Surface(self.shape, pg.SRCALPHA)
         for attr in self.displ_component_attrs:
             #print(f"{attr}_img_constructor")
@@ -2300,6 +2307,9 @@ class SliderPlusGrid(InteractiveDisplayComponentBase):
                 **kwargs,
             )
         #self.setAttributes({"display_surf": None}, _from_container=True)
+        # Workaround to ensure that the slider plus element is sufficiently
+        # set up (in particular the slider component has been initialized)
+        self.sliders[grid_inds[0]][grid_inds[1]].display_surf
         return self.sliders[grid_inds[0]][grid_inds[1]]
 
     def getSliderPlus(self, grid_inds: Tuple[int, int]) -> Optional[SliderPlus]:
@@ -2370,6 +2380,11 @@ class SliderPlusGrid(InteractiveDisplayComponentBase):
         def constructor(obj: SliderPlusGrid, surf: "pg.Surface") -> None:
             print("using slider grid constructor")
             n_slider = 0
+            # Workaround to prevent the possibility that changes to one
+            # of the later sliders causes the display surface of an earlier
+            # one to be reset- moved to the addSliderPlus() method
+            #for slider, _ in obj.sliderPlusIterator():
+            #    slider.display_surf
             for slider, grid_inds in obj.sliderPlusIterator():
                 i1, i2 = grid_inds
                 #if i2 == 0: continue
@@ -2401,8 +2416,10 @@ class SliderPlusGrid(InteractiveDisplayComponentBase):
 
     
     def draw(self, surf: "pg.Surface") -> None:
-        #print("Using SliderPlusGrid method draw()")
+        print("Using SliderPlusGrid method draw()")
+        print(f"self._display_surf = {self.__dict__.get('_display_surf', None)}")
         surf.blit(self.display_surf, self.topleft)
+        print("finished using SliderPlusGrid method draw()")
         return
     
     """

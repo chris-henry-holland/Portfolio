@@ -607,8 +607,8 @@ class ComponentBaseClass(ABC):
         changed_attrs_dict = {}
 
         def setAttrCustom(attr: str, sub_attr: str, val: Any) -> None:
-            #if attr.lstrip("_") in {"val", "val_str", "val_text_surf"}:
-            #    print(f"setting attribute {attr} to {val}")
+            if attr.lstrip("_") in {"display_surf"}:
+                print(f"setting attribute {attr} to {val} for {self}")
             if sub_attr not in self.__dict__.keys():
                 val_prev = None
             else:
@@ -673,6 +673,7 @@ class ComponentBaseClass(ABC):
                 continue
             elif val is not None:
                 continue
+            print(f"hello, {attr}")
             setAttrCustom(attr, sub_attr, val)
             """
             #sub_attr = f"_{attr}"
@@ -709,6 +710,8 @@ class ComponentBaseClass(ABC):
                 if val == val_prev: continue
                 setAttrCustom(attr, sub_attr, val)
                 for idx2, funcs in reset_graph[idx].items():
+                    if attr == "thumb_x":
+                        print(attr_list[idx2])
                     if idx2 in seen:
                         continue
                     if isinstance(funcs, bool):

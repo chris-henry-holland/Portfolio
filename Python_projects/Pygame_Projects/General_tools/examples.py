@@ -729,6 +729,7 @@ def runExampleSliderPlusGrid1() -> None:
         if chng: screen_changed = True
         if screen_changed:
             screen.blit(screen_cp, (0, 0))
+            print(f"drawing slider grid")
             slider_grid.draw(screen)
             pg.display.flip()
         clock.tick(framerate)
