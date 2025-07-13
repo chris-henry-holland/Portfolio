@@ -2447,10 +2447,6 @@ def arithmeticGeometricSeries(a: float=900, b: int=-3, n: int=5000, val: float=-
 # Problem 237
 def playingBoardTourCount(n_rows: int=4, n_cols: int=10 ** 12, start_row: int=0, end_row: int=3, md: Optional[int]=10 ** 8) -> int:
 
-    # Review- try to generalise to arbitrary row numbers- at present only
-    # the transfer function is specialised to four rows, though being
-    # able to generalise this will probably be tricky.
-    #n_rows = 4
 
     if start_row == end_row: raise ValueError("start_row and end_row must be different")
     init_state = [0] * n_rows
@@ -2736,8 +2732,38 @@ def playingBoardTourCount(n_rows: int=4, n_cols: int=10 ** 12, start_row: int=0,
             if md is not None: res %= md
     return res
 
+# Problem 239
+def partialDerangementCount(n_tot: int, n_subset: int, n_subset_deranged: int) -> int:
+
+    if n_subset > n_tot or n_subset_deranged > n_subset: return 0
+    neg = False
+    n_subset_fixed = n_subset - n_subset_deranged
+    res = 0
+    for i in range(n_subset_fixed, n_subset + 1):
+        #print(i)
+        term = math.comb(n_subset_deranged, n_subset - i) * math.factorial(n_tot - i)
+        res += -term if neg else term
+        neg = not neg
+    #print(res)
+    return res * math.comb(n_subset, n_subset_deranged)
+
+def partialDerangementProbability(n_tot: int, n_subset: int, n_subset_deranged: int) -> CustomFraction:
+    return CustomFraction(partialDerangementCount(n_tot, n_subset, n_subset_deranged), math.factorial(n_tot))
+
+def partialPrimeDerangementProbabilityFraction(n_max: int, n_primes_deranged: int) -> CustomFraction:
+    ps = SimplePrimeSieve(n_max)
+    n_p = bisect.bisect_right(ps.p_lst, n_max)
+    print(n_p)
+    res = partialDerangementProbability(n_max, n_p, n_primes_deranged)
+    return res
+
+def partialPrimeDerangementProbabilityFloat(n_max: int=100, n_primes_deranged: int=22) -> float:
+    res = partialPrimeDerangementProbabilityFraction(n_max, n_primes_deranged)
+    print(res)
+    return res.numerator / res.denominator
+
 if __name__ == "__main__":
-    to_evaluate = {237}
+    to_evaluate = {239}
     since0 = time.time()
 
     if not to_evaluate or 201 in to_evaluate:
@@ -2935,6 +2961,11 @@ if __name__ == "__main__":
         since = time.time() 
         res = playingBoardTourCount(n_rows=4, n_cols=10 ** 12, start_row=0, end_row=3, md=10 ** 8)
         print(f"Solution to Project Euler #237 = {res}, calculated in {time.time() - since:.4f} seconds")
+
+    if not to_evaluate or 239 in to_evaluate:
+        since = time.time() 
+        res = partialPrimeDerangementProbabilityFloat(n_max=100, n_primes_deranged=22)
+        print(f"Solution to Project Euler #239 = {res}, calculated in {time.time() - since:.4f} seconds")
 
     print(f"Total time taken = {time.time() - since0:.4f} seconds")
 
