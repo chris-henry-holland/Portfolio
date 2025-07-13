@@ -16,7 +16,7 @@ from General_tools import (
     enter_keys_def_glob,
     named_colors_def,
     font_def_func,
-    MenuOverlay,
+    ButtonMenuOverlay,
     TextGroup,
 )
 
@@ -78,9 +78,9 @@ class Game:
             self._gameplay = res
         return res
         
-    def getMenuOverlay(self, mouse_enabled: bool=True, navkeys_enabled: bool=True) -> "MenuOverlay":
+    def getMenuOverlay(self, mouse_enabled: bool=True, navkeys_enabled: bool=True) -> "ButtonMenuOverlay":
     
-        menu_overlay = MenuOverlay(self.screen_shape, framerate=self.menu_framerate,\
+        menu_overlay = ButtonMenuOverlay(self.screen_shape, framerate=self.menu_framerate,\
             overlay_color=self.menu_overlay_color,\
             mouse_enabled=navkeys_enabled, navkeys_enabled=navkeys_enabled)
         

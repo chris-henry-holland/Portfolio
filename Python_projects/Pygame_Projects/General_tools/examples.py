@@ -31,7 +31,7 @@ from General_tools import (
     #SliderPlusVerticalBattery,
     Button,
     ButtonGrid,
-    MenuOverlay,
+    ButtonMenuOverlay,
     Text,
     TextGroup,
     named_colors_def
@@ -890,7 +890,7 @@ def runExampleButtonGrid1() -> None:
             mouse_enabled=True, navkeys_enabled=True,\
             navkeys=None, navkey_cycle_delay_frame=(30, 10, 10, 10, 5))
     #print("hi1")
-    button_grid.button_shape = (100, 50)
+    #button_grid.button_shape = (100, 50)
     #print(button_grid.button_shape, button_grid.button_shape_fixed)
     button_grid.anchor_type = "center"
     button_grid.anchor_pos = tuple(x / 2 for x in screen_size)
@@ -922,7 +922,7 @@ def runExampleButtonGrid1() -> None:
         screen_changed = False
     return
 
-def runExampleMenuOverlay1() -> None:
+def runExampleButtonMenuOverlay1() -> None:
     screen_shape = (700, 700)
     framerate = 30
     pg.init()
@@ -946,7 +946,7 @@ def runExampleMenuOverlay1() -> None:
             action = functools.partial(print, f"selected button ({i1}, {i2})")
             button_text_and_actions[-1].append(((text, ((anchor_type,), 0, 0, 0)), action))
     
-    menu_overlay = MenuOverlay(screen_shape=screen_shape, framerate=framerate,\
+    menu_overlay = ButtonMenuOverlay(screen_shape=screen_shape, framerate=framerate,\
             overlay_color=(named_colors_def["yellow"], 0.3),\
             mouse_enabled=True, navkeys_enabled=True,\
             navkeys=(({K_LEFT}, {K_RIGHT}), ({K_UP}, {K_DOWN})),\
@@ -968,15 +968,16 @@ def runExampleMenuOverlay1() -> None:
             outline_colors=((named_colors_def["black"], 1), (named_colors_def["blue"], 1), 1, 1))
     
     text_group = TextGroup([], max_height0=None, font=None, font_size=None, min_lowercase=True, text_global_asc_desc_chars=None)
-    anchor_type = "bottomright"
+    anchor_type = "centre"
     font_color = (named_colors_def["black"], 1)
     text_list = [
-        ({"text": "Hello", "font_color": font_color, "anchor_type0": anchor_type}, ((0.2, 0.2), (0.2, 0.1))),
+        ({"text": "Hello", "font_color": font_color, "anchor_type0": anchor_type}, ((0.2, 1), (0.2, 0.1))),
         ({"text": "Goodbye", "font_color": font_color, "anchor_type0": anchor_type}, ((0.2, 0.2), (0.4, 0.1))),
         ({"text": "name", "font_color": font_color, "anchor_type0": anchor_type}, ((0.2, 0.2), (0.6, 0.1))),
         ({"text": ",", "font_color": font_color, "anchor_type0": anchor_type}, ((0.2, 0.2), (0.7, 0.1))),
         ({"text": "'", "font_color": font_color, "anchor_type0": anchor_type}, ((0.2, 0.2), (0.8, 0.1))),
     ]
+    print(f"menu text group: {text_group}")
     #text_list = [
     #    (("Hello", text_color), ((0.2, 0.2), (0.2, 0.1), anchor_type)),
     #    (("Goodbye", text_color), ((0.2, 0.2), (0.4, 0.1), anchor_type)),
@@ -987,6 +988,7 @@ def runExampleMenuOverlay1() -> None:
     
     add_text_list = [x[0] for x in text_list]
     text_objs = text_group.addTextObjects(add_text_list)
+    print("added menu text objects to menu")
     for text_obj, (_, pos_tup) in zip(text_objs, text_list):
         max_shape_rel, anchor_pos_rel = pos_tup
         menu_overlay.addText(text_obj, max_shape_rel,\

@@ -2445,12 +2445,12 @@ def arithmeticGeometricSeries(a: float=900, b: int=-3, n: int=5000, val: float=-
     return lft + (rgt - lft) * .5
 
 # Problem 237
-def playingBoardTourCount(n_cols: int=10 ** 12, start_row: int=0, end_row: int=3, md: Optional[int]=10 ** 8) -> int:
+def playingBoardTourCount(n_rows: int=4, n_cols: int=10 ** 12, start_row: int=0, end_row: int=3, md: Optional[int]=10 ** 8) -> int:
 
     # Review- try to generalise to arbitrary row numbers- at present only
     # the transfer function is specialised to four rows, though being
     # able to generalise this will probably be tricky.
-    n_rows = 4
+    #n_rows = 4
 
     if start_row == end_row: raise ValueError("start_row and end_row must be different")
     init_state = [0] * n_rows
@@ -2458,6 +2458,154 @@ def playingBoardTourCount(n_cols: int=10 ** 12, start_row: int=0, end_row: int=3
     init_state[end_row] = 1
     init_state = tuple(init_state)
 
+    states = []
+    states_dict = {}
+
+    state_memo = {}
+    def getStateIndex(state_raw: Tuple[int]) -> int:
+        #idx_dict = {}
+        args = tuple(state_raw)
+        if args in state_memo.keys():
+            return state_memo[args]
+        state1, state2 = [], []
+        for stt, it in ((state1, state_raw), (state2, reversed(state_raw))):
+            idx_dict = {0: 0}
+            nxt = 1
+            for num in it:
+                if num not in idx_dict.keys():
+                    idx_dict[num] = nxt
+                    nxt += 1
+                stt.append(idx_dict[num])
+        std_state = tuple(min(state1, state2))
+        if std_state in states_dict.keys():
+            idx = states_dict[std_state]
+        else:
+            idx = len(states)
+            states_dict[std_state] = idx
+            states.append(std_state)
+        state_memo[args] = idx
+        return idx
+
+    #def addTransferEdge(state1: Tuple[int], state2: Tuple[int], qty: int=1) -> None:
+    #    idx1, idx2 = map(getStateIndex, (state1, state2))
+    #    while len(transfer_adj) <= idx1:
+    #        transfer_adj.append({})
+    #    transfer_adj[idx1][idx2] = transfer_adj[idx1].get(idx2, 0) + qty
+
+    def getTransferOutEdges(state_idx: int) -> Dict[int, int]:
+        state = states[state_idx]
+        m = len(state)
+        t_dict = {}
+
+        curr = []
+        l_set = set(state) - {0}
+        r_dict = {}
+        #incl_dict = {}
+        #map_dict = {}
+        nxt = [max(l_set) + 1 if l_set else 1]
+        curr_map = list(range(len(state)))
+        def recur(idx: int=0, above: int=0, non_zero_seen: bool=False) -> None:
+            #if state_idx == 3 and len(curr) >= 2 and curr[0] == 1 and curr[1] in {1, 2}:
+            #    print(idx, above, non_zero_seen, curr)
+            if idx == m:
+                if above or not non_zero_seen: return
+                ans = []
+                for idx in curr:
+                    stt = idx
+                    while stt != curr_map[stt]:
+                        stt = curr_map[stt]
+                    ans.append(stt)
+                #if state_idx == 3:
+                ##    print(ans)
+                idx2 = getStateIndex(tuple(ans))
+                t_dict[idx2] = t_dict.get(idx2, 0) + 1
+                return
+            curr.append(0)
+            if not state[idx]:
+                if above:
+                    recur(idx=idx + 1, above=above, non_zero_seen=non_zero_seen)
+                    curr[idx] = above
+                    recur(idx=idx + 1, above=0, non_zero_seen=True)
+                    curr[idx] = 0
+                else:
+                    above2 = nxt[0]
+                    curr[idx] = above2
+                    nxt[0] += 1
+                    r_dict[above2] = idx
+                    recur(idx=idx + 1, above=above2, non_zero_seen=True)
+                    r_dict.pop(above2)
+                    curr[idx] = 0
+                    nxt[0] -= 1
+            else:
+                stt = state[idx]
+                while stt != curr_map[stt]:
+                    stt = curr_map[stt]
+                if not above:
+                    recur(idx=idx + 1, above=stt, non_zero_seen=non_zero_seen)
+                    curr[idx] = stt
+                    recur(idx=idx + 1, above=0, non_zero_seen=True)
+                    curr[idx] = 0
+                elif above != stt:
+                    curr_map[stt] = above
+                    recur(idx=idx + 1, above=0, non_zero_seen=True)
+                    curr_map[stt] = stt
+                """
+                else:
+                    idx2 = r_dict.pop(above)
+                    curr[idx2] = stt
+                    if stt not in incl_dict.keys(): incl_dict[stt] = idx2
+                    recur(idx=idx + 1, above=0, non_zero_seen=True)
+                    if incl_dict.get(stt, -1) == idx: curr[idx2] = stt
+                    incl_dict.pop(stt)
+                    r_dict[above] = idx2
+                """
+            curr.pop()
+            return
+        recur(idx=0, above=0)
+        return t_dict
+        """
+        if state == (1, 1, 0, 0):
+            t_dict[(1, 1, 2, 2)] = 1
+            t_dict[(1, 0, 0, 1)] = 1
+        elif state == (1, 1, 2, 2):
+            t_dict[(1, 1, 2, 2)] = 1
+            t_dict[(1, 0, 0, 1)] = 1
+        elif state == (1, 0, 1, 0):
+            t_dict[(1, 0, 1, 0)] = 1 # Reflected from (0, 1, 0, 1)
+        elif state == (1, 0, 0, 1):
+            t_dict[(1, 1, 0, 0)] = 2 # One reflected from (0, 0, 1, 1)
+            t_dict[(0, 1, 1, 0)] = 1
+            t_dict[(1, 2, 2, 1)] = 1
+        elif state == (1, 2, 2, 1):
+            t_dict[(1, 2, 2, 1)] = 1
+            t_dict[(1, 1, 0, 0)] = 2 # One reflected from (0, 0, 1, 1)
+        elif state == (0, 1, 1, 0):
+            t_dict[(1, 0, 0, 1)] = 1
+        return t_dict
+        """
+        
+
+
+    def createTransferAdj(start_states: List[Tuple[int]]) -> List[Dict[int, int]]:
+        seen = set()
+        qu = deque()
+        adj = []
+        for state in start_states:
+            idx = getStateIndex(state)
+            if idx in seen: continue
+            seen.add(idx)
+            qu.append(idx)
+        while qu:
+            idx = qu.popleft()
+            adj += [{} for _ in range(idx + len(adj) + 1)]
+            #print(f"creating out edges for index {idx}, state {states[idx]}")
+            adj[idx] = getTransferOutEdges(idx)
+            for idx2 in adj[idx].keys() - seen:
+                qu.append(idx2)
+                seen.add(idx2)
+            #print([(states[idx2], f) for idx2, f in adj[idx].items()])
+        return adj
+    """
     def transferFunction(state: Tuple[int]) -> Generator[Tuple[Tuple[int], int], None, None]:
         if state == (1, 1, 0, 0):
             yield ((1, 1, 2, 2), 1)
@@ -2483,9 +2631,9 @@ def playingBoardTourCount(n_cols: int=10 ** 12, start_row: int=0, end_row: int=3
             yield ((1, 0, 0, 1), 1)
             return
         return
-    
+    """
     #state_dict = {init_state: 1}
-
+    """
     states = [(1, 1, 0, 0), (1, 1, 2, 2), (1, 0, 1, 0), (1, 0, 0, 1), (1, 2, 2, 1), (0, 1, 1, 0)]
     states_dict = {x: i for i, x in enumerate(states)}
     n_states = len(states)
@@ -2496,6 +2644,11 @@ def playingBoardTourCount(n_cols: int=10 ** 12, start_row: int=0, end_row: int=3
             idx2 = states_dict[state2]
             state_adj[idx1][idx2] = f
     
+    """
+    state_adj = createTransferAdj([init_state])
+    n_states = len(states)
+    #print(states)
+    #print(f"number of distinct reachable states = {n_states}")
     def multiplyStateAdj(state_adj1: List[Dict[int, int]], state_adj2: List[Dict[int, int]]) -> List[Dict[int, int]]:
         res = [{} for _ in range(n_states)]
         for idx1 in range(n_states):
@@ -2515,7 +2668,7 @@ def playingBoardTourCount(n_cols: int=10 ** 12, start_row: int=0, end_row: int=3
 
     # binary lift
     state_adj_bin = state_adj
-    curr = {states_dict[init_state]: 1}
+    curr = {getStateIndex(init_state): 1}
     m = n_cols - 1
     while True:
         if m & 1:
@@ -2571,7 +2724,7 @@ def playingBoardTourCount(n_cols: int=10 ** 12, start_row: int=0, end_row: int=3
             if len(pair_adj[num1]) == 1:
                 cycle_len = 1 + (next(iter(pair_adj[num1])) != num1)
             else:
-                num2 = next(iter(num1))
+                num2 = next(iter(pair_adj[num1]))
                 cycle = [num1]
                 while num2 != cycle[0]:
                     cycle.append(num2)
@@ -2780,7 +2933,7 @@ if __name__ == "__main__":
 
     if not to_evaluate or 237 in to_evaluate:
         since = time.time() 
-        res = playingBoardTourCount(n_cols=10 ** 12, start_row=0, end_row=3, md=10 ** 8)
+        res = playingBoardTourCount(n_rows=4, n_cols=10 ** 12, start_row=0, end_row=3, md=10 ** 8)
         print(f"Solution to Project Euler #237 = {res}, calculated in {time.time() - since:.4f} seconds")
 
     print(f"Total time taken = {time.time() - since0:.4f} seconds")

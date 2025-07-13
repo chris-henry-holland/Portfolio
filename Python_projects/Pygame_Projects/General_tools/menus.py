@@ -9,18 +9,6 @@ from typing import Union, Tuple, List, Set, Dict, Optional, Callable, Any
 import pygame as pg
 import pygame.freetype
 
-from pygame.locals import (
-    K_UP,
-    K_DOWN,
-    K_LEFT,
-    K_RIGHT,
-    K_ESCAPE,
-    KEYDOWN,
-    QUIT,
-    K_RETURN,
-    K_KP_ENTER,
-)
-
 from .config import(
     enter_keys_def_glob,
     navkeys_def_glob,
@@ -38,7 +26,7 @@ from .text_manager import TextGroup
 
 from .display_base_classes import InteractiveDisplayComponentBase
 
-class MenuOverlay(InteractiveDisplayComponentBase):
+class ButtonMenuOverlay(InteractiveDisplayComponentBase):
     navkeys_def = navkeys_def_glob
     navkeys_dict_def = createNavkeyDict(navkeys_def)
     
@@ -229,9 +217,11 @@ class MenuOverlay(InteractiveDisplayComponentBase):
         return
     
     def textPrinter(self, surf: "pg.Surface") -> None:
+        print("Using ButtonMenuOverlay method textPrinter()")
         surf_shape = (surf.get_width(), surf.get_height())
         for text_obj, max_shape_rel, anchor_pos_rel in self.text_objects:
             text_obj.max_shape = tuple(x * y for x, y in zip(surf_shape, max_shape_rel))
+            print(max_shape_rel, surf_shape, text_obj.max_shape)
             text_obj.anchor_pos0 = tuple(x * y for x, y in zip(surf_shape, anchor_pos_rel))
         for text_obj, _, _ in self.text_objects:
             #anchor_pos = tuple(x * y for x, y in zip(surf_shape, anchor_pos_rel))

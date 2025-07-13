@@ -38,7 +38,7 @@ from General_tools import (
     navkeys_def_glob,
     named_colors_def,
     font_def_func,
-    MenuOverlay,
+    ButtonMenuOverlay,
     Text,
     TextGroup,
     UserInputProcessor
@@ -375,10 +375,10 @@ class GamePlay:
         self._pause_keys = pause_keys
         return
     
-    def getPauseOverlay(self) -> "MenuOverlay":
+    def getPauseOverlay(self) -> "ButtonMenuOverlay":
         #print("Using getPauseOverlay()")
         #print("Creating MenuOverlay object")
-        pause_overlay = MenuOverlay(self.screen_shape, framerate=60,\
+        pause_overlay = ButtonMenuOverlay(self.screen_shape, framerate=60,\
             overlay_color=(named_colors_def["green"], 0.5),\
             mouse_enabled=False, navkeys_enabled=False,\
             exit_press_keys={pg.K_p})
@@ -413,8 +413,8 @@ class GamePlay:
             self._pause_overlay = res
         return res
     
-    def getDeathOverlay(self, mouse_enabled: bool=True, navkeys_enabled: bool=True) -> "MenuOverlay":
-        death_overlay = MenuOverlay(self.screen_shape, framerate=60,\
+    def getDeathOverlay(self, mouse_enabled: bool=True, navkeys_enabled: bool=True) -> "ButtonMenuOverlay":
+        death_overlay = ButtonMenuOverlay(self.screen_shape, framerate=60,\
             overlay_color=(named_colors_def["red"], 0.5),\
             mouse_enabled=navkeys_enabled, navkeys_enabled=navkeys_enabled,\
             exit_press_keys={pg.K_p})

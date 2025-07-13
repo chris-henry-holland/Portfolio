@@ -33,6 +33,9 @@ from .display_base_classes import (
     checkHiddenKwargs,
 )
 
+# Review- Need to reconsider how max height and max font size given width
+# is communicated between the TextGroupElement obejcts and the TextGroup
+
 class Text(ComponentBaseClass):
     text_obj_names = set()
     unnamed_count = 0
@@ -387,7 +390,7 @@ class TextGroupElement(ComponentGroupElementBaseClass, Text):
     #            max_size=max_size)[0]
     
     def setMaxFontSizeGivenWidth(self, prev_val: Optional[Real]) -> None:#, _update_textgroup_max_font_size_given_width: bool=True) -> None:
-        #print("Setting max font size given widths")
+        print("Setting max font size given widths")
         if prev_val == float("inf"): prev_val = None
         add_font_size = self.max_font_size_given_width
         #print(prev_val, add_font_size)
@@ -422,6 +425,10 @@ class TextGroupElement(ComponentGroupElementBaseClass, Text):
         #print(max_shape)
         #prev_val
         self.setMaxHeight(None if not prev_val else prev_val[1])
+        prev_mx_w = None if not prev_val else prev_val[0]
+        prev_mx_font_sz_given_w = None if prev_mx_w is None else findMaxFontSizeGivenWidth(self.font, [self.text], width=prev_mx_w,\
+                max_size=None)[0]
+        self.setMaxFontSizeGivenWidth(prev_mx_font_sz_given_w)
         return
     
     def calculateMaxShapeActual(self) -> Tuple[Optional[int], Optional[int]]:
@@ -1055,6 +1062,9 @@ class TextGroup(ComponentGroupBaseClass):
             self.max_font_sizes_given_widths_dict.setdefault(k, 0)
             self.max_font_sizes_given_widths_dict[k] += f
         for k, f in rm_font_sizes.items():
+            #print(self.max_font_sizes_given_widths_dict.keys())
+            # Hacky fix
+            if k not in self.max_font_sizes_given_widths_dict.keys(): continue
             if self.max_font_sizes_given_widths_dict[k] == f:
                 self.max_font_sizes_given_widths_dict.pop(k)
             else: self.max_font_sizes_given_widths_dict[k] -= f
@@ -1065,8 +1075,12 @@ class TextGroup(ComponentGroupBaseClass):
         return res
     
     def calculateMaxFontSizeGivenWidths(self) -> Real:
-        return self.max_font_sizes_given_widths_dict.peekitem(0)[0] if\
+        print(f"Using TextGroup method calculateMaxFontSizeGivenWidths() for text group {self}")
+        res = self.max_font_sizes_given_widths_dict.peekitem(0)[0] if\
                 self.max_font_sizes_given_widths_dict else float("inf")
+        print(self.max_font_sizes_given_widths_dict)
+        print(res)
+        return res
     
     def calculateFontSizeActual(self) -> Tuple[Tuple[Real]]:
         #print("Calling calculateFontSizeActual()")

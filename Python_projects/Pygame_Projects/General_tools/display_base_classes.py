@@ -673,7 +673,7 @@ class ComponentBaseClass(ABC):
                 continue
             elif val is not None:
                 continue
-            print(f"hello, {attr}")
+            #print(f"hello, {attr}")
             setAttrCustom(attr, sub_attr, val)
             """
             #sub_attr = f"_{attr}"

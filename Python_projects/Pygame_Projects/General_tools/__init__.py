@@ -13,9 +13,11 @@ from .sliders import (
 )
 from .buttons import (
     Button,
-    ButtonGrid
+    ButtonGrid,
 )
-from .menus import MenuOverlay
+from .menus import (
+    ButtonMenuOverlay,
+)
 
 from .config import (
     enter_keys_def_glob,
@@ -63,5 +65,5 @@ from .examples import (
     #runExampleSliders1,
     runExampleButton1,
     runExampleButtonGrid1,
-    runExampleMenuOverlay1
+    runExampleButtonMenuOverlay1
 )
