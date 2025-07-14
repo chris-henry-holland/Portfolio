@@ -2444,6 +2444,281 @@ def arithmeticGeometricSeries(a: float=900, b: int=-3, n: int=5000, val: float=-
         else: rgt = mid
     return lft + (rgt - lft) * .5
 
+# Problem 236
+def luxuryHamperPossibleMValues(
+    pairs: List[Tuple[int, int]]=[(5248, 640), (1312, 1888), (2624, 3776), (5760, 3776), (3936, 5664)],
+) -> List[CustomFraction]:
+
+    # Review- try to make faster
+    n_pairs = len(pairs)
+    pairs2 = [(x * y, (x, y)) for x, y in pairs]
+    pairs2.sort()
+    poss_m_vals = {}
+    #print(pairs2)
+    #print(f"j = 0")
+    i2_0 = 1
+    for i1 in range(1, pairs2[0][1][0] + 1):
+        #print(i1, pairs2[0][1][0])
+        for i2_0 in range(i2_0, pairs2[0][1][1] + 1):
+            if i1 * pairs2[0][1][1] < i2_0 * pairs2[0][1][0]:
+                break
+        else: break
+        #print(i1, i2_0)
+        for i2 in range(i2_0, pairs2[0][1][1] + 1):
+            if gcd(i1, i2) != 1: continue
+            m = CustomFraction(i2 * pairs2[0][1][0], i1 * pairs2[0][1][1])
+            poss_m_vals[m] = [(i1, i2)]
+    for j in range(1, len(pairs2)):
+        #print(len(poss_m_vals))
+        #print(CustomFraction(1476, 1475) in poss_m_vals)
+        #print(f"j = {j}")
+        prev_m_vals = poss_m_vals
+        poss_m_vals = {}
+        for m in prev_m_vals.keys():
+            mult1, mult2 = pairs2[j][1][1] * m.numerator, pairs2[j][1][0] * m.denominator
+            l = lcm(mult1, mult2)
+            i2 = l // mult2
+            if i2 > pairs2[j][1][1]: continue
+            i1 = l // mult1
+            poss_m_vals[m] = prev_m_vals[m]
+            poss_m_vals[m].append((i1, i2))
+    tots = [sum(x[0] for x in pairs), sum(x[1] for x in pairs)]
+    #print(tots)
+    #prev_m_vals = poss_m_vals
+    #poss_m_vals = {}
+
+    def bruteForce(m: CustomFraction) -> bool:
+        mults = poss_m_vals[m]
+        mx_incl = [x[1][1] // y[1] for x, y in zip(pairs2, mults)]
+        #print(pairs2, mults)
+        #print(mx_incl)
+        #sol = [0] * (n_pairs >> 1)
+        seen = set()
+        vals = set()
+        terms = [mults[idx][0] * tots[1] * m.denominator - mults[idx][1] * tots[0] * m.numerator for idx in range(n_pairs)]
+        def recur1(idx: int, net: int) -> None:
+            if idx == (n_pairs >> 1):
+                vals.add(net)
+                #vals[net] = tuple(sol)
+                #return not net#curr1 * tots[1] * m.denominator == curr2 * tots[0] * m.numerator
+                return
+            args = (idx, net)
+            if args in seen: return False
+            for num in range(1, mx_incl[idx] + 1):
+                #sol[idx] = (num * mults[idx][0], num * mults[idx][1])
+                recur1(idx + 1, net + num * terms[idx])
+            seen.add(args)
+            return
+        
+        #sol = [0] * n_pairs
+        def recur2(idx: int, net: int) -> None:
+            if idx == (n_pairs >> 1) - 1:
+                if -net not in vals:
+                    return False
+                #sol2 = vals[-net]
+                #for i in range(n_pairs >> 1):
+                #    sol[i] = sol2[i]
+                #print(m, sol)
+                return True
+            args = (idx, net)
+            if args in seen: return False
+            for num in range(1, mx_incl[idx] + 1):
+                #sol[idx] = (num * mults[idx][0], num * mults[idx][1])
+                if recur2(idx - 1, net + num * terms[idx]):
+                    return True
+            seen.add(args)
+            return False
+
+        recur1(0, 0)
+        seen = set()
+        res = recur2(n_pairs - 1, 0)
+
+        #if res:
+        #    print(sol)
+        return res
+
+    def mHasSolution(m: CustomFraction) -> bool:
+        #print(m)
+        mult1, mult2 = tots[1] * m.numerator, tots[0] * m.denominator
+        l = lcm(mult1, mult2)
+        #print(mult1, mult2, l)
+        i1_incr = l // mult1
+        i2_incr = l // mult2
+        #print(i1_incr, i2_incr)
+        #print(m, i1_incr, i2_incr, abs(i1_incr - i2_incr))
+        #print(i1_incr, i2_incr)
+        diff0 = i2_incr - i1_incr
+        diffs = []
+        for i1, i2 in poss_m_vals[m]:
+            #print((i1, i2))
+            diffs.append(i2 - i1 - diff0)
+        #mults = []
+        l = abs(diff0) if diff0 else 1
+        for idx in set(range(n_pairs)):
+            if not diffs[idx]: continue
+            l = lcm(l, abs(diffs[idx]))
+        #print(f"diff0 = {diff0}")
+        #print(f"diffs = {diffs}")
+        #print(l)
+        #for idx in range(n_pairs):
+        #    if not diffs[idx]:
+        #        mults.append(1)
+        #        continue
+        #    l2 = l // abs(diffs[idx])
+        #    if l2 > pairs2[idx][1][0]:
+        #        return False
+        #    mults.append(l2)
+        
+        #print(f"mults = {mults}")
+        
+        memo = {}
+        sol = [0] * n_pairs
+        def recur(idx: int, curr: int, mult_sm: int) -> bool:
+            if idx == n_pairs:
+                #print("hello")
+                return not curr
+            args = (idx, curr, mult_sm)
+            if args in memo.keys(): return memo[args]
+            #mult0 = mults[idx]
+            #print(mult0, pairs[idx][0])
+            res = False
+            for mult in range(1, (pairs2[idx][1][0] // (poss_m_vals[m][idx][0] * i1_incr)) + 1):
+                sol[idx] = mult
+                if recur(idx + 1, curr + mult * diffs[idx], mult_sm + mult):
+                    res = True
+                    break
+            memo[args] = res
+            return res
+        #print("hi")
+        res = recur(0, 0, 0)
+        if res:
+            cnts1 = [x * y[0] for x, y in zip(sol, poss_m_vals[m])]
+            #print(cnts1)
+            cnts2 = [x * y[1] for x, y in zip(sol, poss_m_vals[m])]
+            #print(cnts2)
+            #print(sum(cnts1) * sum(x[1] for x in pairs) * m.denominator)
+            #print(sum(cnts2) * sum(x[0] for x in pairs) * m.numerator)
+        return res
+        """
+        print(m)
+        mult1, mult2 = tots[1] * m.denominator, tots[0] * m.numerator
+        l = lcm(mult1, mult2)
+        print(mult1, mult2, l)
+        i1_incr = l // mult1
+        i2_incr = l // mult2
+        #print(m, i1_incr, i2_incr, abs(i1_incr - i2_incr))
+        print(i1_incr, i2_incr)
+        diff0 = i2_incr - i1_incr
+        diffs = []
+        for i1, i2 in poss_m_vals[m]:
+            print((i1, i2))
+            diffs.append(i2 - i1)
+        mults = []
+        l = abs(diff0) if diff0 else 1
+        for idx in set(range(n_pairs)):
+            if not diffs[idx]: continue
+            l = lcm(l, abs(diffs[idx]))
+        print(f"diff0 = {diff0}")
+        print(f"diffs = {diffs}")
+        print(l)
+        for idx in range(n_pairs):
+            if not diffs[idx]:
+                mults.append(1)
+                continue
+            l2 = l // abs(diffs[idx])
+            if l2 > pairs2[idx][1][0]:
+                return False
+            mults.append(l2)
+        
+        print(f"mults = {mults}")
+        
+        memo = {}
+        def recur(idx: int, curr: int) -> bool:
+            if idx == n_pairs:
+                #print("hello")
+                return (curr * diff0 > 0) and not abs(curr) % abs(diff0)
+            args = (idx, curr)
+            if args in memo.keys(): return memo[args]
+            mult0 = mults[idx]
+            #print(mult0, pairs[idx][0])
+            res = False
+            for mult in range(mult0, pairs2[idx][1][0] + 1, mult0):
+                if recur(idx + 1, curr + mult * diffs[idx]):
+                    res = True
+                    break
+            memo[args] = res
+            return res
+        #print("hi")
+        res = recur(0, 0)
+        return res
+        """
+    
+    #print(mHasSolution(CustomFraction(1476, 1475)))
+    #print(bruteForce(CustomFraction(1476, 1475)))
+    #return []
+    
+    
+
+    res = []
+    cnt = 0
+    for m in poss_m_vals.keys():
+        #print(cnt, m, len(res))
+        cnt += 1
+        
+        if bruteForce(m):
+            print(m)
+            res.append(m)
+        #if mHasSolution(m): res.append(m)
+
+        """
+        i2 = 0
+        sub1 = sum(x[0] for x in poss_m_vals[m])
+        sub2 = sum(x[1] for x in poss_m_vals[m])
+        for i1 in range(i1_incr, tots[0] + 1, i1_incr):
+            print(i1, tots[0])
+            i2 += i2_incr
+            if i1 < sub1 or i2 < sub2: continue
+            if recur(m, 0, i1 - sub1, i2 - sub2): break
+        else: continue
+        res.append(m)
+        print(f"found {m}")
+        """
+    """
+    for j in range(1, len(pairs2)):
+        i2_0 = 1
+        print(len(poss_m_vals))
+        print(CustomFraction(1476, 1475) in poss_m_vals)
+        print(f"j = {j}")
+        prev_m_vals = poss_m_vals
+        poss_m_vals = {}
+        for i1 in range(1, pairs2[j][1][0] + 1):
+            for i2_0 in range(i2_0, pairs2[j][1][1] + 1):
+                if i1 * pairs2[j][1][1] < i2_0 * pairs2[j][1][0]:
+                    break
+            else: break
+            for i2 in range(i2_0, pairs2[j][1][1] + 1):
+                if gcd(i1, i2) != 1: continue
+                m = CustomFraction(i2 * pairs2[j][1][0], i1 * pairs2[j][1][1])
+                if m not in prev_m_vals.keys(): continue
+                poss_m_vals[m] = prev_m_vals[m]
+                poss_m_vals[m].append((i1, i2))
+    """
+    #print(len(res))
+    #print(CustomFraction(1476, 1475) in res)
+    #print(res)
+    #print(min(poss_m_vals.keys()), max(poss_m_vals.keys()))
+    #print(poss_m_vals.keys())
+    #print(poss_m_vals.get(CustomFraction(1476, 1475), None))
+    print(f"number of solutions = {len(res)}")
+    return res
+
+def largestLuxuryHamperPossibleMValue(
+    pairs: List[Tuple[int, int]]=[(5248, 640), (1312, 1888), (2624, 3776), (5760, 3776), (3936, 5664)],
+) -> List[CustomFraction]:
+
+    m_vals = luxuryHamperPossibleMValues(pairs)
+    return max(m_vals)
+
 # Problem 237
 def playingBoardTourCount(n_rows: int=4, n_cols: int=10 ** 12, start_row: int=0, end_row: int=3, md: Optional[int]=10 ** 8) -> int:
 
@@ -2763,7 +3038,7 @@ def partialPrimeDerangementProbabilityFloat(n_max: int=100, n_primes_deranged: i
     return res.numerator / res.denominator
 
 if __name__ == "__main__":
-    to_evaluate = {239}
+    to_evaluate = {236}
     since0 = time.time()
 
     if not to_evaluate or 201 in to_evaluate:
@@ -2956,6 +3231,13 @@ if __name__ == "__main__":
         since = time.time() 
         res = arithmeticGeometricSeries(a=900, b=-3, n=5000, val=-6 * 10 ** 11, eps=10 ** -13)
         print(f"Solution to Project Euler #235 = {res}, calculated in {time.time() - since:.4f} seconds")
+
+    if not to_evaluate or 236 in to_evaluate:
+        since = time.time() 
+        res = largestLuxuryHamperPossibleMValue(
+            pairs=[(5248, 640), (1312, 1888), (2624, 3776), (5760, 3776), (3936, 5664)],
+        )
+        print(f"Solution to Project Euler #236 = {res}, calculated in {time.time() - since:.4f} seconds")
 
     if not to_evaluate or 237 in to_evaluate:
         since = time.time() 
