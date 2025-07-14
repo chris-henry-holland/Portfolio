@@ -18,7 +18,7 @@ sys.path.append(os.path.join(os.path.dirname(__file__), "../Algorithms_and_Datas
 sys.path.append(os.path.join(os.path.dirname(__file__), "../Algorithms_and_Datastructures/Data_structures"))
 from misc_mathematical_algorithms import CustomFraction, gcd, lcm, isqrt, integerNthRoot
 from prime_sieves import PrimeSPFsieve, SimplePrimeSieve
-from pseudorandom_number_generators import generalisedLaggedFibonacciGenerator
+from pseudorandom_number_generators import generalisedLaggedFibonacciGenerator, blumBlumShubPseudoRandomGenerator
 from Pythagorean_triple_generators import pythagoreanTripleGeneratorByHypotenuse
 from geometry_algorithms import grahamScan
 
@@ -3007,6 +3007,78 @@ def playingBoardTourCount(n_rows: int=4, n_cols: int=10 ** 12, start_row: int=0,
             if md is not None: res %= md
     return res
 
+# Problem 238
+def infiniteStringTourDigitSumStartSum(n_max: int=2 * 10 ** 15, s_0: int=14025256, s_mod: int=20300713, base: int=10) -> int:
+    
+    
+    it = iter(blumBlumShubPseudoRandomGenerator(s_0=s_0, s_mod=s_mod, t_min=0, t_max=s_mod - 1))
+    term_dig_counts_cumu = [0]
+    term_dig_sums_cumu = [0]
+    z_count_cumu = [0]
+    terms = []
+    terms_cumu = []
+    #terms_z_count_cumu = []
+    seen = {}
+    cycle_start = -1
+    for i, num in enumerate(it):
+        if num in seen.keys():
+            cycle_start = seen[num]
+            break
+        terms.append(num)
+        seen[num] = i
+        d_cnt = 0
+        d_sm = 0
+        z_cnt = 0
+        #lst = []
+        while num:
+            num, d = divmod(num, base)
+            #lst.append(d)
+            d_sm += d
+            d_cnt += 1
+            z_cnt += not d
+        term_dig_counts_cumu.append(term_dig_counts_cumu[-1] + d_cnt)
+        term_dig_sums_cumu.append(term_dig_sums_cumu[-1] + d_sm)
+        z_count_cumu.append(z_count_cumu[-1] + z_cnt)
+        """        
+        terms.append(lst[::-1])
+        terms_cumu.append([0])
+        terms_z_count_cumu.append([0])
+        for d in terms[-1]:
+            terms_cumu[-1].append(terms_cumu[-1][-1] + d)
+            terms_z_count_cumu[-1].append(terms_z_count_cumu[-1][-1] + (not d))
+        """
+    print(len(terms))
+    print(term_dig_counts_cumu[-1])
+    print(term_dig_sums_cumu[-1])
+    print(z_count_cumu[-1])
+    print(cycle_start)
+
+    def getTermCounts(idx: int) -> Tuple[List[int], List[int]]:
+        print(idx, len(terms))
+        num = terms[idx]
+        lst = []
+        while num:
+            num, d = divmod(num, base)
+            lst.append(d)
+        lst = lst[::-1]
+        z_cumu = [0]
+        digs_cumu = [0]
+        for d in lst:
+            z_cumu.append(z_cumu[-1] + (not d))
+            digs_cumu.append(digs_cumu[-1] + d)
+        return lst, digs_cumu, z_cumu
+
+    q, r = divmod(n_max - term_dig_sums_cumu[cycle_start], term_dig_sums_cumu[-1] - term_dig_sums_cumu[cycle_start])
+    i = bisect.bisect_right(term_dig_sums_cumu, r + term_dig_sums_cumu[cycle_start]) - 1
+    term_digs, term_digs_cumu, z_counts_cumu = getTermCounts(i)
+    j = bisect.bisect_right(term_digs_cumu, term_dig_sums_cumu[i] - term_dig_sums_cumu[cycle_start]) - 1
+    n1 = term_dig_counts_cumu[cycle_start] - z_count_cumu[cycle_start] +\
+            q * (term_dig_counts_cumu[-1] - term_dig_counts_cumu[cycle_start] - z_count_cumu[-1] + z_count_cumu[cycle_start]) +\
+            (term_dig_counts_cumu[i] - term_dig_counts_cumu[cycle_start] - z_count_cumu[i] + z_count_cumu[cycle_start]) +\
+            (j - z_counts_cumu[j])
+    print(n1)
+    return -1
+
 # Problem 239
 def partialDerangementCount(n_tot: int, n_subset: int, n_subset_deranged: int) -> int:
 
@@ -3037,8 +3109,66 @@ def partialPrimeDerangementProbabilityFloat(n_max: int=100, n_primes_deranged: i
     print(res)
     return res.numerator / res.denominator
 
+# Problem 240
+def topDiceSumCombinations(n_sides: int=12, n_dice: int=20, n_top_dice: int=10, top_sum: int=70) -> int:
+
+    def diceSumEqualsTargetCount(target_score: int, n_sides: int, n_dice: int) -> int:
+        if target_score < n_dice: return 0
+        #target_score -= n_dice
+        memo = {}
+        def recur(val: int, remain_score: int, remain_dice: int, cnt: int) -> int:
+            #print(val, remain_score, remain_dice, cnt)
+            if not remain_score:
+                return cnt // math.factorial(remain_dice)
+            elif remain_score > remain_dice * val: return 0
+            args = (val, remain_score, remain_dice, cnt)
+            if args in memo.keys(): return memo[args]
+
+            res = 0
+            #print(args)
+            #if val == 4 and remain_score == 12:
+            #    print(remain_dice, min(remain_dice, remain_score // val))
+            for n_val in range(min(remain_dice, remain_score // val) + 1):
+                #print(remain_score, n_val, val)
+                ans = recur(val - 1, remain_score - n_val * val, remain_dice - n_val, cnt // math.factorial(n_val))
+                res += ans
+
+            memo[args] = res
+            return res
+
+        res = recur(n_sides - 1, target_score - n_dice, n_dice, math.factorial(n_dice))
+        #print(memo)
+        return res
+
+    def diceSumCombinationsMinimumDieScoreGenerator(target_score: int, n_dice: int) -> Generator[Tuple[int, int, int], None, None]:
+        # yields: min die score, number of that min die score, frequency
+        #target_score -= n_dice
+        mx_mn_die = target_score // n_dice
+        for min_die_val in range(1, mx_mn_die + 1):
+            target_score2 = target_score - min_die_val * n_dice
+            n_sides2 = n_sides - min_die_val
+            for n_min_dice in range(1, n_dice + 1):
+                #print(n_dice, n_min_dice, n_sides2, target_score2)
+                if (n_dice - n_min_dice) * n_sides2 < target_score2: break
+                #print(min_die_val, n_min_dice)
+                cnt0 = diceSumEqualsTargetCount(target_score2, n_sides2, n_dice - n_min_dice)
+                if not cnt0: continue
+                cnt = math.comb(n_dice, n_min_dice) * cnt0
+                yield (min_die_val, n_min_dice, cnt)
+        return
+    
+    res = 0
+    for (min_top_die_score, n_min_dice, f) in diceSumCombinationsMinimumDieScoreGenerator(top_sum, n_top_dice):
+        #print(min_top_die_score, n_min_dice, f)
+        for n_extra_min_dice in range(n_dice - n_top_dice + 1):
+            n_lt_min_top = n_dice - (n_top_dice + n_extra_min_dice)
+            cnt = math.comb(n_dice, n_top_dice + n_extra_min_dice) * (min_top_die_score - 1) ** n_lt_min_top *\
+                    f * math.factorial(n_top_dice + n_extra_min_dice) * math.factorial(n_min_dice) // (math.factorial(n_top_dice) * math.factorial(n_min_dice + n_extra_min_dice))
+            res += cnt
+    return res
+
 if __name__ == "__main__":
-    to_evaluate = {236}
+    to_evaluate = {240}
     since0 = time.time()
 
     if not to_evaluate or 201 in to_evaluate:
@@ -3244,10 +3374,20 @@ if __name__ == "__main__":
         res = playingBoardTourCount(n_rows=4, n_cols=10 ** 12, start_row=0, end_row=3, md=10 ** 8)
         print(f"Solution to Project Euler #237 = {res}, calculated in {time.time() - since:.4f} seconds")
 
+    if not to_evaluate or 238 in to_evaluate:
+        since = time.time() 
+        res = infiniteStringTourDigitSumStartSum(n_max=2 * 10 ** 15, s_0=14025256, s_mod=20300713, base=10)
+        print(f"Solution to Project Euler #238 = {res}, calculated in {time.time() - since:.4f} seconds")
+
     if not to_evaluate or 239 in to_evaluate:
         since = time.time() 
         res = partialPrimeDerangementProbabilityFloat(n_max=100, n_primes_deranged=22)
         print(f"Solution to Project Euler #239 = {res}, calculated in {time.time() - since:.4f} seconds")
+
+    if not to_evaluate or 240 in to_evaluate:
+        since = time.time() 
+        res = topDiceSumCombinations(n_sides=12, n_dice=20, n_top_dice=10, top_sum=70)
+        print(f"Solution to Project Euler #240 = {res}, calculated in {time.time() - since:.4f} seconds")
 
     print(f"Total time taken = {time.time() - since0:.4f} seconds")
 
