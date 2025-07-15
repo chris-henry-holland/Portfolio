@@ -3167,8 +3167,216 @@ def topDiceSumCombinations(n_sides: int=12, n_dice: int=20, n_top_dice: int=10, 
             res += cnt
     return res
 
+# Problem 241
+def divisorFunction(num: int) -> int:
+    pf = calculatePrimeFactorisation(num)
+    res = 1
+    for p, f in pf.items():
+        res *= (p ** (f + 1) - 1) // (p - 1)
+    return res
+
+def halfIntegerPerfectionQuotients(n_max: int=10 ** 18) -> List[int]:
+    ps = SimplePrimeSieve()
+    p_gen = iter(ps.endlessPrimeGenerator())
+    """
+    p_lst = []
+    p_dict = {}
+    p_pows_sigma = []
+
+    
+    def addNextPrime() -> None:
+        p = next(p_gen)
+        p_dict[p] = len(p_lst)
+        p_lst.append(p)
+        num = 1
+        exp = 0
+        p_pows_sigma.append([])
+        while True:
+            exp += 1
+            num *= p
+            if num > n_max: break
+            sigma = (p ** (exp + 1) - 1) // (p - 1)
+            sigma_pf = calculatePrimeFactorisation(sigma)
+            p_pows_sigma[-1].append((num, exp, sigma, sigma_pf))
+        return
+    """
+    memo = {}
+    def primePowerSigmaPrimeFactorisation(p: int, exp: int) -> Dict[int, int]:
+        args = (p, exp)
+        if args in memo.keys(): return memo[args]
+        sigma = (p ** (exp + 1) - 1) // (p - 1)
+        res = calculatePrimeFactorisation(sigma)
+        memo[args] = res
+        return res
+    p_max = 500
+    p_lst = []
+    p_dict = {}
+    def getPrimeAtIndex(idx: int) -> int:
+        while len(p_lst) <= idx:
+            p = next(p_gen)
+            p_dict[p] = len(p_lst)
+            p_lst.append(p)
+        return p_lst[idx]
+    
+    def getPrimeIndex(p: int) -> int:
+        while not p_lst or p_lst[-1] < p:
+            p2 = next(p_gen)
+            p_dict[p2] = len(p_lst)
+            p_lst.append(p2)
+        if p not in p_dict.keys():
+            raise ValueError(f"{p} is not prime")
+        return p_dict[p]
+        
+    def search(n_max: int, numerator: int) -> List[int]:
+        res = []
+        numer_pf = calculatePrimeFactorisation(numerator)
+
+        def recur(p_idx: int, curr: int, nonzero_cnt: int) -> None:
+            #print(p_idx, curr, nonzero_cnt, bal)
+            #if not neg_cnt and not bal[0]:
+            #    res.append(curr)
+            p = getPrimeAtIndex(p_idx)
+            if p > p_max: return
+            #curr2 = curr
+            recur(p_idx + 1, curr, nonzero_cnt)
+            nonzero_cnt2 = nonzero_cnt
+            
+            while len(bal) <= p_idx:
+                bal.append(0)
+            bal0 = bal[p_idx]
+            start = max(1, bal[p_idx])
+            bal[p_idx] -= start - 1
+            curr2 = curr * p ** (start - 1)
+            for exp_p in itertools.count(start):
+                curr2 *= p
+                if curr2 > n_max: break
+                #print(p_idx)
+                if not bal[p_idx]: nonzero_cnt2 += 1
+                elif bal[p_idx] == 1: nonzero_cnt2 -= 1
+                bal[p_idx] -= 1
+                #print(f"starting sigma_pf")
+                sigma_pf = primePowerSigmaPrimeFactorisation(p, exp_p)
+                #print(f"finishing sigma_pf")
+                p2_lst = sorted(sigma_pf.keys())
+                if p2_lst[-1] > p_max: continue
+                #print("pre:")
+                #print(p2_lst)
+                delta = {}
+                nonzero_cnt_delta = 0
+                #if p2_lst[0] == 2:
+                #    if bal[0] + sigma_pf[2] > 0: continue
+                #    #bal[0] += sigma_pf[2]
+                #    delta[0] = sigma_pf[2]
+                cancel = False
+                for p2_idx in range(len(p2_lst)):#range(p2_lst[0] == 2, len(p2_lst)):
+                    p2 = p2_lst[p2_idx]
+                    j = getPrimeIndex(p2)
+                    f = sigma_pf[p2]
+                    if j < p_idx and bal[j] > -f:
+                        cancel = True
+                        break
+                    while len(bal) <= j:
+                        bal.append(0)
+                    if not bal[j]: nonzero_cnt_delta += 1
+                    if bal[j] == -f: nonzero_cnt_delta -= 1
+                    delta[j] = f
+                if cancel: continue
+                for j, f in delta.items():
+                    bal[j] += f
+                nonzero_cnt2 += nonzero_cnt_delta
+                if not nonzero_cnt2:
+                    print(curr2)
+                    res.append(curr2)
+                recur(p_idx + 1, curr2, nonzero_cnt2)
+                #print("post:")
+                #print(p2_lst)
+                for j, f in delta.items():
+                    bal[j] -= f
+                nonzero_cnt2 -= nonzero_cnt_delta
+                """
+                if p2_lst[0] == 2:
+                    bal[0] -= sigma_pf[2]
+                for p2_idx in range(p2_lst[0] == 2, len(p2_lst)):
+                    p2 = p2_lst[p2_idx]
+                    
+                    j = getPrimeIndex(p2)
+                    #print(p2, j, bal)
+                    f = sigma_pf[p2]
+                    if bal[j] >= 0 and bal[j] < f:
+                        neg_cnt2 += 1
+                    bal[j] -= f
+                """
+            bal[p_idx] = bal0
+            return
+
+        for exp2 in itertools.count(1):
+            print(f"exp2 = {exp2}")
+            if (1 << exp2) > n_max: break
+            #print(f"starting prime factorisation for 2 ** {exp2}")
+            sigma_pf = primePowerSigmaPrimeFactorisation(2, exp2)
+            #print(f"finishing prime factorisation for 2 ** {exp2}")
+            if max(sigma_pf.keys()) > p_max: continue
+            bal = [0] * (getPrimeIndex(max(max(sigma_pf.keys()), max(numer_pf.keys()))) + 1)
+            #print("hi0")
+            bal[0] = 1 - exp2
+            #print("hi1")
+            for p, f in numer_pf.items():
+                bal[getPrimeIndex(p)] = -f
+            #print("hi2")
+            nonzero_cnt = len(numer_pf) + bool(bal[0])
+            p2_lst = sorted(sigma_pf.keys())
+            if p2_lst[-1] > p_max:
+                #print("prime in factorisation exceeds the max")
+                continue
+            #print("hi3")
+            #print(sigma_pf)
+            #print(nonzero_cnt)
+            for p2 in p2_lst:
+                p2_idx = getPrimeIndex(p2)
+                #print(p2, p2_idx)
+                if not bal[p2_idx]:
+                    nonzero_cnt += 1
+                if bal[p2_idx] == -sigma_pf[p2]:
+                    nonzero_cnt -= 1
+                bal[p2_idx] += sigma_pf[p2]
+                #print(bal, nonzero_cnt)
+            curr = 1 << exp2
+            #print("hi4")
+            #print("hi")
+            #print(bal)
+            if not nonzero_cnt:
+                print(curr)
+                res.append(curr)
+            #print(curr, bal)
+            recur(1, curr, nonzero_cnt)
+        #print("hi")
+        return res
+    
+    res = [2] #search(n_max)
+    for numer in range(5, 16, 2):
+        print(CustomFraction(numer, 2))
+        lst = search(n_max, numer)
+        print(lst)
+        res += lst
+    res.sort()
+    print(res)
+    return res
+    """
+    res = 0
+    for num in range(2, n_max + 1, 2):
+        sigma = divisorFunction(num)
+        if sigma % num and not 2 * sigma % num:
+            print(num, sigma, CustomFraction(sigma, num), calculatePrimeFactorisation(num))
+            res += num
+    return res
+    """
+
+def halfIntegerPerfectionQuotientsSum(n_max: int=10 ** 18) -> int:
+    res = halfIntegerPerfectionQuotients(n_max=n_max)
+    return sum(res)
+
 if __name__ == "__main__":
-    to_evaluate = {240}
+    to_evaluate = {241}
     since0 = time.time()
 
     if not to_evaluate or 201 in to_evaluate:
@@ -3374,10 +3582,10 @@ if __name__ == "__main__":
         res = playingBoardTourCount(n_rows=4, n_cols=10 ** 12, start_row=0, end_row=3, md=10 ** 8)
         print(f"Solution to Project Euler #237 = {res}, calculated in {time.time() - since:.4f} seconds")
 
-    if not to_evaluate or 238 in to_evaluate:
-        since = time.time() 
-        res = infiniteStringTourDigitSumStartSum(n_max=2 * 10 ** 15, s_0=14025256, s_mod=20300713, base=10)
-        print(f"Solution to Project Euler #238 = {res}, calculated in {time.time() - since:.4f} seconds")
+    #if not to_evaluate or 238 in to_evaluate:
+    #    since = time.time() 
+    #    res = infiniteStringTourDigitSumStartSum(n_max=2 * 10 ** 15, s_0=14025256, s_mod=20300713, base=10)
+    #    print(f"Solution to Project Euler #238 = {res}, calculated in {time.time() - since:.4f} seconds")
 
     if not to_evaluate or 239 in to_evaluate:
         since = time.time() 
@@ -3388,6 +3596,11 @@ if __name__ == "__main__":
         since = time.time() 
         res = topDiceSumCombinations(n_sides=12, n_dice=20, n_top_dice=10, top_sum=70)
         print(f"Solution to Project Euler #240 = {res}, calculated in {time.time() - since:.4f} seconds")
+
+    if not to_evaluate or 241 in to_evaluate:
+        since = time.time() 
+        res = halfIntegerPerfectionQuotientsSum(n_max=10 ** 18)
+        print(f"Solution to Project Euler #241 = {res}, calculated in {time.time() - since:.4f} seconds")
 
     print(f"Total time taken = {time.time() - since0:.4f} seconds")
 
