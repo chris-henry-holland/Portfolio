@@ -2160,13 +2160,18 @@ def probabilityPlayer2WinsFloat(points_required: int=100) -> CustomFraction:
 # Problem 233
 def factorisationsGenerator(num: int) -> Generator[Dict[int, int], None, None]:
     pf = calculatePrimeFactorisation(num)
-    print(pf)
+    yield from factorisationsFromPrimeFactorisationGenerator(pf)
+    return
+
+def factorisationsFromPrimeFactorisationGenerator(prime_factorisation: Dict[int, int]) -> Generator[Dict[int, int], None, None]:
+    pf = prime_factorisation
+    #print(pf)
     p_lst = sorted(pf.keys())
     n_p = len(p_lst)
     f_lst = [pf[p] for p in p_lst]
     z_cnt = [0]
 
-    print(p_lst, f_lst)
+    #print(p_lst, f_lst)
 
     curr = {}
     def recur(idx: int, num: int, prev: int=2) -> Generator[Dict[int, int], None, None]:
@@ -3630,9 +3635,151 @@ def sliderPuzzleShortestPathsChecksumValue(
     #    res = (res * checksum_mult + tot) % checksum_md
     #return res
 
+# Problem 247
+def squaresUnderHyperbola(target_index: Tuple[int, int]=(3, 3)) -> int:
+    """
+    Solution to Project Euler #247
+    """
+    def calculateLength(pos: Tuple[float]) -> float:
+        d = pos[0] - pos[1]
+        return .5 * (math.sqrt(d ** 2 + 4) - (pos[0] + pos[1]))
+
+    pos0 = (1, 0)
+    h = [(-calculateLength(pos0), pos0, (0, 0))]
+    target_cnt = math.comb(sum(target_index), target_index[0])
+    cnt = 0
+    for num in itertools.count(1):
+        neg_length, pos, index = heapq.heappop(h)
+        length = -neg_length
+        #print(num, length, pos, index)
+        if index == target_index:
+            cnt += 1
+            print(f"count = {cnt} of {target_cnt}")
+            if cnt == target_cnt: break
+        for pos2, index_incr in (((pos[0] + length, pos[1]), (1, 0)), ((pos[0], pos[1] + length), (0, 1))):
+            d = pos2[0] - pos2[1]
+            length2 = calculateLength(pos2)
+            index2 = tuple(x + y for x, y in zip(index, index_incr))
+            heapq.heappush(h, (-length2, pos2, index2))
+    return num
+
+
+# Problem 248
+def factorialPrimeFactorisation(n: int) -> Dict[int, int]:
+    pf = {}
+    for num in range(2, n + 1):
+        pf2 = calculatePrimeFactorisation(num)
+        for p, f in pf2.items():
+            pf[p] = pf.get(p, 0) + f
+    return pf
+
+def numbersWithEulerTotientFunctionNFactorial(n: int) -> List[int]:
+    
+
+    ps = SimplePrimeSieve()
+    def primeCheck(num: int) -> bool:
+        res = ps.millerRabinPrimalityTestWithKnownBounds(num, max_n_additional_trials_if_above_max=10)
+        return res[0]
+    
+    #for num in range(1, 30):
+    #    print(num, primeCheck(num))
+
+    factorial_pf = factorialPrimeFactorisation(n)
+    #print(factorial_pf)
+
+    p_lst = sorted(factorial_pf.keys())
+    p_dict = {p: i for i, p in enumerate(p_lst)}
+    n_p = len(p_lst)
+    f_lst = [factorial_pf[p] for p in p_lst]
+    z_cnt = [0]
+
+    #print(p_lst, f_lst)
+
+    def recur(idx: int=0, tot: int=1, num: int=1, prev: int=1) -> Generator[int, None, None]:
+        #print(idx, num, prev, curr)
+        if idx == n_p:
+            #print("hi2")
+            
+            if num <= prev: return
+            #if num == 2: print("hello")
+            #print(idx, num, prev, f_lst, curr, z_cnt[0])
+            p1 = num + 1
+            
+            #if num == 66530: print("here")
+            if not primeCheck(p1):
+                return
+            #if num > 5 * 10 ** 4:
+            #    print(num, p1)
+            #if num == 66528: print("here")
+            tot2 = tot * p1
+            #print(num, p1)
+            if z_cnt[0] == n_p:
+                yield tot2
+                yield tot2 << 1
+            else:
+                if z_cnt[0] == n_p - 1 and f_lst[0]:
+                    yield tot2 << (f_lst[0] + 1)
+                yield from recur(idx=0, tot=tot2, num=1, prev=num)
+            p1_f = f_lst[p_dict[p1]] if p1 in p_dict.keys() else 0
+            if not p1_f: return
+            
+            p1_idx = p_dict[p1]
+            for exp in range(1, p1_f):
+                f_lst[p1_idx] -= 1
+                tot2 *= p1
+                yield from recur(idx=0, tot=tot2, num=1, prev=num)
+            f_lst[p1_idx] = 0
+            tot2 *= p1
+            z_cnt[0] += 1
+            if z_cnt[0] == n_p:
+                yield tot2
+                yield tot2 << 1
+            else:
+                if z_cnt[0] == n_p - 1 and f_lst[0]:
+                    yield tot2 << (f_lst[0] + 1)
+                yield from recur(idx=0, tot=tot2, num=1, prev=num)
+            f_lst[p1_idx] = p1_f
+            z_cnt[0] -= 1
+            return
+        f0 = f_lst[idx]
+        num0 = num
+        #print(f"idx = {idx}, f0 = {f0}, f_lst = {f_lst}, z_cnt = {z_cnt}, curr = {curr}")
+        if not f0:
+            yield from recur(idx=idx + 1, tot=tot, num=num, prev=prev)
+            return
+        for i in range(f0):
+            #print(f"i = {i}")
+            yield from recur(idx=idx + 1, tot=tot, num=num, prev=prev)
+            #print(f"i = {i}, idx = {idx}, f_lst[idx] = {f_lst[idx]}")
+            num *= p_lst[idx]
+            f_lst[idx] -= 1
+        #print("finished loop")
+        z_cnt[0] += 1
+        #print(idx, num, prev)
+        yield from recur(idx=idx + 1, tot=tot, num=num, prev=prev)
+        num = num0
+        z_cnt[0] -= 1
+        f_lst[idx] = f0
+        return
+    
+    res = list(recur())
+    res.sort()
+    #for num in recur():
+        #tot += 1
+        #if num == 6227180929: print("found")
+        #if not  tot % 100: print(tot, num)
+
+    return res
+
+def mthSmallestNumbersWithEulerTotientFunctionNFactorial(n: int=13, m: int=15 * 10 ** 4) -> int:
+    """
+    Solution to Project Euler #248
+    """
+    nums = numbersWithEulerTotientFunctionNFactorial(n)
+    return nums[m - 1] if len(nums) >= m else -1
 
 if __name__ == "__main__":
-    to_evaluate = {244}
+    to_evaluate = {247}
     since0 = time.time()
 
     if not to_evaluate or 201 in to_evaluate:
@@ -3872,6 +4019,16 @@ if __name__ == "__main__":
             checksum_md=10 ** 8 + 7,
         )
         print(f"Solution to Project Euler #244 = {res}, calculated in {time.time() - since:.4f} seconds")
+
+    if not to_evaluate or 247 in to_evaluate:
+        since = time.time() 
+        res = squaresUnderHyperbola(target_index=(3, 3))
+        print(f"Solution to Project Euler #247 = {res}, calculated in {time.time() - since:.4f} seconds")
+
+    if not to_evaluate or 248 in to_evaluate:
+        since = time.time() 
+        res = mthSmallestNumbersWithEulerTotientFunctionNFactorial(n=13, m=15 * 10 ** 4)
+        print(f"Solution to Project Euler #248 = {res}, calculated in {time.time() - since:.4f} seconds")
 
     print(f"Total time taken = {time.time() - since0:.4f} seconds")
 
