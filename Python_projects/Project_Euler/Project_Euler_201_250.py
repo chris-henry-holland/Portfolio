@@ -3176,6 +3176,13 @@ def divisorFunction(num: int) -> int:
     return res
 
 def halfIntegerPerfectionQuotients(n_max: int=10 ** 18) -> List[int]:
+
+    # Review- try to make faster
+    # Review- try to implement without arbitrarily setting a maximum
+    # prime factor
+    if n_max < 2: return []
+
+    p_max = 400
     ps = SimplePrimeSieve()
     p_gen = iter(ps.endlessPrimeGenerator())
     """
@@ -3208,7 +3215,7 @@ def halfIntegerPerfectionQuotients(n_max: int=10 ** 18) -> List[int]:
         res = calculatePrimeFactorisation(sigma)
         memo[args] = res
         return res
-    p_max = 500
+    
     p_lst = []
     p_dict = {}
     def getPrimeAtIndex(idx: int) -> int:
@@ -3231,15 +3238,16 @@ def halfIntegerPerfectionQuotients(n_max: int=10 ** 18) -> List[int]:
         res = []
         numer_pf = calculatePrimeFactorisation(numerator)
 
-        def recur(p_idx: int, curr: int, nonzero_cnt: int) -> None:
+        def recur(p_idx: int, curr: int, target_ratio: CustomFraction) -> None:
             #print(p_idx, curr, nonzero_cnt, bal)
             #if not neg_cnt and not bal[0]:
             #    res.append(curr)
             p = getPrimeAtIndex(p_idx)
             if p > p_max: return
             #curr2 = curr
-            recur(p_idx + 1, curr, nonzero_cnt)
-            nonzero_cnt2 = nonzero_cnt
+            recur(p_idx + 1, curr, target_ratio)
+            #nonzero_cnt2 = nonzero_cnt
+            #target_ratio2 = CustomFraction(target_ratio.numerator, target_ratio.denominator)
             
             while len(bal) <= p_idx:
                 bal.append(0)
@@ -3247,12 +3255,14 @@ def halfIntegerPerfectionQuotients(n_max: int=10 ** 18) -> List[int]:
             start = max(1, bal[p_idx])
             bal[p_idx] -= start - 1
             curr2 = curr * p ** (start - 1)
+            target_ratio2 = target_ratio / p ** (start - 1)
             for exp_p in itertools.count(start):
                 curr2 *= p
+                target_ratio2 /= p
                 if curr2 > n_max: break
                 #print(p_idx)
-                if not bal[p_idx]: nonzero_cnt2 += 1
-                elif bal[p_idx] == 1: nonzero_cnt2 -= 1
+                #if not bal[p_idx]: nonzero_cnt2 += 1
+                #elif bal[p_idx] == 1: nonzero_cnt2 -= 1
                 bal[p_idx] -= 1
                 #print(f"starting sigma_pf")
                 sigma_pf = primePowerSigmaPrimeFactorisation(p, exp_p)
@@ -3262,12 +3272,14 @@ def halfIntegerPerfectionQuotients(n_max: int=10 ** 18) -> List[int]:
                 #print("pre:")
                 #print(p2_lst)
                 delta = {}
-                nonzero_cnt_delta = 0
+                #nonzero_cnt_delta = 0
+                target_ratio_mult = 1
                 #if p2_lst[0] == 2:
                 #    if bal[0] + sigma_pf[2] > 0: continue
                 #    #bal[0] += sigma_pf[2]
                 #    delta[0] = sigma_pf[2]
                 cancel = False
+                target_ratio3 = target_ratio2
                 for p2_idx in range(len(p2_lst)):#range(p2_lst[0] == 2, len(p2_lst)):
                     p2 = p2_lst[p2_idx]
                     j = getPrimeIndex(p2)
@@ -3277,22 +3289,30 @@ def halfIntegerPerfectionQuotients(n_max: int=10 ** 18) -> List[int]:
                         break
                     while len(bal) <= j:
                         bal.append(0)
-                    if not bal[j]: nonzero_cnt_delta += 1
-                    if bal[j] == -f: nonzero_cnt_delta -= 1
+                    #if not bal[j]: nonzero_cnt_delta += 1
+                    #if bal[j] == -f: nonzero_cnt_delta -= 1
+                    target_ratio3 *= p2 ** f
+                    if target_ratio3 > 1:
+                        cancel = True
+                        break
                     delta[j] = f
                 if cancel: continue
-                for j, f in delta.items():
-                    bal[j] += f
-                nonzero_cnt2 += nonzero_cnt_delta
-                if not nonzero_cnt2:
+                elif target_ratio3 == 1:
                     print(curr2)
                     res.append(curr2)
-                recur(p_idx + 1, curr2, nonzero_cnt2)
+                    continue
+                for j, f in delta.items():
+                    bal[j] += f
+                #nonzero_cnt2 += nonzero_cnt_delta
+                #if not nonzero_cnt2:
+                #    print(curr2)
+                #    res.append(curr2)
+                recur(p_idx + 1, curr2, target_ratio3)#nonzero_cnt2)
                 #print("post:")
                 #print(p2_lst)
                 for j, f in delta.items():
                     bal[j] -= f
-                nonzero_cnt2 -= nonzero_cnt_delta
+                #nonzero_cnt2 -= nonzero_cnt_delta
                 """
                 if p2_lst[0] == 2:
                     bal[0] -= sigma_pf[2]
@@ -3322,8 +3342,9 @@ def halfIntegerPerfectionQuotients(n_max: int=10 ** 18) -> List[int]:
             #print("hi1")
             for p, f in numer_pf.items():
                 bal[getPrimeIndex(p)] = -f
+            
             #print("hi2")
-            nonzero_cnt = len(numer_pf) + bool(bal[0])
+            #nonzero_cnt = len(numer_pf) + bool(bal[0])
             p2_lst = sorted(sigma_pf.keys())
             if p2_lst[-1] > p_max:
                 #print("prime in factorisation exceeds the max")
@@ -3331,29 +3352,39 @@ def halfIntegerPerfectionQuotients(n_max: int=10 ** 18) -> List[int]:
             #print("hi3")
             #print(sigma_pf)
             #print(nonzero_cnt)
+            target_ratio = CustomFraction(1, numerator * 2 **(exp2 - 1))
             for p2 in p2_lst:
                 p2_idx = getPrimeIndex(p2)
                 #print(p2, p2_idx)
-                if not bal[p2_idx]:
-                    nonzero_cnt += 1
-                if bal[p2_idx] == -sigma_pf[p2]:
-                    nonzero_cnt -= 1
+                #if not bal[p2_idx]:
+                #    nonzero_cnt += 1
+                #if bal[p2_idx] == -sigma_pf[p2]:
+                #    nonzero_cnt -= 1
                 bal[p2_idx] += sigma_pf[p2]
                 #print(bal, nonzero_cnt)
+                target_ratio *= p2 ** sigma_pf[p2]
+            #print(target_ratio)
             curr = 1 << exp2
             #print("hi4")
             #print("hi")
             #print(bal)
-            if not nonzero_cnt:
+            if target_ratio == 1:#nonzero_cnt:
                 print(curr)
                 res.append(curr)
+                break
+            elif target_ratio > 1:
+                break
             #print(curr, bal)
-            recur(1, curr, nonzero_cnt)
+            recur(1, curr, target_ratio)#nonzero_cnt)
         #print("hi")
         return res
     
-    res = [2] #search(n_max)
-    for numer in range(5, 16, 2):
+    # Getting an upper bound on the possible numerators using Robin's inequality
+    euler_mascheroni = 0.57721566490153286060651209008240243104215933593992 # From Wikipedia
+    numer_ub = math.floor(2 * (math.exp(euler_mascheroni) * n_max * math.log(math.log(n_max)) + 0.6483 * n_max / math.log(math.log(n_max))) / n_max)
+    print(f"numerator upper bound = {numer_ub}")
+    res = [] #search(n_max)
+    for numer in range(3, numer_ub + 1, 2):
         print(CustomFraction(numer, 2))
         lst = search(n_max, numer)
         print(lst)
@@ -3372,11 +3403,236 @@ def halfIntegerPerfectionQuotients(n_max: int=10 ** 18) -> List[int]:
     """
 
 def halfIntegerPerfectionQuotientsSum(n_max: int=10 ** 18) -> int:
+    """
+    Solution to Project Euler #241
+    """
     res = halfIntegerPerfectionQuotients(n_max=n_max)
     return sum(res)
 
+# Problem 243
+def smallestDenominatorWithSmallerResilience(resilience_upper_bound: CustomFraction=CustomFraction(15499, 94744)) -> int:
+    """
+    Solution to Project Euler #243
+    """
+    def testResilience(num: int, sigma: int) -> bool:
+        return sigma * resilience_upper_bound.denominator < (num - 1) * resilience_upper_bound.numerator
+
+    ps = SimplePrimeSieve()
+    p_gen = iter(ps.endlessPrimeGenerator())
+    ub = 1
+    p_lst = []
+    sigma = 1
+    for p in p_gen:
+        p_lst.append(p)
+        ub *= p
+        sigma *= p - 1
+        if testResilience(ub, sigma):
+            break
+    print(ub)
+    #print(p_lst[-1])
+
+    res = [ub]
+
+    def recur(p_idx: int, curr_num: int, curr_sigma: int, prev_pow: int) -> None:
+        p = p_lst[p_idx]
+        curr_num *= p
+        if curr_num > res[0]: return
+        curr_sigma *= p - 1
+        if testResilience(curr_num, curr_sigma):
+            res[0] = min(res[0], curr_num)
+            return
+        recur(p_idx + 1, curr_num, curr_sigma, 1)
+        for exp in range(2, prev_pow + 1):
+            curr_num *= p
+            if curr_num > res[0]: break
+            curr_sigma *= p
+            if testResilience(curr_num, curr_sigma):
+                res[0] = min(res[0], curr_num)
+            recur(p_idx + 1, curr_num, curr_sigma, exp)
+        return
+
+    p_idx = 0
+    p = p_lst[p_idx]
+    curr_num = p
+    curr_sigma = p - 1
+    for exp in itertools.count(2):
+        curr_num *= p
+        if curr_num >= res[0]: break
+        curr_sigma *= p
+        if testResilience(curr_num, curr_sigma):
+            res[0] = min(res[0], curr_num)
+            break
+        recur(p_idx + 1, curr_num, curr_sigma, exp)
+    
+    return res[0]
+
+def sliderPuzzleShortestPathsChecksumValue(
+    init_state: List[List[int]]=[[0, 1, 2, 2], [1, 1, 2, 2], [1, 1, 2, 2], [1, 1, 2, 2]],
+    final_state: List[List[int]]=[[0, 2, 1, 2], [2, 1, 2, 1], [1, 2, 1, 2], [2, 1, 2, 1]],
+    checksum_mult: int=243,
+    checksum_md: int=10 ** 8 + 7,
+) -> int:
+    
+    if len(init_state) != len(final_state):
+        raise ValueError("init_state and final_state must have the same length")
+    shape = (len(init_state), len(init_state[0]))
+    cnts1 = [0, 0]
+    cnts2 = [0, 0]
+    z1_seen = False
+    z2_seen = False
+    for (row1, row2) in zip(init_state, final_state):
+        if len(row1) != shape[1] or len(row2) != shape[1]:
+            raise ValueError("Each row of init_state and final_state must all have "
+                            "the same length.")
+                            
+        for l in row1:
+            if l == 0:
+                if z1_seen:
+                    raise ValueError("There must be exactly be one 0 element in init_state.")
+                z1_seen = True
+                continue
+            elif l not in {1, 2}:
+                raise ValueError("init_state can only hold the integers 0 to 2 inclusive.")
+            cnts1[l == 2] += 1
+        for l in row2:
+            if l == 0:
+                if z2_seen:
+                    raise ValueError("There must be exactly be one 0 element in final_state.")
+                z2_seen = True
+                continue
+            elif l not in {1, 2}:
+                raise ValueError("final_state can only hold the integers 0 to 2 inclusive.")
+            cnts2[l == 2] += 1
+    if cnts1 != cnts2:
+        raise ValueError("There must be the same number of 1s and 2s in init_state and final_state.")
+    if not z1_seen:
+        raise ValueError("There must be exactly be one 0 element in init_state.")
+    if not z2_seen:
+        raise ValueError("There must be exactly be one 0 element in final_state.")
+
+    def gridIndex2FlatIndex(i1: int, i2: int) -> int:
+        return i1 * shape[1] + i2
+    
+    def flatIndex2GridIndex(idx: int) -> Tuple[int, int]:
+        return divmod(idx, shape[1])
+
+    def encodeState(state: List[List[int]]) -> Tuple[int, int]:
+        z_pos = None
+        bm = 0
+        for i1 in reversed(range(shape[0])):
+            row = state[i1]
+            for i2 in reversed(range(shape[1])):
+                l = row[i2]
+                bm <<= 1
+                if not l:
+                    z_pos = (i1, i2)
+                    continue
+                bm |= int(l == 2)
+        return (gridIndex2FlatIndex(*z_pos), bm)
+    
+    directs = ["D", "U", "R", "L"]
+    directs_dict = {l: i for i, l in enumerate(directs)}
+    def encodeDirection(direct: str) -> int:
+        return directs_dict.get(l, -1)
+
+    directs_ascii = [ord(x) for x in directs]
+    #print(directs_ascii)
+    def getEncodedDirectionAscii(direct_idx: int) -> int:
+        return directs_ascii[direct_idx]
+    
+    comps = [
+        lambda i1, i2: i1 > 0,
+        lambda i1, i2: i1 < shape[0] - 1,
+        lambda i1, i2: i2 > 0,
+        lambda i1, i2: i2 < shape[1] - 1
+    ]
+    
+    incrs = [-shape[1], shape[1], -1, 1]
+
+    def move(state: Tuple[int, int]) -> Generator[Tuple[str, Tuple[int, int]], None, None]:
+        i1, i2 = flatIndex2GridIndex(state[0])
+        bm = state[1]
+        
+        for direct_idx, (comp, incr) in enumerate(zip(comps, incrs)):
+            if not comp(i1, i2): continue
+            state2 = list(state)
+            state2[0] += incr
+            if bm & (1 << state2[0]):
+                state2[1] ^= (1 << state2[0])
+                state2[1] |= (1 << state[0])
+            yield (direct_idx, tuple(state2))
+        return
+
+    start = encodeState(final_state)
+    end = encodeState(init_state)
+    #print("hi1")
+    #print(start, end)
+    if start == end: return 0
+    #print("hi2")
+    Trie = lambda: defaultdict(Trie)
+
+    curr_tries = {start: Trie()}
+    curr_tries[start]["end"] = True
+    #curr_paths = {start: [1, []]}
+    seen = {start}
+    steps = 0
+    while curr_tries:
+        steps += 1
+        prev_tries = curr_tries
+        curr_tries = {}
+        for state, trie in prev_tries.items():
+            for direct_idx, state2 in move(state):
+                direct_idx2 = direct_idx ^ 1
+                if state2 not in curr_tries.keys():
+                    if state2 in seen: continue
+                    curr_tries[state2] = Trie()
+                    #curr_paths[state2] = [n_paths, [list(x) for x in paths]]
+                    #curr_paths[state2][1].append([0] * 4)
+                curr_tries[state2][direct_idx2] = trie
+                #else:
+                #    #print(f"repeating for state {state2}")
+                #    curr_paths[state2][0] += n_paths
+                #    for f_lst1, f_lst2 in zip(curr_paths[state2][1], paths):
+                #        for j in range(len(f_lst2)):
+                #            f_lst1[j] += f_lst2[j]
+                #print(curr_paths, direct_idx)
+                #curr_paths[state2][1][-1][direct_idx] += n_paths
+                seen.add(state2)
+        #print(curr_paths)
+        #if steps >= 5:
+        #    break
+        if end in curr_tries.keys(): break
+    else:
+        #print(seen)
+        print(steps)
+        return -1
+    
+    #trie_depth = [-1]
+    def recur(trie: Trie, curr: int=0) -> int:
+        if "end" in trie.keys(): return curr
+        res = 0
+        curr = (curr * checksum_mult) % checksum_md
+        for direct_idx, t in trie.items():
+            res += recur(t, curr=(curr + directs_ascii[direct_idx]) % checksum_md)
+        return res
+
+    res = recur(curr_tries[end], curr=0)
+    #print(trie_depth[0])
+    #print(curr_tries[end])
+    return res
+    #print(curr_paths)
+    #print(len(curr_paths))
+    #paths = curr_paths[end]
+    #print(paths)
+    #res = 0
+    #for f_lst in paths[1]:
+    #    tot = sum(x * y for x, y in zip(directs_ascii, f_lst))
+    #    res = (res * checksum_mult + tot) % checksum_md
+    #return res
+
+
 if __name__ == "__main__":
-    to_evaluate = {241}
+    to_evaluate = {244}
     since0 = time.time()
 
     if not to_evaluate or 201 in to_evaluate:
@@ -3601,6 +3857,21 @@ if __name__ == "__main__":
         since = time.time() 
         res = halfIntegerPerfectionQuotientsSum(n_max=10 ** 18)
         print(f"Solution to Project Euler #241 = {res}, calculated in {time.time() - since:.4f} seconds")
+
+    if not to_evaluate or 243 in to_evaluate:
+        since = time.time() 
+        res = smallestDenominatorWithSmallerResilience(resilience_upper_bound=CustomFraction(15499, 94744))
+        print(f"Solution to Project Euler #243 = {res}, calculated in {time.time() - since:.4f} seconds")
+
+    if not to_evaluate or 244 in to_evaluate:
+        since = time.time() 
+        res = sliderPuzzleShortestPathsChecksumValue(
+            init_state=[[0, 1, 2, 2], [1, 1, 2, 2], [1, 1, 2, 2], [1, 1, 2, 2]],
+            final_state=[[0, 2, 1, 2], [2, 1, 2, 1], [1, 2, 1, 2], [2, 1, 2, 1]],
+            checksum_mult=243,
+            checksum_md=10 ** 8 + 7,
+        )
+        print(f"Solution to Project Euler #244 = {res}, calculated in {time.time() - since:.4f} seconds")
 
     print(f"Total time taken = {time.time() - since0:.4f} seconds")
 
