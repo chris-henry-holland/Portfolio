@@ -600,6 +600,8 @@ class CustomFraction:
     def __add__(self, other: Union["CustomFraction", int]) -> "CustomFraction":
         if isinstance(other, int):
             other = CustomFraction(other, 1)
+        elif isinstance(other, float):
+            return self.numerator / self.denominator + other
         if self.denominator == 0:
             if self != other and other.denominator: raise ValueError("Indeterminate value for addition of +inf and -inf")
             return self
@@ -615,6 +617,8 @@ class CustomFraction:
     def __sub__(self, other: Union["CustomFraction", int]) -> "CustomFraction":
         if isinstance(other, int):
             other = CustomFraction(other, 1)
+        elif isinstance(other, float):
+            return self.numerator / self.denominator - other
         if self.denominator == 0:
             if self == other and other.denominator:
                 sgn = "+" if self.numerator > 0 else "-"
@@ -627,13 +631,14 @@ class CustomFraction:
         return CustomFraction(numer, denom)
     
     def __rsub__(self, other: Union["CustomFraction", int]) -> "CustomFraction":
-        res = self.__sub__(other)
-        res.numerator = -res.numerator
-        return res
+        cp = CustomFraction(-self.numerator, self.denominator)
+        return cp.__add__(other)
     
     def __mul__(self, other: Union["CustomFraction", int]) -> "CustomFraction":
         if isinstance(other, int):
             other = CustomFraction(other, 1)
+        elif isinstance(other, float):
+            return self.numerator / self.denominator * other
         return CustomFraction(self.numerator * other.numerator, self.denominator * other.denominator)
     
     def __rmul__(self, other: Union["CustomFraction", int]) -> "CustomFraction":
@@ -642,11 +647,14 @@ class CustomFraction:
     def __truediv__(self, other: Union["CustomFraction", int]) -> "CustomFraction":
         if isinstance(other, int):
             other = CustomFraction(other, 1)
+        elif isinstance(other, float):
+            return self.numerator / (self.denominator * other)
         return CustomFraction(self.numerator * other.denominator, self.denominator * other.numerator)
     
     def __rtruediv__(self, other: Union["CustomFraction", int]) -> "CustomFraction":
-        res = self.__div__(other)
-        return CustomFraction(res.denominator, res.numerator)
+        res = self.__truediv__(other)
+        cp = CustomFraction(self.denominator, self.numerator)
+        return cp.__mul__(other)
     
     def __lt__(self, other: Union["CustomFraction", int]) -> "CustomFraction":
         if isinstance(other, int):

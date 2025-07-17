@@ -1315,11 +1315,14 @@ def calculatePrimeFactorisation(num: int) -> Dict[int, int]:
         res[num] = 1
     return res
 
-def calculateFactorsUpToMax(num: int, fact_max: Optional[int]) -> Set[int]:
+def calculateFactorsInRange(num: int, fact_min: Optional[int]=None, fact_max: Optional[int]=None) -> Set[int]:
+    if fact_min > num: return set()
     pf = calculatePrimeFactorisation(num)
     #print(num, pf)
     if fact_max is None: fact_max = num
+    if fact_min is None: fact_min = 1
     curr = {1}
+    res = set() if fact_min > 1 else {1}
     for p, f in pf.items():
         prev = set(curr)
         for m in prev:
@@ -1327,8 +1330,10 @@ def calculateFactorsUpToMax(num: int, fact_max: Optional[int]) -> Set[int]:
             for i in range(f + 1):
                 if m2 > fact_max: break
                 curr.add(m2)
+                if m2 >= fact_min:
+                    res.add(m2)
                 m2 *= p
-    return curr
+    return res
 
 
 def alexandrianIntegerGenerator() -> Generator[int, None, None]:
@@ -1342,7 +1347,7 @@ def alexandrianIntegerGenerator() -> Generator[int, None, None]:
             cnt += 1
             yield heapq.heappop(h)
         #print(f"heap size = {len(h)}")
-        d_set = calculateFactorsUpToMax(m2, fact_max=m)
+        d_set = calculateFactorsInRange(m2, fact_max=m)
         #print(m2, d_set)
         for d in d_set:
             heapq.heappush(h, m * (m + d) * (m + m2 // d))
@@ -3414,6 +3419,45 @@ def halfIntegerPerfectionQuotientsSum(n_max: int=10 ** 18) -> int:
     res = halfIntegerPerfectionQuotients(n_max=n_max)
     return sum(res)
 
+# Problem 242
+def oddSumSubsetCount(n: int, k: int) -> int:
+    n_even = n >> 1
+    n_odd = n - n_even
+    res = 0
+    for odd_cnt in range(1, k + 1, 2):
+        res += math.comb(n_odd, odd_cnt) * math.comb(n_even, k - odd_cnt)
+    return res
+
+def oddTripletsCount(n_max: int=10 ** 12) -> int:
+    """
+    Solution to Project Euler #142
+    """
+
+    memo = {}
+    def pascalOddEntriesCount(num: int) -> int:
+        if num < 0: return 0
+        elif num <= 1: return num
+        args = num
+        if args in memo.keys(): return memo[args]
+        res = 2 * pascalOddEntriesCount(num >> 1) + pascalOddEntriesCount((num >> 1) + 1) if num & 1 else 3 * pascalOddEntriesCount(num >> 1)
+        memo[args] = res
+        return res
+    """
+    res = 0
+    for n in range(1, n_max + 1, 2):
+        cnt = 0
+        for k in range(1, n + 1, 2):
+            f = oddSumSubsetCount(n, k)
+            if f & 1:
+                print((n, k, f))
+                cnt += 1
+        print(f"count for n = {n} is {cnt}")
+        res += cnt
+    return res
+    """
+    res = pascalOddEntriesCount((n_max + 3) >> 2)
+    return res
+
 # Problem 243
 def smallestDenominatorWithSmallerResilience(resilience_upper_bound: CustomFraction=CustomFraction(15499, 94744)) -> int:
     """
@@ -3635,6 +3679,198 @@ def sliderPuzzleShortestPathsChecksumValue(
     #    res = (res * checksum_mult + tot) % checksum_md
     #return res
 
+# Problem 245
+def compositeCoresilienceAReciprocalSum(n_max: int=2 * 10 ** 11) -> int:
+
+    ps = SimplePrimeSieve()
+    def primeCheck(num: int) -> bool:
+        res = ps.millerRabinPrimalityTestWithKnownBounds(num, max_n_additional_trials_if_above_max=10)
+        return res[0]
+
+    def eulerTotientFunction(pf: Dict[int, int]) -> int:
+        res = 1
+        for p, f in pf.items():
+            res *= p - 1
+            res *= p ** (f - 1)
+        return res
+    
+    p_mx = isqrt(n_max)
+    res = 0
+    for p in ps.endlessPrimeGenerator():
+        if p > p_mx: break
+        num = p ** 2 - p + 1
+        fact_mn = 2 * p - 1
+        fact_mx = n_max // p + p + 1
+        for fact in calculateFactorsInRange(num, fact_min=fact_mn, fact_max=fact_mx):
+            q = fact - p + 1
+            if not primeCheck(q): continue
+            #print(p, q, p * q)
+            res += p * q
+    #return res
+    ref = 3 * 5 * 17 * 353
+    def recur(num: int, phi: int, n_remain_p: int, prev_p: int=None) -> int:
+        res = 0
+        if n_remain_p == 1:
+            #d = num * phi - phi + num
+            #mx = n_max + phi - (phi * n_max - 1) // num + 1#(n_max - phi) // (num - phi)
+            #if num == ref:
+            #    print(num, phi, d, mx)
+            fact_mn = (num - phi) * ((2 if prev_p is None else prev_p) + 1) + phi
+            fact_mx = ((num - phi) * n_max) // num + phi
+            for fact in calculateFactorsInRange(num * phi - phi + num, fact_min=fact_mn, fact_max=fact_mx):
+                p, r = divmod(fact - phi, num - phi)
+                #if num == ref:
+                #    print(num, fact, p, r)
+                if r or not primeCheck(p): continue
+                ans = num * p
+                phi2 = phi * (p - 1)
+                if (ans - 1) % (ans - phi2): continue
+                print(ans, phi2, ans - phi2, ans - 1)
+                #print(ans, num, phi, p, phi2, ans - phi2, ans - 1, (num - phi) * p + phi)
+                res += ans
+            return res
+            """
+            for mult in range(d, mx + 1, d):
+                
+                p, r = divmod(mult - phi, num - phi)
+                if num == ref:
+                    print(num, mult, p, r)
+                if r or not primeCheck(p): continue
+                ans = num * p
+                phi2 = phi * (p - 1)
+                if (ans - 1) % (ans - phi2): continue
+                print(ans, phi2, ans - phi2, ans - 1)
+                #print(ans, num, phi, p, phi2, ans - phi2, ans - 1, (num - phi) * p + phi)
+                res += ans
+            return res
+            """
+        j0 = 1 if prev_p is None else bisect.bisect_right(ps.p_lst, prev_p)
+        p_mx = integerNthRoot(n_max // num, n_remain_p)
+        #if n_remain_p == 4: print(f"num = {num}, n_max = {n_max}, p_mx = {p_mx}")
+        for j in range(j0, len(ps.p_lst)):
+            p = ps.p_lst[j]
+            if p > p_mx: break
+            res += recur(num * p, phi * (p - 1), n_remain_p - 1, prev_p=p)
+        return res
+
+    #print("hello")
+    for n_p in range(5, math.floor(math.log(n_max, 3)) + 1):
+        print(f"n_p = {n_p}")
+        res += recur(1, 1, n_p, prev_p=None)
+    
+    return res
+    """
+
+    res = 0
+    coresilience_dict = {}
+    for num in range(4, 5 * 10 ** 6 + 1):
+        if primeCheck(num): continue
+        pf = calculatePrimeFactorisation(num)
+        phi = eulerTotientFunction(pf)
+        coresilience = CustomFraction(num - phi, num - 1)
+        #print(num, coresilience)
+        if coresilience.numerator != 1: continue
+        #print(num, pf, phi, coresilience)
+        denom = coresilience.denominator
+        coresilience_dict.setdefault(denom, [])
+        coresilience_dict[denom].append(pf)
+        if len(pf) > 2:
+            print(num, denom, pf)
+            p_lst = sorted(pf.keys())
+            pairs = []
+            for i2 in range(1, len(p_lst)):
+                p2 = p_lst[i2]
+                for i1 in range(i2):
+                    p1 = p_lst[i1]
+                    num2 = p1 * p2
+                    pf2 = {p1: 1, p2: 1}
+                    phi2 = eulerTotientFunction(pf2)
+                    coresilience2 = CustomFraction(num2 - phi2, num2 - 1)
+                    if coresilience2.numerator != 1: continue
+                    pairs.append((p1, p2))
+            print(f"sub-pairs found: {pairs}")
+        #res += num
+    """
+    #for denom in sorted(coresilience_dict.keys()):
+    #    print(denom, coresilience_dict[denom])
+    return res
+    
+# Problem 246
+def latticePointsAtTangentsToEllipseLatticePoints(upper_bound_angle_deg: float=45, m_x: int=-2000, g_x: int=8000, circle_radius: int=15000, incl_upper_bound_angle: bool=False, incl_ellipse_border: bool=False) -> int:
+    """
+    Solution to Project Euler #246
+    """
+    c = CustomFraction(abs(g_x - m_x), 2)
+    print(c)
+    c_sq = c * c
+    a = CustomFraction(circle_radius, 2)
+    a_sq = a * a
+    b_sq = a_sq - c_sq
+    print(a_sq, b_sq)
+    sq_ratio = a_sq / b_sq
+    print(sq_ratio.numerator / sq_ratio.denominator)
+    print(f"ellipse area = {math.pi * math.sqrt(a_sq.numerator / a_sq.denominator) * math.sqrt(b_sq.numerator / b_sq.denominator)}")
+    x_hlf = (c.denominator == 2)
+
+    t = math.tan(math.radians(upper_bound_angle_deg))
+    t_sq = t ** 2
+    print(f"t_sq = {t_sq}")
+
+    y_max = math.floor(math.sqrt(((a_sq + b_sq) * t_sq + 2 * a_sq * (1 + math.sqrt(t_sq + 1))) / t_sq))
+
+    y_max_ellipse = math.floor(math.sqrt(b_sq.numerator / b_sq.denominator))
+    
+    def getLatticePointCountInsideEllipseAtY(y: int) -> int:
+        y_sq = y ** 2
+        frac = a_sq * (1 - y_sq / b_sq)
+        if frac < 0: return 0
+        if x_hlf:
+            if frac.denominator == 4:
+                rt = CustomFraction(isqrt(frac.numerator), 2)
+                x_max = rt - (rt * rt == frac and incl_ellipse_border)
+            else:
+                x_max_numer = math.floor(4 * frac.numerator / frac.denominator) >> 1
+                x_max_numer -= 1 - (x_max_numer & 1)
+                x_max = CustomFraction(x_max_numer, 2)
+            return x_max.numerator + 1
+        if frac.denominator == 1:
+            rt = isqrt(frac.numerator)
+            x_max = rt - (rt * rt == frac and incl_ellipse_border)
+        else:
+            x_max = isqrt(frac.numerator // frac.denominator)
+        return x_max * 2 + 1
+        
+
+    def getLatticePointCountInsideLocusAtY(y: int) -> int:
+        y_sq = y ** 2
+        sm = a_sq  + b_sq - y_sq
+        c2 = t_sq
+        c1 = -2 * (sm * t_sq + 2 * b_sq)
+        c0 = t_sq * sm * sm + 4 * a_sq * (b_sq - y_sq)
+        x_max = math.sqrt((-c1 + math.sqrt(c1 * c1 - 4 * c2 * c0)) / (2 * c2))
+        if x_hlf:
+            x_max *= 2
+            x_max_int = math.floor(x_max)
+            x_max_int -= 1 - (x_max_int & 1)
+            return x_max + 1 - 2 * ((x_max_int == x_max) and not incl_upper_bound_angle)
+        x_max_int = math.floor(x_max)
+        return x_max_int * 2 + 1 - 2 * ((x_max_int == x_max) and not incl_upper_bound_angle)
+
+    res = 0#
+    locus_cnt = 0
+    ellipse_cnt = 0
+    for y in range(1, y_max + 1):
+        locus_cnt += getLatticePointCountInsideLocusAtY(y)
+    for y in range(1, y_max_ellipse + 1):
+        ellipse_cnt += getLatticePointCountInsideEllipseAtY(y)
+    locus_cnt <<= 1
+    ellipse_cnt <<= 1
+    locus_cnt += getLatticePointCountInsideLocusAtY(0)
+    ellipse_cnt += getLatticePointCountInsideEllipseAtY(0)
+    print(f"lattice point count in locus= {locus_cnt}")
+    print(f"lattice point count in ellipse = {ellipse_cnt}")
+    return locus_cnt - ellipse_cnt
+
 # Problem 247
 def squaresUnderHyperbola(target_index: Tuple[int, int]=(3, 3)) -> int:
     """
@@ -3779,7 +4015,7 @@ def mthSmallestNumbersWithEulerTotientFunctionNFactorial(n: int=13, m: int=15 * 
     return nums[m - 1] if len(nums) >= m else -1
 
 if __name__ == "__main__":
-    to_evaluate = {247}
+    to_evaluate = {246}
     since0 = time.time()
 
     if not to_evaluate or 201 in to_evaluate:
@@ -4005,6 +4241,11 @@ if __name__ == "__main__":
         res = halfIntegerPerfectionQuotientsSum(n_max=10 ** 18)
         print(f"Solution to Project Euler #241 = {res}, calculated in {time.time() - since:.4f} seconds")
 
+    if not to_evaluate or 242 in to_evaluate:
+        since = time.time() 
+        res = oddTripletsCount(n_max=10 ** 12)
+        print(f"Solution to Project Euler #242 = {res}, calculated in {time.time() - since:.4f} seconds")
+
     if not to_evaluate or 243 in to_evaluate:
         since = time.time() 
         res = smallestDenominatorWithSmallerResilience(resilience_upper_bound=CustomFraction(15499, 94744))
@@ -4020,8 +4261,18 @@ if __name__ == "__main__":
         )
         print(f"Solution to Project Euler #244 = {res}, calculated in {time.time() - since:.4f} seconds")
 
-    if not to_evaluate or 247 in to_evaluate:
+    if not to_evaluate or 245 in to_evaluate:
         since = time.time() 
+        res = compositeCoresilienceAReciprocalSum(n_max=2 * 10 ** 11)
+        print(f"Solution to Project Euler #245 = {res}, calculated in {time.time() - since:.4f} seconds")
+
+    if not to_evaluate or 246 in to_evaluate:
+        since = time.time() 
+        res = latticePointsAtTangentsToEllipseLatticePoints(upper_bound_angle_deg=45, m_x=-2000, g_x=8000, circle_radius=15000, incl_upper_bound_angle=False, incl_ellipse_border=False)
+        print(f"Solution to Project Euler #246 = {res}, calculated in {time.time() - since:.4f} seconds")
+
+    if not to_evaluate or 247 in to_evaluate:
+        since = time.time()
         res = squaresUnderHyperbola(target_index=(3, 3))
         print(f"Solution to Project Euler #247 = {res}, calculated in {time.time() - since:.4f} seconds")
 
