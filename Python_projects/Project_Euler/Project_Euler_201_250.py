@@ -4016,6 +4016,9 @@ def mthSmallestNumbersWithEulerTotientFunctionNFactorial(n: int=13, m: int=15 * 
 
 # Problem 249
 def primeSumsetSums(p_max: int=4999, md: Optional[int]=10 ** 16) -> int:
+    """
+    Solution to Project Euler #249
+    """
     ps = SimplePrimeSieve(n_max=p_max)
     def primeCheck(num: int) -> bool:
         res = ps.millerRabinPrimalityTestWithKnownBounds(num, max_n_additional_trials_if_above_max=10)
@@ -4035,8 +4038,28 @@ def primeSumsetSums(p_max: int=4999, md: Optional[int]=10 ** 16) -> int:
             if md is not None: res %= md
     return res
 
+# Problem 250
+def numberToItsOwnPowerSubsetDivisibleByNumberCount(n_max: int=250250, div: int=250, md: Optional[int]=10 ** 16) -> int:
+    """
+    Solution to Project Euler #250
+    """
+    curr = [0] * div
+    curr[0] = 1
+    for num in range(1, n_max + 1):
+        #if not num % 1000: print(num)
+        num2 = pow(num, num, div)
+        for i, f in enumerate(list(curr)):
+            if not f: continue
+            curr[(i + num2) % div] += f
+        if md is None: continue
+        for i, f in enumerate(curr):
+            curr[i] = f % md
+    res = curr[0] - 1
+    if md is not None: res %= md
+    return res
+
 if __name__ == "__main__":
-    to_evaluate = {249}
+    to_evaluate = {238}
     since0 = time.time()
 
     if not to_evaluate or 201 in to_evaluate:
@@ -4242,10 +4265,10 @@ if __name__ == "__main__":
         res = playingBoardTourCount(n_rows=4, n_cols=10 ** 12, start_row=0, end_row=3, md=10 ** 8)
         print(f"Solution to Project Euler #237 = {res}, calculated in {time.time() - since:.4f} seconds")
 
-    #if not to_evaluate or 238 in to_evaluate:
-    #    since = time.time() 
-    #    res = infiniteStringTourDigitSumStartSum(n_max=2 * 10 ** 15, s_0=14025256, s_mod=20300713, base=10)
-    #    print(f"Solution to Project Euler #238 = {res}, calculated in {time.time() - since:.4f} seconds")
+    if not to_evaluate or 238 in to_evaluate:
+        since = time.time() 
+        res = infiniteStringTourDigitSumStartSum(n_max=10 ** 3, s_0=14025256, s_mod=20300713, base=10)
+        print(f"Solution to Project Euler #238 = {res}, calculated in {time.time() - since:.4f} seconds")
 
     if not to_evaluate or 239 in to_evaluate:
         since = time.time() 
@@ -4306,6 +4329,11 @@ if __name__ == "__main__":
         since = time.time() 
         res = primeSumsetSums(p_max=5000, md=10 ** 16)
         print(f"Solution to Project Euler #249 = {res}, calculated in {time.time() - since:.4f} seconds")
+
+    if not to_evaluate or 250 in to_evaluate:
+        since = time.time() 
+        res = numberToItsOwnPowerSubsetDivisibleByNumberCount(n_max=250250, div=250, md=10 ** 16)
+        print(f"Solution to Project Euler #250 = {res}, calculated in {time.time() - since:.4f} seconds")
 
     print(f"Total time taken = {time.time() - since0:.4f} seconds")
 
