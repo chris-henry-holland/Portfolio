@@ -138,7 +138,7 @@ class SimplePrimeSieve:
         # index 0 signifies if the test shows n is a prime, index
         # 1 signifies whether that test definitely gave the correct
         # answer
-        if n == 1: return (False, True)
+        if n <= 1: return (False, True)
         elif n == 2: return (True, True)
         mx = 2 ** 64 - 1
         thresholds = [

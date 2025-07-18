@@ -4014,8 +4014,29 @@ def mthSmallestNumbersWithEulerTotientFunctionNFactorial(n: int=13, m: int=15 * 
     nums = numbersWithEulerTotientFunctionNFactorial(n)
     return nums[m - 1] if len(nums) >= m else -1
 
+# Problem 249
+def primeSumsetSums(p_max: int=4999, md: Optional[int]=10 ** 16) -> int:
+    ps = SimplePrimeSieve(n_max=p_max)
+    def primeCheck(num: int) -> bool:
+        res = ps.millerRabinPrimalityTestWithKnownBounds(num, max_n_additional_trials_if_above_max=10)
+        return res[0]
+
+    curr = {0: 1}
+    for p in ps.endlessPrimeGenerator():
+        if p > p_max: break
+        print(p, len(curr))
+        for num in reversed(sorted(curr.keys())):
+            curr[num + p] = curr.get(num + p, 0) + curr[num]
+            if md is not None: curr[num + p] %= md
+    res = 0
+    for num, f in curr.items():
+        if primeCheck(num):
+            res += f
+            if md is not None: res %= md
+    return res
+
 if __name__ == "__main__":
-    to_evaluate = {246}
+    to_evaluate = {249}
     since0 = time.time()
 
     if not to_evaluate or 201 in to_evaluate:
@@ -4280,6 +4301,11 @@ if __name__ == "__main__":
         since = time.time() 
         res = mthSmallestNumbersWithEulerTotientFunctionNFactorial(n=13, m=15 * 10 ** 4)
         print(f"Solution to Project Euler #248 = {res}, calculated in {time.time() - since:.4f} seconds")
+
+    if not to_evaluate or 249 in to_evaluate:
+        since = time.time() 
+        res = primeSumsetSums(p_max=5000, md=10 ** 16)
+        print(f"Solution to Project Euler #249 = {res}, calculated in {time.time() - since:.4f} seconds")
 
     print(f"Total time taken = {time.time() - since0:.4f} seconds")
 
