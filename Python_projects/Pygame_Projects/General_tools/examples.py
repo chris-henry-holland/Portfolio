@@ -23,15 +23,17 @@ from pygame.locals import (
 
 sys.path.append(os.path.join(os.path.dirname(__file__), "../"))
 from General_tools import (
+    Button,
+    ButtonGroup,
+    ButtonGrid,
     Slider,
     SliderGroup,
     SliderPlus,
     SliderPlusGroup,
     SliderPlusGrid,
     #SliderPlusVerticalBattery,
-    Button,
-    ButtonGrid,
     ButtonMenuOverlay,
+    SliderAndButtonMenuOverlay,
     Text,
     TextGroup,
     named_colors_def
@@ -794,10 +796,11 @@ def runExampleButton1() -> None:
     
     screen_cp = pg.Surface.copy(screen)
     
+    """
     text_objects = tuple(
         (Text(
+            text="Hi",
             max_shape=(200, 200),
-            text="Hello",
             font=None,
             font_size=None,
             font_color=None,
@@ -808,11 +811,13 @@ def runExampleButton1() -> None:
         ),)
         for _ in range(4)
     )
+    """
     
     #print(text_objects)
     button = Button(
-        shape=(200, 50),
-        text_objects=text_objects,
+        shape=(200, 100),
+        text="Goodbye",
+        text_objects=None,
         anchor_pos=(100, 100),
         anchor_type="topleft",
         screen_topleft_offset=None,
@@ -827,11 +832,13 @@ def runExampleButton1() -> None:
     )
     #print(button.topleft)
     #print(button.shape)
-    button.shape = (300, 100)
-    button.text_borders_rel=((0, 0), (0.2, 0.2), 1, 0)
+    #button.shape = (300, 100)
+    #button.text_borders_rel=((0, 0), (0.2, 0.2), 1, 0)
     #button.mouse_enabled = False
+    button.shape = (500, 500)
     
     screen_changed = True
+    button.text = "change"
     clock = pg.time.Clock()
     
     while True:
@@ -857,6 +864,132 @@ def runExampleButton1() -> None:
         clock.tick(framerate)
         screen_changed = False
     return
+
+def runExampleButtonGroup1() -> None:
+    screen_size = (700, 700)
+    framerate = 60
+    pg.init()
+    screen = pg.display.set_mode(screen_size)
+    screen_color = named_colors_def["gray"]
+    screen.fill(screen_color)
+    pg.display.update(pg.Rect(0, 0, *screen_size))
+    
+    screen_cp = pg.Surface.copy(screen)
+    
+    """
+    text_objects = tuple(
+        (Text(
+            text="Hi",
+            max_shape=(200, 200),
+            font=None,
+            font_size=None,
+            font_color=None,
+            anchor_pos0=None,
+            anchor_type0=None,
+            text_global_asc_desc_chars0=None,
+            name=None,
+        ),)
+        for _ in range(4)
+    )
+    """
+
+    button_group = ButtonGroup(
+        button_shape=(200, 100),
+        text_groups=None,
+        text_borders_rel=((0.1, 0.2), (0, 0), 1, 0),
+        font_colors=((named_colors_def["white"], 0.5), (named_colors_def["yellow"], 1), (named_colors_def["blue"], 1), (named_colors_def["green"], 1)),
+        fill_colors=(None, 0, (named_colors_def["red"], 0.2), (named_colors_def["red"], 0.5)),
+        outline_widths=((1,), (2,), (3,), 1),
+        outline_colors=((named_colors_def["black"], 1), (named_colors_def["blue"], 1), 1, 1),
+    )
+
+    buttons = []
+    print(button_group.text_groups[0][0].max_font_sizes_given_widths_dict)
+    print(button_group.text_groups[0][0].heights_dict)
+    buttons.append(
+        button_group.addButton(
+            text="bye",
+            anchor_pos=(350, 350),
+            anchor_type="center",
+            screen_topleft_offset=(0, 0),
+            text_anchor_types="center",
+            mouse_enabled=True,
+            name=None,
+        )
+    )
+    print(button_group.text_groups[0][0].max_font_sizes_given_widths_dict)
+    print(button_group.text_groups[0][0].heights_dict)
+    buttons.append(
+        button_group.addButton(
+            text="Hello",
+            anchor_pos=(10, 10),
+            anchor_type="topleft",
+            screen_topleft_offset=(0, 0),
+            text_anchor_types="center",
+            mouse_enabled=True,
+            name=None,
+        )
+    )
+    
+    def drawButtons(screen: "pg.Surface", buttons: List[Button]) -> None:
+        for button in buttons:
+            button.draw(screen)
+        return
+    drawButtons(screen, buttons)
+    screen_changed = True
+    print("hi")
+    button_group.button_shape = (500, 500)
+
+    print(buttons[0].__dict__.get("_text_anchor_positions", None))
+    print(buttons[0].__dict__.get("_button_surfs", None))
+    
+    #button_group.button_shape = (500, 300)
+    print(button_group.text_groups[0][0].max_font_sizes_given_widths_dict)
+    print(button_group.text_groups[0][0].heights_dict)
+    buttons[0].text = "goodbye"
+    print(button_group.text_groups[0][0].max_font_sizes_given_widths_dict)
+    print(button_group.text_groups[0][0].heights_dict)
+    
+    clock = pg.time.Clock()
+    
+    while True:
+        
+        quit, esc_pressed, event_loop_kwargs =\
+                buttons[0].getRequiredInputs()
+        #print(event_loop_kwargs)
+        running = not esc_pressed
+        if quit or not running:
+            pg.quit()
+            return
+        for button in buttons:
+            quit, running, chng, selected = button.eventLoop(check_axes=(0, 1),\
+                **event_loop_kwargs)
+            if quit or not running:
+                pg.quit()
+                break
+            if selected:
+                print(f"button {button.name} selected")
+            if not chng: continue
+            screen_changed = True
+            #print(f"new slider value for {slider.name} = {val}")
+        if screen_changed:
+            screen.blit(screen_cp, (0, 0))
+            print("drawing buttons")
+            drawButtons(screen, buttons)
+            print(buttons[0].__dict__.get("_text_anchor_positions", None))
+            print(buttons[0].__dict__.get("_button_surfs", None))
+            pg.display.flip()
+        clock.tick(framerate)
+        screen_changed = False
+    return
+
+
+    #print(button.topleft)
+    #print(button.shape)
+    #button.shape = (300, 100)
+    button.text_borders_rel=((0, 0), (0.2, 0.2), 1, 0)
+    #button.mouse_enabled = False
+    
     
 def runExampleButtonGrid1() -> None:
     screen_size = (700, 700)
@@ -909,7 +1042,7 @@ def runExampleButtonGrid1() -> None:
             #sys.exit()
             return
         change = False
-        chng, buttons_pressed = button_grid.eventLoop(check_axes=(0, 1), **event_loop_kwargs)[2]
+        chng, buttons_pressed = button_grid.eventLoop(check_axes=(0, 1), **event_loop_kwargs)[2:]
         if buttons_pressed:
             print(f"buttons pressed: {buttons_pressed}")
         if chng: change = True
@@ -1020,7 +1153,7 @@ def runExampleButtonMenuOverlay1() -> None:
             pg.quit()
             return
         change = False
-        quit, running, (chng, actions) = menu_overlay.eventLoop(check_axes=(0, 1), **event_loop_kwargs)
+        quit, running, chng, actions = menu_overlay.eventLoop(check_axes=(0, 1), **event_loop_kwargs)
         if quit or not running:
             pg.quit()
             return
@@ -1055,3 +1188,120 @@ def runExampleButtonMenuOverlay1() -> None:
         clock.tick(framerate)
         screen_changed = False
     """
+def runExampleSliderAndButtonMenuOverlay1() -> None:
+    screen_shape = (700, 700)
+    framerate = 30
+    pg.init()
+    screen = pg.display.set_mode(screen_shape)
+    screen_color = named_colors_def["gray"]
+    screen.fill(screen_color)
+    pg.display.update(pg.Rect(0, 0, *screen_shape))
+    
+    screen_cp = pg.Surface.copy(screen)
+    
+    exit_press_keys = None
+    exit_release_keys = {pg.K_p}
+    
+    button_text = [["Apply"], ["Reset"], ["Return"]]
+    anchor_type = "midtop"
+    
+    button_text_and_actions = []
+    for i1, row in enumerate(button_text):
+        button_text_and_actions.append([])
+        for i2, text in enumerate(row):
+            action = functools.partial(print, f"selected button ({i1}, {i2})")
+            button_text_and_actions[-1].append(((text, ((anchor_type,), 0, 0, 0)), action))
+    
+    menu_overlay = SliderAndButtonMenuOverlay(screen_shape=screen_shape, framerate=framerate,\
+            overlay_color=(named_colors_def["yellow"], 0.3),\
+            mouse_enabled=True, navkeys_enabled=True,\
+            navkeys=(({K_LEFT}, {K_RIGHT}), ({K_UP}, {K_DOWN})),\
+            navkey_cycle_delay_s=(0.5, 0.15),\
+            exit_press_keys=exit_press_keys,\
+            exit_release_keys=exit_release_keys)
+    
+    
+    button_text_groups = tuple((TextGroup([], max_height0=None, font=None, font_size=None, min_lowercase=True, text_global_asc_desc_chars=None),) for _ in range(4))
+    menu_overlay.setButtons(
+        (0.5, 0.9),
+        "midbottom",
+        (0.8, 0.5),
+        wh_ratio_range=(1, 20),
+        button_text_and_actions=button_text_and_actions,
+        text_groups=button_text_groups,
+        button_gap_rel_shape=(0.05, 0.1),
+        font_colors=((named_colors_def["white"], 0.5), (named_colors_def["yellow"], 1), (named_colors_def["blue"], 1), (named_colors_def["green"], 1)),
+        text_borders_rel=((0.05, 0.2), (0.05, 0.18), 1, 0),
+        fill_colors=(None, (named_colors_def["red"], 0.2), (named_colors_def["red"], 0.5), 2),
+        outline_widths=((1,), (2,), (3,), 1),
+        outline_colors=((named_colors_def["black"], 1), (named_colors_def["blue"], 1), 1, 1)
+    )
+    
+    text_group = TextGroup([], max_height0=None, font=None, font_size=None, min_lowercase=True, text_global_asc_desc_chars=None)
+    anchor_type = "midbottom"
+    font_color = (named_colors_def["black"], 1)
+    text_list = [
+        ({"text": "Hello", "font_color": font_color, "anchor_type0": anchor_type}, ((0.2, 1), (0.2, 0.1))),
+        ({"text": "Goodbye", "font_color": font_color, "anchor_type0": anchor_type}, ((0.2, 0.2), (0.4, 0.1))),
+        ({"text": "name", "font_color": font_color, "anchor_type0": anchor_type}, ((0.2, 0.2), (0.6, 0.1))),
+        ({"text": ",", "font_color": font_color, "anchor_type0": anchor_type}, ((0.2, 0.2), (0.7, 0.1))),
+        ({"text": "'", "font_color": font_color, "anchor_type0": anchor_type}, ((0.2, 0.2), (0.8, 0.1))),
+    ]
+    print(f"menu text group: {text_group}")
+    #text_list = [
+    #    (("Hello", text_color), ((0.2, 0.2), (0.2, 0.1), anchor_type)),
+    #    (("Goodbye", text_color), ((0.2, 0.2), (0.4, 0.1), anchor_type)),
+    #    (("name", text_color), ((0.2, 0.2), (0.6, 0.1), anchor_type)),
+    #    ((",", text_color), ((0.2, 0.2), (0.7, 0.1), anchor_type)),
+    #    (("'", None, text_color), ((0.2, 0.2), (0.8, 0.1), anchor_type)),
+    #]
+    
+    add_text_list = [x[0] for x in text_list]
+    text_objs = text_group.addTextObjects(add_text_list)
+    print("added menu text objects to menu")
+    for text_obj, (_, pos_tup) in zip(text_objs, text_list):
+        max_shape_rel, anchor_pos_rel = pos_tup
+        menu_overlay.addText(text_obj, max_shape_rel,\
+                anchor_pos_rel)
+    
+    """
+    max_height_rel = 0.2
+    anchor_type = "bottomright"
+    text_color = (named_colors_def["black"], 1)
+    text_list = [
+        ("Hello", (0.2, 0.1), anchor_type, 0.2, text_color),
+        ("Goodbye", (0.4, 0.1), anchor_type, 0.2, text_color),
+        ("name", (0.6, 0.1), anchor_type, 0.2, text_color),
+        (",", (0.7, 0.1), anchor_type, 0.2, text_color),
+        ("'", (0.8, 0.1), anchor_type, 0.2, text_color),
+    ]
+    menu_overlay.addTextGroup(text_list, max_height_rel, font=None,\
+            font_size=None)
+    """
+    screen_changed = True
+    clock = pg.time.Clock()
+    
+    while True:
+        #print("hello")
+        quit, esc_pressed, event_loop_kwargs = menu_overlay.getRequiredInputs()
+        #print(quit, esc_pressed, event_loop_kwargs)
+        running = not esc_pressed
+        if quit or not running:
+            pg.quit()
+            return
+        change = False
+        quit, running, chng, actions = menu_overlay.eventLoop(check_axes=(0, 1), **event_loop_kwargs)
+        if quit or not running:
+            pg.quit()
+            return
+        for action in actions:
+            action()
+        if chng: change = True
+        if change: screen_changed = True
+        if screen_changed:
+            screen.blit(screen_cp, (0, 0))
+            menu_overlay.draw(screen)
+            pg.display.flip()
+        clock.tick(framerate)
+        screen_changed = False
+    return

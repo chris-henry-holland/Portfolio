@@ -9,14 +9,16 @@ from .sliders import (
     SliderGroup,
     SliderPlus,
     SliderPlusGroup,
-    SliderPlusGrid
+    SliderPlusGrid,
 )
 from .buttons import (
     Button,
+    ButtonGroup,
     ButtonGrid,
 )
 from .menus import (
     ButtonMenuOverlay,
+    SliderAndButtonMenuOverlay,
 )
 
 from .config import (
@@ -57,13 +59,15 @@ from .font_size_calculators import (
 )
 
 from .examples import (
+    runExampleButton1,
+    runExampleButtonGroup1,
+    runExampleButtonGrid1,
     runExampleSlider1,
     runExampleSliderGroup1,
     runExampleSliderPlus1,
     runExampleSliderPlusGroup1,
     runExampleSliderPlusGrid1,
     #runExampleSliders1,
-    runExampleButton1,
-    runExampleButtonGrid1,
-    runExampleButtonMenuOverlay1
+    runExampleButtonMenuOverlay1,
+    runExampleSliderAndButtonMenuOverlay1,
 )

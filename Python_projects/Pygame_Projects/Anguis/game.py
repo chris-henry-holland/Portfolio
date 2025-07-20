@@ -330,7 +330,7 @@ class Game:
             if quit or not running:
                 break
             change = False
-            quit2, running2, (chng, actions) = overlay.eventLoop(check_axes=(0, 1), **event_loop_kwargs)
+            quit2, running2, chng, actions = overlay.eventLoop(check_axes=(0, 1), **event_loop_kwargs)
             if not running2: running = False
             if quit2: quit = True
             for action in actions:

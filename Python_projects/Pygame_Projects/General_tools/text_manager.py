@@ -315,7 +315,7 @@ class Text(ComponentBaseClass):
         return
 
 class TextGroupElement(ComponentGroupElementBaseClass, Text):
-    finalizer_attrs = {"name", "slider_group"}
+    #finalizer_attrs = {"name", "slider_group"}
     
     group_cls_func = lambda: TextGroup
     group_obj_attr = "text_group"
@@ -390,7 +390,7 @@ class TextGroupElement(ComponentGroupElementBaseClass, Text):
     #            max_size=max_size)[0]
     
     def setMaxFontSizeGivenWidth(self, prev_val: Optional[Real]) -> None:#, _update_textgroup_max_font_size_given_width: bool=True) -> None:
-        print("Setting max font size given widths")
+        #print("Setting max font size given widths")
         if prev_val == float("inf"): prev_val = None
         add_font_size = self.max_font_size_given_width
         #print(prev_val, add_font_size)
@@ -641,6 +641,21 @@ class TextGroup(ComponentGroupBaseClass):
             text_obj.text_global_asc_desc_chars0 = ad_chars
         return
     """
+    @staticmethod
+    def createDefaultTextGroup(font: Optional["pg.freetype"]=None):
+        #print("\ncreating TextGroup for the final Slider object")
+        #res = SliderPlus.createTitleTextGroup(font=None, max_height=None)#self.demarc_numbers_max_height)
+        #print("finished creating TextGroup for final Slider object")
+        if font is None: font = font_def_func()
+        return TextGroup(
+            text_list=[],
+            max_height0=None,
+            font=font_def_func(),
+            font_size=None,
+            min_lowercase=True,
+            text_global_asc_desc_chars=None
+        )
+
     def _updateAscDescChars(
         self,
         rm_asc_chars: List[str],
@@ -1075,11 +1090,11 @@ class TextGroup(ComponentGroupBaseClass):
         return res
     
     def calculateMaxFontSizeGivenWidths(self) -> Real:
-        print(f"Using TextGroup method calculateMaxFontSizeGivenWidths() for text group {self}")
+        #print(f"Using TextGroup method calculateMaxFontSizeGivenWidths() for text group {self}")
         res = self.max_font_sizes_given_widths_dict.peekitem(0)[0] if\
                 self.max_font_sizes_given_widths_dict else float("inf")
-        print(self.max_font_sizes_given_widths_dict)
-        print(res)
+        #print(self.max_font_sizes_given_widths_dict)
+        #print(res)
         return res
     
     def calculateFontSizeActual(self) -> Tuple[Tuple[Real]]:
@@ -1111,7 +1126,7 @@ class TextGroup(ComponentGroupBaseClass):
         return self.addTextObjects(text_dicts)
     """
     def replaceTextObjects(self, rm_text_objs: Optional[List["TextGroupElement"]]=None, add_text_dicts: Optional[List[dict]]=None) -> List["Text"]:
-        #print("using replaceTextObjects()")
+        #print(f"Using replaceTextObjects() for {self}")
         #print(f"add_text_dicts = {add_text_dicts}")
         if rm_text_objs is None:
             rm_text_objs = []
@@ -1179,7 +1194,8 @@ class TextGroup(ComponentGroupBaseClass):
             #print("Creating text object in TextGroup")
             #print("hi1")
             #print(f"text_dict = {text_dict}")
-            text_obj = group_element_cls(**text_dict, **{"_from_group": True, grp_attr: self})#TextGroupElement(self, _from_group=True, **text_dict)
+            #text_obj = group_element_cls(**text_dict, **{"_from_group": True, grp_attr: self})#TextGroupElement(self, _from_group=True, **text_dict)
+            text_obj = self._addElement(_from_group=True, **text_dict)
             #print("hi2")
             #text_obj.setMaxWidth(max_width, _update_textgroup_max_font_size_given_width=False)
             #print(f"text_obj._max_shape_actual = {text_obj.__dict__.get('_max_shape_actual', None)}")
@@ -1194,10 +1210,12 @@ class TextGroup(ComponentGroupBaseClass):
             #text_obj._calculateAndSetMaxFontSizeGivenWidth(max_size=None, _update_textgroup_max_font_size_given_width=False)
             #text_obj._calculateAndSetTextLocalAscDescChars(update_textgroup_asc_desc_chars=False)
             ad_chars = text_obj.text_local_asc_desc_chars[self.min_lowercase]
+            #print("hi3")
             if ad_chars is not None:
                 add_ad_chars[0].append(ad_chars[0])
                 add_ad_chars[1].append(ad_chars[1])
-            self._addElementToRecord(text_obj)
+            #print("Using _addElementToRecord() from replaceTextObjects()")
+            #self._addElementToRecord(text_obj)
             res.append(text_obj)
             #self.text_objects[idx] = text_obj
         #print("hello3")

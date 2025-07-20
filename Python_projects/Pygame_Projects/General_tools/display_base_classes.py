@@ -62,6 +62,7 @@ def popIndex(
     lst: List[Any],
     available_idx_heap: List[int]
 ) -> Any:
+    #print(idx)
     res = lst[idx]
     lst[idx] = None
     if idx < len(lst) - 1:
@@ -83,7 +84,7 @@ def popIndex(
 
 class ComponentBaseClass(ABC):
 
-    finalizer_attributes = {"name"}
+    finalizer_attributes = {}#"name"}
 
     """
     subclasses_initialized_set = set()
@@ -121,10 +122,22 @@ class ComponentBaseClass(ABC):
         #cls = type(self)
         self.weakref_finalizer
 
+        # Ensuring the attributes whose values are potentially propogated
+        # to other objects have been initialized
+        #print(self.attr_list)
+        #print(self.getCustomResetFunctions().keys())
+        print(f"\nInitializing attributes with custom reset functions")
+        print([self.attr_list[idx] for idx in self.getCustomResetFunctions().keys()])
+        for idx in self.getCustomResetFunctions().keys():
+            attr = self.attr_list[idx]
+            sub_attr = f"_{attr}"
+            print(attr)
+            print(f"self._{attr} = {self.__dict__.get(sub_attr, None)}")
+            getattr(self, self.attr_list[idx])
         #self.setupClass()
     
     @classmethod
-    def _addInstanceToRecord(cls, obj: "ComponentGroupElementBaseClass", finalizer_attr_vals: Dict[str, Any]) -> int:
+    def _addInstanceToRecord(cls, obj: "ComponentBaseClass", finalizer_attr_vals: Dict[str, Any]) -> int:
         if "instances" not in cls.__dict__.keys():
             cls.instances = []
             cls.instances_idx_dict = {}
@@ -147,6 +160,7 @@ class ComponentBaseClass(ABC):
         cls.instances_idx_dict[w_ref] = idx
         if idx == len(cls.instances_finalizer_attr_vals):
             cls.instances_finalizer_attr_vals.append(None)
+        #print(f"finalizer_attr_vals = {finalizer_attr_vals}")
         cls.instances_finalizer_attr_vals[idx] = finalizer_attr_vals
         obj._inst_idx = idx
         #print(f"idx = {idx}")
@@ -202,6 +216,7 @@ class ComponentBaseClass(ABC):
         cls = type(self)
         finalizer_attr_set = getattr(cls, "finalizer_attr_set", cls.createFinalizerAttributeSet())
         finalizer_attr_vals = {attr: getattr(self, attr, None) for attr in finalizer_attr_set}
+        #print(f"new finalizer attr vals = {finalizer_attr_vals}")
         inst_idx = cls._addInstanceToRecord(self, finalizer_attr_vals)
         #print(cls.finalizer_kwargs, kwargs)
         return weakref.finalize(self, cls.remove, inst_idx)
@@ -218,6 +233,7 @@ class ComponentBaseClass(ABC):
         return
     
     def initArgsManagement(self, init_locals: Dict[str, Any], kwargs: Optional[Dict[str, Any]]=None, rm_args: Optional[List[str]]=None) -> Dict[str, Any]:
+        #print("Using initArgsManagement()")
         res = dict(init_locals)
         res.pop("self")
         #print("init_val" in res.keys())
@@ -231,6 +247,7 @@ class ComponentBaseClass(ABC):
             for arg in rm_args:
                 if arg in res.keys():
                     res.pop(arg)
+        #print("finished using initArgsManagement()")
         return res
     
     @staticmethod
@@ -249,7 +266,8 @@ class ComponentBaseClass(ABC):
         return idx 
     
     @classmethod
-    def createResetStructures(cls) -> Tuple[Union[List[str], Dict[str, int], List[Dict[int, Union[List[Callable[["DisplayComponentBase"], bool]]]]], Dict[int, List[Callable[[], None]]]]]:
+    def createResetStructures(cls) -> Tuple[Union[List[str], Dict[str, int], List[Dict[int, Union[List[Callable[["DisplayComponentBase"], bool]]]]], Dict[int, List[Callable[[Any, "DisplayComponentBase"], None]]]]]:
+        #print("Using createResetStructures()")
         attr_list = []
         attr_dict = {}
         reset_graph = []
@@ -276,6 +294,7 @@ class ComponentBaseClass(ABC):
         # Ensuring vertices edges in graph due to default dependencies
         # are included
         attr_deffunc_dict = cls.getAttributeDefaultFunctionDictionary()
+        #print(f"attr_deffunc_dict = {attr_deffunc_dict}")
         
         for attr1, (_, attr2_lst) in attr_deffunc_dict.items():
             idx1 = attr2Index(attr1)
@@ -288,8 +307,10 @@ class ComponentBaseClass(ABC):
             for attr1, attr2_dict in getattr(cls2, "reset_graph_edges", {}).items():
                 #if attr1 == "val":
                 #    print(attr1, attr2_dict)
+                #print(f"1, {attr1}, {attr2_dict}")
                 idx1 = attr2Index(attr1)
                 for attr2, func_new in attr2_dict.items():
+                    #print(f"2, {attr2}")
                     idx2 = attr2Index(attr2)
                     addEdgeFunction(idx1, idx2, func_new, reset_graph=reset_graph)
                     #if func_new is True or reset_graph[idx1].get(idx2, False) is True:
@@ -301,6 +322,7 @@ class ComponentBaseClass(ABC):
                 meth = cls2.__dict__.get(method_name, None)
                 if meth is None:
                     continue
+                #print(f"3, {attr}")
                 idx = attr2Index(attr)
                 custom_reset_funcs.setdefault(idx, [])
                 custom_reset_funcs[idx].append(functools.partial(meth))
@@ -318,7 +340,7 @@ class ComponentBaseClass(ABC):
             for component_attr, attr_calc in attr_dict2.items():
                 parent_attr_lst = [attr_calc] if isinstance(attr_calc, str) else attr_calc[0]
                 for parent_attr in parent_attr_lst:
-                    
+                    #print(f"4, {parent_attr}")
                     idx = attr2Index(parent_attr)
                     #print(parent_attr, idx)
                     custom_reset_funcs.setdefault(idx, [])
@@ -330,6 +352,7 @@ class ComponentBaseClass(ABC):
                 #    custom_reset_funcs[idx].append(functools.partial(setComponentAttribute, component_name, component_attr, parent_attr))
         
         def updateFinalizerAttributeValue(attr: str, obj: "ComponentBaseClass", prev_val: Any) -> None:
+            #print(f"Using updateFinalizerAttributeValue() for {attr}")
             cls = type(obj)
             inst_idx = obj.__dict__.get("_inst_idx", None)
             if inst_idx is None: return
@@ -339,16 +362,29 @@ class ComponentBaseClass(ABC):
         #if "instances_finalizer_attr_vals" in cls.__dict__.keys():
         finalizer_attr_set = cls.__dict__.get("finalizer_attr_set", cls.createFinalizerAttributeSet())
         for attr in finalizer_attr_set:
+            #print(f"5, {attr}")
             idx = attr2Index(attr)
             custom_reset_funcs.setdefault(idx, [])
             custom_reset_funcs[idx].append(functools.partial(updateFinalizerAttributeValue, attr))
         
         cls.reset_graph = reset_graph
         cls.attr_list = attr_list
+        #print(f"attr_list = {attr_list}")
         cls.attr_dict = attr_dict
         cls.custom_reset_funcs = custom_reset_funcs
+        crfs = {attr_list[x]: y for x, y in custom_reset_funcs.items()}
+        print(f"custom_reset_funcs = {crfs}")
         return (attr_list, attr_dict, reset_graph, custom_reset_funcs)
     
+    @classmethod
+    def getCustomResetFunctions(cls) -> Dict[int, List[Callable[[Any, "DisplayComponentBase"], None]]]:
+        custom_reset_funcs = cls.__dict__.get("custom_reset_funcs", None)
+        if custom_reset_funcs is None:
+            cls.createResetStructures()
+            custom_reset_funcs = cls.custom_reset_funcs
+        return custom_reset_funcs
+            
+
     def getComponentAttribute(self, component_name: str, component_attr: str) -> Any:
         return getattr(getattr(self, component_name), component_attr)
     
@@ -555,13 +591,25 @@ class ComponentBaseClass(ABC):
         #calcfunc, b = (calcfunc_tup, False) if isinstance(calcfunc_tup, str) else calcfunc_tup
         res = calcfunc(self)
         if not b:
-            self.__dict__[f"_{attr}"] = res
+            sub_attr = attr if attr.startswith("_") else f"_{attr}"
+            #self.__dict__[sub_attr] = res
             #print(f"attribute {attr} new value = {res}")
+            
+            if sub_attr not in self.__dict__.keys():
+                val_prev = None
+            else:
+                val_prev = self.__dict__.get(sub_attr, None)
+                if res == val_prev: return
+            self.__dict__[sub_attr] = res
+            custom_reset_funcs = self.getCustomResetFunctions()
+            for func in custom_reset_funcs.get(self.attr_dict.get(attr, None), []):
+                func(self, val_prev)
         return True
     
     def setAttributes(self, setattr_dict: Dict[str, Any], _from_container: bool=False, _calculated_override: bool=False, **kwargs) -> Dict[str, Tuple[Any, Any]]:
-        #print("Using ComponentBaseClass method setAttributes()")
-        #print(setattr_dict)
+        #if len(setattr_dict.keys() - {"state"}) >= 1:
+        #    print("Using ComponentBaseClass method setAttributes()")
+        #    print(setattr_dict)
         #if "title_color" in setattr_dict.keys():
         #    print(f"setting title_color attribute for {type(self).__name__}")
         #print("using setAttributes()")
@@ -575,6 +623,8 @@ class ComponentBaseClass(ABC):
         #for attr in ["max_shape"]:
         #    if attr in setattr_dict.keys():
         #        print(f"{attr} = {setattr_dict[attr]}")
+        
+
         cls = type(self)
         attr_calcfunc_dict = cls.getAttributeCalculationFunctionDictionary()
         fixed_attr_set = cls.getFixedAttributeSet()
@@ -591,7 +641,15 @@ class ComponentBaseClass(ABC):
                 raise AttributeError(f"The attribute '{attr}' of '{cls.__name__}' object cannot be reassigned")
             is_default_set.discard(attr)
         
-        attr_deffunc_dict = cls.getAttributeDefaultFunctionDictionary()
+        attr_processing_dict = cls.getAttributeProcessingDictionary()
+        setattr_dict2 = {}
+        for attr, val in setattr_dict.items():
+            if val is None or attr not in attr_processing_dict.keys():
+                setattr_dict2[attr] = val
+                continue
+            setattr_dict2[attr] = attr_processing_dict[attr](val, self)
+
+        #attr_deffunc_dict = cls.getAttributeDefaultFunctionDictionary()
         
         if "attr_list" not in cls.__dict__.keys():
             attr_list, attr_dict, reset_graph, custom_reset_funcs = cls.createResetStructures()
@@ -599,7 +657,7 @@ class ComponentBaseClass(ABC):
             attr_list = cls.attr_list
             attr_dict = cls.attr_dict
             reset_graph = cls.reset_graph
-            custom_reset_funcs = cls.custom_reset_funcs
+            custom_reset_funcs = cls.getCustomResetFunctions()#custom_reset_funcs
         inds = []
         
         container_reset_attrs = {}
@@ -607,8 +665,8 @@ class ComponentBaseClass(ABC):
         changed_attrs_dict = {}
 
         def setAttrCustom(attr: str, sub_attr: str, val: Any) -> None:
-            if attr.lstrip("_") in {"display_surf"}:
-                print(f"setting attribute {attr} to {val} for {self}")
+            #if attr.lstrip("_") in {"text_shapes"}:
+            #    print(f"setting attribute {attr} to {val} for {self}")
             if sub_attr not in self.__dict__.keys():
                 val_prev = None
             else:
@@ -660,7 +718,7 @@ class ComponentBaseClass(ABC):
         #attr_processing_dict = cls.getAttributeProcessingDictionary()
         
         reset_funcs = []
-        for attr, val in setattr_dict.items():
+        for attr, val in setattr_dict2.items():
             #print(attr, val)
             
             sub_attr = attr if attr.startswith("_") else f"_{attr}"
@@ -710,8 +768,8 @@ class ComponentBaseClass(ABC):
                 if val == val_prev: continue
                 setAttrCustom(attr, sub_attr, val)
                 for idx2, funcs in reset_graph[idx].items():
-                    if attr == "thumb_x":
-                        print(attr_list[idx2])
+                    #if attr == "thumb_x":
+                    #    print(attr_list[idx2])
                     if idx2 in seen:
                         continue
                     if isinstance(funcs, bool):
@@ -730,13 +788,16 @@ class ComponentBaseClass(ABC):
                     qu.append((idx2, None))
             return reset_funcs
         reset_funcs.extend(bfs(inds))
+        #if len(setattr_dict.keys() - {"state"}) >= 1:
+        #    print(f"reset_funcs: {reset_funcs}")
         #print("custom functions:")
         #print(funcs)
         #print(f"default_attrs = {default_attrs}")
         #for attr in default_attrs:
         #    print(self.__dict__[f"_{attr}"])
         #    print(getattr(self, attr))
-        #print(reset_funcs)
+        #if len(setattr_dict.keys() - {"state"}) >= 1:
+        #    print(f"custom reset functions: {reset_funcs}")
         for func, prev_val in reset_funcs:
             func(self, prev_val)
         #print("hello")
@@ -757,9 +818,11 @@ class ComponentBaseClass(ABC):
         #if "display_surf" in setattr_dict.keys():
         #    print("hola")
         #    print("_display_surf" in self.__dict__.keys(), "display_surf" in self.__dict__.keys())
+        #print(f"attributes changed: {changed_attrs_dict}")
         return changed_attrs_dict
     
     def __setattr__(self, attr: str, val: Any) -> None:
+        #print(f"Using __setattr__() for attribute {attr}")
         if attr and attr[0] == "_":
             self.__dict__[attr] = val
             return
@@ -805,6 +868,7 @@ class ComponentBaseClass(ABC):
         cls = type(self)
         attr_deffunc_dict = cls.getAttributeDefaultFunctionDictionary()
         if attr in attr_deffunc_dict.keys():
+            #print("calculating default")
             val = attr_deffunc_dict[attr][0](self)
             self.__dict__[attr2] = val
             is_default_set.add(attr)
@@ -817,6 +881,10 @@ class ComponentBaseClass(ABC):
 
 class ComponentGroupElementBaseClass(ComponentBaseClass):
     finalizer_attributes = {"group_idx", (lambda cls: cls.group_obj_attr)}
+
+    attribute_default_functions = {
+        "group_idx": ((lambda obj: obj.createGroupIndex()),),
+    }
     
     """
     @classmethod
@@ -827,12 +895,35 @@ class ComponentGroupElementBaseClass(ComponentBaseClass):
         #print("hello2")
         #print(kwargs)
         self.__dict__[f"_{self.group_obj_attr}"] = kwargs["_group"]
+        #kwargs["_group"]._addElementToRecord(self)
         super().__init__(**self.initArgsManagement(locals(), kwargs=kwargs, rm_args=["_group"]))
     
+    #@property
+    #def group_idx(self) -> int:
+    #    res = self.__dict__.get("_group_idx", None)
+    #    if res is None:
+    #        grp = getattr(self, self.group_obj_attr, None)
+    #        if grp is not None:
+    #            res = grp._addElementToRecord(self)
+    #        else: res = None
+    #    return res
+
+    def createGroupIndex(self) -> Optional[int]:
+        #print("Using createGroupIndex()")
+        grp = getattr(self, self.group_obj_attr, None)
+        if grp is not None:
+            res = grp._addElementToRecord(self)
+            #print(f"Using _addElementToRecord obtained new group index {res}")
+        else: res = None
+        #print(f"new group index = {res}")
+        return res
+
     @classmethod
     def remove(cls, inst_idx: int) -> None:
         
         attrs = cls.instances_finalizer_attr_vals[inst_idx]
+        #print(cls.instances_finalizer_attr_vals)
+        #print(f"attrs = {attrs}")
         #print("\n\n")
         #print(f"attrs = {attrs}")
         #print(f"cls = {cls.__name__}")
@@ -840,7 +931,9 @@ class ComponentGroupElementBaseClass(ComponentBaseClass):
         #print(f"cls.instances_finalizer_attr_vals = {cls.instances_finalizer_attr_vals}")
         group = attrs[cls.group_obj_attr]
         group_idx = attrs["group_idx"]
-        
+        #print(cls)
+        #print(f"group_idx = {group_idx}")
+        #print(f"_group_idx = {self._group_idx}")
         group._removeElementFromRecord(group_idx)
         super().remove(inst_idx)
         return
@@ -854,7 +947,7 @@ class ComponentGroupElementBaseClass(ComponentBaseClass):
         el_inherit_attr_dict = grp_cls.getElementInheritedAttributesDictionary()
         for grp_attr, el_attr in el_inherit_attr_dict.items():
             group_determined_attr_dict[el_attr] = grp_attr
-        print(f"group_determined_attr_dict for class {cls} is {group_determined_attr_dict}")
+        #print(f"group_determined_attr_dict for class {cls} is {group_determined_attr_dict}")
         return group_determined_attr_dict
     
     @classmethod
@@ -1000,8 +1093,8 @@ class ComponentGroupBaseClass(ComponentBaseClass):
 
     @classmethod
     def _createGroupAttributesAffectedByElementAttributesSet(cls) -> Set[str]:
-        print(f"Using _createGroupAttributesAffectedByElementAttributesSet()")
-        print(cls.getElementAttributesAffectingGroupAttributesDictionary())
+        #print(f"Using _createGroupAttributesAffectedByElementAttributesSet()")
+        #print(cls.getElementAttributesAffectingGroupAttributesDictionary())
         return set(cls.getElementAttributesAffectingGroupAttributesDictionary().values())
 
     @classmethod
@@ -1057,9 +1150,9 @@ class ComponentGroupBaseClass(ComponentBaseClass):
         return
     
     def _resetGroupAttributesAffectedByElementAttributes(self) -> None:
-        print("Using ComponentGroupBaseClass method _resetGroupAttributesAffectedByElementAttributes()")
+        #print("Using ComponentGroupBaseClass method _resetGroupAttributesAffectedByElementAttributes()")
         attr_reset_dict = {grp_attr: None for grp_attr in self.getGroupAttributesAffectedByElementAttributesSet()}
-        print(f"attr_reset_dict = {attr_reset_dict}")
+        #print(f"attr_reset_dict = {attr_reset_dict}")
         self.setAttributes(attr_reset_dict)
         return
 
@@ -1091,17 +1184,19 @@ class ComponentGroupBaseClass(ComponentBaseClass):
         _from_group: bool=True,
         **kwargs,
     ) -> "ComponentGroupElementBaseClass":
+        #print(f"Using _addElement() for {self}")
         group_element_cls = type(self).group_element_cls_func()
         grp_attr = group_element_cls.group_obj_attr
         #kwargs2 = {}
         #for 
         res = group_element_cls(**kwargs, **{grp_attr: self, "_from_group": True})
-        self._addElementToRecord(res)
+        #self._addElementToRecord(res)
         self._resetGroupAttributesAffectedByElementAttributes()
         self._setMemberInheritedAttributes(set_group_attrs=None)
         return res
     
     def _addElementToRecord(self, element: "ComponentGroupElementBaseClass") -> int:
+        #print("Using _addElementToRecord()")
         """
         idx = None
         while self.available_el_idx_heap:
@@ -1116,16 +1211,17 @@ class ComponentGroupBaseClass(ComponentBaseClass):
             self.elements_weakref.append(None)
         """
         idx = findSmallestAvailableIndex(
-            self.elements_weakref,
+            self.__dict__.get("_elements_weakref", []),
             self.available_el_idx_heap,
         )
-        #print(f"\nSetting group_idx to {idx}")
-        element.group_idx = idx
+        #print(f"\nSetting group_idx for {self} to {idx}")
+        #element._group_idx = idx
         #print(f"group_idx = {element.group_idx}")
-        inst_idx = element.inst_idx
+        #inst_idx = element.inst_idx
         #print(f"finalizer_attr_vals = {element.instances_finalizer_attr_vals[inst_idx]}")
-        self.elements_weakref[idx] = weakref.ref(element)
-        
+        #print(self.__dict__.get("_elements_weakref", []))
+        self.__dict__.get("_elements_weakref", [])[idx] = weakref.ref(element)
+        #print("hi4")
         return idx
     
     def _removeElementFromRecord(self, group_idx: int) -> None:
@@ -1146,6 +1242,7 @@ class ComponentGroupBaseClass(ComponentBaseClass):
         
 
 class DisplayComponentBase(ComponentBaseClass):
+    finalizer_attributes = {"name"}
     
     reset_graph_edges = {
         "shape": {"topleft": (lambda obj: obj.anchor_type != "topleft")},

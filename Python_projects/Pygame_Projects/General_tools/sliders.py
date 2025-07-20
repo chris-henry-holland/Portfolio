@@ -45,19 +45,6 @@ def sliderDemarcationsDPDefault(obj: "Slider") -> int:
 def sliderPlusDemarcationsDPDefault(obj: "SliderPlus") -> int:
     return sliderDemarcationsDPDefault(obj.slider)
 
-def createDefaultTextGroup():
-    #print("\ncreating TextGroup for the final Slider object")
-    #res = SliderPlus.createTitleTextGroup(font=None, max_height=None)#self.demarc_numbers_max_height)
-    #print("finished creating TextGroup for final Slider object")
-    return TextGroup(
-        text_list=[],
-        max_height0=None,
-        font=font_def_func(),
-        font_size=None,
-        min_lowercase=True,
-        text_global_asc_desc_chars=None
-    )
-
 class Slider(InteractiveDisplayComponentBase):
     slider_names = set()
     unnamed_count = 0
@@ -155,7 +142,7 @@ class Slider(InteractiveDisplayComponentBase):
     attribute_default_functions = {
         "increment": ((lambda obj: 0),),
         "val_raw": ((lambda obj: -float("inf")),),
-        "demarc_numbers_text_group": ((lambda obj: createDefaultTextGroup()),),#((lambda obj: Slider.demarcNumsTextGroup()),),#createDemarcationNumbersTextGroup()),),
+        "demarc_numbers_text_group": ((lambda obj: TextGroup.createDefaultTextGroup()),),#((lambda obj: Slider.demarcNumsTextGroup()),),#createDemarcationNumbersTextGroup()),),
         "demarc_numbers_dp": (sliderDemarcationsDPDefault, ("demarc_intervals", "demarc_start_val", "increment", "increment_start")),
         "thumb_radius_rel": ((lambda obj: 1),),
         "demarc_line_lens_rel": ((lambda obj: tuple(0.5 ** i for i in range(10))),),
@@ -980,7 +967,7 @@ class SliderGroup(ComponentGroupBaseClass):
         "demarc_intervals": "slider_component_dimensions",
         "demarc_start_val": "slider_component_dimensions",
     }
-    
+    # Review- consider transferring mouse_enabled to the group elements
     def __init__(self, 
         slider_shape: Tuple[Real],
         demarc_numbers_text_group: Optional["TextGroup"]=None,
@@ -1129,10 +1116,10 @@ class SliderPlus(InteractiveDisplayComponentBase):
         **{
             "slider_shape_rel": ((lambda obj: (0.7, 0.6)),),
             "slider_borders_rel": ((lambda obj: (0., 0.)),),
-            "title_text_group": ((lambda obj: createDefaultTextGroup()),),
+            "title_text_group": ((lambda obj: TextGroup.createDefaultTextGroup()),),
             "title_anchor_type": ((lambda obj: "topleft"),),
             "title_color": ((lambda obj: text_color_def),),
-            "val_text_group": ((lambda obj: createDefaultTextGroup()),),
+            "val_text_group": ((lambda obj: TextGroup.createDefaultTextGroup()),),
             "val_text_anchor_type": ((lambda obj: "topleft"),),
             "val_text_color": ((lambda obj: text_color_def),),
             "val_text_dp": (sliderPlusDemarcationsDPDefault, ("slider",)),
@@ -1988,8 +1975,6 @@ class SliderPlusGroup(ComponentGroupBaseClass):
         demarc_numbers_text_group: Optional["TextGroup"]=None,
         thumb_radius_rel: Optional[Real]=None,
         demarc_line_lens_rel: Optional[Tuple[Real]]=None,
-        demarc_intervals: Optional[Tuple[Real]]=None,
-        demarc_start_val: Optional[Real]=None,
         demarc_numbers_max_height_rel: Optional[Real]=None,
         track_color: Optional[ColorOpacity]=None,
         thumb_color: Optional[ColorOpacity]=None,
@@ -2119,8 +2104,6 @@ class SliderPlusGrid(InteractiveDisplayComponentBase):
                 "demarc_numbers_text_group": "demarc_numbers_text_group",
                 "thumb_radius_rel": "thumb_radius_rel",
                 "demarc_line_lens_rel": "demarc_line_lens_rel",
-                "demarc_intervals": "demarc_intervals",
-                "demarc_start_val": "demarc_start_val",
                 "demarc_numbers_max_height_rel": "demarc_numbers_max_height_rel",
                 "track_color": "track_color",
                 "thumb_color": "thumb_color",
@@ -2142,8 +2125,6 @@ class SliderPlusGrid(InteractiveDisplayComponentBase):
                 "demarc_numbers_text_group": None,
                 "thumb_radius_rel": None,
                 "demarc_line_lens_rel": None,
-                "demarc_intervals": None,
-                "demarc_start_val": None,
                 "demarc_numbers_max_height_rel": None,
                 "track_color": None,
                 "thumb_color": None,
@@ -2184,8 +2165,6 @@ class SliderPlusGrid(InteractiveDisplayComponentBase):
         demarc_numbers_text_group: Optional["TextGroup"]=None,
         thumb_radius_rel: Optional[Real]=None,
         demarc_line_lens_rel: Optional[Tuple[Real]]=None,
-        demarc_intervals: Optional[Tuple[Real]]=None,
-        demarc_start_val: Optional[Real]=None,
         demarc_numbers_max_height_rel: Optional[Real]=None,
         track_color: Optional[ColorOpacity]=None,
         thumb_color: Optional[ColorOpacity]=None,
