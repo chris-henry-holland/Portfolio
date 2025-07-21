@@ -124,9 +124,9 @@ class Button(InteractiveDisplayComponentBase):
     }
     
     
-    custom_reset_methods = {
-        "text": "setButtonText",
-        "text_shapes": "setTextShapes",
+    custom_attribute_change_propogation_methods = {
+        "text": "customButtonTextChangePropogation",
+        "text_shapes": "customTextShapesChangePropogation",
         #"text_anchor_positions": "setTextAnchorPositions",
         #"text_objects": "setTextObjects",
     }
@@ -273,10 +273,11 @@ class Button(InteractiveDisplayComponentBase):
     def setTextObjects(self, prev_val: Tuple[Union[int, Optional["Text"]]]) -> None:
         return self.setTextObjectsUpdates(self.text_objects)
     
-    def setButtonText(self, prev_val: Tuple[Union[int, Tuple[str]]]) -> None:
+    def customButtonTextChangePropogation(self, new_val: Tuple[Union[int, Tuple[str]]], prev_val: Tuple[Union[int, Tuple[str]]]) -> None:
+        print(f"Using customButtonTextChangePropogation() with new_val = {new_val}, prev_val = {prev_val}")
         #print(self.text, len(self.text))
         #print(self.text_objects, len(self.text_objects))
-        for idx, s_tup in enumerate(self.text):
+        for idx, s_tup in enumerate(new_val):
             if isinstance(s_tup, int): s_tup = self.text[s_tup]
             self.text_objects[idx][0].text = s_tup[0]
         return
@@ -410,13 +411,14 @@ class Button(InteractiveDisplayComponentBase):
         print(f"calculated text shapes = {res}")
         return res
     
-    def setTextShapes(
+    def customTextShapesChangePropogation(
         self,
+        new_val: Optional[Tuple[Real]],
         prev_val: Optional[Tuple[Real]],
     ) -> None:
-        print("using setTextShapes()")
+        print("using customTextShapesChangePropogation()")
         text_objs = self.text_objects
-        text_shapes = self.text_shapes
+        text_shapes = new_val#self.text_shapes
         for text_obj_tup, text_shape in zip(text_objs, text_shapes):
             if text_obj_tup is None or isinstance(text_obj_tup, int):
                 continue
@@ -945,7 +947,7 @@ class ButtonGroupElement(ComponentGroupElementBaseClass, Button):
         )
     
     def createTextObjects(self) -> None:
-        #print("Using ButtonGroupElement method createTextObjects()")
+        print("Using ButtonGroupElement method createTextObjects()")
         add_text_dict_lsts = {}
         for idx, text_group_tup in enumerate(self.button_group.text_groups):
             if text_group_tup is None: continue
@@ -964,9 +966,14 @@ class ButtonGroupElement(ComponentGroupElementBaseClass, Button):
                 }
             )
             add_text_dict_lsts[text_group_tup[0]][1].append(idx)
+        print(add_text_dict_lsts)
         res = [None] * self.n_state
         for grp, (add_text_dict_lst, idx_lst) in add_text_dict_lsts.items():
+            print(f"adding text objects for {grp}")
             text_objs = grp.addTextObjects(add_text_dict_lst)
+            print(f"finished adding text objects for {grp}")
+            print(grp.max_font_sizes_given_widths_dict)
+            print(grp.heights_dict)
             for text_obj, idx in zip(text_objs, idx_lst):
                 res[idx] = (text_obj,)
         return res

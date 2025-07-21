@@ -835,10 +835,12 @@ def runExampleButton1() -> None:
     #button.shape = (300, 100)
     #button.text_borders_rel=((0, 0), (0.2, 0.2), 1, 0)
     #button.mouse_enabled = False
-    button.shape = (500, 500)
+    
     
     screen_changed = True
+    print("\nhello\n")
     button.text = "change"
+    button.shape = (500, 500)
     clock = pg.time.Clock()
     
     while True:
@@ -917,8 +919,10 @@ def runExampleButtonGroup1() -> None:
             name=None,
         )
     )
+    
     print(button_group.text_groups[0][0].max_font_sizes_given_widths_dict)
     print(button_group.text_groups[0][0].heights_dict)
+    
     buttons.append(
         button_group.addButton(
             text="Hello",
@@ -938,7 +942,7 @@ def runExampleButtonGroup1() -> None:
     drawButtons(screen, buttons)
     screen_changed = True
     print("hi")
-    button_group.button_shape = (500, 500)
+    button_group.button_shape = (500, 200)
 
     print(buttons[0].__dict__.get("_text_anchor_positions", None))
     print(buttons[0].__dict__.get("_button_surfs", None))
@@ -946,7 +950,7 @@ def runExampleButtonGroup1() -> None:
     #button_group.button_shape = (500, 300)
     print(button_group.text_groups[0][0].max_font_sizes_given_widths_dict)
     print(button_group.text_groups[0][0].heights_dict)
-    buttons[0].text = "goodbye"
+    #buttons[0].text = "goodbye"
     print(button_group.text_groups[0][0].max_font_sizes_given_widths_dict)
     print(button_group.text_groups[0][0].heights_dict)
     

@@ -125,15 +125,15 @@ class ComponentBaseClass(ABC):
         # Ensuring the attributes whose values are potentially propogated
         # to other objects have been initialized
         #print(self.attr_list)
-        #print(self.getCustomResetFunctions().keys())
+        #print(self.getAttributeChangePropogationFunctions().keys())
         print(f"\nInitializing attributes with custom reset functions")
-        print([self.attr_list[idx] for idx in self.getCustomResetFunctions().keys()])
-        for idx in self.getCustomResetFunctions().keys():
+        print([self.attr_list[idx] for idx in self.getAttributeChangePropogationFunctions().keys()])
+        for idx in self.getAttributeChangePropogationFunctions().keys():
             attr = self.attr_list[idx]
             sub_attr = f"_{attr}"
             print(attr)
             print(f"self._{attr} = {self.__dict__.get(sub_attr, None)}")
-            getattr(self, self.attr_list[idx])
+            print(getattr(self, self.attr_list[idx]))
         #self.setupClass()
     
     @classmethod
@@ -232,6 +232,65 @@ class ComponentBaseClass(ABC):
         cls._removeInstanceFromRecord(inst_idx)
         return
     
+    def getPendingAttributeChanges(self) -> Dict[str, Optional[Any]]:
+        chng_dict = self.__dict__.get("_pending_attr_changes", None)
+        if chng_dict is None:
+            chng_dict = {}
+            self.__dict__["_pending_attr_changes"] = chng_dict
+        #print(chng_dict)
+        return chng_dict
+
+    def addPendingAttributeChange(self, attr: str, new_val: Optional[Any]) -> None:
+        print(f"Using addPendingAttributeChange() for {self} with attribute {attr} getting new value {new_val}")
+        chng_dict = self.getPendingAttributeChanges()
+
+        attr = attr.lstrip("_")
+        sub_attr = f"_{attr}"
+        prev_val = chng_dict.get(attr, self.__dict__.get(attr, None))
+        # No change
+        if attr in chng_dict.keys() or sub_attr in self.__dict__.keys():
+            if chng_dict.get(attr, self.__dict__.get(sub_attr, None)) == new_val:
+                return
+        chng_dict[attr] = new_val
+        return
+
+    def resolvePendingAttributeChanges(self, attrs: Optional[List[str]]) -> None:
+        if "max_font_size_given_width" in attrs:
+            print(f"Using resolvePendingAttributeChanges() for attrs = {attrs}")
+        chng_dict = self.getPendingAttributeChanges()
+        it = chng_dict.keys() if attrs is None else {x.lstrip("_") for x in attrs}.intersection(chng_dict.keys())
+        #print(chng_dict, it)
+        propogation_funcs = self.getAttributeChangePropogationFunctions()
+        #print(propogation_funcs)
+        calcfunc_dict = self.getAttributeCalculationFunctionDictionary()
+        for attr in it:
+            if "max_font_size_given_width" in attrs:
+                print(f"resolving attribute {attr}")
+            #print(attr, chng_dict[attr])
+            if attr not in chng_dict.keys(): continue
+            if attr in calcfunc_dict.keys():
+                self.calculateAndSetAttribute(attr)
+                chng_dict.pop(attr)
+                continue
+            sub_attr = f"_{attr}"
+            prev_val = self.__dict__.get(sub_attr, None)
+            new_val = chng_dict.pop(attr)
+            #print(f"prev_val = {prev_val}, new_val = {new_val}")
+            #print(propogation_funcs.get(attr, None))
+            #if attr in calcfunc_dict.keys():
+            #    new_val = calcfunc_dict[attr][0](self)
+            self.__dict__[sub_attr] = new_val
+            if new_val == prev_val: continue
+            for func in propogation_funcs.get(self.attr2Index(attr), []):#[attr], []):
+                if "max_font_size_given_width" in attrs:
+                    print(f"Using propogation function {func} for attribute {attr}")
+                func(self, new_val, prev_val)
+            if "max_font_size_given_width" in attrs:
+                print(f"finished resolving attribute {attr}")
+        if "max_font_size_given_width" in attrs:
+            print(f"Finished using resolvePendingAttributeChanges() for attrs = {attrs}")
+        return
+
     def initArgsManagement(self, init_locals: Dict[str, Any], kwargs: Optional[Dict[str, Any]]=None, rm_args: Optional[List[str]]=None) -> Dict[str, Any]:
         #print("Using initArgsManagement()")
         res = dict(init_locals)
@@ -266,12 +325,16 @@ class ComponentBaseClass(ABC):
         return idx 
     
     @classmethod
+    def attr2Index(cls, attr: str)-> int:
+        return cls._attr2Index(attr, cls.attr_list, cls.attr_dict, cls.reset_graph)
+
+    @classmethod
     def createResetStructures(cls) -> Tuple[Union[List[str], Dict[str, int], List[Dict[int, Union[List[Callable[["DisplayComponentBase"], bool]]]]], Dict[int, List[Callable[[Any, "DisplayComponentBase"], None]]]]]:
         #print("Using createResetStructures()")
         attr_list = []
         attr_dict = {}
         reset_graph = []
-        custom_reset_funcs = {}
+        attribute_change_propogation_funcs = {}
         
         def attr2Index(attr: str) -> int:
             return cls._attr2Index(attr, attr_list, attr_dict, reset_graph)
@@ -318,16 +381,17 @@ class ComponentBaseClass(ABC):
                     #else:
                     #    reset_graph[idx1].setdefault(idx2, [])
                     #    reset_graph[idx1][idx2].append(func_new)
-            for attr, method_name in cls2.__dict__.get("custom_reset_methods", {}).items():
+            for attr, method_name in cls2.__dict__.get("custom_attribute_change_propogation_methods", {}).items():
                 meth = cls2.__dict__.get(method_name, None)
+                #print(f"3, {attr}, {method_name}, {meth}")
                 if meth is None:
                     continue
-                #print(f"3, {attr}")
+                
                 idx = attr2Index(attr)
-                custom_reset_funcs.setdefault(idx, [])
-                custom_reset_funcs[idx].append(functools.partial(meth))
+                attribute_change_propogation_funcs.setdefault(idx, [])
+                attribute_change_propogation_funcs[idx].append(functools.partial(meth))
         
-        def setComponentAttribute(component_name: str, component_attr_to_set: str, attr_calc: Union[str, Tuple[tuple, Callable]], obj: "ComponentBaseClass", prev_val: Any) -> None:
+        def setComponentAttribute(component_name: str, component_attr_to_set: str, attr_calc: Union[str, Tuple[tuple, Callable]], obj: "ComponentBaseClass", new_val: Any, prev_val: Any) -> None:
             component = obj.__dict__.get(f"_{component_name}", None)
             if component is None: return
             val = getattr(obj, attr_calc) if isinstance(attr_calc, str) else attr_calc[1](*[getattr(obj, x) for x in attr_calc[0]])
@@ -343,15 +407,15 @@ class ComponentBaseClass(ABC):
                     #print(f"4, {parent_attr}")
                     idx = attr2Index(parent_attr)
                     #print(parent_attr, idx)
-                    custom_reset_funcs.setdefault(idx, [])
-                    custom_reset_funcs[idx].append(functools.partial(setComponentAttribute, component_name, component_attr, attr_calc))
+                    attribute_change_propogation_funcs.setdefault(idx, [])
+                    attribute_change_propogation_funcs[idx].append(functools.partial(setComponentAttribute, component_name, component_attr, attr_calc))
                 #if not isinstance(val_attr, str): continue
                 #for parent_attr in attr_lst:
                 #    idx = attr2Index(parent_attr)
-                #    custom_reset_funcs.setdefault(idx, [])
-                #    custom_reset_funcs[idx].append(functools.partial(setComponentAttribute, component_name, component_attr, parent_attr))
+                #    attribute_change_propogation_funcs.setdefault(idx, [])
+                #    attribute_change_propogation_funcs[idx].append(functools.partial(setComponentAttribute, component_name, component_attr, parent_attr))
         
-        def updateFinalizerAttributeValue(attr: str, obj: "ComponentBaseClass", prev_val: Any) -> None:
+        def updateFinalizerAttributeValue(attr: str, obj: "ComponentBaseClass", new_val: Any, prev_val: Any) -> None:
             #print(f"Using updateFinalizerAttributeValue() for {attr}")
             cls = type(obj)
             inst_idx = obj.__dict__.get("_inst_idx", None)
@@ -364,25 +428,26 @@ class ComponentBaseClass(ABC):
         for attr in finalizer_attr_set:
             #print(f"5, {attr}")
             idx = attr2Index(attr)
-            custom_reset_funcs.setdefault(idx, [])
-            custom_reset_funcs[idx].append(functools.partial(updateFinalizerAttributeValue, attr))
+            attribute_change_propogation_funcs.setdefault(idx, [])
+            attribute_change_propogation_funcs[idx].append(functools.partial(updateFinalizerAttributeValue, attr))
         
         cls.reset_graph = reset_graph
         cls.attr_list = attr_list
         #print(f"attr_list = {attr_list}")
         cls.attr_dict = attr_dict
-        cls.custom_reset_funcs = custom_reset_funcs
-        crfs = {attr_list[x]: y for x, y in custom_reset_funcs.items()}
-        print(f"custom_reset_funcs = {crfs}")
-        return (attr_list, attr_dict, reset_graph, custom_reset_funcs)
+        cls.attribute_change_propogation_funcs = attribute_change_propogation_funcs
+        crfs = {attr_list[x]: y for x, y in attribute_change_propogation_funcs.items()}
+        #print(f"attribute_change_propogation_funcs for class {cls} = {crfs}")
+        return (attr_list, attr_dict, reset_graph, attribute_change_propogation_funcs)
     
     @classmethod
-    def getCustomResetFunctions(cls) -> Dict[int, List[Callable[[Any, "DisplayComponentBase"], None]]]:
-        custom_reset_funcs = cls.__dict__.get("custom_reset_funcs", None)
-        if custom_reset_funcs is None:
+    def getAttributeChangePropogationFunctions(cls) -> Dict[int, List[Callable[[Any, "DisplayComponentBase"], None]]]:
+        #print("using getAttributeChangePropogationFunctions()")
+        attribute_change_propogation_funcs = cls.__dict__.get("attribute_change_propogation_funcs", None)
+        if attribute_change_propogation_funcs is None:
             cls.createResetStructures()
-            custom_reset_funcs = cls.custom_reset_funcs
-        return custom_reset_funcs
+            attribute_change_propogation_funcs = cls.attribute_change_propogation_funcs
+        return attribute_change_propogation_funcs
             
 
     def getComponentAttribute(self, component_name: str, component_attr: str) -> Any:
@@ -589,7 +654,7 @@ class ComponentBaseClass(ABC):
         calcfunc, b = attr_calcfunc_dict[attr]
         #print(calcfunc, b)
         #calcfunc, b = (calcfunc_tup, False) if isinstance(calcfunc_tup, str) else calcfunc_tup
-        res = calcfunc(self)
+        val_new = calcfunc(self)
         if not b:
             sub_attr = attr if attr.startswith("_") else f"_{attr}"
             #self.__dict__[sub_attr] = res
@@ -599,17 +664,18 @@ class ComponentBaseClass(ABC):
                 val_prev = None
             else:
                 val_prev = self.__dict__.get(sub_attr, None)
-                if res == val_prev: return
-            self.__dict__[sub_attr] = res
-            custom_reset_funcs = self.getCustomResetFunctions()
-            for func in custom_reset_funcs.get(self.attr_dict.get(attr, None), []):
-                func(self, val_prev)
+                if val_new == val_prev: return
+            self.__dict__[sub_attr] = val_new
+            attribute_change_propogation_funcs = self.getAttributeChangePropogationFunctions()
+            for func in attribute_change_propogation_funcs.get(self.attr_dict.get(attr, None), []):
+                #print(f"calling custom reset function from calculateAndSetAttribute(), {func}")
+                func(self, val_new, val_prev)
         return True
     
     def setAttributes(self, setattr_dict: Dict[str, Any], _from_container: bool=False, _calculated_override: bool=False, **kwargs) -> Dict[str, Tuple[Any, Any]]:
-        #if len(setattr_dict.keys() - {"state"}) >= 1:
-        #    print("Using ComponentBaseClass method setAttributes()")
-        #    print(setattr_dict)
+        if len(setattr_dict.keys() - {"state"}) >= 1:
+            print("Using ComponentBaseClass method setAttributes()")
+            print(setattr_dict)
         #if "title_color" in setattr_dict.keys():
         #    print(f"setting title_color attribute for {type(self).__name__}")
         #print("using setAttributes()")
@@ -652,46 +718,57 @@ class ComponentBaseClass(ABC):
         #attr_deffunc_dict = cls.getAttributeDefaultFunctionDictionary()
         
         if "attr_list" not in cls.__dict__.keys():
-            attr_list, attr_dict, reset_graph, custom_reset_funcs = cls.createResetStructures()
+            attr_list, attr_dict, reset_graph, attribute_change_propogation_funcs = cls.createResetStructures()
         else:
             attr_list = cls.attr_list
             attr_dict = cls.attr_dict
             reset_graph = cls.reset_graph
-            custom_reset_funcs = cls.getCustomResetFunctions()#custom_reset_funcs
+            attribute_change_propogation_funcs = cls.getAttributeChangePropogationFunctions()#attribute_change_propogation_funcs
         inds = []
         
         container_reset_attrs = {}
-        attr_reset_dict = getattr(self, "_attr_reset_funcs", {})
+        #attr_reset_dict = getattr(self, "_attr_reset_funcs", {})
         changed_attrs_dict = {}
+        change_propogate_attrs = set()
+        pending_change_dict = self.getPendingAttributeChanges()
 
         def setAttrCustom(attr: str, sub_attr: str, val: Any) -> None:
             #if attr.lstrip("_") in {"text_shapes"}:
             #    print(f"setting attribute {attr} to {val} for {self}")
-            if sub_attr not in self.__dict__.keys():
-                val_prev = None
-            else:
-                val_prev = self.__dict__.get(sub_attr, None)
-                if val == val_prev: return
-            self.__dict__[sub_attr] = val
+            #if sub_attr not in self.__dict__.keys():
+            #    val_prev = None
+            #else:
+            #    val_prev = self.__dict__.get(sub_attr, None)
+            #    if val == val_prev: return
+            #self.__dict__[sub_attr] = val
+            
+            val_prev = pending_change_dict.get(attr, self.__dict__.get(sub_attr, None))
             changed_attrs_dict[attr] = (val, val_prev)
+            self.addPendingAttributeChange(attr, val)
             if attr in container_attr_reset_dict.keys():
                 for attr2, func in container_attr_reset_dict[attr].items():
                     func_lst = addBooleanFunction(container_reset_attrs.get(attr2, []), func)
                     container_reset_attrs[attr2] = func_lst
             
             #if attr in attr_deffunc_dict.keys():
-            #    reset_funcs.extend(custom_reset_funcs.get(idx
+            #    reset_funcs.extend(attribute_change_propogation_funcs.get(idx
             #    #default_attrs.append(attr)
             #print(sub_attr)
-            #print(custom_reset_funcs)
+            #print(attribute_change_propogation_funcs)
             #print(idx2)
-            for func in custom_reset_funcs.get(attr_dict.get(attr, None), []):
-                reset_funcs.append((func, val_prev))
-            if val is None:
-                for func in attr_reset_dict.get(attr, []):
-                    #if attr == "updated":
-                    #    print("reset function for 'updated' added")
-                    reset_funcs.append((func, val_prev))
+            #if attr not in attr_dict.keys() or attr_dict[attr] not in attribute_change_propogation_funcs.
+            #is_change_propogating_attr = False
+            is_change_propogating_attr = bool(attribute_change_propogation_funcs.get(self.attr_dict.get(attr, None), []))
+            #    is_change_propogating_attr = True
+            #    #reset_funcs.append((func, val_prev))
+            #if val is None:
+            #    for func in attr_reset_dict.get(attr, []):
+            #        #if attr == "updated":
+            #        #    print("reset function for 'updated' added")
+            #        is_reset_attr = True
+            #        reset_funcs.append((func, val_prev))
+            if is_change_propogating_attr:
+                change_propogate_attrs.add(attr)
             #print(f"self.__dict__['{attr}'] = {val}")
             return
         
@@ -717,7 +794,7 @@ class ComponentBaseClass(ABC):
         # unintended?
         #attr_processing_dict = cls.getAttributeProcessingDictionary()
         
-        reset_funcs = []
+        #reset_funcs = []
         for attr, val in setattr_dict2.items():
             #print(attr, val)
             
@@ -738,7 +815,7 @@ class ComponentBaseClass(ABC):
             val_prev = self.__dict__.get(sub_attr, None)
             #if attr == "max_height0":
             #    print(f"max_height0 val_prev = {val_prev}, val = {val}")
-            for func in custom_reset_funcs.get(attr_dict.get(attr, None), []):
+            for func in attribute_change_propogation_funcs.get(attr_dict.get(attr, None), []):
                 #if attr == "max_height":
                 #    print(f"reset function for max_height: {(func, val_prev)}")
                 reset_funcs.append((func, val_prev))
@@ -751,8 +828,8 @@ class ComponentBaseClass(ABC):
             #print(attr2 in self.__dict__.keys(), attr in self.__dict__.keys())
             """
         #print("hello")
-        def bfs(inds: List[Tuple[int, Any]]) -> Tuple[List[Callable[["DisplayComponentBase"], None]]]:
-            reset_funcs = []
+        def bfs(inds: List[Tuple[int, Any]]) -> None:#Tuple[List[Callable[["DisplayComponentBase"], None]]]:
+            #reset_funcs = []
             #for idx in inds:
                 
             qu = deque(inds)
@@ -786,8 +863,9 @@ class ComponentBaseClass(ABC):
                     #reset_funcs.extend(funcs)
                     seen.add(idx2)
                     qu.append((idx2, None))
-            return reset_funcs
-        reset_funcs.extend(bfs(inds))
+            return# reset_funcs
+        bfs(inds)
+        #reset_funcs.extend(bfs(inds))
         #if len(setattr_dict.keys() - {"state"}) >= 1:
         #    print(f"reset_funcs: {reset_funcs}")
         #print("custom functions:")
@@ -798,8 +876,15 @@ class ComponentBaseClass(ABC):
         #    print(getattr(self, attr))
         #if len(setattr_dict.keys() - {"state"}) >= 1:
         #    print(f"custom reset functions: {reset_funcs}")
-        for func, prev_val in reset_funcs:
-            func(self, prev_val)
+        #for func, prev_val in reset_funcs:
+        #    func(self, prev_val)
+
+        # Ensuring the attributes whose changes are propogated are
+        # up to date
+        #if len(setattr_dict.keys() - {"state"}) >= 1:
+        #    print(f"change_propogate_attrs = {change_propogate_attrs}")
+        for attr in change_propogate_attrs:
+            getattr(self, attr)
         #print("hello")
         #print(container_attr_reset_dict, container_reset_attrs)
         if container_reset_attrs and "_container_obj" in self.__dict__.keys():
@@ -829,7 +914,7 @@ class ComponentBaseClass(ABC):
         return self.setAttributes({attr: val})
     
     def __getattr__(self, attr: str) -> Any:
-        #if attr == "display_surf":
+        #if attr == "text":
         #    print(f"Using ComponentBaseClass method __getattr__() for attribute {attr}")
         def notFoundError():
             raise AttributeError(f"'{type(self).__name__}' object has no attribute '{attr}'")
@@ -842,6 +927,13 @@ class ComponentBaseClass(ABC):
                     return (cls.__dict__[attr], True)
             return (None, False)
         
+        pending_changes = self.getPendingAttributeChanges()
+        #if attr == "max_shape":
+        #    print(f"pending_changes = {pending_changes}")
+        if attr in pending_changes.keys():
+            #print("calling resolvePendingAttributeChanges()")
+            self.resolvePendingAttributeChanges([attr])
+
         #if attr in {"val", "val_str", "val_text_surf"}:
         #    print(f"attempting to get attribute {attr}")
         val, b = findAttribute(attr)
@@ -1106,13 +1198,13 @@ class ComponentGroupBaseClass(ComponentBaseClass):
     
     @classmethod
     def createResetStructures(cls) -> Tuple[Union[List[str], Dict[str, int], List[Dict[int, Union[List[Callable[["DisplayComponentBase"], bool]]]]], Dict[int, List[Callable[[], None]]]]]:
-        (attr_list, attr_dict, reset_graph, custom_reset_funcs) = super().createResetStructures()
+        (attr_list, attr_dict, reset_graph, attribute_change_propogation_funcs) = super().createResetStructures()
         #el_inherit_attr_dict = cls.__dict__.get("el_inherit_attr_dict", cls.createElementInheritedAttributesDictionary())
         el_inherit_attr_dict = cls.getElementInheritedAttributesDictionary()
         
-        def resetFunction(grp_attr: str, el_attr: str, obj: "ComponentGroupBaseClass", prev_val: Any) -> None:
+        def attributeInheritanceFunction(grp_attr: str, el_attr: str, obj: "ComponentGroupBaseClass", new_val: Any, prev_val: Any) -> None:
             #print(f"calling resetFunction with group attribute {grp_attr} and element attribute {el_attr} for a {type(obj).__name__} object")
-            val = getattr(obj, grp_attr)
+            #val = getattr(obj, grp_attr)
             #print(f"val = {val}")
             for el_weakref in obj.elements_weakref:
                 if el_weakref is None:
@@ -1120,15 +1212,15 @@ class ComponentGroupBaseClass(ComponentBaseClass):
                 el = el_weakref()
                 #print(el_weakref)
                 #print(el)
-                el.setAttributes({el_attr: val}, _from_group=True)
+                el.setAttributes({el_attr: new_val}, _from_group=True)
             return
         
         for grp_attr, el_attr in el_inherit_attr_dict.items():
             idx = cls._attr2Index(grp_attr, attr_list, attr_dict, reset_graph)
-            custom_reset_funcs.setdefault(idx, [])
-            custom_reset_funcs[idx].append(functools.partial(resetFunction, grp_attr, el_attr))
+            attribute_change_propogation_funcs.setdefault(idx, [])
+            attribute_change_propogation_funcs[idx].append(functools.partial(attributeInheritanceFunction, grp_attr, el_attr))
         
-        return (attr_list, attr_dict, reset_graph, custom_reset_funcs)
+        return (attr_list, attr_dict, reset_graph, attribute_change_propogation_funcs)
     
     def _setMemberInheritedAttributes(self, set_group_attrs: Optional[Set[str]]=None) -> None:
         el_inherit_attr_dict = self.getElementInheritedAttributesDictionary()#cls.__dict__.get("el_inherit_attr_dict", cls.createElementInheritedAttributesDictionary())
@@ -1251,7 +1343,7 @@ class DisplayComponentBase(ComponentBaseClass):
         "topleft": {"topleft_screen": True},
         "screen_topleft_offset": {"topleft_screen": True},
     }
-    custom_reset_methods = {}
+    custom_attribute_change_propogation_methods = {}
     
     attribute_calculation_methods = {
         "topleft": "calculateTopLeft",#"calculateAndSetTopLeft",
@@ -1324,7 +1416,7 @@ class InteractiveDisplayComponentBase(DisplayComponentBase):
         "navkeys_dict": {"navkeys": True},
     }
     
-    custom_reset_methods = {}
+    custom_attribute_change_propogation_methods = {}
     
     attribute_calculation_methods = {
         "ranges_surf": "calculateRangesSurface",

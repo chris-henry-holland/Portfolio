@@ -100,9 +100,9 @@ class Slider(InteractiveDisplayComponentBase):
     for attr in component_dim_dependent:
         reset_graph_edges["slider_component_dimensions"][attr] = True
     
-    custom_reset_methods = {
-        "val_raw": "setValueRaw",
-    }
+    #custom_attribute_change_propogation_methods = {
+    #    "val_raw": "setValueRaw",
+    #}
     
     attribute_calculation_methods = {
         "mouse_enablement": "calculateMouseEnablement",
@@ -215,7 +215,7 @@ class Slider(InteractiveDisplayComponentBase):
         mouse_enabled = self.mouse_enabled
         return (mouse_enabled, mouse_enabled, mouse_enabled)
     
-    def setValueRaw(self, prev_val: Real) -> None:
+    def setValueRaw(self, new_val: Real, prev_val: Real) -> None:
         self.__dict__["_thumb_x_screen_raw"] = None
         return
     
@@ -910,7 +910,7 @@ class SliderGroup(ComponentGroupBaseClass):
         reset_graph_edges[attr]["slider_component_dimensions"] = True
     
     """
-    custom_reset_methods = {
+    custom_attribute_change_propogation_methods = {
         "slider_shape": "setSliderShape",
         "demarc_numbers_text_group": "setDemarcationNumbersTextGroup",
         "thumb_radius_rel": "setThumbRadiusRelative",
@@ -1072,7 +1072,7 @@ class SliderPlus(InteractiveDisplayComponentBase):
         "static_bg_surf": {"display_surf": True},
     }
     
-    #custom_reset_methods = {
+    #custom_attribute_change_propogation_methods = {
     #    "title_shape": "setTitleShape",
     #}
     
@@ -1869,7 +1869,7 @@ class SliderPlusGroup(ComponentGroupBaseClass):
     reset_graph_edges = {}
     
     """
-    custom_reset_methods = {
+    custom_attribute_change_propogation_methods = {
         "slider_shape": "setSliderShape",
         "demarc_numbers_text_group": "setDemarcationNumbersTextGroup",
         "thumb_radius_rel": "setThumbRadiusRelative",
@@ -2048,7 +2048,7 @@ class SliderPlusGrid(InteractiveDisplayComponentBase):
         "slider_topleft_locations": {"display_surf": True},
     }
     
-    #custom_reset_methods = {
+    #custom_attribute_change_propogation_methods = {
     #    "title_shape": "setTitleShape",
     #}
     
