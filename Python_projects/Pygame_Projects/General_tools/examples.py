@@ -58,7 +58,7 @@ def runExampleButton1() -> None:
             font=None,
             font_size=None,
             font_color=None,
-            anchor_pos0=None,
+            anchor_rel_pos0=None,
             anchor_type0=None,
             text_global_asc_desc_chars0=None,
             name=None,
@@ -72,9 +72,9 @@ def runExampleButton1() -> None:
         shape=(200, 100),
         text="Goodbye",
         text_objects=None,
-        anchor_pos=(100, 100),
+        anchor_rel_pos=(100, 100),
         anchor_type="topleft",
-        screen_topleft_offset=None,
+        screen_topleft_to_component_anchor_offset=None,
         font_colors=((named_colors_def["white"], 0.5), (named_colors_def["yellow"], 1), (named_colors_def["blue"], 1), (named_colors_def["green"], 1)),
         text_borders_rel=((0.1, 0.2), (0, 0), 1, 0),
         text_anchor_types=(("midleft",), 0, 0, 0),
@@ -140,7 +140,7 @@ def runExampleButtonGroup1() -> None:
             font=None,
             font_size=None,
             font_color=None,
-            anchor_pos0=None,
+            anchor_rel_pos0=None,
             anchor_type0=None,
             text_global_asc_desc_chars0=None,
             name=None,
@@ -165,9 +165,9 @@ def runExampleButtonGroup1() -> None:
     buttons.append(
         button_group.addButton(
             text="adfsadfdsafdsafdsa",
-            anchor_pos=(350, 350),
+            anchor_rel_pos=(350, 350),
             anchor_type="center",
-            screen_topleft_offset=(0, 0),
+            screen_topleft_to_component_anchor_offset=(0, 0),
             text_anchor_types="center",
             mouse_enabled=True,
             name=None,
@@ -180,9 +180,9 @@ def runExampleButtonGroup1() -> None:
     buttons.append(
         button_group.addButton(
             text="Hello",
-            anchor_pos=(10, 10),
+            anchor_rel_pos=(10, 10),
             anchor_type="topleft",
-            screen_topleft_offset=(0, 0),
+            screen_topleft_to_component_anchor_offset=(0, 0),
             text_anchor_types="center",
             mouse_enabled=True,
             name=None,
@@ -198,7 +198,7 @@ def runExampleButtonGroup1() -> None:
     print("hi")
     button_group.button_shape = (500, 200)
 
-    print(buttons[0].__dict__.get("_text_anchor_positions", None))
+    print(buttons[0].__dict__.get("_text_anchor_rel_positions", None))
     print(buttons[0].__dict__.get("_button_surfs", None))
     
     #button_group.button_shape = (500, 300)
@@ -234,7 +234,7 @@ def runExampleButtonGroup1() -> None:
             screen.blit(screen_cp, (0, 0))
             print("drawing buttons")
             drawButtons(screen, buttons)
-            print(buttons[0].__dict__.get("_text_anchor_positions", None))
+            print(buttons[0].__dict__.get("_text_anchor_rel_positions", None))
             print(buttons[0].__dict__.get("_button_surfs", None))
             pg.display.flip()
         clock.tick(framerate)
@@ -259,32 +259,49 @@ def runExampleButtonGrid1() -> None:
     pg.display.update(pg.Rect(0, 0, *screen_size))
     
     screen_cp = pg.Surface.copy(screen)
-    
+
     button_text0 = [["Hello", "Hello", ",", "pog", "Log"], ["Hello", "Hello", "'", "now", "bye"]]# "Helloasdfsfdsafa", "Goodbye"]]
+    grid_dims = len(button_text0), len(button_text0[0])
     button_text = []
-    for i, text_row in enumerate(button_text0):
-        align = "right" if i else "left"
-        anchor_tup = ((f"mid{align}",), 0, ("center",), 2)
-        button_text.append([(text, anchor_tup) for text in text_row])
+    
     
     text_groups = tuple((TextGroup([], max_height0=None, font=None, font_size=None, min_lowercase=True, text_global_asc_desc_chars=None),) for _ in range(4))
     
-    button_grid = ButtonGrid((500, 400),\
-            button_text, text_groups, (100, 100),\
-            anchor_type="topleft", screen_topleft_offset=(0, 0),\
-            button_gap_rel_shape=(0.2, 0.2),\
-            font_colors=((named_colors_def["white"], 0.5), (named_colors_def["yellow"], 1), (named_colors_def["blue"], 1), (named_colors_def["green"], 1)),\
-            text_borders_rel=((0.1, 0.2), (0, 0), 1, 0),\
-            fill_colors=(None, (named_colors_def["red"], 0.2), (named_colors_def["red"], 0.5), 2),\
-            outline_widths=((1,), (2,), (3,), 1),\
-            outline_colors=((named_colors_def["black"], 1), (named_colors_def["blue"], 0.8), 1, 1),\
-            mouse_enabled=True, navkeys_enabled=True,\
-            navkeys=None, navkey_cycle_delay_frame=(30, 10, 10, 10, 5))
+    button_grid = ButtonGrid(
+        grid_dims=grid_dims,
+        shape=(500, 400),
+        anchor_rel_pos=(100, 100),
+        anchor_type="topleft",
+        screen_topleft_to_component_anchor_offset=(0, 0),
+        button_gaps_rel_shape=(0.2, 0.2),
+        text_groups=text_groups,
+        font_colors=((named_colors_def["white"], 0.5), (named_colors_def["yellow"], 1), (named_colors_def["blue"], 1), (named_colors_def["green"], 1)),
+        text_borders_rel=((0.1, 0.2), (0, 0), 1, 0),
+        fill_colors=(None, (named_colors_def["red"], 0.2), (named_colors_def["red"], 0.5), 2),
+        outline_widths=((1,), (2,), (3,), 1),
+        outline_colors=((named_colors_def["black"], 1), (named_colors_def["blue"], 0.8), 1, 1),
+        mouse_enabled=True,
+        navkeys_enabled=True,
+        navkey_cycle_delay_frame=(30, 10, 10, 10, 5),
+    )
+
+    for i2, text_col in enumerate(button_text0):
+        align = "right" if i2 else "left"
+        anchor_tup = ((f"mid{align}",), 0, ("center",), 2)
+        setup_kwargs = {
+            "text_anchor_types": anchor_tup,
+        }
+        #button_text.append([(text, anchor_tup) for text in text_row])
+        for i1, txt in enumerate(text_col):
+            setup_kwargs["grid_inds"] = (i1, i2)
+            setup_kwargs["text"] = txt
+            button_grid.setupButtonGridElement(*setup_kwargs)
+
     #print("hi1")
     #button_grid.button_shape = (100, 50)
     #print(button_grid.button_shape, button_grid.button_shape_fixed)
-    button_grid.anchor_type = "center"
-    button_grid.anchor_pos = tuple(x / 2 for x in screen_size)
+    #button_grid.anchor_type = "center"
+    #button_grid.anchor_rel_pos = tuple(x / 2 for x in screen_size)
     #print(button_grid.button_shape_fixed)
     
     #button_grid.dims = (100, 100, 500, 800)
@@ -312,7 +329,61 @@ def runExampleButtonGrid1() -> None:
         clock.tick(framerate)
         screen_changed = False
     return
-
+    
+    """
+    button_text0 = [["Hello", "Hello", ",", "pog", "Log"], ["Hello", "Hello", "'", "now", "bye"]]# "Helloasdfsfdsafa", "Goodbye"]]
+    button_text = []
+    for i, text_row in enumerate(button_text0):
+        align = "right" if i else "left"
+        anchor_tup = ((f"mid{align}",), 0, ("center",), 2)
+        button_text.append([(text, anchor_tup) for text in text_row])
+    
+    text_groups = tuple((TextGroup([], max_height0=None, font=None, font_size=None, min_lowercase=True, text_global_asc_desc_chars=None),) for _ in range(4))
+    
+    button_grid = ButtonGrid((500, 400),\
+            button_text, text_groups, (100, 100),\
+            anchor_type="topleft", screen_topleft_to_component_anchor_offset=(0, 0),\
+            button_gap_rel_shape=(0.2, 0.2),\
+            font_colors=((named_colors_def["white"], 0.5), (named_colors_def["yellow"], 1), (named_colors_def["blue"], 1), (named_colors_def["green"], 1)),\
+            text_borders_rel=((0.1, 0.2), (0, 0), 1, 0),\
+            fill_colors=(None, (named_colors_def["red"], 0.2), (named_colors_def["red"], 0.5), 2),\
+            outline_widths=((1,), (2,), (3,), 1),\
+            outline_colors=((named_colors_def["black"], 1), (named_colors_def["blue"], 0.8), 1, 1),\
+            mouse_enabled=True, navkeys_enabled=True,\
+            navkeys=None, navkey_cycle_delay_frame=(30, 10, 10, 10, 5))
+    #print("hi1")
+    #button_grid.button_shape = (100, 50)
+    #print(button_grid.button_shape, button_grid.button_shape_fixed)
+    button_grid.anchor_type = "center"
+    button_grid.anchor_rel_pos = tuple(x / 2 for x in screen_size)
+    #print(button_grid.button_shape_fixed)
+    
+    #button_grid.dims = (100, 100, 500, 800)
+    
+    screen_changed = True
+    clock = pg.time.Clock()
+    
+    while True:
+        quit, esc_pressed, event_loop_kwargs = button_grid.getRequiredInputs()
+        running = not esc_pressed
+        if quit or not running:
+            pg.quit()
+            #sys.exit()
+            return
+        change = False
+        chng, buttons_pressed = button_grid.eventLoop(check_axes=(0, 1), **event_loop_kwargs)[2:]
+        if buttons_pressed:
+            print(f"buttons pressed: {buttons_pressed}")
+        if chng: change = True
+        if change: screen_changed = True
+        if screen_changed:
+            screen.blit(screen_cp, (0, 0))
+            button_grid.draw(screen)
+            pg.display.flip()
+        clock.tick(framerate)
+        screen_changed = False
+    return
+    """
 
 def runExampleSlider1() -> None:
     screen_size = (600, 600)
@@ -325,9 +396,9 @@ def runExampleSlider1() -> None:
     screen_cp = pg.Surface.copy(screen)
     """
     shape: Tuple[Real],
-            anchor_pos: Tuple[Real], anchor_type: str="topleft",
+            anchor_rel_pos: Tuple[Real], anchor_type: str="topleft",
             demarc_numbers_text_group: Optional["Text"]=None,
-            surf_screen_topleft_offset: Tuple[Real]=(0, 0),
+            surf_screen_topleft_to_component_anchor_offset: Tuple[Real]=(0, 0),
             val_range=(0, 100),
             demarc_intervals=(20, 10, 5), demarc_start_val=0, increment=None,
             increment_start=None, track_color=None, thumb_color=None, thumb_radius_rel=1,
@@ -338,12 +409,12 @@ def runExampleSlider1() -> None:
     """
     slider = Slider(
         shape=(500, 150),
-        anchor_pos=(300, 200),
+        anchor_rel_pos=(300, 200),
         val_range=(0, 100),
         increment_start=15,
         increment=5,
         anchor_type="center",
-        screen_topleft_offset=None,
+        screen_topleft_to_component_anchor_offset=None,
         init_val=None,
         demarc_numbers_text_group=None,
         demarc_numbers_dp=None,
@@ -366,7 +437,7 @@ def runExampleSlider1() -> None:
     """
     slider = Slider((500, 70), (300, 200), anchor_type="center",
             demarc_numbers_text_group=None,
-            screen_topleft_offset=(0, 0), val_range=(0, 100),
+            screen_topleft_to_component_anchor_offset=(0, 0), val_range=(0, 100),
             demarc_intervals=(20, 10, 5), demarc_start_val=35,
             increment=10, increment_start=15, track_color=(named_colors_def["gray"], 1),
             thumb_color=(named_colors_def["silver"], 1), thumb_radius_rel=1, init_val=None,
@@ -457,12 +528,12 @@ def runExampleSliderGroup1() -> None:
 
     sliders.append(
         slider_group.addSlider(
-            anchor_pos=(300, 400),
+            anchor_rel_pos=(300, 400),
             val_range=(0, 50),
             increment_start=15,
             increment=5,
             anchor_type="center",
-            screen_topleft_offset=None,
+            screen_topleft_to_component_anchor_offset=None,
             init_val=None,
             demarc_numbers_dp=0,
             demarc_intervals=(5,),
@@ -474,12 +545,12 @@ def runExampleSliderGroup1() -> None:
     
     sliders.append(
         slider_group.addSlider(
-            anchor_pos=(300, 200),
+            anchor_rel_pos=(300, 200),
             val_range=(0, 100),
             increment_start=15,
             increment=0,
             anchor_type="center",
-            screen_topleft_offset=None,
+            screen_topleft_to_component_anchor_offset=None,
             init_val=None,
             demarc_numbers_dp=None,
             demarc_intervals=(20, 10, 5),
@@ -502,7 +573,7 @@ def runExampleSliderGroup1() -> None:
     """
     slider = Slider((500, 70), (300, 200), anchor_type="center",
             demarc_numbers_text_group=None,
-            screen_topleft_offset=(0, 0), val_range=(0, 100),
+            screen_topleft_to_component_anchor_offset=(0, 0), val_range=(0, 100),
             demarc_intervals=(20, 10, 5), demarc_start_val=35,
             increment=10, increment_start=15, track_color=(named_colors_def["gray"], 1),
             thumb_color=(named_colors_def["silver"], 1), thumb_radius_rel=1, init_val=None,
@@ -563,9 +634,9 @@ def runExampleSliderPlus1() -> None:
     screen_cp = pg.Surface.copy(screen)
     """
     shape: Tuple[Real],
-            anchor_pos: Tuple[Real], anchor_type: str="topleft",
+            anchor_rel_pos: Tuple[Real], anchor_type: str="topleft",
             demarc_numbers_text_group: Optional["Text"]=None,
-            surf_screen_topleft_offset: Tuple[Real]=(0, 0),
+            surf_screen_topleft_to_component_anchor_offset: Tuple[Real]=(0, 0),
             val_range=(0, 100),
             demarc_intervals=(20, 10, 5), demarc_start_val=0, increment=None,
             increment_start=None, track_color=None, thumb_color=None, thumb_radius_rel=1,
@@ -577,12 +648,12 @@ def runExampleSliderPlus1() -> None:
     slider_plus = SliderPlus(
         title="Slider 1",
         shape=(600, 300),
-        anchor_pos=(300, 200),
+        anchor_rel_pos=(300, 200),
         val_range=(0, 100),
         increment_start=15,
         increment=None,
         anchor_type="center",
-        screen_topleft_offset=None,
+        screen_topleft_to_component_anchor_offset=None,
         init_val=None,
         demarc_numbers_text_group=None,
         demarc_numbers_dp=2,
@@ -719,12 +790,12 @@ def runExampleSliderPlusGroup1() -> None:
     sliders.append(
         slider_group.addSliderPlus(
             title="Slider 1",
-            anchor_pos=(50, 50),
+            anchor_rel_pos=(50, 50),
             val_range=(0, 200),
             increment_start=15,
             increment=0,
             anchor_type="topleft",
-            screen_topleft_offset=None,
+            screen_topleft_to_component_anchor_offset=None,
             init_val=None,
             demarc_numbers_dp=0,
             demarc_intervals=(50, 10, 5),
@@ -737,12 +808,12 @@ def runExampleSliderPlusGroup1() -> None:
     sliders.append(
         slider_group.addSliderPlus(
             title="Slider 2",
-            anchor_pos=(300, 400),
+            anchor_rel_pos=(300, 400),
             val_range=(0, 50),
             increment_start=15,
             increment=5,
             anchor_type="center",
-            screen_topleft_offset=None,
+            screen_topleft_to_component_anchor_offset=None,
             init_val=None,
             demarc_numbers_dp=2,
             demarc_intervals=(10,),
@@ -770,7 +841,7 @@ def runExampleSliderPlusGroup1() -> None:
     """
     slider = Slider((500, 70), (300, 200), anchor_type="center",
             demarc_numbers_text_group=None,
-            screen_topleft_offset=(0, 0), val_range=(0, 100),
+            screen_topleft_to_component_anchor_offset=(0, 0), val_range=(0, 100),
             demarc_intervals=(20, 10, 5), demarc_start_val=35,
             increment=10, increment_start=15, track_color=(named_colors_def["gray"], 1),
             thumb_color=(named_colors_def["silver"], 1), thumb_radius_rel=1, init_val=None,
@@ -842,9 +913,9 @@ def runExampleSliderPlusGrid1() -> None:
         grid_dims=grid_dims,
         shape=(400, 400),
         slider_gaps_rel_shape=(0.1, 0.1),
-        anchor_pos=(50, 50),
+        anchor_rel_pos=(50, 50),
         anchor_type="topleft",
-        screen_topleft_offset=None,
+        screen_topleft_to_component_anchor_offset=None,
         demarc_numbers_text_group=None,
         thumb_radius_rel=1,
         demarc_line_lens_rel=None,
@@ -926,12 +997,12 @@ def runExampleSliderPlusGrid1() -> None:
     sliders.append(
         slider_group.addSliderPlus(
             title="Slider 2",
-            anchor_pos=(300, 400),
+            anchor_rel_pos=(300, 400),
             val_range=(0, 100),
             increment_start=15,
             increment=5,
             anchor_type="center",
-            screen_topleft_offset=None,
+            screen_topleft_to_component_anchor_offset=None,
             init_val=None,
             demarc_numbers_dp=3,
             demarc_intervals=(20,),
@@ -958,7 +1029,7 @@ def runExampleSliderPlusGrid1() -> None:
     """
     slider = Slider((500, 70), (300, 200), anchor_type="center",
             demarc_numbers_text_group=None,
-            screen_topleft_offset=(0, 0), val_range=(0, 100),
+            screen_topleft_to_component_anchor_offset=(0, 0), val_range=(0, 100),
             demarc_intervals=(20, 10, 5), demarc_start_val=35,
             increment=10, increment_start=15, track_color=(named_colors_def["gray"], 1),
             thumb_color=(named_colors_def["silver"], 1), thumb_radius_rel=1, init_val=None,
@@ -1129,9 +1200,9 @@ def runExampleButtonMenuOverlay1() -> None:
     text_objs = text_group.addTextObjects(add_text_list)
     print("added menu text objects to menu")
     for text_obj, (_, pos_tup) in zip(text_objs, text_list):
-        max_shape_rel, anchor_pos_rel = pos_tup
+        max_shape_rel, anchor_rel_pos_rel = pos_tup
         menu_overlay.addText(text_obj, max_shape_rel,\
-                anchor_pos_rel)
+                anchor_rel_pos_rel)
     
     """
     max_height_rel = 0.2
@@ -1266,9 +1337,9 @@ def runExampleSliderAndButtonMenuOverlay1() -> None:
     text_objs = text_group.addTextObjects(add_text_list)
     print("added menu text objects to menu")
     for text_obj, (_, pos_tup) in zip(text_objs, text_list):
-        max_shape_rel, anchor_pos_rel = pos_tup
+        max_shape_rel, anchor_rel_pos_rel = pos_tup
         menu_overlay.addText(text_obj, max_shape_rel,\
-                anchor_pos_rel)
+                anchor_rel_pos_rel)
     
     """
     max_height_rel = 0.2

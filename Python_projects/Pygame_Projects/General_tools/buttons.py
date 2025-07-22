@@ -6,7 +6,7 @@ import functools
 import os
 import sys
 
-from typing import Union, Tuple, List, Set, Dict, Optional, Callable, Any
+from typing import Union, Tuple, List, Set, Dict, Optional, Callable, Any, Generator
 
 import pygame as pg
 import pygame.freetype
@@ -103,10 +103,10 @@ class Button(InteractiveDisplayComponentBase):
     unnamed_count = 0
     
     reset_graph_edges = {
-        "shape": {"text_shapes": True, "text_anchor_positions": True, "fill_img_constructors": True, "outline_img_constructors": True},
-        "text_borders_rel": {"text_shapes": True, "text_anchor_positions": True},
+        "shape": {"text_shapes": True, "text_anchor_rel_positions": True, "fill_img_constructors": True, "outline_img_constructors": True},
+        "text_borders_rel": {"text_shapes": True, "text_anchor_rel_positions": True},
         "text_anchor_types": {"text_img_constructors": True},
-        "text_anchor_positions": {"text_img_constructors": True},
+        "text_anchor_rel_positions": {"text_img_constructors": True},
         "outline_widths": {"outline_img_constructors": True},
         "text_objects": {"text_img_constructors": True},
         
@@ -127,14 +127,14 @@ class Button(InteractiveDisplayComponentBase):
     custom_attribute_change_propogation_methods = {
         "text": "customButtonTextChangePropogation",
         "text_shapes": "customTextShapesChangePropogation",
-        #"text_anchor_positions": "setTextAnchorPositions",
+        #"text_anchor_rel_positions": "setTextAnchorPositions",
         #"text_objects": "setTextObjects",
     }
     
     attribute_calculation_methods = {
         "mouse_enablement": "calculateMouseEnablement",
         "text_shapes": "calculateTextShapes",
-        "text_anchor_positions": "calculateTextAnchorPositions",
+        "text_anchor_rel_positions": "calculateTextAnchorPositions",
         
         "button_surfs": "createButtonSurfaces",
         
@@ -178,7 +178,7 @@ class Button(InteractiveDisplayComponentBase):
     n_state = 4
     
     #button_img_lst = ["button_surfs", "button_img_constructors"]
-    #change_reset_attrs = {"shape": ["text_anchor_positions", "text_img_constructors", *button_img_lst], "text_nonspatial": ["text_img_constructors", *button_img_lst], "text_spatial": ["text_anchor_positions", "text_img_constructors", *button_img_lst], "fill": ["fill_img_constructors", *button_img_lst], "outline": ["outline_img_constructors", *button_img_lst]}
+    #change_reset_attrs = {"shape": ["text_anchor_rel_positions", "text_img_constructors", *button_img_lst], "text_nonspatial": ["text_img_constructors", *button_img_lst], "text_spatial": ["text_anchor_rel_positions", "text_img_constructors", *button_img_lst], "fill": ["fill_img_constructors", *button_img_lst], "outline": ["outline_img_constructors", *button_img_lst]}
     
     #displ_attrs = ["button"]#("background_imgs", "outline_imgs", "text_imgs")
     button_img_component_attrs = ["fill_img", "text_img", "outline_img"]
@@ -188,9 +188,9 @@ class Button(InteractiveDisplayComponentBase):
         self,
         shape: Tuple[Real],
         text: Tuple[Union[Tuple[str], int]],
-        anchor_pos: Tuple[Real],
+        anchor_rel_pos: Tuple[Real],
         anchor_type: Optional[str]=None,
-        screen_topleft_offset: Optional[Tuple[Real]]=None,
+        screen_topleft_to_component_anchor_offset: Optional[Tuple[Real]]=None,
         text_objects: Tuple[Union[Optional["Text"], int]]=None,
         font_colors: Optional[Tuple[Optional[ColorOpacity], int]]=None,
         text_borders_rel: Optional[Tuple[Union[Optional[Tuple[Real]], int]]]=None,
@@ -211,16 +211,16 @@ class Button(InteractiveDisplayComponentBase):
         Button.button_names.add(name)
         super().__init__(**self.initArgsManagement(locals(), kwargs=kwargs))
         """
-        super().__init__(shape, anchor_pos, anchor_type=anchor_type,\
-            screen_topleft_offset=screen_topleft_offset)
+        super().__init__(shape, anchor_rel_pos, anchor_type=anchor_type,\
+            screen_topleft_to_component_anchor_offset=screen_topleft_to_component_anchor_offset)
         
         self.state = 0
         #self._shape = shape
-        #self._anchor_pos = anchor_pos
+        #self._anchor_rel_pos = anchor_rel_pos
         #self._anchor_type = anchor_type
         self._text_borders_rel = tuple([(0.2, 0.2)] + [0] * (self.n_state - 1)) if text_borders_rel is None else text_borders_rel
         self._text_anchor_types = tuple([("center",)] + [0] * (self.n_state - 1)) if text_anchor_types is None else text_anchor_types
-        self._screen_topleft_offset = screen_topleft_offset
+        self._screen_topleft_to_component_anchor_offset = screen_topleft_to_component_anchor_offset
         #print(f"self.text_anchor_types = {self.text_anchor_types}")
         
         self.text_objects = text_objects
@@ -429,8 +429,8 @@ class Button(InteractiveDisplayComponentBase):
         return
     """
     @property
-    def text_anchor_positions(self):
-        res = getattr(self, "_text_anchor_positions", None)
+    def text_anchor_rel_positions(self):
+        res = getattr(self, "_text_anchor_rel_positions", None)
         if res is None:
             res = self.calculateAndSetTextAnchorPositions()
         return res
@@ -448,42 +448,42 @@ class Button(InteractiveDisplayComponentBase):
                 continue
             text_max_shape, text_borders_rel,\
                     text_anchor_type_tup = props
-            text_anchor_pos = self._calculateTextAnchorPosition(
+            text_anchor_rel_pos = self._calculateTextAnchorPosition(
                 text_max_shape=text_max_shape,
-                topleft=(0, 0),
+                topleft_pos=(0, 0),
                 text_anchor_type=text_anchor_type_tup[0],
                 shape=shape,
                 text_borders_rel=text_borders_rel,
             )
-            res.append(text_anchor_pos)
+            res.append(text_anchor_rel_pos)
         return tuple(res)
     
     @staticmethod
     def _calculateTextAnchorPosition(
         text_max_shape: Tuple[Real],
-        topleft: Tuple[Real],
+        topleft_pos: Tuple[Real],
         text_anchor_type: str,
         shape: Tuple[Real],
         text_borders_rel: Tuple[Real],
     ) -> Tuple[Real]:
         text_topleft = tuple(x + y * z for x, y, z in\
-                zip(topleft, shape, text_borders_rel))
+                zip(topleft_pos, shape, text_borders_rel))
         #print(text_max_shape, text_anchor_type)
         anchor_offset = topLeftAnchorOffset(text_max_shape, text_anchor_type)
-        text_anchor_pos = tuple(x + y for x, y in zip(text_topleft, anchor_offset))
-        return text_anchor_pos
+        text_anchor_rel_pos = tuple(x + y for x, y in zip(text_topleft, anchor_offset))
+        return text_anchor_rel_pos
     
     """
     def setTextAnchorPositions(
         self,
         prev_val: Optional[Tuple[Real]],
     ) -> None:
-        for text_obj_tup, text_anchor_pos in zip(self.text_objects, self.text_anchor_positions):
+        for text_obj_tup, text_anchor_rel_pos in zip(self.text_objects, self.text_anchor_rel_positions):
             if text_obj_tup is None or isinstance(text_obj_tup, int):
                 continue
-            if isinstance(text_anchor_pos, int):
-                text_anchor_pos = self.text_anchor_positions[text_anchor_pos]
-            text_obj_tup.anchor_pos0 = text_anchor_pos
+            if isinstance(text_anchor_rel_pos, int):
+                text_anchor_rel_pos = self.text_anchor_rel_positions[text_anchor_rel_pos]
+            text_obj_tup.anchor_rel_pos0 = text_anchor_rel_pos
         return
     """
     """
@@ -498,12 +498,12 @@ class Button(InteractiveDisplayComponentBase):
                 continue
             text_max_shape, text_borders_rel,\
                     text_anchor_type_tup = props
-            text_anchor_pos = self.calculateTextAnchorPosition(\
+            text_anchor_rel_pos = self.calculateTextAnchorPosition(\
                     text_max_shape, (0, 0),\
                     text_anchor_type_tup[0], shape, text_borders_rel)
-            res.append(text_anchor_pos)
+            res.append(text_anchor_rel_pos)
         res = tuple(res)
-        self._text_anchor_positions = res
+        self._text_anchor_rel_positions = res
         return res
     """
     """
@@ -655,26 +655,26 @@ class Button(InteractiveDisplayComponentBase):
         #print("creating text image constructors")
         res = []
         def textImageConstructor(surf: "pg.Surface", text_obj: "Text",\
-                text_anchor_pos: Tuple[int]=(0, 0),\
+                text_anchor_rel_pos: Tuple[int]=(0, 0),\
                 text_anchor_type: str="topleft",\
                 font_color: ColorOpacity=((0, 0, 0), 1))\
                 -> None:
             #print("hello")
-            #print(surf, text_obj, text_anchor_pos, text_anchor_type, font_color)
+            #print(surf, text_obj, text_anchor_rel_pos, text_anchor_type, font_color)
             text_obj.font_color = font_color
-            text_obj.draw(surf, anchor_pos=text_anchor_pos, anchor_type=text_anchor_type)
+            text_obj.draw(surf, anchor_rel_pos=text_anchor_rel_pos, anchor_type=text_anchor_type)
             #print("hello2")
             return
-        #for attr in ["text_objects", "text_anchor_positions", "text_anchor_types", "font_colors"]:
+        #for attr in ["text_objects", "text_anchor_rel_positions", "text_anchor_types", "font_colors"]:
         #    print(attr, getattr(self, attr, None))
         for i in range(self.n_state):
-            props = getProperties(self, ["text_objects", "text_anchor_positions", "text_anchor_types", "font_colors"], i)
+            props = getProperties(self, ["text_objects", "text_anchor_rel_positions", "text_anchor_types", "font_colors"], i)
             if props is None or isinstance(props, int):
                 res.append(props)
                 continue
-            text_obj_tup, text_anchor_pos, text_anchor_type_tup, font_color = props
+            text_obj_tup, text_anchor_rel_pos, text_anchor_type_tup, font_color = props
             res.append((functools.partial(textImageConstructor,\
-                    text_obj=text_obj_tup[0], text_anchor_pos=text_anchor_pos,\
+                    text_obj=text_obj_tup[0], text_anchor_rel_pos=text_anchor_rel_pos,\
                     text_anchor_type=text_anchor_type_tup[0],\
                     font_color=font_color),))
         #print(res)
@@ -764,7 +764,7 @@ class Button(InteractiveDisplayComponentBase):
         def buttonImageConstructor(surf: "pg.Surface",\
                 button_surf: Optional["pg.Surface"]=None)\
                 -> None:
-            surf.blit(button_surf, self.topleft)
+            surf.blit(button_surf, self.topleft_rel_pos)
             return
         for i in range(self.n_state):
             props = getProperties(self, ["button_surfs"], i)
@@ -904,17 +904,17 @@ class ButtonGroupElement(ComponentGroupElementBaseClass, Button):
         button_group: "ButtonGroup",
         text: Tuple[Union[Tuple[str], int]],
         #text_objects=text_objects,
-        anchor_pos: Tuple[Real],
+        anchor_rel_pos: Tuple[Real],
         anchor_type: Optional[str]=None,
-        screen_topleft_offset: Optional[Tuple[Real]]=None,
+        screen_topleft_to_component_anchor_offset: Optional[Tuple[Real]]=None,
         text_anchor_types: Optional[Tuple[Union[Optional[Tuple[str]], int]]]=None,
         mouse_enabled: Optional[bool]=None,
         name: Optional[str]=None,
 
         #text: str,
-        #anchor_pos: Tuple[Real],
+        #anchor_rel_pos: Tuple[Real],
         #anchor_type: Optional[str]=None,
-        #screen_topleft_offset: Optional[Tuple[Real]]=None,
+        #screen_topleft_to_component_anchor_offset: Optional[Tuple[Real]]=None,
         #font_colors: Optional[Tuple[Optional[ColorOpacity], int]]=None,
         #fill_colors: Optional[Tuple[Optional[ColorOpacity], int]]=None,
         #outline_colors: Optional[Tuple[Optional[ColorOpacity], int]]=None,
@@ -930,9 +930,9 @@ class ButtonGroupElement(ComponentGroupElementBaseClass, Button):
         super().__init__(
             shape=button_group.button_shape,
             text=text,
-            anchor_pos=anchor_pos,
+            anchor_rel_pos=anchor_rel_pos,
             anchor_type=anchor_type,
-            screen_topleft_offset=screen_topleft_offset,
+            screen_topleft_to_component_anchor_offset=screen_topleft_to_component_anchor_offset,
             text_objects=None,
             font_colors=button_group.font_colors,
             text_borders_rel=button_group.text_borders_rel,
@@ -1014,6 +1014,20 @@ class ButtonGroup(ComponentGroupBaseClass):
             "text_groups": ((lambda obj: obj.createTextGroups()), ("n_state",)),
         }
     }
+
+    attribute_processing = {
+        **{
+            attr: Button.attribute_processing.get(attr) for attr in
+                [
+                    "text_groups",
+                    "text_borders_rel",
+                    "outline_widths",
+                    "font_colors",
+                    "fill_colors",
+                    "outline_colors",
+                ]
+        },
+    }
     
     #fixed_attributes = {"buttons"}
     
@@ -1050,9 +1064,9 @@ class ButtonGroup(ComponentGroupBaseClass):
     def addButton(
         self,
         text: Tuple[Union[Tuple[str], int]],
-        anchor_pos: Tuple[Real],
+        anchor_rel_pos: Tuple[Real],
         anchor_type: Optional[str]=None,
-        screen_topleft_offset: Optional[Tuple[Real]]=None,
+        screen_topleft_to_component_anchor_offset: Optional[Tuple[Real]]=None,
         text_anchor_types: Optional[Tuple[Union[Optional[Tuple[str]], int]]]=None,
         mouse_enabled: Optional[bool]=None,
         name: Optional[str]=None,
@@ -1064,9 +1078,9 @@ class ButtonGroup(ComponentGroupBaseClass):
         res = self._addElement(
             text=text,
             #text_objects=text_objects,
-            anchor_pos=anchor_pos,
+            anchor_rel_pos=anchor_rel_pos,
             anchor_type=anchor_type,
-            screen_topleft_offset=screen_topleft_offset,
+            screen_topleft_to_component_anchor_offset=screen_topleft_to_component_anchor_offset,
             text_anchor_types=text_anchor_types,
             mouse_enabled=mouse_enabled,
             name=name,
@@ -1103,34 +1117,164 @@ class ButtonGrid(InteractiveDisplayComponentBase):
     
     n_state = Button.n_state
 
+    reset_graph_edges = {
+        "grid_dims": {"grid_layout": True},
+        "shape": {"grid_layout": True},
+        "button_gaps_rel_shape": {"grid_layout": True},
+        "grid_layout": {"button_shape": True, "button_gaps": True, "button_topleft_locations": True, "display_surf": True},
+        "button_shape": {"display_surf": True, "button_ranges_rel": True},
+        "button_gaps": {"display_surf": True},
+        "button_topleft_locations": {"display_surf": True, "button_ranges_rel": True},
+        "button_ranges_rel": {"button_ranges_screen"},
+    }
+    
+    attribute_calculation_methods = {
+        "mouse_enablement": "calculateMouseEnablement",
+
+        #"slider": "createSlider",
+        "grid_layout": "calculateGridLayout",
+        "button_shape": "calculateButtonShape",
+        "button_gaps": "calculateButtonGaps",
+        "button_topleft_locations": "calculateButtonTopleftLocations",
+
+        "button_ranges_rel": "calculateButtonRangesRelative",
+        "button_ranges_screen": "calculateButtonRangesScreen",
+
+        "display_surf": "createDisplaySurface",
+
+        "button_grid_img_constructor": "createButtonGridImageConstructor",
+    }
+    
+    attribute_default_functions = {
+        **{
+            attr: Button.attribute_default_functions.get(attr) for attr in
+            [
+                "mouse_enabled",
+            ]
+        },
+        **{
+            attr: ButtonGroup.attribute_default_functions.get(attr) for attr in
+            [
+                "text_groups",
+                "font_colors",
+                "text_borders_rel",
+                "fill_colors",
+                "outline_widths",
+                "outline_colors",
+            ]
+        },
+        **{
+            "button_gaps_rel_shape": ((lambda obj: (0., 0.)),),
+            "navkeys_enabled": ((lambda obj: True),),
+            "navkey_cycle_delay_frame": ((lambda obj: (30, 10)),),
+            "buttons": ((lambda obj: [[None] * obj.grid_dims[1] for _ in range(obj.grid_dims[0])])),
+            "selected": 0,
+        }
+    }
+
+    attribute_processing = {
+        **{
+            attr: Button.attribute_processing.get(attr) for attr in
+                [
+                    "text_groups",
+                    "text_borders_rel",
+                    "outline_widths",
+                    "font_colors",
+                    "fill_colors",
+                    "outline_colors",
+                ]
+        },
+    }
+    
+    #fixed_attributes = set()
+    
+    sub_components = {
+        "button_group": {
+            "class": ButtonGroup,
+            "attribute_correspondence": {
+                "shape": "slider_shape",
+                "demarc_numbers_text_group": "demarc_numbers_text_group",
+                "thumb_radius_rel": "thumb_radius_rel",
+                "demarc_line_lens_rel": "demarc_line_lens_rel",
+                "demarc_numbers_max_height_rel": "demarc_numbers_max_height_rel",
+                "track_color": "track_color",
+                "thumb_color": "thumb_color",
+                "demarc_numbers_color": "demarc_numbers_color",
+                "demarc_line_colors": "demarc_line_colors",
+                "thumb_outline_color": "thumb_outline_color",
+                "mouse_enabled": "mouse_enabled",
+                "slider_shape_rel": "slider_shape_rel",
+                "slider_borders_rel": "slider_borders_rel",
+                "title_text_group": "title_text_group",
+                "title_anchor_type": "title_anchor_type",
+                "title_color": "title_color",
+                "val_text_group": "val_text_group",
+                "val_text_anchor_type": "val_text_anchor_type",
+                "val_text_color": "val_text_color",
+            },
+            "creation_function_args": {
+                "shape": None,
+                "demarc_numbers_text_group": None,
+                "thumb_radius_rel": None,
+                "demarc_line_lens_rel": None,
+                "demarc_numbers_max_height_rel": None,
+                "track_color": None,
+                "thumb_color": None,
+                "demarc_numbers_color": None,
+                "demarc_line_colors": None,
+                "thumb_outline_color": None,
+                "mouse_enabled": None,
+                "slider_shape_rel": None,
+                "slider_borders_rel": None,
+                "title_text_group": None,
+                "title_anchor_type": None,
+                "title_color": None,
+                "val_text_group": None,
+                "val_text_anchor_type": None,
+                "val_text_color": None,
+            },
+        }
+    }
+    
+    displ_component_attrs = ["button_grid"]
+
     def __init__(
-        self, 
-        shape: Tuple[Real],
-        button_text: List[List[str]],
-        text_groups: Tuple[Union[Optional[Tuple["TextGroup"]], int]],
-        anchor_pos: Tuple[Real],
-        anchor_type: str="topleft",
-        screen_topleft_offset: Tuple[Real]=(0, 0),
-        button_gap_rel_shape=(0.2, 0.2),
-        font_colors=None,
-        text_borders_rel=None,
-        fill_colors=None,
-        outline_widths=None,
-        outline_colors=None,
-        mouse_enabled: bool=True,
-        navkeys_enabled: bool=True,
+        self,
+        grid_dims: Tuple[int, int],
+        shape: Tuple[Real, Real],
+        anchor_rel_pos: Tuple[Real, Real],
+        anchor_type: Optional[str]=None,
+        screen_topleft_to_component_anchor_offset: Optional[Tuple[Real, Real]]=None,
+        button_gaps_rel_shape: Optional[Tuple[Optional[Real], Optional[Real]]]=None,
+        text_groups: Optional[Tuple[Union[Optional[Tuple["TextGroup"]], int]]]=None,
+        font_colors: Optional[Tuple[Optional[ColorOpacity], int]]=None,
+        text_borders_rel: Optional[Tuple[Union[Optional[Tuple[Real]], int]]]=None,
+        fill_colors: Optional[Tuple[Optional[ColorOpacity], int]]=None,
+        outline_widths: Optional[Tuple[Union[Real, int]]]=None,
+        outline_colors: Optional[Tuple[Optional[ColorOpacity], int]]=None,
+        mouse_enabled: Optional[bool]=None,
+        navkeys_enabled: Optional[bool]=None,
         navkeys: Optional[Tuple[Tuple[Set[int]]]]=None,
-        navkey_cycle_delay_frame: Tuple[int]=(30, 10),
+        navkey_cycle_delay_frame: Optional[Tuple[int]]=None,
         enter_keys: Optional[Set[int]]=None,
+        **kwargs,
     ):
+
+        #self.button_shape_fixed = False
         
-        self.button_shape_fixed = False
+        checkHiddenKwargs(type(self), kwargs)
+
+        kwargs2 = self.initArgsManagement(locals(), kwargs=kwargs)
+        super().__init__(**kwargs2)
+        #self.buttons = [[None] * self.grid_dims[1] for _ in range(self.grid_dims[0])]
+
         
+        """
         super().__init__(
             shape,
-            anchor_pos,
+            anchor_rel_pos,
             anchor_type=anchor_type,
-            screen_topleft_offset=screen_topleft_offset,
+            screen_topleft_to_component_anchor_offset=screen_topleft_to_component_anchor_offset,
             mouse_enablement=(mouse_enabled, False, mouse_enabled),
             navkeys_enablement=(navkeys_enabled, navkeys_enabled, False),
             navkeys=navkeys,
@@ -1139,18 +1283,20 @@ class ButtonGrid(InteractiveDisplayComponentBase):
         )
         
         #self.n_state = 4
-        self.selected = 0
+        #self.selected = 0
         
         #print(button_text)
-        self._button_array_shape = (len(button_text), len(button_text[0])) if button_text else (0, 0)
+        #self._button_array_shape = (len(button_text), len(button_text[0])) if button_text else (0, 0)
         """
-        self._screen_topleft_offset = screen_topleft_offset
-        self._grid_anchor_pos = grid_anchor_pos
+        """
+        self._screen_topleft_to_component_anchor_offset = screen_topleft_to_component_anchor_offset
+        self._grid_anchor_rel_pos = grid_anchor_rel_pos
         self._grid_anchor_type = grid_anchor_type
+        """
         """
         self._text_groups = None# text_groups
         
-        self._button_gap_rel_shape = tuple(button_gap_rel_shape)
+        self._button_gaps_rel_shape = tuple(button_gaps_rel_shape)
         
         #self._button_shape = button_shape
         #self.button_shape_fixed = True
@@ -1182,15 +1328,132 @@ class ButtonGrid(InteractiveDisplayComponentBase):
         self._navkeys = navkeys
         self._navkey_cycle_delay_frame = navkey_cycle_delay_frame
         """
-        self.user_input_processor = UserInputProcessor(keys_down=set(self.navkeys_dict.keys()) if self.navkeys_enabled else set(),
-            key_press_event_filter=(lambda event: event.key in (enter_keys.union(self.navkeys_dict.keys())) if self.navkeys_enabled else set()),
-            key_release_event_filter=False,
-            mouse_press_event_filter=False,
-            mouse_release_event_filter=lambda event: (self.mouse_enabled and event.button == 1),
-            other_event_filter=False,
-            get_mouse_status=self.mouse_enabled)
-        """
     
+    def setupButtonGridElement(
+        self,
+        grid_inds: Tuple[int],
+        text: Tuple[Union[Tuple[str], int]],
+        text_anchor_types: Optional[Tuple[Union[Optional[Tuple[str]], int]]]=None,
+        name: Optional[str]=None,
+        **kwargs,
+    ) -> Button:
+        # Review- add mechanism for communicating from a constituent slider
+        # that its value has changed.
+        if any(idx < 0 or idx >= m for idx, m in zip(grid_inds, self.grid_dims)):
+            raise IndexError("The grid indices given are not in the allowed range")
+        attr_dict = {
+            "text": text,
+            "anchor_rel_pos": (0, 0),
+            "anchor_type": "topleft",
+            "screen_topleft_to_component_anchor_offset": self.screen_topleft_to_component_topleft_offset,
+            "text_anchor_types": text_anchor_types,
+            "mouse_enabled": self.mouse_enabled,
+            "name": name,
+        }
+        if self.buttons[grid_inds[0]][grid_inds[1]] is None:
+            print(f"creating button at grid indices {grid_inds}")
+            container_attr_resets = {"display_surf": {"display_surf": True}}
+            self.buttons[grid_inds[0]][grid_inds[1]] = self.button_group.addButton(
+                _from_container=True,
+                _container_obj=self,
+                _container_attr_reset_dict=container_attr_resets,
+                **attr_dict,
+                **kwargs,
+            )
+            #print(self.buttons[grid_inds[0]][grid_inds[1]].__dict__.get("_display_surf", None))
+        else:
+            self.buttons[grid_inds[0]][grid_inds[1]].setAttributes(
+                attr_dict,
+                _from_container=True,
+                **kwargs,
+            )
+        #self.setAttributes({"display_surf": None}, _from_container=True)
+        # Workaround to ensure that the button element is sufficiently
+        # set up
+        self.buttons[grid_inds[0]][grid_inds[1]].display_surf
+        return self.buttons[grid_inds[0]][grid_inds[1]]
+    
+    def getButton(self, grid_inds: Tuple[int, int]) -> Optional[Button]:
+        if any(idx < 0 or idx >= m for idx, m in zip(grid_inds, self.grid_dims)):
+            raise IndexError("The grid indices given are not in the allowed range")
+        return self.buttons[grid_inds[0]][grid_inds[1]]
+    
+    def getButtonState(self, inds: Tuple[int]) -> int:
+        return self.button_grid[inds[0]][inds[1]].state
+
+    def buttonIterator(self) -> Generator[Tuple[Button, Tuple[int, int]], None, None]:
+        for i1, button_row in enumerate(self.buttons):
+            for i2, button in enumerate(button_row):
+                if button is None: continue
+                yield (button, (i1, i2))
+        return
+
+    def calculateGridLayout(self) -> Tuple[Tuple[int, int], Tuple[float, float]]:
+        shape = []
+        gaps = []
+        for tot_len, n_buttons, rel_gap_size in zip(self.shape, self.grid_dims, self.button_gaps_rel_shape):
+            shape.append(round(tot_len / (rel_gap_size * (n_buttons - 1) + n_buttons)))
+            gaps.append((tot_len - n_buttons * shape[-1]) / (n_buttons - 1) if n_buttons > 1 else 0.)
+        return tuple(shape), tuple(gaps)
+    
+    def calculateButtonShape(self) -> Tuple[int, int]:
+        return self.grid_layout[0]
+
+    def calculateButtonGaps(self) -> Tuple[int, int]:
+        return self.grid_layout[1]
+    
+    def calculateButtonTopleftLocations(self) -> Tuple[List[int], List[int]]:
+        dims = self.grid_dims
+        button_shape, gap_size = self.grid_layout
+        x_lst = []
+        y_lst = []
+        for i1 in range(dims[0]):
+            x_lst.append(round((button_shape[0] + gap_size[0]) * i1))
+        for i2 in range(dims[1]):
+            y_lst.append(round((button_shape[1] + gap_size[1]) * i2))
+
+        return (x_lst, y_lst)
+
+    def createDisplaySurface(self) -> "pg.Surface":
+        #print("creating display surface")
+        #print(f"shape = {self.shape}")
+        surf = pg.Surface(self.shape, pg.SRCALPHA)
+        #surf.set_alpha(100)
+        #surf.fill((255, 0, 0))
+        #print(self.displ_component_attrs)
+        for attr in self.displ_component_attrs:
+            #print(f"{attr}_img_constructor")
+            constructor_func = getattr(self, f"{attr}_img_constructor", (lambda obj, surf: None))
+            #print(attr, surf)
+            constructor_func(self, surf)
+            #print("howdy")
+        #print(f"display surface = {surf}")
+        return surf
+
+    def createButtonGridImageConstructor(self) -> Callable[["ButtonGrid", "pg.Surface"], None]:
+        def constructor(obj: ButtonGrid, surf: "pg.Surface") -> None:
+            #print("using slider grid constructor")
+            n_button = 0
+            # Workaround to prevent the possibility that changes to one
+            # of the later sliders causes the display surface of an earlier
+            # one to be reset- moved to the addSliderPlus() method
+            #for slider, _ in obj.sliderPlusIterator():
+            #    slider.display_surf
+            for button, grid_inds in obj.sliderPlusIterator():
+                i1, i2 = grid_inds
+                #if i2 == 0: continue
+                print(f"grid inds {(i1, i2)}")
+                button.anchor_type = "topleft"
+                button.anchor_rel_pos = (self.button_topleft_locations[0][i1], self.button_topleft_locations[1][i2])
+                button.draw(surf)
+                n_button += 1
+            #print(f"n_button = {n_button}")
+            return
+
+        return constructor
+
+    #########################
+    """
     def _setupText(
         self,
         button_text: List[List]
@@ -1247,11 +1510,11 @@ class ButtonGrid(InteractiveDisplayComponentBase):
                             zip(button_topleft, button_shape, tbr))
                     #print(text_shape, text_anchor_type)
                     anchor_offset = topLeftAnchorOffset(text_shape, text_anchor_type)
-                    text_anchor_pos = tuple(x + y for x, y in zip(text_topleft, anchor_offset))
+                    text_anchor_rel_pos = tuple(x + y for x, y in zip(text_topleft, anchor_offset))
                     
                     inds_list.append((idx1, idx2))
-                    # text_list = [{"text": "Hello", "max_width": 200, "color": (named_colors_def["red"], 1)), "anchor_pos0": (0, 0), "anchor_type0": "topleft"}]
-                    text_list.append({"text": text, "max_shape": (text_shape[0], None), "font_color": font_color, "anchor_pos0": text_anchor_pos, "anchor_type0": "topleft"})
+                    # text_list = [{"text": "Hello", "max_width": 200, "color": (named_colors_def["red"], 1)), "anchor_rel_pos0": (0, 0), "anchor_type0": "topleft"}]
+                    text_list.append({"text": text, "max_shape": (text_shape[0], None), "font_color": font_color, "anchor_rel_pos0": text_anchor_rel_pos, "anchor_type0": "topleft"})
             text_objs = text_group.addTextObjects(text_list)
             for text_obj, (idx1, idx2) in zip(text_objs, inds_list):
                 res[idx1][idx2][i] = (text_obj,)
@@ -1291,13 +1554,6 @@ class ButtonGrid(InteractiveDisplayComponentBase):
         text_groups = simplifyReferences(text_groups)
         self.setAttribute("text_groups", text_groups, "_textGroupsCustomUpdate", reset_type="text_groups", replace_attr=True)
         return
-        """
-        if text_groups == getattr(self, "_text_groups", None):
-            return
-        # Review
-        self._text_groups = text_groups
-        return
-        """
     
     @property
     def button_grid(self):
@@ -1311,15 +1567,16 @@ class ButtonGrid(InteractiveDisplayComponentBase):
     def text_list(self):
         return self._text_list
     """
+    """
     @property
-    def screen_topleft_offset(self):
-        return self._screen_topleft_offset
+    def screen_topleft_to_component_anchor_offset(self):
+        return self._screen_topleft_to_component_anchor_offset
     
-    @screen_topleft_offset.setter
-    def screen_topleft_offset(self, screen_topleft_offset: Tuple[Real]):
-        if screen_topleft_offset == getattr(self, "_screen_topleft_offset", None):
+    @screen_topleft_to_component_anchor_offset.setter
+    def screen_topleft_to_component_anchor_offset(self, screen_topleft_to_component_anchor_offset: Tuple[Real]):
+        if screen_topleft_to_component_anchor_offset == getattr(self, "_screen_topleft_to_component_anchor_offset", None):
             return
-        self._screen_topleft_offset = screen_topleft_offset
+        self._screen_topleft_to_component_anchor_offset = screen_topleft_to_component_anchor_offset
         for attr in ("_button_ranges_screen",):
             setattr(self, attr, None)
         return
@@ -1338,14 +1595,14 @@ class ButtonGrid(InteractiveDisplayComponentBase):
         return
     
     @property
-    def grid_anchor_pos(self):
-        return self._grid_anchor_pos
+    def grid_anchor_rel_pos(self):
+        return self._grid_anchor_rel_pos
     
-    @grid_anchor_pos.setter
-    def grid_anchor_pos(self, grid_anchor_pos: Tuple[int]):
-        if grid_anchor_pos == getattr(self, "_grid_anchor_pos", None):
+    @grid_anchor_rel_pos.setter
+    def grid_anchor_rel_pos(self, grid_anchor_rel_pos: Tuple[int]):
+        if grid_anchor_rel_pos == getattr(self, "_grid_anchor_rel_pos", None):
             return
-        self._grid_anchor_pos = grid_anchor_pos
+        self._grid_anchor_rel_pos = grid_anchor_rel_pos
         for attr in ("_grid_topleft", "_button_ranges_surf", "_button_ranges_screen"):
             setattr(self, attr, None)
         return
@@ -1360,7 +1617,7 @@ class ButtonGrid(InteractiveDisplayComponentBase):
     
     def findTopLeft(self) -> Tuple[int]:
         return topLeftFromAnchorPosition(self.grid_shape, self.grid_anchor_type,\
-                self.grid_anchor_pos)
+                self.grid_anchor_rel_pos)
     
     
     @property
@@ -1384,12 +1641,12 @@ class ButtonGrid(InteractiveDisplayComponentBase):
             self.dims = (*grid_topleft, *self.dims[2:])
         return
         ""
-    """
+    
     @property
     def button_array_shape(self):
         return self._button_array_shape
     
-    """
+    
     @property
     def grid_shape(self):
         res = getattr(self, "_grid_shape", None)
@@ -1407,12 +1664,14 @@ class ButtonGrid(InteractiveDisplayComponentBase):
         self.setButtonsShape(self.findButtonShapeFromOverallShape(), update_font_sizes=True)
         return
     """
+    """
     def _shapeCustomUpdate(self, change: bool=False) -> None:
         #print("hello")
         self.button_shape_fixed = False
         if change:
             self.setButtonsShape(self.findButtonShapeFromOverallShape(), update_font_sizes=True)
         return
+    """
     """
     @property
     def button_shape(self):
@@ -1427,6 +1686,7 @@ class ButtonGrid(InteractiveDisplayComponentBase):
         if self.grid_anchor_type != "topleft":
             self._grid_topleft = None
         return
+    """
     """
     @property
     def button_shape(self):
@@ -1484,7 +1744,7 @@ class ButtonGrid(InteractiveDisplayComponentBase):
         self.setTextMaxShape()
         for button_lst, x in zip(self.button_grid, x_lst):
             for button, y in zip(button_lst, y_lst):
-                button.anchor_pos = (x, y)
+                button.anchor_rel_pos = (x, y)
                 button.shape = b_shape
         #if update_font_sizes and not self.font_sizes_set:
         #    self.calculateAndSetFontSizes()
@@ -1499,26 +1759,13 @@ class ButtonGrid(InteractiveDisplayComponentBase):
         return res
     
     @property
-    def button_gap_rel_shape(self):
-        return self._button_gap_rel_shape
+    def button_gaps_rel_shape(self):
+        return self._button_gaps_rel_shape
     
-    @button_gap_rel_shape.setter
-    def button_gap_rel_shape(self, button_gap_rel_shape):
-        self.setAttribute("button_gap_rel_shape", button_gap_rel_shape, "_buttonGapRelativeToShapeCustomUpdate", reset_type="button_gap_rel_shape", replace_attr=True)
+    @button_gaps_rel_shape.setter
+    def button_gaps_rel_shape(self, button_gaps_rel_shape):
+        self.setAttribute("button_gaps_rel_shape", button_gaps_rel_shape, "_buttonGapRelativeToShapeCustomUpdate", reset_type="button_gaps_rel_shape", replace_attr=True)
         return
-        """
-        if button_gap_rel_shape == getattr(self, "_button_gap_rel_shape", None):
-            return
-        self._button_gap_rel_shape = button_gap_rel_shape
-        if self.button_shape_fixed:
-            self._button_ranges_surf = None
-            self._button_ranges_screen = None
-            #self._dims = None
-            self._grid_offsets = None
-            self._buttons_topleft = None
-        else: self.setButtonsShape(self.findButtonShapeFromOverallShape(), update_font_sizes=True)
-        return
-        """
     
     def _buttonGapRelativeToShapeCustomUpdate(self, change: bool=True) -> None:
         #print("howdy")
@@ -1536,17 +1783,17 @@ class ButtonGrid(InteractiveDisplayComponentBase):
     def grid_offsets(self):
         res = getattr(self, "_grid_offsets", None)
         if res is None:
-            res = tuple(x * (1 + y) for x, y in zip(self.button_shape, self.button_gap_rel_shape))
+            res = tuple(x * (1 + y) for x, y in zip(self.button_shape, self.button_gaps_rel_shape))
             self._grid_offsets = res
         return res
     
     
     def findButtonShapeFromOverallShape(self):
-        return tuple(overall_sz / (n_button + (n_button - 1) * gap) for overall_sz, n_button, gap in zip(self.shape, self.button_array_shape, self.button_gap_rel_shape))
+        return tuple(overall_sz / (n_button + (n_button - 1) * gap) for overall_sz, n_button, gap in zip(self.shape, self.button_array_shape, self.button_gaps_rel_shape))
     
     def findOverallShapeFromButtonShape(self):
-        return tuple(button_sz * (n_button + (n_button - 1) * gap) for button_sz, n_button, gap in zip(self.button_shape, self.button_array_shape, self.button_gap_rel_shape))
-    
+        return tuple(button_sz * (n_button + (n_button - 1) * gap) for button_sz, n_button, gap in zip(self.button_shape, self.button_array_shape, self.button_gaps_rel_shape))
+    """
     """
     @property
     def dims(self):
@@ -1567,22 +1814,32 @@ class ButtonGrid(InteractiveDisplayComponentBase):
         self.setButtonsShape(self.findButtonShapeFromOverallShape(), update_font_sizes=True)
         return
     """
-    
+    """
     @property
     def button_ranges_gridwise(self):
         res = getattr(self, "_button_ranges_gridwise", None)
         if res is None:
-            res = self.findButtonRangesLocal()
+            res = self.findButtonRangesRelative()
             self._button_ranges_gridwise = res
             #print(f"button_ranges = {res}")
         return res
-    
-    def findButtonRangesLocal(self) -> Tuple[Tuple[Real]]:
+    """
+    def calculateButtonRangesRelative(self) -> Tuple[Tuple[Real]]:
         res = [[], []]
+        b_shape = self.button_shape
+        b_topleft_locs = self.button_topleft_locations
+        for x in b_topleft_locs[0]:
+            res[0].append((x, x + b_shape[0]))
+        res[0] = tuple(res[0])
+        for y in b_topleft_locs[1]:
+            res[1].append((y, y + b_shape[1]))
+        res[1] = tuple(res[1])
+        return tuple(res)
+        """
         b_shape = self.button_shape
         for i1, button_row in enumerate(self.button_grid):
             button = button_row[0]
-            topleft = button.topleft
+            topleft = button.topleft_rel_pos
             res[0].append((topleft[0], topleft[0] + b_shape[0]))
         for i2, button in enumerate(self.button_grid[0]):
             topleft = button.topleft
@@ -1590,7 +1847,16 @@ class ButtonGrid(InteractiveDisplayComponentBase):
         res[0] = tuple(res[0])
         res[1] = tuple(res[1])
         return tuple(res)
+        """
     
+    def calculateButtonRangesScreen(self) -> Tuple[Tuple[Real]]:
+        offset = tuple(x + y for x, y in zip(self.screen_topleft_to_component_anchor_offset, self.topleft_rel_pos))
+        res = []
+        for rngs, d in zip(self.button_ranges_rel, offset):
+            res.append([tuple(x + d for x in rng) for rng in rngs])
+        return res
+
+    """
     @property
     def button_ranges_surf(self):
         res = getattr(self, "_button_ranges_surf", None)
@@ -1602,7 +1868,7 @@ class ButtonGrid(InteractiveDisplayComponentBase):
     
     def findButtonRangesSurface(self) -> Tuple[Tuple[Real]]:
         res = []
-        for rngs, tl_displ in zip(self.button_ranges_gridwise, self.topleft):
+        for rngs, tl_displ in zip(self.button_ranges_gridwise, self.topleft_rel_pos):
             res.append([tuple(x + tl_displ for x in rng) for rng in rngs])
         return tuple(res)
     
@@ -1614,15 +1880,16 @@ class ButtonGrid(InteractiveDisplayComponentBase):
             res = self.findButtonRangesScreen()
             self._button_ranges_screen = res
         return res
-    
+   
     def findButtonRangesScreen(self):
         res = []
-        #for rngs, tl_displ, tl_offset in zip(self.button_ranges_gridwise, self.topleft, self.screen_topleft_offset):
+        #for rngs, tl_displ, tl_offset in zip(self.button_ranges_gridwise, self.topleft, self.screen_topleft_to_component_anchor_offset):
         #    res.append([tuple(x + tl_displ + tl_offset for x in rng) for rng in rngs])
-        for rngs, stl_offset in zip(self.button_ranges_surf, self.screen_topleft_offset):
+        for rngs, stl_offset in zip(self.button_ranges_surf, self.screen_topleft_to_component_anchor_offset):
             res.append([tuple(x + stl_offset for x in rng) for rng in rngs])
         return tuple(res)
-    
+     """
+    """
     @property
     def text_borders_rel(self):
         return self._text_borders_rel
@@ -1692,12 +1959,18 @@ class ButtonGrid(InteractiveDisplayComponentBase):
         return res
     
     def createButtonGridImageConstructor(self) -> Callable[[], None]:
-        return lambda surf: surf.blit(self.button_grid_surf, self.topleft)
-    
+        return lambda surf: surf.blit(self.button_grid_surf, self.topleft_rel_pos)
+    """
     def draw(self, surf: "pg.Surface"):
-        self.button_grid_img_constructor(surf)
+        #self.button_grid_img_constructor(surf)
+        surf.blid(self.display_surf, self.topleft_rel_pos)
         return
     
+    def calculateMouseEnablement(self) -> None:
+        #print("calculating mouse enablement")
+        mouse_enabled = self.mouse_enabled
+        return (mouse_enabled, False, mouse_enabled)
+
     @property
     def mouse_over(self):
         return self._mouse_over
@@ -1863,7 +2136,7 @@ class ButtonGrid(InteractiveDisplayComponentBase):
     #            res.append(event_tup[0].pos)
     #    return res
     
-    def mouseOverButton(self, mouse_pos: Optional[Tuple]=None) -> Optional[Tuple[int]]:
+    def mouseOverWhichButton(self, mouse_pos: Optional[Tuple]=None) -> Optional[Tuple[int]]:
         if not self.mouse_enabled: return None
         if mouse_pos is None:
             if not pg.mouse.get_focused():
@@ -1892,7 +2165,7 @@ class ButtonGrid(InteractiveDisplayComponentBase):
         for tup in events:
             if tup[1] == 3 and self.mouse_enabled:
                 pos = tup[0].pos
-                b_inds2 = self.mouseOverButton(pos)
+                b_inds2 = self.mouseOverWhichButton(pos)
                 if b_inds2 is None: continue
                 b_inds = b_inds2
                 b_reset = True
@@ -1946,7 +2219,7 @@ class ButtonGrid(InteractiveDisplayComponentBase):
             if mouse_status is None:
                 mouse_status = self.user_input_processor.getMouseStatus()
             b_inds0_mouse = self.mouse_over
-            b_inds1_mouse = self.mouseOverButton(mouse_status[0])
+            b_inds1_mouse = self.mouseOverWhichButton(mouse_status[0])
             lmouse_down = mouse_status[1][0]
         else:
             b_inds0_mouse = None

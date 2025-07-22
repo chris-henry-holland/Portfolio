@@ -191,18 +191,18 @@ class MenuOverlayBase(InteractiveDisplayComponentBase):
     def textPrinter(self, surf: "pg.Surface") -> None:
         print("Using ButtonMenuOverlay method textPrinter()")
         surf_shape = (surf.get_width(), surf.get_height())
-        for text_obj, max_shape_rel, anchor_pos_rel in self.text_objects:
+        for text_obj, max_shape_rel, anchor_screen_pos_norm in self.text_objects:
             text_obj.max_shape = tuple(x * y for x, y in zip(surf_shape, max_shape_rel))
             print(max_shape_rel, surf_shape, text_obj.max_shape)
-            text_obj.anchor_pos0 = tuple(x * y for x, y in zip(surf_shape, anchor_pos_rel))
+            text_obj.anchor_rel_pos0 = tuple(x * y for x, y in zip(surf_shape, anchor_screen_pos_norm))
         for text_obj, _, _ in self.text_objects:
-            #anchor_pos = tuple(x * y for x, y in zip(surf_shape, anchor_pos_rel))
+            #anchor_screen_pos = tuple(x * y for x, y in zip(surf_shape, anchor_screen_pos_norm))
             text_obj.draw(surf)
         return
     
     def addText(self, text_obj: "Text", max_shape_rel: Tuple[Real],\
-            anchor_pos_rel: Tuple[Real]) -> None:
-        self.text_objects.append((text_obj, max_shape_rel, anchor_pos_rel))
+            anchor_screen_pos_norm: Tuple[Real]) -> None:
+        self.text_objects.append((text_obj, max_shape_rel, anchor_screen_pos_norm))
         return
     
     @property
@@ -566,18 +566,18 @@ class ButtonMenuOverlay(MenuOverlayBase):
     def textPrinter(self, surf: "pg.Surface") -> None:
         print("Using ButtonMenuOverlay method textPrinter()")
         surf_shape = (surf.get_width(), surf.get_height())
-        for text_obj, max_shape_rel, anchor_pos_rel in self.text_objects:
+        for text_obj, max_shape_rel, anchor_screen_pos_norm in self.text_objects:
             text_obj.max_shape = tuple(x * y for x, y in zip(surf_shape, max_shape_rel))
             print(max_shape_rel, surf_shape, text_obj.max_shape)
-            text_obj.anchor_pos0 = tuple(x * y for x, y in zip(surf_shape, anchor_pos_rel))
+            text_obj.anchor_rel_pos0 = tuple(x * y for x, y in zip(surf_shape, anchor_screen_pos_norm))
         for text_obj, _, _ in self.text_objects:
-            #anchor_pos = tuple(x * y for x, y in zip(surf_shape, anchor_pos_rel))
+            #anchor_rel_pos = tuple(x * y for x, y in zip(surf_shape, anchor_screen_pos_norm))
             text_obj.draw(surf)
         return
     
     def addText(self, text_obj: "Text", max_shape_rel: Tuple[Real],\
-            anchor_pos_rel: Tuple[Real]) -> None:
-        self.text_objects.append((text_obj, max_shape_rel, anchor_pos_rel))
+            anchor_screen_pos_norm: Tuple[Real]) -> None:
+        self.text_objects.append((text_obj, max_shape_rel, anchor_screen_pos_norm))
         return
     """
     @property
@@ -606,11 +606,11 @@ class ButtonMenuOverlay(MenuOverlayBase):
         bsp_rel = self.buttons_spatial_props_rel
         if bsp_rel is None:
             return ()
-        (anchor_pos_rel, anchor_type, overall_shape_rel,\
+        (anchor_screen_pos_norm, anchor_type, overall_shape_rel,\
                 wh_ratio_range) = bsp_rel
         
         screen_shape = self.screen_shape
-        anchor_pos = tuple(x * y for x, y in zip(screen_shape, anchor_pos_rel))
+        anchor_screen_pos = tuple(x * y for x, y in zip(screen_shape, anchor_screen_pos_norm))
         
         overall_shape = [x * y for x, y in zip(screen_shape, overall_shape_rel)]
         #print(overall_shape)
@@ -621,7 +621,7 @@ class ButtonMenuOverlay(MenuOverlayBase):
             overall_shape[0] *= wh_ratio_range[1] / wh_ratio
         
         overall_shape = tuple(overall_shape)
-        topleft = topLeftFromAnchorPosition(overall_shape, anchor_type, anchor_pos)
+        topleft = topLeftFromAnchorPosition(overall_shape, anchor_type, anchor_screen_pos)
         
         return (topleft, overall_shape)
     
@@ -636,7 +636,7 @@ class ButtonMenuOverlay(MenuOverlayBase):
     
     def setButtons(
         self,
-        anchor_pos_rel: Tuple[Real],
+        anchor_screen_pos_norm: Tuple[Real],
         anchor_type: str,
         overall_shape_rel: Tuple[Real],
         wh_ratio_range: Tuple[Real],
@@ -652,7 +652,7 @@ class ButtonMenuOverlay(MenuOverlayBase):
         outline_colors=None
     ) -> None:
         
-        self._buttons_spatial_props_rel = (anchor_pos_rel, anchor_type,\
+        self._buttons_spatial_props_rel = (anchor_screen_pos_norm, anchor_type,\
                 overall_shape_rel, wh_ratio_range)
         
         (topleft, overall_shape) = self.findButtonsSpatialProperties()
@@ -1005,11 +1005,11 @@ class SliderAndButtonMenuOverlay(ButtonMenuOverlay):
         bsp_rel = self.buttons_spatial_props_rel
         if bsp_rel is None:
             return ()
-        (anchor_pos_rel, anchor_type, overall_shape_rel,\
+        (anchor_screen_pos_norm, anchor_type, overall_shape_rel,\
                 wh_ratio_range) = bsp_rel
         
         screen_shape = self.screen_shape
-        anchor_pos = tuple(x * y for x, y in zip(screen_shape, anchor_pos_rel))
+        anchor_screen_pos = tuple(x * y for x, y in zip(screen_shape, anchor_screen_pos_norm))
         
         overall_shape = [x * y for x, y in zip(screen_shape, overall_shape_rel)]
         #print(overall_shape)
@@ -1020,7 +1020,7 @@ class SliderAndButtonMenuOverlay(ButtonMenuOverlay):
             overall_shape[0] *= wh_ratio_range[1] / wh_ratio
         
         overall_shape = tuple(overall_shape)
-        topleft = topLeftFromAnchorPosition(overall_shape, anchor_type, anchor_pos)
+        topleft = topLeftFromAnchorPosition(overall_shape, anchor_type, anchor_screen_pos)
         
         return (topleft, overall_shape)
     
@@ -1036,7 +1036,7 @@ class SliderAndButtonMenuOverlay(ButtonMenuOverlay):
     def setSliders(
         self,
         slider_elements: List[List[Any]],
-        anchor_pos_rel: Tuple[Real],
+        anchor_screen_pos_norm: Tuple[Real],
         anchor_type: str,
         overall_shape_rel: Tuple[Real],
         wh_ratio_range: Tuple[Real],
@@ -1062,7 +1062,7 @@ class SliderAndButtonMenuOverlay(ButtonMenuOverlay):
         val_text_color: Optional[ColorOpacity]=None,
     ) -> None:
         
-        self._sliders_spatial_props_rel = (anchor_pos_rel, anchor_type,\
+        self._sliders_spatial_props_rel = (anchor_screen_pos_norm, anchor_type,\
                 overall_shape_rel, wh_ratio_range)
         
         (topleft, overall_shape) = self.findSlidersSpatialProperties()
@@ -1088,7 +1088,7 @@ class SliderAndButtonMenuOverlay(ButtonMenuOverlay):
             grid_dims,
             overall_shape,
             slider_gaps_rel_shape=slider_gaps_rel_shape,
-            anchor_pos=topleft,
+            anchor_rel_pos=topleft,
             anchor_type="topleft",
             screen_topleft_offset=self.screen_topleft_offset,
             demarc_numbers_text_group=demarc_numbers_text_group,

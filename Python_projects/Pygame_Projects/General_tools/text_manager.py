@@ -83,7 +83,7 @@ class Text(ComponentBaseClass):
         "font": ((lambda obj: font_def_func()),),
         "font_size": ((lambda obj: None),),
         "font_color": ((lambda obj: ((0, 0, 0), 1)),),
-        "anchor_pos0": ((lambda obj: (0, 0)),),
+        "anchor_rel_pos0": ((lambda obj: (0, 0)),),
         "anchor_type0": ((lambda obj: "topleft"),),
         "text_global_asc_desc_chars0": ((lambda obj: ()),),
     }
@@ -99,7 +99,7 @@ class Text(ComponentBaseClass):
         font: Optional["pg.freetype"]=None,
         font_size: Optional[Real]=None,
         font_color: Optional[ColorOpacity]=None,
-        anchor_pos0: Optional[Tuple[int]]=None,
+        anchor_rel_pos0: Optional[Tuple[int]]=None,
         anchor_type0: Optional[str]=None,
         text_global_asc_desc_chars0: Optional[Tuple[Optional[str]]]=None,
         name: Optional[str]=None,
@@ -252,15 +252,15 @@ class Text(ComponentBaseClass):
         w = self.shape[0]
         return (w, h)
         
-    def calculateTopleftEffective(self, anchor_pos: Tuple[Real], anchor_type: str="topleft") -> Tuple[Real]:
+    def calculateTopleftEffective(self, anchor_rel_pos: Tuple[Real], anchor_type: str="topleft") -> Tuple[Real]:
         #print("using calculateTopleftEffective()")
         #print(f"self.shape_eff = {self.shape_eff}")
         return topLeftFromAnchorPosition(self.shape_eff,\
-                anchor_type, anchor_pos)
+                anchor_type, anchor_rel_pos)
     
     
-    def calculateTopleftActual(self, anchor_pos: Tuple[Real], anchor_type: str="topleft") -> Tuple[Real]:
-        topleft_eff = self.calculateTopleftEffective(anchor_pos, anchor_type=anchor_type)
+    def calculateTopleftActual(self, anchor_rel_pos: Tuple[Real], anchor_type: str="topleft") -> Tuple[Real]:
+        topleft_eff = self.calculateTopleftEffective(anchor_rel_pos, anchor_type=anchor_type)
         return (topleft_eff[0], topleft_eff[1] + self.top_offset)
     
     def calculateTextRectangle(self):
@@ -285,33 +285,33 @@ class Text(ComponentBaseClass):
         if self.font_color is None:
             # If font_color given as None then the text does not
             # display
-            return (lambda surf, anchor_pos, anchor_type: None)
+            return (lambda surf, anchor_rel_pos, anchor_type: None)
         
-        def textConstructor(surf: "pg.Surface", anchor_pos: Tuple[int], anchor_type: str="topleft") -> None:
+        def textConstructor(surf: "pg.Surface", anchor_rel_pos: Tuple[int], anchor_type: str="topleft") -> None:
             font_color = self.font_color
             if not font_color: return
             color, alpha0 = self.font_color
             #print(f"shape = {self.shape}, shape_eff = {self.shape_eff}")
-            text_rect = self.text_rect#self.getTextRect(anchor_pos, anchor_type=anchor_type)
-            #setattr(text_rect, anchor_type, anchor_pos)#
-            topleft = self.calculateTopleftActual(anchor_pos, anchor_type=anchor_type)
-            #print(f"anchor_pos = {anchor_pos}, anchor_type = {anchor_type}, shape = {self.shape}, shape_eff = {self.shape_eff}, topleft = {topleft}")
+            text_rect = self.text_rect#self.getTextRect(anchor_rel_pos, anchor_type=anchor_type)
+            #setattr(text_rect, anchor_type, anchor_rel_pos)#
+            topleft = self.calculateTopleftActual(anchor_rel_pos, anchor_type=anchor_type)
+            #print(f"anchor_rel_pos = {anchor_rel_pos}, anchor_type = {anchor_type}, shape = {self.shape}, shape_eff = {self.shape_eff}, topleft = {topleft}")
             text_rect.topleft = topleft
             self.font.render_to(surf, text_rect, self.text, (*color, alpha0 * 255), size=self.font_size_actual)
             self._updated = False
             return
         return textConstructor
     
-    def draw(self, surf: "pg.Surface", anchor_pos: Optional[Tuple[int]]=None, anchor_type: Optional[str]=None):
-        if anchor_pos is None: anchor_pos = self.anchor_pos0
+    def draw(self, surf: "pg.Surface", anchor_rel_pos: Optional[Tuple[int]]=None, anchor_type: Optional[str]=None):
+        if anchor_rel_pos is None: anchor_rel_pos = self.anchor_rel_pos0
         if anchor_type is None: anchor_type = self.anchor_type0
-        #print(f"anchor_pos = {anchor_pos}, anchor_type = {anchor_type}")
+        #print(f"anchor_rel_pos = {anchor_rel_pos}, anchor_type = {anchor_type}")
         #print(f"surf dimensions = {(surf.get_width(), surf.get_height())}")
         for attr in self.displ_attrs:
             func = getattr(self, attr, None)
             if func is None:
                 raise ValueError(f"Attribute {attr} not found")
-            func(surf, anchor_pos, anchor_type=anchor_type)
+            func(surf, anchor_rel_pos, anchor_type=anchor_type)
         return
 
 class TextGroupElement(ComponentGroupElementBaseClass, Text):
@@ -332,7 +332,7 @@ class TextGroupElement(ComponentGroupElementBaseClass, Text):
         text: str,
         max_shape: Optional[Real]=None,
         font_color: Optional[Tuple[Union[Tuple[int], Real]]]=None,
-        anchor_pos0: Optional[Tuple[Real]]=None,
+        anchor_rel_pos0: Optional[Tuple[Real]]=None,
         anchor_type0: Optional[str]=None,
         name: Optional[str]=None,
         **kwargs,
@@ -345,7 +345,7 @@ class TextGroupElement(ComponentGroupElementBaseClass, Text):
             font=text_group.font,
             font_size=text_group.font_size_actual,
             font_color=font_color,
-            anchor_pos0=anchor_pos0,
+            anchor_rel_pos0=anchor_rel_pos0,
             anchor_type0=anchor_type0,
             text_global_asc_desc_chars0=text_group.text_global_asc_desc_chars,
             name=name,
@@ -630,10 +630,10 @@ class TextGroup(ComponentGroupBaseClass):
         #print(self.heights_dict)
         #print(self.max_height)
         
-        # text_list = [{"text": "Hello", "max_shape": (200, 50), "color": (named_colors_def["red"], 1)), "anchor_pos0": (0, 0), "anchor_type0": "topleft"}]
+        # text_list = [{"text": "Hello", "max_shape": (200, 50), "color": (named_colors_def["red"], 1)), "anchor_rel_pos0": (0, 0), "anchor_type0": "topleft"}]
     """
     def addSlider(self,
-        anchor_pos: Tuple[Real],
+        anchor_rel_pos: Tuple[Real],
         val_range: Tuple[Real],
         increment_start: Real,
         increment: Optional[Real]=None,
@@ -648,7 +648,7 @@ class TextGroup(ComponentGroupBaseClass):
         
         res = self._addElement(
             slider_group=self,
-            anchor_pos=anchor_pos,
+            anchor_rel_pos=anchor_rel_pos,
             val_range=val_range,
             increment_start=increment_start,
             increment=increment,

@@ -1350,44 +1350,46 @@ class DisplayComponentBase(ComponentBaseClass):
     #finalizer_attributes = {"name"}
     
     reset_graph_edges = {
-        "shape": {"topleft": (lambda obj: obj.anchor_type != "topleft")},
-        "anchor_pos": {"topleft": True},
-        "anchor_type": {"topleft": True},
-        "topleft": {"topleft_screen": True},
-        "screen_topleft_offset": {"topleft_screen": True},
+        "shape": {"topleft_rel_pos": (lambda obj: obj.anchor_type != "topleft")},
+        "anchor_rel_pos": {"topleft_rel_pos": True},
+        "anchor_type": {"topleft_rel_pos": True},
+        "topleft_rel_pos": {"screen_topleft_to_component_topleft_offset": True},
+        "screen_topleft_to_component_anchor_offset": {"screen_topleft_to_component_topleft_offset": True},
     }
     custom_attribute_change_propogation_methods = {}
     
     attribute_calculation_methods = {
-        "topleft": "calculateTopLeft",#"calculateAndSetTopLeft",
-        "topleft_screen": "calculateTopLeftScreen",#"calculateAndSetTopLeftScreen",
+        "topleft_rel_pos": "calculateTopLeftRelativePosition",#"calculateAndSetTopLeft",
+        "screen_topleft_to_component_topleft_offset": "calculateTopLeftScreenPosition",#"calculateAndSetTopLeftScreen",
     }
     
     attribute_default_functions = {
         "anchor_type": ((lambda obj: "topleft"),),
-        "screen_topleft_offset": ((lambda obj: (0, 0)),),
+        "screen_topleft_to_component_anchor_offset": ((lambda obj: (0, 0)),),
     }
     
     fixed_attributes = set()
     
     def __init__(self, shape: Tuple[Real],\
-            anchor_pos: Tuple[Real], anchor_type: Optional[str]=None,\
-            screen_topleft_offset: Optional[Tuple[Real]]=None, **kwargs):
+            anchor_rel_pos: Tuple[Real], anchor_type: Optional[str]=None,\
+            screen_topleft_to_component_anchor_offset: Optional[Tuple[Real]]=None, **kwargs):
         
         super().__init__(**self.initArgsManagement(locals(), kwargs=kwargs))
         pg.init()
     
     
-    def findScreenPosition(self, surf_pos: Tuple[Real]):
-        return tuple(x + y for x, y in zip(surf_pos, self.screen_topleft_offset))
+    def calculateScreenPositionFromRelativePosition(self, surf_pos: Tuple[Real]):
+        return tuple(x + y for x, y in zip(surf_pos, self.screen_topleft_to_component_anchor_offset))
     
-    def calculateTopLeft(self) -> Tuple[int]:
+    def calculateTopLeftRelativePosition(self) -> Tuple[int]:
+        # Position of the topleft relative to the anchor
         #print(type(self), self._shape)
         return topLeftFromAnchorPosition(self.shape, self.anchor_type,\
-                self.anchor_pos)
+                self.anchor_rel_pos)
     
-    def calculateTopLeftScreen(self):
-        return self.findScreenPosition(self.topleft)
+    def calculateTopLeftScreenPosition(self):
+        # Position of the topleft relative to the screen origin (the screen topleft)
+        return self.calculateScreenPositionFromRelativePosition(self.topleft_rel_pos)
     
     @abstractmethod
     def draw(self) -> None:
@@ -1418,14 +1420,14 @@ def mouseEventFilter0(obj: "InteractiveDisplayComponentBase", event, mouse_enabl
 
 class InteractiveDisplayComponentBase(DisplayComponentBase):
     
-    #change_reset_attrs = {"anchor": ["ranges_surf", "ranges_screen"], "shape": ["ranges_surf", "ranges_screen"], "screen_topleft_offset": ["ranges_screen"]}
+    #change_reset_attrs = {"anchor": ["ranges_surf", "ranges_screen"], "shape": ["ranges_surf", "ranges_screen"], "screen_topleft_to_component_anchor_offset": ["ranges_screen"]}
     
     reset_graph_edges = {
         "shape": {"ranges_surf": True},
-        "anchor_pos": {"ranges_surf": True},
+        "anchor_rel_pos": {"ranges_surf": True},
         "anchor_type": {"ranges_surf": True},
         "ranges_surf": {"ranges_screen": True},
-        "screen_topleft_offset": {"ranges_screen": True},
+        "screen_topleft_to_component_anchor_offset": {"ranges_screen": True},
         "navkeys_dict": {"navkeys": True},
     }
     
@@ -1455,22 +1457,26 @@ class InteractiveDisplayComponentBase(DisplayComponentBase):
             get_mouse_status_func=(lambda obj: obj.mouse_enablement[0]))
     
     
-    def __init__(self, shape: Tuple[Real],\
-            anchor_pos: Tuple[Real], anchor_type: str="topleft",\
-            screen_topleft_offset: Tuple[Real]=(0, 0),\
-            mouse_enablement: Optional[Tuple[bool]]=None,\
-            navkeys_enablement: Optional[Tuple[bool]]=None,\
-            navkeys: Optional[Tuple[Tuple[Set[int]]]]=None,\
-            enter_keys_enablement: Optional[Tuple[bool]]=None,\
-            enter_keys: Optional[Set[int]]=None,\
-            keys_down_func=False,\
-            key_press_event_filter=False,\
-            key_release_event_filter=False,\
-            mouse_press_event_filter=False,\
-            mouse_release_event_filter=False,\
-            other_event_filter=False,\
-            get_mouse_status_func=False,\
-            **kwargs):
+    def __init__(
+        self,
+        shape: Tuple[Real],
+        anchor_rel_pos: Tuple[Real],
+        anchor_type: str="topleft",
+        screen_topleft_to_component_anchor_offset: Tuple[Real]=(0, 0),
+        mouse_enablement: Optional[Tuple[bool]]=None,
+        navkeys_enablement: Optional[Tuple[bool]]=None,
+        navkeys: Optional[Tuple[Tuple[Set[int]]]]=None,
+        enter_keys_enablement: Optional[Tuple[bool]]=None,
+        enter_keys: Optional[Set[int]]=None,
+        keys_down_func=False,
+        key_press_event_filter=False,
+        key_release_event_filter=False,
+        mouse_press_event_filter=False,
+        mouse_release_event_filter=False,
+        other_event_filter=False,
+        get_mouse_status_func=False,
+        **kwargs,
+    ):
         
         super().__init__(**self.initArgsManagement(locals(), kwargs=kwargs))
         type(self)._resolveClassUserInputProcessors()
@@ -1525,7 +1531,7 @@ class InteractiveDisplayComponentBase(DisplayComponentBase):
     
     def rangesSurface2RangesScreen(self, ranges: Tuple[Tuple[Real]]) -> Tuple[Tuple[Real]]:
         #print("hi")
-        offset = self.topleft_screen
+        offset = self.screen_topleft_to_component_topleft_offset
         if offset == (0, 0): return ranges
         return tuple(tuple(x + y for x in rng) for y, rng in zip(offset, ranges))
     
