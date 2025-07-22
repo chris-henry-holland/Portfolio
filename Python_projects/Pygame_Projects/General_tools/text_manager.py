@@ -396,8 +396,8 @@ class TextGroupElement(ComponentGroupElementBaseClass, Text):
     #            max_size=max_size)[0]
     
     def customMaxFontSizeGivenWidthChangePropogation(self, new_val: Optional[Real], prev_val: Optional[Real]) -> None:#, _update_textgroup_max_font_size_given_width: bool=True) -> None:
-        print(f"Using TextGroupElement {self} method customMaxFontSizeGivenWidthChangePropogation()")
-        print(f"prev_val = {prev_val}, new_val = {new_val}")
+        #print(f"Using TextGroupElement {self} method customMaxFontSizeGivenWidthChangePropogation()")
+        #print(f"prev_val = {prev_val}, new_val = {new_val}")
         #prev_val = self.__dict__.get("_max_font_size_given_width", None)
         #print("Setting max font size given widths")
         if prev_val == float("inf"): prev_val = None
@@ -426,7 +426,7 @@ class TextGroupElement(ComponentGroupElementBaseClass, Text):
         #    #print("hello")
         #    #print(self.text_group.font_size)
         #    self.font_size = self.text_group.font_size
-        print("finished using customMaxFontSizeGivenWidthChangePropogation()")
+        #print("finished using customMaxFontSizeGivenWidthChangePropogation()")
         return
     
     #def _calculateAndcustomMaxFontSizeGivenWidthChangePropogation(self, prev_val: Optional[int], max_size: Optional[Real]=None, _update_textgroup_max_font_size_given_width: bool=True) -> Real:
@@ -1038,7 +1038,7 @@ class TextGroup(ComponentGroupBaseClass):
         f: int=1,
         reset_max_font_size_given_widths: bool=True,
     ) -> bool:
-        print("Using _addMaxFontSizeGivenWidth()")
+        #print("Using _addMaxFontSizeGivenWidth()")
         res = (font_size < self.max_font_size_given_widths)
         self.max_font_sizes_given_widths_dict.setdefault(font_size, 0)
         self.max_font_sizes_given_widths_dict[font_size] += f
@@ -1074,10 +1074,10 @@ class TextGroup(ComponentGroupBaseClass):
         add_font_sizes: Dict[Real, int],
         reset_max_font_size_given_widths: bool=True
     ) -> bool:
-        print("Using _updateMaxFontSizesGivenWidths()")
-        print(self.max_font_sizes_given_widths_dict)
-        print(rm_font_sizes)
-        print(add_font_sizes)
+        #print("Using _updateMaxFontSizesGivenWidths()")
+        #print(self.max_font_sizes_given_widths_dict)
+        #print(rm_font_sizes)
+        #print(add_font_sizes)
         if float("inf") in rm_font_sizes.keys():
             rm_font_sizes.pop(float("inf"))
         if float("inf") in add_font_sizes.keys():
@@ -1126,8 +1126,8 @@ class TextGroup(ComponentGroupBaseClass):
         res = self._addMaxFontSizeGivenWidth(mn_add, f=mn_add_f, reset_max_font_size_given_widths=reset_max_font_size_given_widths)\
                 if mn_add < mn_rm else\
                 self._removeMaxFontSizeGivenWidth(mn_rm, f=mn_rm_f, reset_max_font_size_given_widths=reset_max_font_size_given_widths)
-        print("Finished using _updateMaxFontSizesGivenWidths()")
-        print(self.max_font_sizes_given_widths_dict)
+        #print("Finished using _updateMaxFontSizesGivenWidths()")
+        #print(self.max_font_sizes_given_widths_dict)
         return res
     
     def calculateMaxFontSizeGivenWidths(self) -> Real:
@@ -1167,10 +1167,10 @@ class TextGroup(ComponentGroupBaseClass):
         return self.addTextObjects(text_dicts)
     """
     def replaceTextObjects(self, rm_text_objs: Optional[List["TextGroupElement"]]=None, add_text_dicts: Optional[List[dict]]=None) -> List["Text"]:
-        print(f"Using replaceTextObjects() for {self}")
-        print(f"add_text_dicts = {add_text_dicts}")
-        print(f"rm_text_objs = {rm_text_objs}")
-        print(self.max_font_sizes_given_widths_dict)
+        #print(f"Using replaceTextObjects() for {self}")
+        #print(f"add_text_dicts = {add_text_dicts}")
+        #print(f"rm_text_objs = {rm_text_objs}")
+        #print(self.max_font_sizes_given_widths_dict)
         if rm_text_objs is None:
             rm_text_objs = []
         for rm_obj in rm_text_objs:
@@ -1238,18 +1238,18 @@ class TextGroup(ComponentGroupBaseClass):
             #print("hi1")
             #print(f"text_dict = {text_dict}")
             #text_obj = group_element_cls(**text_dict, **{"_from_group": True, grp_attr: self})#TextGroupElement(self, _from_group=True, **text_dict)
-            print("pre _addElement():")
-            print(self.max_font_sizes_given_widths_dict)
+            #print("pre _addElement():")
+            #print(self.max_font_sizes_given_widths_dict)
             text_obj = self._addElement(_from_group=True, **text_dict)
-            print("post _addElement():")
-            print(self.max_font_sizes_given_widths_dict)
+            #print("post _addElement():")
+            #print(self.max_font_sizes_given_widths_dict)
             #print("hi2")
             #text_obj.setMaxWidth(max_width, _update_textgroup_max_font_size_given_width=False)
             #print(f"text_obj._max_shape_actual = {text_obj.__dict__.get('_max_shape_actual', None)}")
             text_obj._max_shape = max_shape
-            print(self.max_font_sizes_given_widths_dict)
+            #print(self.max_font_sizes_given_widths_dict)
             add_font_size = text_obj.max_font_size_given_width
-            print(self.max_font_sizes_given_widths_dict)
+            #print(self.max_font_sizes_given_widths_dict)
             if add_font_size is not None:
                 add_font_sizes[add_font_size] = add_font_sizes.get(add_font_size, 0) + 1
             #print(f"max_shape = {max_shape}")
@@ -1267,31 +1267,31 @@ class TextGroup(ComponentGroupBaseClass):
             #self._addElementToRecord(text_obj)
             res.append(text_obj)
             #self.text_objects[idx] = text_obj
-        print("hello3")
-        print(self.max_font_sizes_given_widths_dict)
+        #print("hello3")
+        #print(self.max_font_sizes_given_widths_dict)
         self._updateAscDescChars(
             rm_ad_chars[0],
             add_ad_chars[0],
             rm_ad_chars[1],
             add_ad_chars[1]
         )
-        print(f"rm_font_sizes = {rm_font_sizes}")
-        print(f"add_font_sizes = {add_font_sizes}")
-        print("pre _updateMaxFontSizesGivenWidths()")
-        print(self.max_font_sizes_given_widths_dict)
+        #print(f"rm_font_sizes = {rm_font_sizes}")
+        #print(f"add_font_sizes = {add_font_sizes}")
+        #print("pre _updateMaxFontSizesGivenWidths()")
+        #print(self.max_font_sizes_given_widths_dict)
         self._updateMaxFontSizesGivenWidths(
             rm_font_sizes,
             {},#add_font_sizes, # adding was handled when calling text_obj.max_font_size_given_width
             reset_max_font_size_given_widths=True,
         )
-        print("post _updateMaxFontSizesGivenWidths()")
-        print(self.max_font_sizes_given_widths_dict)
+        #print("post _updateMaxFontSizesGivenWidths()")
+        #print(self.max_font_sizes_given_widths_dict)
         self._updateHeights(
             rm_heights,
             add_heights,
         )
-        print(f"Finished using replaceTextObjects() for {self}")
-        print(self.max_font_sizes_given_widths_dict)
+        #print(f"Finished using replaceTextObjects() for {self}")
+        #print(self.max_font_sizes_given_widths_dict)
         return res
         """
         self._text_list.extend(text_list)

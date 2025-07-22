@@ -72,8 +72,9 @@ class Slider(InteractiveDisplayComponentBase):
         "thumb_color": {"thumb_surf": True},
         
         "val_raw": {"val": True},
-        "val": {"thumb_x": True},
         "thumb_x_screen_raw": {"val": True},
+
+        "val": {"thumb_x": True},
         "thumb_x_screen": {"thumb_x": True},
         
         "slider_ranges_surf": {"slider_ranges_screen": True},
@@ -188,6 +189,7 @@ class Slider(InteractiveDisplayComponentBase):
         name: Optional[str]=None,
         **kwargs,
     ) -> None:
+        print("Creating Slider")
         checkHiddenKwargs(type(self), kwargs)
         if name is None:
             Slider.unnamed_count += 1
@@ -205,9 +207,10 @@ class Slider(InteractiveDisplayComponentBase):
 
     def setAttributes(self, setattr_dict: Dict[str, Any], _from_container: bool=False, _calculated_override: bool=False, **kwargs) -> Dict[str, Tuple[Any, Any]]:
         changed_attrs_dict = super().setAttributes(setattr_dict, _from_container=_from_container, _calculated_override=_calculated_override, **kwargs)
-        print(f"setAttributes() called for {self} with setattr_dict = {setattr_dict}\nchanged_attrs_dict = {changed_attrs_dict}")
-        if "_display_surf" in self.__dict__.keys():
-            print(f"self._display_surf = {self.__dict__['_display_surf']}")
+        #if changed_attrs_dict:
+        #    print(f"setAttributes() called for {self} with setattr_dict = {setattr_dict}\nchanged_attrs_dict = {changed_attrs_dict}")
+        #if "_display_surf" in self.__dict__.keys():
+        #    print(f"self._display_surf = {self.__dict__['_display_surf']}")
         return changed_attrs_dict
     
     def calculateMouseEnablement(self) -> None:
@@ -216,7 +219,11 @@ class Slider(InteractiveDisplayComponentBase):
         return (mouse_enabled, mouse_enabled, mouse_enabled)
     
     def setValueRaw(self, new_val: Real, prev_val: Real) -> None:
+        #print("Using setValueRaw()")
         self.__dict__["_thumb_x_screen_raw"] = None
+        chng_dict = self.getPendingAttributeChanges()
+        if "thumb_x_screen_raw" in chng_dict.keys():
+            chng_dict.pop("thumb_x_screen_raw")
         return
     
     def calculateValueRangeActual(self) -> Tuple[Real]:
@@ -235,7 +242,7 @@ class Slider(InteractiveDisplayComponentBase):
     
     def calculateValue(self) -> Real:
         #print("calculating value")
-        thumb_x_screen_raw = self.__dict__.get("_thumb_x_screen_raw", None)
+        thumb_x_screen_raw = getattr(self, "thumb_x_screen_raw", None) #__dict__.get("_thumb_x_screen_raw", None)
         if thumb_x_screen_raw is not None:
             return self.x2Val(thumb_x_screen_raw - self.topleft_screen[0])
         return self.findNearestValue(self.val_raw)
@@ -291,9 +298,9 @@ class Slider(InteractiveDisplayComponentBase):
     
     @staticmethod
     def _calculateMultipleSliderComponentDimensions(slider_objs: List["Slider"], slider_shape: Tuple[int, int], demarc_numbers_max_height_rel: Optional[Real], demarc_line_lens_rel: Tuple[Real], thumb_radius_rel: Real, demarc_numbers_min_gap_rel_height: Real=1, demarc_numbers_min_gap_pixel: int=0) -> Tuple[Union[Tuple[Real], Real]]:
-        print("using _calculateMultipleSliderComponentDimensions()")
+        #print("using _calculateMultipleSliderComponentDimensions()")
         #text_obj_lists: List[Tuple[List[Tuple["TextGroupElement", Real]]]
-        print(len(slider_objs))
+        #print(len(slider_objs))
         y0 = 0
         y_sz0 = slider_shape[1]
         y_sz_ratio = demarc_numbers_max_height_rel + (3 * demarc_line_lens_rel[0] / 2) + 1 + max(thumb_radius_rel - 0.5, 0)
@@ -343,7 +350,7 @@ class Slider(InteractiveDisplayComponentBase):
         return ((track_x_sz, track_y_sz), (track_topleft_x, track_topleft_y), thumb_radius, new_text_h)
     
     def calculateComponentDimensions(self) -> Tuple[Tuple[int, int], Tuple[int, int], Real]:
-        print("Using Slider method calculateComponentDimensions()")
+        #print("Using Slider method calculateComponentDimensions()")
         return self._calculateMultipleSliderComponentDimensions([self], slider_shape=self.shape, demarc_numbers_max_height_rel=self.demarc_numbers_max_height_rel, demarc_line_lens_rel=self.demarc_line_lens_rel, thumb_radius_rel=self.thumb_radius_rel, demarc_numbers_min_gap_rel_height=1, demarc_numbers_min_gap_pixel=0)
 
     """
@@ -688,7 +695,7 @@ class Slider(InteractiveDisplayComponentBase):
         return thumbRenderer
     
     def createDisplaySurface(self) -> Optional["pg.Surface"]:
-        print(f"creating display surface for Slider object {self}")
+        #print(f"creating display surface for Slider object {self}")
         surf = pg.Surface(self.shape, pg.SRCALPHA)
         for attr in self.displ_component_attrs:
             #print(f"{attr}_img_constructor")
@@ -1001,7 +1008,7 @@ class SliderGroup(ComponentGroupBaseClass):
         name: Optional[str]=None,
         **kwargs,
     ) -> "SliderGroupElement":
-        print("Using SliderGroup method addSlider()")
+        #print("Using SliderGroup method addSlider()")
         res = self._addElement(
             anchor_pos=anchor_pos,
             val_range=val_range,
@@ -1019,8 +1026,8 @@ class SliderGroup(ComponentGroupBaseClass):
         return res
     
     def calculateSliderComponentDimensions(self):
-        print("Using SliderGroup method calculateSliderComponentDimensions() here")
-        print(len(self._elements_weakref))
+        #print("Using SliderGroup method calculateSliderComponentDimensions() here")
+        #print(len(self._elements_weakref))
         res = Slider._calculateMultipleSliderComponentDimensions(
             [slider_weakref() for slider_weakref in self._elements_weakref if slider_weakref is not None],
             slider_shape=self.slider_shape,
@@ -1030,7 +1037,7 @@ class SliderGroup(ComponentGroupBaseClass):
             demarc_numbers_min_gap_rel_height=1,
             demarc_numbers_min_gap_pixel=0,
         )
-        print(f"value = {res}")
+        #print(f"value = {res}")
         return res
         """
         #print("\ncreating TextGroup to calculate SliderGroup component dimensions")
@@ -1339,7 +1346,7 @@ class SliderPlus(InteractiveDisplayComponentBase):
         return res
 
     def _setTitleTextObjectAttribute(self, attr: str, text_obj_attr: str) -> None:
-        #print(f"Using _setTitleTextObjectAttribute() to set title text object attribute {text_obj_attr}")
+        print(f"Using _setTitleTextObjectAttribute() to set title text object attribute {text_obj_attr} from SliderPlus attribute {attr}")
         title_text_obj = self.__dict__.get("_title_text_obj", None)
         if title_text_obj is None:
             #print("title_text_obj is None")
@@ -1363,7 +1370,7 @@ class SliderPlus(InteractiveDisplayComponentBase):
         slider_borders = self.slider_borders
         #print(f"overall shape = {shape}, slider_shape = {slider_shape}, slider_borders = {slider_borders}")
         res = (slider_shape[0], shape[1] - (slider_shape[1] + slider_borders[1]))
-        #print(f"title shape = {res}")
+        print(f"title shape = {res}")
         return res 
     
     def calculateTitleAnchorPosition(self) -> Tuple[int]:
@@ -1438,6 +1445,7 @@ class SliderPlus(InteractiveDisplayComponentBase):
         print(f"using createTitleSurface() for {self}")
         #print("hello1")
         title_text_obj = self.title_text_obj
+        print(f"title font size = {title_text_obj.font_size}")
         #print(title_text_obj)
         if not title_text_obj: return ()
         #print("hello2")
@@ -1449,9 +1457,25 @@ class SliderPlus(InteractiveDisplayComponentBase):
         title_text_obj.draw(surf, anchor_pos=self.title_anchor_pos, anchor_type=self.title_anchor_type)
         return surf
     
-    def createTitleImageConstructor(self)\
-            -> Callable[["pg.Surface"], None]:
-        return lambda obj, surf: (None if obj.title_surf == () else surf.blit(obj.title_surf, (0, 0)))
+    #def createTitleImageConstructor(self)\
+    #        -> Callable[["pg.Surface"], None]:
+    #    #return lambda obj, surf: (None if obj.title_surf == () else surf.blit(obj.title_surf, (0, 0)))
+
+    def createTitleImageConstructor(self) -> Callable[["SliderPlus", "pg.Surface"], None]:
+        #print("creating text image constructors")
+        res = []
+        def textImageConstructor(obj: SliderPlus, surf: "pg.Surface") -> None:
+            obj.title_text_obj.font_color = obj.title_color
+            #obj.title_text_obj.text = obj.val_str
+            obj.title_text_obj.max_shape = obj.title_shape
+            text_img = obj.title_surf
+            if text_img == (): return
+            surf.blit(text_img, obj.title_anchor_pos)
+            #return lambda obj, surf: (None if obj.static_bg_surf == () else surf.blit(obj.static_bg_surf, (0, 0)))
+            #obj.val_text_obj.draw(surf, anchor_pos=obj.val_text_anchor_pos, anchor_type=obj.val_text_anchor_type)
+            #print("hello2")
+            return
+        return textImageConstructor
     
     
     def createStaticBackgroundSurface(self)\
@@ -1630,7 +1654,7 @@ class SliderPlus(InteractiveDisplayComponentBase):
         #print("setting title shape for text object")
         return self._setValueTextObjectAttribute("val_text_shape", "max_shape")
     
-    def createValueTextImageConstructor(self):
+    def createValueTextImageConstructor(self) -> Callable[["SliderPlus", "pg.Surface"], None]:
         #print("creating text image constructors")
         res = []
         def textImageConstructor(obj: SliderPlus, surf: "pg.Surface") -> None:
@@ -2035,8 +2059,8 @@ class SliderPlusGroup(ComponentGroupBaseClass):
 
 
 class SliderPlusGrid(InteractiveDisplayComponentBase):
-    sliderplus_names = set()
-    unnamed_count = 0
+    #sliderplus_names = set()
+    #unnamed_count = 0
     
     reset_graph_edges = {
         "grid_dims": {"slider_geometry": True},

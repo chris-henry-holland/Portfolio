@@ -241,7 +241,7 @@ class ComponentBaseClass(ABC):
         return chng_dict
 
     def addPendingAttributeChange(self, attr: str, new_val: Optional[Any]) -> None:
-        print(f"Using addPendingAttributeChange() for {self} with attribute {attr} getting new value {new_val}")
+        #print(f"Using addPendingAttributeChange() for {self} with attribute {attr} getting new value {new_val}")
         chng_dict = self.getPendingAttributeChanges()
 
         attr = attr.lstrip("_")
@@ -269,8 +269,8 @@ class ComponentBaseClass(ABC):
             #print(attr, chng_dict[attr])
             if attr not in chng_dict.keys(): continue
             if attr in calcfunc_dict.keys():
-                self.calculateAndSetAttribute(attr)
                 chng_dict.pop(attr)
+                self.calculateAndSetAttribute(attr)
                 continue
             sub_attr = f"_{attr}"
             prev_val = self.__dict__.get(sub_attr, None)
@@ -330,7 +330,7 @@ class ComponentBaseClass(ABC):
 
     @classmethod
     def createResetStructures(cls) -> Tuple[Union[List[str], Dict[str, int], List[Dict[int, Union[List[Callable[["DisplayComponentBase"], bool]]]]], Dict[int, List[Callable[[Any, "DisplayComponentBase"], None]]]]]:
-        #print("Using createResetStructures()")
+        print("Using createResetStructures()")
         attr_list = []
         attr_dict = {}
         reset_graph = []
@@ -420,7 +420,7 @@ class ComponentBaseClass(ABC):
             cls = type(obj)
             inst_idx = obj.__dict__.get("_inst_idx", None)
             if inst_idx is None: return
-            cls.instances_finalizer_attr_vals[inst_idx][attr] = getattr(obj, attr)
+            cls.instances_finalizer_attr_vals[inst_idx][attr] = new_val
             return
         
         #if "instances_finalizer_attr_vals" in cls.__dict__.keys():
@@ -437,7 +437,7 @@ class ComponentBaseClass(ABC):
         cls.attr_dict = attr_dict
         cls.attribute_change_propogation_funcs = attribute_change_propogation_funcs
         crfs = {attr_list[x]: y for x, y in attribute_change_propogation_funcs.items()}
-        #print(f"attribute_change_propogation_funcs for class {cls} = {crfs}")
+        print(f"attribute_change_propogation_funcs for class {cls} = {crfs}")
         return (attr_list, attr_dict, reset_graph, attribute_change_propogation_funcs)
     
     @classmethod
@@ -603,6 +603,7 @@ class ComponentBaseClass(ABC):
     
     
     def createSubComponent(self, component: str) -> Optional[Any]:
+        print("Using createSubComponent()")
         #return self._createSlider(Slider, attr_arg_dict)
         cls = type(self)
         #sub_components_dict = cls.__dict__.get("sub_components_dict", cls.createSubComponentsDictionary())
@@ -636,12 +637,19 @@ class ComponentBaseClass(ABC):
         kwargs["_container_obj"] = self
         if container_attr_resets:
             kwargs["_container_attr_reset_dict"] = container_attr_resets
+            print(f"container_attr_resets = {container_attr_resets}")
         #print(f"subcomponent creation kwargs = {kwargs}")
         
         component = creation_function(**kwargs)
         setattr_dict = {arg: (getattr(self, attr) if isinstance(attr, str) else attr[1](*[getattr(self, x) for x in attr[0]])) for arg, attr in attr_corresp_dict.items()}
         component.setAttributes(setattr_dict)
         component._attr_container_dependent_set = {x for x in attr_corresp_dict.values() if isinstance(x, str)}
+        #if component._attr_container_dependent_set:
+        #    print(f"component._attr_container_dependent_set = {component._attr_container_dependent_set}")
+        if container_attr_resets:
+            print(f"component dictionary: {component.__dict__.keys()}")
+            print(component.getPendingAttributeChanges())
+            #print(f"component._container_attr_reset_dict = {component._container_attr_reset_dict}")
         return component
     
     def calculateAndSetAttribute(self, attr: str) -> bool:
@@ -673,9 +681,9 @@ class ComponentBaseClass(ABC):
         return True
     
     def setAttributes(self, setattr_dict: Dict[str, Any], _from_container: bool=False, _calculated_override: bool=False, **kwargs) -> Dict[str, Tuple[Any, Any]]:
-        if len(setattr_dict.keys() - {"state"}) >= 1:
-            print("Using ComponentBaseClass method setAttributes()")
-            print(setattr_dict)
+        #if len(setattr_dict.keys() - {"state"}) >= 1:
+        #    print("Using ComponentBaseClass method setAttributes()")
+        #    print(setattr_dict)
         #if "title_color" in setattr_dict.keys():
         #    print(f"setting title_color attribute for {type(self).__name__}")
         #print("using setAttributes()")
@@ -689,7 +697,10 @@ class ComponentBaseClass(ABC):
         #for attr in ["max_shape"]:
         #    if attr in setattr_dict.keys():
         #        print(f"{attr} = {setattr_dict[attr]}")
-        
+        for attr in list(setattr_dict.keys()):
+            if not attr.startswith("_"): continue
+            val = setattr_dict.pop(attr)
+            self.__dict__[attr] = val
 
         cls = type(self)
         attr_calcfunc_dict = cls.getAttributeCalculationFunctionDictionary()
@@ -731,6 +742,9 @@ class ComponentBaseClass(ABC):
         changed_attrs_dict = {}
         change_propogate_attrs = set()
         pending_change_dict = self.getPendingAttributeChanges()
+        container_attr_reset_dict = getattr(self, "_container_attr_reset_dict", {})
+        #if container_attr_reset_dict:
+        #    print(f"container_attr_reset_dict = {container_attr_reset_dict}")
 
         def setAttrCustom(attr: str, sub_attr: str, val: Any) -> None:
             #if attr.lstrip("_") in {"text_shapes"}:
@@ -785,7 +799,6 @@ class ComponentBaseClass(ABC):
             func_lst.append(func)
             return func_lst
         
-        container_attr_reset_dict = getattr(self, "_container_attr_reset_dict", {})
         #if container_attr_reset_dict:
         #    print(f"container_attr_reset_dict = {container_attr_reset_dict}")
         
@@ -1334,7 +1347,7 @@ class ComponentGroupBaseClass(ComponentBaseClass):
         
 
 class DisplayComponentBase(ComponentBaseClass):
-    finalizer_attributes = {"name"}
+    #finalizer_attributes = {"name"}
     
     reset_graph_edges = {
         "shape": {"topleft": (lambda obj: obj.anchor_type != "topleft")},
