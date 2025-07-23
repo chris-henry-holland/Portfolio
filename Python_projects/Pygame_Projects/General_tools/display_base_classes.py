@@ -255,8 +255,8 @@ class ComponentBaseClass(ABC):
         return
 
     def resolvePendingAttributeChanges(self, attrs: Optional[List[str]]) -> None:
-        if "max_font_size_given_width" in attrs:
-            print(f"Using resolvePendingAttributeChanges() for attrs = {attrs}")
+        #if "max_font_size_given_width" in attrs:
+        #    print(f"Using resolvePendingAttributeChanges() for attrs = {attrs}")
         chng_dict = self.getPendingAttributeChanges()
         it = chng_dict.keys() if attrs is None else {x.lstrip("_") for x in attrs}.intersection(chng_dict.keys())
         #print(chng_dict, it)
@@ -264,11 +264,13 @@ class ComponentBaseClass(ABC):
         #print(propogation_funcs)
         calcfunc_dict = self.getAttributeCalculationFunctionDictionary()
         for attr in it:
-            if "max_font_size_given_width" in attrs:
-                print(f"resolving attribute {attr}")
+            #if "max_font_size_given_width" in attrs:
+            #    print(f"resolving attribute {attr}")
             #print(attr, chng_dict[attr])
+            #if attr == "changed_since_last_draw":
+            #    print(attr, chng_dict[attr])
             if attr not in chng_dict.keys(): continue
-            if attr in calcfunc_dict.keys():
+            if chng_dict[attr] is None and attr in calcfunc_dict.keys():
                 chng_dict.pop(attr)
                 self.calculateAndSetAttribute(attr)
                 continue
@@ -282,14 +284,23 @@ class ComponentBaseClass(ABC):
             self.__dict__[sub_attr] = new_val
             if new_val == prev_val: continue
             for func in propogation_funcs.get(self.attr2Index(attr), []):#[attr], []):
-                if "max_font_size_given_width" in attrs:
-                    print(f"Using propogation function {func} for attribute {attr}")
+                #if "max_font_size_given_width" in attrs:
+                #    print(f"Using propogation function {func} for attribute {attr}")
                 func(self, new_val, prev_val)
-            if "max_font_size_given_width" in attrs:
-                print(f"finished resolving attribute {attr}")
-        if "max_font_size_given_width" in attrs:
-            print(f"Finished using resolvePendingAttributeChanges() for attrs = {attrs}")
+            #if "max_font_size_given_width" in attrs:
+            #    print(f"finished resolving attribute {attr}")
+        #if "max_font_size_given_width" in attrs:
+        #    print(f"Finished using resolvePendingAttributeChanges() for attrs = {attrs}")
         return
+
+    def _calculatedAttributeUpToDate(self, attr: str) -> bool:
+        attr = attr.lstrip("_")
+        attr_calcfunc_dict = self.getAttributeCalculationFunctionDictionary()
+        if attr not in attr_calcfunc_dict.keys():
+            raise ValueError("Method _calculateAttributeUpToDate() is only to be used for attirbutes that are calculated.")
+        if attr in self.getPendingAttributeChanges().keys(): return False
+        sub_attr = f"_{attr}"
+        return self.__dict__.get(sub_attr, None) is not None
 
     def initArgsManagement(self, init_locals: Dict[str, Any], kwargs: Optional[Dict[str, Any]]=None, rm_args: Optional[List[str]]=None) -> Dict[str, Any]:
         #print("Using initArgsManagement()")
@@ -330,7 +341,7 @@ class ComponentBaseClass(ABC):
 
     @classmethod
     def createResetStructures(cls) -> Tuple[Union[List[str], Dict[str, int], List[Dict[int, Union[List[Callable[["DisplayComponentBase"], bool]]]]], Dict[int, List[Callable[[Any, "DisplayComponentBase"], None]]]]]:
-        print("Using createResetStructures()")
+        #print("Using createResetStructures()")
         attr_list = []
         attr_dict = {}
         reset_graph = []
@@ -437,7 +448,7 @@ class ComponentBaseClass(ABC):
         cls.attr_dict = attr_dict
         cls.attribute_change_propogation_funcs = attribute_change_propogation_funcs
         crfs = {attr_list[x]: y for x, y in attribute_change_propogation_funcs.items()}
-        print(f"attribute_change_propogation_funcs for class {cls} = {crfs}")
+        #print(f"attribute_change_propogation_funcs for class {cls} = {crfs}")
         return (attr_list, attr_dict, reset_graph, attribute_change_propogation_funcs)
     
     @classmethod
@@ -497,7 +508,7 @@ class ComponentBaseClass(ABC):
         attr_deffunc_dict = {}
         for cls2 in cls.mro():
             for attr, def_func_tup in cls2.__dict__.get("attribute_default_functions", {}).items():
-                #print(attr, def_func_tup)
+                #print(cls, attr, def_func_tup)
                 if callable(def_func_tup):
                     def_func_tup = (def_func_tup, ())
                 elif len(def_func_tup) == 1:
@@ -603,7 +614,7 @@ class ComponentBaseClass(ABC):
     
     
     def createSubComponent(self, component: str) -> Optional[Any]:
-        print("Using createSubComponent()")
+        #print("Using createSubComponent()")
         #return self._createSlider(Slider, attr_arg_dict)
         cls = type(self)
         #sub_components_dict = cls.__dict__.get("sub_components_dict", cls.createSubComponentsDictionary())
@@ -637,7 +648,7 @@ class ComponentBaseClass(ABC):
         kwargs["_container_obj"] = self
         if container_attr_resets:
             kwargs["_container_attr_reset_dict"] = container_attr_resets
-            print(f"container_attr_resets = {container_attr_resets}")
+            #print(f"container_attr_resets = {container_attr_resets}")
         #print(f"subcomponent creation kwargs = {kwargs}")
         
         component = creation_function(**kwargs)
@@ -646,10 +657,10 @@ class ComponentBaseClass(ABC):
         component._attr_container_dependent_set = {x for x in attr_corresp_dict.values() if isinstance(x, str)}
         #if component._attr_container_dependent_set:
         #    print(f"component._attr_container_dependent_set = {component._attr_container_dependent_set}")
-        if container_attr_resets:
-            print(f"component dictionary: {component.__dict__.keys()}")
-            print(component.getPendingAttributeChanges())
-            #print(f"component._container_attr_reset_dict = {component._container_attr_reset_dict}")
+        #if container_attr_resets:
+        #    print(f"component dictionary: {component.__dict__.keys()}")
+        #    print(component.getPendingAttributeChanges())
+        #    #print(f"component._container_attr_reset_dict = {component._container_attr_reset_dict}")
         return component
     
     def calculateAndSetAttribute(self, attr: str) -> bool:
@@ -681,6 +692,8 @@ class ComponentBaseClass(ABC):
         return True
     
     def setAttributes(self, setattr_dict: Dict[str, Any], _from_container: bool=False, _calculated_override: bool=False, **kwargs) -> Dict[str, Tuple[Any, Any]]:
+        #if "changed_since_last_draw" in setattr_dict.keys():
+        #    print("Using setAttributes")
         #if len(setattr_dict.keys() - {"state"}) >= 1:
         #    print("Using ComponentBaseClass method setAttributes()")
         #    print(setattr_dict)
@@ -724,6 +737,7 @@ class ComponentBaseClass(ABC):
             if val is None or attr not in attr_processing_dict.keys():
                 setattr_dict2[attr] = val
                 continue
+            #print(attr)
             setattr_dict2[attr] = attr_processing_dict[attr](val, self)
 
         #attr_deffunc_dict = cls.getAttributeDefaultFunctionDictionary()
@@ -755,6 +769,8 @@ class ComponentBaseClass(ABC):
             #    val_prev = self.__dict__.get(sub_attr, None)
             #    if val == val_prev: return
             #self.__dict__[sub_attr] = val
+            #if attr == "changed_since_last_draw":
+            #    print(attr, sub_attr, val)
             
             val_prev = pending_change_dict.get(attr, self.__dict__.get(sub_attr, None))
             changed_attrs_dict[attr] = (val, val_prev)
@@ -925,6 +941,8 @@ class ComponentBaseClass(ABC):
             self.__dict__[attr] = val
             return
         return self.setAttributes({attr: val})
+        
+    # Consider adding separate method to check if an attribute exists
     
     def __getattr__(self, attr: str) -> Any:
         #if attr == "text":
@@ -1086,7 +1104,7 @@ class ComponentGroupElementBaseClass(ComponentBaseClass):
         return cls._attrs_affecting_group_attrs_dict
 
 
-    def setAttributes(self, setattr_dict: Dict[str, Any], _from_group: bool=False, **kwargs) -> Dict[str, Tuple[Any, Any]]:
+    def setAttributes(self, setattr_dict: Dict[str, Any], _from_group: bool=False, _calculated_override: bool=False, **kwargs) -> Dict[str, Tuple[Any, Any]]:
         if not _from_group:
             cls = type(self)
             grp_cls = cls.group_cls_func()
@@ -1350,17 +1368,20 @@ class DisplayComponentBase(ComponentBaseClass):
     #finalizer_attributes = {"name"}
     
     reset_graph_edges = {
-        "shape": {"topleft_rel_pos": (lambda obj: obj.anchor_type != "topleft")},
+        "shape": {"topleft_rel_pos": (lambda obj: obj.anchor_type != "topleft"), "display_surf": True},
         "anchor_rel_pos": {"topleft_rel_pos": True},
         "anchor_type": {"topleft_rel_pos": True},
-        "topleft_rel_pos": {"screen_topleft_to_component_topleft_offset": True},
+        "topleft_rel_pos": {"screen_topleft_to_component_topleft_offset": True, "changed_since_last_draw": True},
         "screen_topleft_to_component_anchor_offset": {"screen_topleft_to_component_topleft_offset": True},
+        "display_surf": {"changed_since_last_draw": True}
     }
     custom_attribute_change_propogation_methods = {}
     
     attribute_calculation_methods = {
         "topleft_rel_pos": "calculateTopLeftRelativePosition",#"calculateAndSetTopLeft",
         "screen_topleft_to_component_topleft_offset": "calculateTopLeftScreenPosition",#"calculateAndSetTopLeftScreen",
+        "display_surf": "createDisplaySurface",
+        "changed_since_last_draw": "calculateChangedSinceLastDraw",
     }
     
     attribute_default_functions = {
@@ -1391,9 +1412,23 @@ class DisplayComponentBase(ComponentBaseClass):
         # Position of the topleft relative to the screen origin (the screen topleft)
         return self.calculateScreenPositionFromRelativePosition(self.topleft_rel_pos)
     
-    @abstractmethod
-    def draw(self) -> None:
-        pass
+    def createDisplaySurface(self) -> Optional["pg.Surface"]:
+        surf = pg.Surface(self.shape, pg.SRCALPHA)
+        return surf
+    
+    def calculateChangedSinceLastDraw(self) -> bool:
+        return True
+
+    def draw(self, surf: "pg.Surface") -> None:
+        #print("Using DisplayComponentBase method draw()")
+        surf.blit(self.display_surf, self.topleft_rel_pos)
+        self.setAttributes({"changed_since_last_draw": False}, _calculated_override=True)
+        #print(self.changed_since_last_draw)
+        return
+
+    def drawUpdateRequired(self) -> bool:
+        return self.changed_since_last_draw
+        #return not self._calculatedAttributeUpToDate("display_surf") or not self._calculatedAttributeUpToDate("topleft_rel_pos")
     
 
 def keysDownFunction0(obj: "InteractiveDisplayComponentBase") -> Set[int]:
@@ -1402,12 +1437,12 @@ def keysDownFunction0(obj: "InteractiveDisplayComponentBase") -> Set[int]:
     if obj.enter_keys_enablement[0]:
         res |= obj.enter_keys
     if obj.navkeys_enablement[0]:
-        res |= obj.navkeys_dict.keys()
+        res |= obj.navkey_dict.keys()
     return res
 
 def keyEventFilter0(obj: "InteractiveDisplayComponentBase", event, navkeys_enabled: bool=True, enter_keys_enabled: bool=True) -> bool:
     #print("Using keyEventFilter0()")
-    if navkeys_enabled and event.key in obj.navkeys_dict.keys():
+    if navkeys_enabled and event.key in obj.navkey_dict.keys():
         return True
     if enter_keys_enabled and event.key in obj.enter_keys:
         return True
@@ -1428,7 +1463,7 @@ class InteractiveDisplayComponentBase(DisplayComponentBase):
         "anchor_type": {"ranges_surf": True},
         "ranges_surf": {"ranges_screen": True},
         "screen_topleft_to_component_anchor_offset": {"ranges_screen": True},
-        "navkeys_dict": {"navkeys": True},
+        "navkeys": {"navkey_dict": True},
     }
     
     custom_attribute_change_propogation_methods = {}
@@ -1436,6 +1471,7 @@ class InteractiveDisplayComponentBase(DisplayComponentBase):
     attribute_calculation_methods = {
         "ranges_surf": "calculateRangesSurface",
         "ranges_screen": "calculateRangesScreen",
+        "navkey_dict": "calculateNavkeyDict",
     }
     
     attribute_default_functions = {
@@ -1526,7 +1562,7 @@ class InteractiveDisplayComponentBase(DisplayComponentBase):
     def calculateRangesSurface(self) -> Tuple[Tuple[Real]]:
         return tuple((0, x) for x in self.shape)
     
-    def findNavkeyDict(self) -> Dict[int, Tuple[int]]:
+    def calculateNavkeyDict(self) -> Dict[int, Tuple[int]]:
         return createNavkeyDict(self.navkeys)
     
     def rangesSurface2RangesScreen(self, ranges: Tuple[Tuple[Real]]) -> Tuple[Tuple[Real]]:

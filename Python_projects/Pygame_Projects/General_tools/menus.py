@@ -29,7 +29,7 @@ from .display_base_classes import InteractiveDisplayComponentBase
 
 class MenuOverlayBase(InteractiveDisplayComponentBase):
     navkeys_def = navkeys_def_glob
-    navkeys_dict_def = createNavkeyDict(navkeys_def)
+    navkey_dict_def = createNavkeyDict(navkeys_def)
 
     dynamic_displ_attrs = []
     static_bg_components = ["overlay_bg", "text"]
@@ -113,7 +113,7 @@ class MenuOverlayBase(InteractiveDisplayComponentBase):
         res = getattr(self, "_user_input_processor", None)
         
         if res is None:
-            keys_down_func=(lambda obj: set(self.navkeys_dict.keys()) if self.navkeys_enabled else set())
+            keys_down_func=(lambda obj: set(self.navkey_dict.keys()) if self.navkeys_enabled else set())
             key_press_event_filter = False if not self.exit_press_keys else\
                     (lambda obj, event: event.key in self.exit_press_keys)
             key_release_event_filter = False if not self.exit_release_keys else\
@@ -163,18 +163,18 @@ class MenuOverlayBase(InteractiveDisplayComponentBase):
     
     @navkeys.setter
     def navkeys(self, navkeys):
-        self._navkeys_dict = None
+        self._navkey_dict = None
         self._navkeys = navkeys
         return
     
     @property
-    def navkeys_dict(self):
-        res = getattr(self, "_navkeys_dict", None)
+    def navkey_dict(self):
+        res = getattr(self, "_navkey_dict", None)
         if res is None:
             navkeys = self.navkeys
             if navkeys is not None:
                 res = self.getNavkeyDict(navkeys)
-        return self.navkeys_dict_def if res is None else res
+        return self.navkey_dict_def if res is None else res
     
     @staticmethod
     def getNavkeyDict(navkeys: Tuple[Tuple[Set[int]]]):
@@ -400,7 +400,7 @@ class MenuOverlayBase(InteractiveDisplayComponentBase):
 
 class ButtonMenuOverlay(MenuOverlayBase):
     #navkeys_def = navkeys_def_glob
-    #navkeys_dict_def = createNavkeyDict(navkeys_def)
+    #navkey_dict_def = createNavkeyDict(navkeys_def)
     
     dynamic_displ_attrs = ["buttons"]
     #static_bg_components = ["overlay_bg", "text"]
@@ -466,7 +466,7 @@ class ButtonMenuOverlay(MenuOverlayBase):
         #print("getting user_input_processor")
         
         if res is None:
-            keys_down_func=(lambda obj: set(self.navkeys_dict.keys()) if self.navkeys_enabled else set())
+            keys_down_func=(lambda obj: set(self.navkey_dict.keys()) if self.navkeys_enabled else set())
             key_press_event_filter = False if not self.exit_press_keys else\
                     (lambda obj, event: event.key in self.exit_press_keys)
             key_release_event_filter = False if not self.exit_release_keys else\
@@ -518,18 +518,18 @@ class ButtonMenuOverlay(MenuOverlayBase):
     
     @navkeys.setter
     def navkeys(self, navkeys):
-        self._navkeys_dict = None
+        self._navkey_dict = None
         self._navkeys = navkeys
         return
     
     @property
-    def navkeys_dict(self):
-        res = getattr(self, "_navkeys_dict", None)
+    def navkey_dict(self):
+        res = getattr(self, "_navkey_dict", None)
         if res is None:
             navkeys = self.navkeys
             if navkeys is not None:
                 res = self.getNavkeyDict(navkeys)
-        return self.navkeys_dict_def if res is None else res
+        return self.navkey_dict_def if res is None else res
     
     @staticmethod
     def getNavkeyDict(navkeys: Tuple[Tuple[Set[int]]]):

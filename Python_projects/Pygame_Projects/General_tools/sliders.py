@@ -125,7 +125,7 @@ class Slider(InteractiveDisplayComponentBase):
         "demarc_numbers_text_objects": "createDemarcationNumbersTextObjects",
         "demarc_surf": "createDemarcationSurface",
         "thumb_surf": "createThumbSurface",
-        "display_surf": "createDisplaySurface",
+        #"display_surf": "createDisplaySurface",
         
         "track_img_constructor": "createTrackImageConstructor",
         "demarc_img_constructor": "createDemarcationsImageConstructor",
@@ -705,19 +705,19 @@ class Slider(InteractiveDisplayComponentBase):
         #print(f"surf = {surf}")
         return surf
     
-    def draw(self, surf: "pg.Surface") -> None:
-        #print("\ndrawing slider")
-        #print("display_surf" in self.__dict__.keys())
-        #print(self.__dict__.get("display_surf", None))
-        #print("_display_surf" in self.__dict__.keys())
-        #print(self.__dict__.get("_display_surf", None))
-        #print(f"self.display_surf = {self.display_surf}")
-        #print("display_surf" in self.__dict__.keys())
-        #print(self.__dict__.get("display_surf", None))
-        #print("_display_surf" in self.__dict__.keys())
-        #print(self.__dict__.get("_display_surf", None))
-        surf.blit(self.display_surf, self.topleft_rel_pos)
-        return
+    #def draw(self, surf: "pg.Surface") -> None:
+    #    #print("\ndrawing slider")
+    #    #print("display_surf" in self.__dict__.keys())
+    #    #print(self.__dict__.get("display_surf", None))
+    #    #print("_display_surf" in self.__dict__.keys())
+    #    #print(self.__dict__.get("_display_surf", None))
+    #    #print(f"self.display_surf = {self.display_surf}")
+    #    #print("display_surf" in self.__dict__.keys())
+    #    #print(self.__dict__.get("display_surf", None))
+    #    #print("_display_surf" in self.__dict__.keys())
+    #    #print(self.__dict__.get("_display_surf", None))
+    #    surf.blit(self.display_surf, self.topleft_rel_pos)
+    #    return
     
     @staticmethod
     def _val2TrackLeftDistGivenTrackWidth(val: Real, track_width: int, val_range: Tuple[Real, Real]) -> int:
@@ -809,13 +809,16 @@ class Slider(InteractiveDisplayComponentBase):
         if slider_held:
             thumb_x_screen_raw_changed = True
             thumb_x_screen_raw = mouse_status[0][0]
-            
+        
         self.slider_held = slider_held
+
         if thumb_x_screen_raw_changed:
-            thumb_x0 = self.thumb_x
+            #thumb_x0 = self.thumb_x
             self.thumb_x_screen_raw = thumb_x_screen_raw
-            screen_changed = (self.thumb_x != thumb_x0)
-        else: screen_changed = False
+            #screen_changed = (self.thumb_x != thumb_x0)
+        #else: screen_changed = False
+        screen_changed = self.drawUpdateRequired()
+        #print(screen_changed)
         #print(screen_changed, self.slider_held, self.val)
         return quit, running, screen_changed, self.val
 
@@ -1104,7 +1107,7 @@ class SliderPlus(InteractiveDisplayComponentBase):
         "title_surf": "createTitleSurface",
         "val_text_surf": "createValueTextSurface",
         "static_bg_surf": "createStaticBackgroundSurface",
-        "display_surf": "createDisplaySurface",
+        #"display_surf": "createDisplaySurface",
         
         "title_img_constructor": "createTitleImageConstructor",
         "val_text_img_constructor": "createValueTextImageConstructor",
@@ -1208,7 +1211,7 @@ class SliderPlus(InteractiveDisplayComponentBase):
                 "name": None,
             },
             "container_attr_resets": {
-                "display_surf": {"display_surf": True},
+                "changed_since_last_draw": {"display_surf": (lambda container_obj, obj: obj.drawUpdateRequired())},
             },
             #"attr_reset_component_funcs": {},
             "container_attr_derivation": {
@@ -1346,7 +1349,7 @@ class SliderPlus(InteractiveDisplayComponentBase):
         return res
 
     def _setTitleTextObjectAttribute(self, attr: str, text_obj_attr: str) -> None:
-        print(f"Using _setTitleTextObjectAttribute() to set title text object attribute {text_obj_attr} from SliderPlus attribute {attr}")
+        #print(f"Using _setTitleTextObjectAttribute() to set title text object attribute {text_obj_attr} from SliderPlus attribute {attr}")
         title_text_obj = self.__dict__.get("_title_text_obj", None)
         if title_text_obj is None:
             #print("title_text_obj is None")
@@ -1370,7 +1373,7 @@ class SliderPlus(InteractiveDisplayComponentBase):
         slider_borders = self.slider_borders
         #print(f"overall shape = {shape}, slider_shape = {slider_shape}, slider_borders = {slider_borders}")
         res = (slider_shape[0], shape[1] - (slider_shape[1] + slider_borders[1]))
-        print(f"title shape = {res}")
+        #print(f"title shape = {res}")
         return res 
     
     def calculateTitleAnchorPosition(self) -> Tuple[int]:
@@ -1383,7 +1386,7 @@ class SliderPlus(InteractiveDisplayComponentBase):
         font: Optional["pg.freetype"]=None,
         max_height: Optional[int]=None,
     ) -> "TextGroup":
-        print("Using SliderPlus method createTitleTextGroup()")
+        #print("Using SliderPlus method createTitleTextGroup()")
         if font is None:
             font = font_def_func()
         return TextGroup(
@@ -1442,10 +1445,10 @@ class SliderPlus(InteractiveDisplayComponentBase):
     
     def createTitleSurface(self)\
             -> Union["pg.Surface", tuple]:
-        print(f"using createTitleSurface() for {self}")
+        #print(f"using createTitleSurface() for {self}")
         #print("hello1")
         title_text_obj = self.title_text_obj
-        print(f"title font size = {title_text_obj.font_size}")
+        #print(f"title font size = {title_text_obj.font_size}")
         #print(title_text_obj)
         if not title_text_obj: return ()
         #print("hello2")
@@ -1453,7 +1456,7 @@ class SliderPlus(InteractiveDisplayComponentBase):
         surf.set_alpha(255)
         surf.fill((0, 0, 255))
         #print(self.title_anchor_rel_pos, self.title_anchor_type)
-        print(title_text_obj.font_size)
+        #print(title_text_obj.font_size)
         title_text_obj.draw(surf, anchor_rel_pos=self.title_anchor_rel_pos, anchor_type=self.title_anchor_type)
         return surf
     
@@ -1732,12 +1735,12 @@ class SliderPlus(InteractiveDisplayComponentBase):
         #print(f"display surface = {surf}")
         return surf
     
-    def draw(self, surf: "pg.Surface") -> None:
-        print("Using SliderPlus method draw()")
-        #print(f"self._display_surf = {getattr(self, '_display_surf', None)}")
-        #print(f"self.display_surf = {self.display_surf}")
-        surf.blit(self.display_surf, self.topleft_rel_pos)
-        return
+    #def draw(self, surf: "pg.Surface") -> None:
+    #    print("Using SliderPlus method draw()")
+    #    #print(f"self._display_surf = {getattr(self, '_display_surf', None)}")
+    #    #print(f"self.display_surf = {self.display_surf}")
+    #    surf.blit(self.display_surf, self.topleft_rel_pos)
+    #    return
 
     def eventLoop(self, events: Optional[List[int]]=None,\
             keys_down: Optional[List[int]]=None,\
@@ -1760,9 +1763,10 @@ class SliderPlus(InteractiveDisplayComponentBase):
         )
         quit = quit or quit2
         running = running and running2
-        screen_changed = screen_changed or screen_changed2
-        if screen_changed:
-            print(f"slider {self} has attribute display_surf of {self.__dict__.get('_display_surf', None)}")
+        #screen_changed = screen_changed or screen_changed2
+        screen_changed = self.drawUpdateRequired()
+        #if screen_changed:
+        #    print(f"slider {self} has attribute display_surf of {self.__dict__.get('_display_surf', None)}")
         #print(screen_changed, self.val)
         #print()
         #print("end of SliderPlus eventLoop()")
@@ -1810,7 +1814,7 @@ class SliderPlusGroupElement(ComponentGroupElementBaseClass, SliderPlus):
                 "name": None,
             },
             "container_attr_resets": {
-                "display_surf": {"display_surf": True},
+                "changed_since_last_draw": {"display_surf": (lambda container_obj, obj: obj.drawUpdateRequired())},
             },
             #"attr_reset_component_funcs": {},
             "container_attr_derivation": {
@@ -1880,8 +1884,8 @@ class SliderPlusGroupElement(ComponentGroupElementBaseClass, SliderPlus):
             _group=slider_plus_group,
             **kwargs,
         )
-        print(f"slider plus group title text group = {slider_plus_group.title_text_group}")
-        print(f"new slider plus group element title text group = {getattr(self, '_title_text_group', None)}")
+        #print(f"slider plus group title text group = {slider_plus_group.title_text_group}")
+        #print(f"new slider plus group element title text group = {getattr(self, '_title_text_group', None)}")
         return
 
     def calculateSliderShape(self) -> Tuple[int, int]:
@@ -2066,8 +2070,8 @@ class SliderPlusGrid(InteractiveDisplayComponentBase):
         "grid_dims": {"grid_layout": True},
         "shape": {"grid_layout": True},
         "slider_gaps_rel_shape": {"grid_layout": True},
-        "grid_layout": {"slider_shape": True, "slider_gaps": True, "slider_topleft_locations": True, "display_surf": True},
-        "slider_shape": {"display_surf": True},
+        "grid_layout": {"slider_plus_shape": True, "slider_gaps": True, "slider_topleft_locations": True, "display_surf": True},
+        "slider_plus_shape": {"display_surf": True},
         "slider_gaps": {"display_surf": True},
         "slider_topleft_locations": {"display_surf": True},
     }
@@ -2081,11 +2085,11 @@ class SliderPlusGrid(InteractiveDisplayComponentBase):
 
         #"slider": "createSlider",
         "grid_layout": "calculateGridLayout",
-        "slider_shape": "calculateSliderShape",
+        "slider_plus_shape": "calculateSliderShape",
         "slider_gaps": "calculateSliderGaps",
         "slider_topleft_locations": "calculateSliderTopleftLocations",
 
-        "display_surf": "createDisplaySurface",
+        #"display_surf": "createDisplaySurface",
 
         "slider_grid_img_constructor": "createSliderGridImageConstructor",
     }
@@ -2125,7 +2129,7 @@ class SliderPlusGrid(InteractiveDisplayComponentBase):
         "slider_plus_group": {
             "class": SliderPlusGroup,
             "attribute_correspondence": {
-                "shape": "slider_shape",
+                "shape": "slider_plus_shape",
                 "demarc_numbers_text_group": "demarc_numbers_text_group",
                 "thumb_radius_rel": "thumb_radius_rel",
                 "demarc_line_lens_rel": "demarc_line_lens_rel",
@@ -2230,7 +2234,7 @@ class SliderPlusGrid(InteractiveDisplayComponentBase):
         shape = (100, 100) # Placeholder
 
         self._slider_group = SliderPlusGroup(
-            shape=self.slider_shape,
+            shape=self.slider_plus_shape,
             demarc_numbers_text_group: Optional["TextGroup"]=None,
             thumb_radius_rel: Optional[Real]=None,
             demarc_line_lens_rel: Optional[Tuple[Real]]=None,
@@ -2295,7 +2299,7 @@ class SliderPlusGrid(InteractiveDisplayComponentBase):
         }
         if self.sliders[grid_inds[0]][grid_inds[1]] is None:
             print(f"creating slider plus at grid indices {grid_inds}")
-            container_attr_resets = {"display_surf": {"display_surf": True}}
+            container_attr_resets = {"changed_since_last_draw": {"display_surf": (lambda container_obj, obj: obj.drawUpdateRequired())}}
             self.sliders[grid_inds[0]][grid_inds[1]] = self.slider_plus_group.addSliderPlus(
                 _from_container=True,
                 _container_obj=self,
@@ -2354,13 +2358,13 @@ class SliderPlusGrid(InteractiveDisplayComponentBase):
     
     def calculateSliderTopleftLocations(self) -> Tuple[List[int], List[int]]:
         dims = self.grid_dims
-        slider_shape, gap_size = self.grid_layout
+        slider_plus_shape, gap_size = self.grid_layout
         x_lst = []
         y_lst = []
         for i1 in range(dims[0]):
-            x_lst.append(round((slider_shape[0] + gap_size[0]) * i1))
+            x_lst.append(round((slider_plus_shape[0] + gap_size[0]) * i1))
         for i2 in range(dims[1]):
-            y_lst.append(round((slider_shape[1] + gap_size[1]) * i2))
+            y_lst.append(round((slider_plus_shape[1] + gap_size[1]) * i2))
 
         return (x_lst, y_lst)
 
@@ -2419,12 +2423,12 @@ class SliderPlusGrid(InteractiveDisplayComponentBase):
         return (mouse_enabled, mouse_enabled, mouse_enabled)
 
     
-    def draw(self, surf: "pg.Surface") -> None:
-        print("Using SliderPlusGrid method draw()")
-        print(f"self._display_surf = {self.__dict__.get('_display_surf', None)}")
-        surf.blit(self.display_surf, self.topleft_rel_pos)
-        print("finished using SliderPlusGrid method draw()")
-        return
+    #def draw(self, surf: "pg.Surface") -> None:
+    #    print("Using SliderPlusGrid method draw()")
+    #    print(f"self._display_surf = {self.__dict__.get('_display_surf', None)}")
+    #    surf.blit(self.display_surf, self.topleft_rel_pos)
+    #    print("finished using SliderPlusGrid method draw()")
+    #    return
     
     """
     def processEvents(self, events: List[Tuple[int]]) -> List[Tuple[int]]:
@@ -2458,8 +2462,9 @@ class SliderPlusGrid(InteractiveDisplayComponentBase):
                 print(f"slider at {inds} changed")
             quit = quit or quit2
             running = running and running2
-            screen_changed = screen_changed or screen_changed2
+            #screen_changed = screen_changed or screen_changed2
             n_slider += 1
+        screen_changed = self.drawUpdateRequired()
         #print(f"the number of sliders in grid is {n_slider}")
         #print("end of SliderPlusGrid eventLoop()")
         #print(quit, running, screen_changed, None)

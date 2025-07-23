@@ -17,8 +17,8 @@ from General_tools import (
     runExampleSliderAndButtonMenuOverlay1,
 )
 
-runExampleButton1()
-runExampleButtonGroup1()
+#runExampleButton1()
+#runExampleButtonGroup1()
 runExampleButtonGrid1()
 
 #address = runExampleSlider1()

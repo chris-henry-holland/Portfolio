@@ -232,10 +232,10 @@ def runExampleButtonGroup1() -> None:
             #print(f"new slider value for {slider.name} = {val}")
         if screen_changed:
             screen.blit(screen_cp, (0, 0))
-            print("drawing buttons")
+            #print("drawing buttons")
             drawButtons(screen, buttons)
-            print(buttons[0].__dict__.get("_text_anchor_rel_positions", None))
-            print(buttons[0].__dict__.get("_button_surfs", None))
+            #print(buttons[0].__dict__.get("_text_anchor_rel_positions", None))
+            #print(buttons[0].__dict__.get("_button_surfs", None))
             pg.display.flip()
         clock.tick(framerate)
         screen_changed = False
@@ -280,22 +280,22 @@ def runExampleButtonGrid1() -> None:
         fill_colors=(None, (named_colors_def["red"], 0.2), (named_colors_def["red"], 0.5), 2),
         outline_widths=((1,), (2,), (3,), 1),
         outline_colors=((named_colors_def["black"], 1), (named_colors_def["blue"], 0.8), 1, 1),
-        mouse_enabled=True,
+        mouse_enabled=False,
         navkeys_enabled=True,
         navkey_cycle_delay_frame=(30, 10, 10, 10, 5),
     )
 
-    for i2, text_col in enumerate(button_text0):
-        align = "right" if i2 else "left"
+    for i1, text_col in enumerate(button_text0):
+        align = "right" if i1 else "left"
         anchor_tup = ((f"mid{align}",), 0, ("center",), 2)
         setup_kwargs = {
             "text_anchor_types": anchor_tup,
         }
         #button_text.append([(text, anchor_tup) for text in text_row])
-        for i1, txt in enumerate(text_col):
+        for i2, txt in enumerate(text_col):
             setup_kwargs["grid_inds"] = (i1, i2)
             setup_kwargs["text"] = txt
-            button_grid.setupButtonGridElement(*setup_kwargs)
+            button_grid.setupButtonGridElement(**setup_kwargs)
 
     #print("hi1")
     #button_grid.button_shape = (100, 50)
@@ -480,6 +480,7 @@ def runExampleSlider1() -> None:
             pg.quit()
             break
         if chng: screen_changed = True
+        print(f"redraw required = {screen_changed}")
         if screen_changed:
             print(f"new slider value = {val}")
             screen.blit(screen_cp, (0, 0))
@@ -615,6 +616,7 @@ def runExampleSliderGroup1() -> None:
             if not chng: continue
             screen_changed = True
             print(f"new slider value for {slider.name} = {val}")
+        print(f"redraw required = {screen_changed}")
         if screen_changed:
             screen.blit(screen_cp, (0, 0))
             drawSliders(screen, sliders)
@@ -732,6 +734,7 @@ def runExampleSliderPlus1() -> None:
             pg.quit()
             break
         if chng: screen_changed = True
+        print(f"redraw required = {screen_changed}")
         if screen_changed:
             print(f"new slider value = {val}")
             screen.blit(screen_cp, (0, 0))
@@ -889,6 +892,7 @@ def runExampleSliderPlusGroup1() -> None:
             if not chng: continue
             screen_changed = True
             #print(f"new slider value for {slider.name} = {val}")
+        print(f"redraw required = {screen_changed}")
         if screen_changed:
             screen.blit(screen_cp, (0, 0))
             drawSliders(screen, sliders)
@@ -1075,6 +1079,7 @@ def runExampleSliderPlusGrid1() -> None:
         if quit or not running:
             pg.quit()
             break
+        print(f"redraw required = {screen_changed}")
         if chng: screen_changed = True
         if screen_changed:
             screen.blit(screen_cp, (0, 0))

@@ -117,8 +117,10 @@ class Button(InteractiveDisplayComponentBase):
         "fill_img_constructors": {"button_surfs": True},
         "text_img_constructors": {"button_surfs": True},
         "outline_img_constructors": {"button_surfs": True},
+
+        "state": {"display_surf": True},
         
-        "button_surfs": {"button_img_constructors": True},
+        "button_surfs": {"display_surf": True},#, "button_img_constructors": True},
         
         "mouse_enabled": {"mouse_enablement": True},
     }
@@ -142,7 +144,7 @@ class Button(InteractiveDisplayComponentBase):
         "text_img_constructors": "createTextImageConstructors",
         "outline_img_constructors": "createOutlineImageConstructors",
         
-        "button_img_constructors": "createButtonImageConstructors",
+        #"button_img_constructors": "createButtonImageConstructors",
     }
     
     attribute_default_functions = {
@@ -758,7 +760,7 @@ class Button(InteractiveDisplayComponentBase):
             #print(f"res = {res}")
             self._button_img_constructors = res
         return res
-    """
+    
     def createButtonImageConstructors(self) -> Callable[["pg.Surface"], None]:
         res = []
         def buttonImageConstructor(surf: "pg.Surface",\
@@ -776,7 +778,14 @@ class Button(InteractiveDisplayComponentBase):
             res.append((functools.partial(buttonImageConstructor,\
                     button_surf=button_surf_tup[0]),))
         return tuple(res)
-    
+    """
+    def createDisplaySurface(self) -> Optional["pg.Surface"]:
+        idx = self.state
+        button_surfs = self.button_surfs
+        if isinstance(button_surfs[idx], int):
+            idx = button_surfs[idx]
+        return button_surfs[idx][0]
+    """
     def draw(self, surf: "pg.Surface"):
         idx = self.state
         button_img_constructors = self.button_img_constructors
@@ -786,7 +795,7 @@ class Button(InteractiveDisplayComponentBase):
             return
         self.button_img_constructors[idx][0](surf)
         return
-        """
+        ""
         idx = self.state
         for displ_attr in self.displ_attrs:
             attr = f"{displ_attr}_img_constructors"
@@ -799,7 +808,8 @@ class Button(InteractiveDisplayComponentBase):
                 img_constructor_tup = img_constructors[img_constructor_tup]
             img_constructor_tup[0](surf)
         return
-        """
+        ""
+    """
     """
     def getRequiredInputs(self) -> Tuple[Union[bool, Dict[str, Union[List[int], Tuple[Union[Tuple[int], int]]]]]]:
         quit, esc_pressed, events = self.user_input_processor.getEvents()
@@ -885,7 +895,10 @@ class Button(InteractiveDisplayComponentBase):
         
         mouse_over = self.mouseOverSurface(mouse_status[0], check_axes=check_axes) if mouse_status else False
         self.state = 2 + mouse_status[1][0] if mouse_over else 0
-        return quit, running, (self.state != prev_state), selected
+        screen_changed = self.drawUpdateRequired()
+        #screen_changed = True
+        #print(f"screen_changed = {screen_changed}")
+        return quit, running, screen_changed, selected
 
 class ButtonGroupElement(ComponentGroupElementBaseClass, Button):
     
@@ -1019,7 +1032,6 @@ class ButtonGroup(ComponentGroupBaseClass):
         **{
             attr: Button.attribute_processing.get(attr) for attr in
                 [
-                    "text_groups",
                     "text_borders_rel",
                     "outline_widths",
                     "font_colors",
@@ -1027,6 +1039,9 @@ class ButtonGroup(ComponentGroupBaseClass):
                     "outline_colors",
                 ]
         },
+        **{
+            "text_groups": lambda val, obj: processReferenceStructure(val, obj.n_state),
+        }
     }
     
     #fixed_attributes = {"buttons"}
@@ -1112,8 +1127,8 @@ class ButtonGroup(ComponentGroupBaseClass):
         return res
     
 class ButtonGrid(InteractiveDisplayComponentBase):
-    navkeys_def = navkeys_def_glob
-    navkeys_dict_def = createNavkeyDict(navkeys_def)
+    #navkeys_def = navkeys_def_glob
+    #navkey_dict_def = createNavkeyDict(navkeys_def)
     
     n_state = Button.n_state
 
@@ -1125,13 +1140,19 @@ class ButtonGrid(InteractiveDisplayComponentBase):
         "button_shape": {"display_surf": True, "button_ranges_rel": True},
         "button_gaps": {"display_surf": True},
         "button_topleft_locations": {"display_surf": True, "button_ranges_rel": True},
-        "button_ranges_rel": {"button_ranges_screen"},
+        "button_ranges_rel": {"button_ranges_screen": True},
+    }
+
+    custom_attribute_change_propogation_methods = {
+        "button_mouse_is_over": "customButtonMouseIsOverChangePropogation",
+        "mouse_l_held": "customMouseLHeldChangePropogation",
+        "navkey_button": "customNavkeyButtonChangePropogation",
     }
     
     attribute_calculation_methods = {
         "mouse_enablement": "calculateMouseEnablement",
+        "navkeys_enablement": "calculateNavkeysEnablement",
 
-        #"slider": "createSlider",
         "grid_layout": "calculateGridLayout",
         "button_shape": "calculateButtonShape",
         "button_gaps": "calculateButtonGaps",
@@ -1139,8 +1160,6 @@ class ButtonGrid(InteractiveDisplayComponentBase):
 
         "button_ranges_rel": "calculateButtonRangesRelative",
         "button_ranges_screen": "calculateButtonRangesScreen",
-
-        "display_surf": "createDisplaySurface",
 
         "button_grid_img_constructor": "createButtonGridImageConstructor",
     }
@@ -1167,8 +1186,13 @@ class ButtonGrid(InteractiveDisplayComponentBase):
             "button_gaps_rel_shape": ((lambda obj: (0., 0.)),),
             "navkeys_enabled": ((lambda obj: True),),
             "navkey_cycle_delay_frame": ((lambda obj: (30, 10)),),
-            "buttons": ((lambda obj: [[None] * obj.grid_dims[1] for _ in range(obj.grid_dims[0])])),
-            "selected": 0,
+            "navkey_status": ((lambda obj: (None, [0, 0])),),
+            "navkey_button": ((lambda obj: (0, 0)),),
+            "enter_keys_enablement": ((lambda obj: (False, True, False)),),
+            "buttons": ((lambda obj: [[None] * obj.grid_dims[1] for _ in range(obj.grid_dims[0])]),),
+            "selected": ((lambda obj: 0),),
+            "button_mouse_is_over": ((lambda obj: ()),),
+            "mouse_l_held": ((lambda obj: False),),
         }
     }
 
@@ -1176,7 +1200,6 @@ class ButtonGrid(InteractiveDisplayComponentBase):
         **{
             attr: Button.attribute_processing.get(attr) for attr in
                 [
-                    "text_groups",
                     "text_borders_rel",
                     "outline_widths",
                     "font_colors",
@@ -1184,6 +1207,12 @@ class ButtonGrid(InteractiveDisplayComponentBase):
                     "outline_colors",
                 ]
         },
+        **{
+            attr: ButtonGroup.attribute_processing.get(attr) for attr in
+                [
+                    "text_groups",
+                ]
+        }
     }
     
     #fixed_attributes = set()
@@ -1192,46 +1221,22 @@ class ButtonGrid(InteractiveDisplayComponentBase):
         "button_group": {
             "class": ButtonGroup,
             "attribute_correspondence": {
-                "shape": "slider_shape",
-                "demarc_numbers_text_group": "demarc_numbers_text_group",
-                "thumb_radius_rel": "thumb_radius_rel",
-                "demarc_line_lens_rel": "demarc_line_lens_rel",
-                "demarc_numbers_max_height_rel": "demarc_numbers_max_height_rel",
-                "track_color": "track_color",
-                "thumb_color": "thumb_color",
-                "demarc_numbers_color": "demarc_numbers_color",
-                "demarc_line_colors": "demarc_line_colors",
-                "thumb_outline_color": "thumb_outline_color",
-                "mouse_enabled": "mouse_enabled",
-                "slider_shape_rel": "slider_shape_rel",
-                "slider_borders_rel": "slider_borders_rel",
-                "title_text_group": "title_text_group",
-                "title_anchor_type": "title_anchor_type",
-                "title_color": "title_color",
-                "val_text_group": "val_text_group",
-                "val_text_anchor_type": "val_text_anchor_type",
-                "val_text_color": "val_text_color",
+                "button_shape": "button_shape",
+                "text_groups": "text_groups",
+                "text_borders_rel": "text_borders_rel",
+                "font_colors": "font_colors",
+                "fill_colors": "fill_colors",
+                "outline_widths": "outline_widths",
+                "outline_colors": "outline_colors",
             },
             "creation_function_args": {
-                "shape": None,
-                "demarc_numbers_text_group": None,
-                "thumb_radius_rel": None,
-                "demarc_line_lens_rel": None,
-                "demarc_numbers_max_height_rel": None,
-                "track_color": None,
-                "thumb_color": None,
-                "demarc_numbers_color": None,
-                "demarc_line_colors": None,
-                "thumb_outline_color": None,
-                "mouse_enabled": None,
-                "slider_shape_rel": None,
-                "slider_borders_rel": None,
-                "title_text_group": None,
-                "title_anchor_type": None,
-                "title_color": None,
-                "val_text_group": None,
-                "val_text_anchor_type": None,
-                "val_text_color": None,
+                "button_shape": None,
+                "text_groups": None,
+                "text_borders_rel": None,
+                "font_colors": None,
+                "fill_colors": None,
+                "outline_widths": None,
+                "outline_colors": None,
             },
         }
     }
@@ -1339,6 +1344,7 @@ class ButtonGrid(InteractiveDisplayComponentBase):
     ) -> Button:
         # Review- add mechanism for communicating from a constituent slider
         # that its value has changed.
+        print(grid_inds, self.grid_dims)
         if any(idx < 0 or idx >= m for idx, m in zip(grid_inds, self.grid_dims)):
             raise IndexError("The grid indices given are not in the allowed range")
         attr_dict = {
@@ -1352,7 +1358,7 @@ class ButtonGrid(InteractiveDisplayComponentBase):
         }
         if self.buttons[grid_inds[0]][grid_inds[1]] is None:
             print(f"creating button at grid indices {grid_inds}")
-            container_attr_resets = {"display_surf": {"display_surf": True}}
+            container_attr_resets = {"changed_since_last_draw": {"display_surf": (lambda container_obj, obj: obj.drawUpdateRequired())}}
             self.buttons[grid_inds[0]][grid_inds[1]] = self.button_group.addButton(
                 _from_container=True,
                 _container_obj=self,
@@ -1370,7 +1376,11 @@ class ButtonGrid(InteractiveDisplayComponentBase):
         #self.setAttributes({"display_surf": None}, _from_container=True)
         # Workaround to ensure that the button element is sufficiently
         # set up
-        self.buttons[grid_inds[0]][grid_inds[1]].display_surf
+        self.buttons[grid_inds[0]][grid_inds[1]].button_surfs
+        # Ensure that the navkey button is highlighted (if applicable)
+        navkey_button = self.navkey_button
+        self.navkey_button = ()
+        self.navkey_button = navkey_button
         return self.buttons[grid_inds[0]][grid_inds[1]]
     
     def getButton(self, grid_inds: Tuple[int, int]) -> Optional[Button]:
@@ -1387,6 +1397,7 @@ class ButtonGrid(InteractiveDisplayComponentBase):
                 if button is None: continue
                 yield (button, (i1, i2))
         return
+    
 
     def calculateGridLayout(self) -> Tuple[Tuple[int, int], Tuple[float, float]]:
         shape = []
@@ -1439,7 +1450,7 @@ class ButtonGrid(InteractiveDisplayComponentBase):
             # one to be reset- moved to the addSliderPlus() method
             #for slider, _ in obj.sliderPlusIterator():
             #    slider.display_surf
-            for button, grid_inds in obj.sliderPlusIterator():
+            for button, grid_inds in obj.buttonIterator():
                 i1, i2 = grid_inds
                 #if i2 == 0: continue
                 print(f"grid inds {(i1, i2)}")
@@ -1961,20 +1972,65 @@ class ButtonGrid(InteractiveDisplayComponentBase):
     def createButtonGridImageConstructor(self) -> Callable[[], None]:
         return lambda surf: surf.blit(self.button_grid_surf, self.topleft_rel_pos)
     """
-    def draw(self, surf: "pg.Surface"):
-        #self.button_grid_img_constructor(surf)
-        surf.blid(self.display_surf, self.topleft_rel_pos)
-        return
+    #def draw(self, surf: "pg.Surface"):
+    #    #self.button_grid_img_constructor(surf)
+    #    surf.blit(self.display_surf, self.topleft_rel_pos)
+    #    return
     
     def calculateMouseEnablement(self) -> None:
         #print("calculating mouse enablement")
         mouse_enabled = self.mouse_enabled
         return (mouse_enabled, False, mouse_enabled)
-
-    @property
-    def mouse_over(self):
-        return self._mouse_over
     
+    def calculateNavkeysEnablement(self) -> None:
+        #print("calculating mouse enablement")
+        navkeys_enabled = self.navkeys_enabled
+        return (navkeys_enabled, navkeys_enabled, False)
+
+    #@property
+    #def mouse_over(self):
+    #    return self._mouse_over
+
+    #def calculateButtonMouseIsOver(self) -> Optional[Tuple[int, int]]:
+    #
+
+    def customButtonMouseIsOverChangePropogation(
+        self,
+        new_val: Optional[Tuple[int, int]],
+        prev_val: Optional[Tuple[int, int]],
+    ) -> None:
+        print(new_val, prev_val)
+        if not new_val:
+            print("hello")
+            if not prev_val: return
+            self.buttons[prev_val[0]][prev_val[1]].state = int(self.navkeys_enabled)
+            return
+        state = 2 + self.mouse_l_held
+        button = self.buttons[new_val[0]][new_val[1]]
+        if prev_val == new_val:
+            if button.state == state:
+                return False#, False
+            #selected = (button.state == 3 and state == 2)
+            button.state = state
+            return True#, selected
+        if self.navkeys_enabled:
+            self.navkey_button = new_val
+        if prev_val:
+            self.buttons[prev_val[0]][prev_val[1]].state = 0
+        button.state = state
+        return True
+    
+    def customMouseLHeldChangePropogation(
+        self,
+        new_val: bool,
+        prev_val: bool,
+    ) -> None:
+        mouse_button = self.button_mouse_is_over
+        if not mouse_button: return
+        button = self.buttons[mouse_button[0]][mouse_button[1]]
+        button.state = 2 + new_val
+        return
+    """
     def setMouseOver(self, mouse_over: Optional[Tuple[int]],\
             mouse_down: bool) -> bool:
         prev = getattr(self, "_mouse_over", None)
@@ -1982,10 +2038,10 @@ class ButtonGrid(InteractiveDisplayComponentBase):
         
         if mouse_over is None:
             if prev is None: return False#, False
-            self.button_grid[prev[0]][prev[1]].state = int(self.navkeys_enabled)
+            self.buttons[prev[0]][prev[1]].state = int(self.navkeys_enabled)
             return True#, False
         state = 2 + mouse_down
-        button = self.button_grid[mouse_over[0]][mouse_over[1]]
+        button = self.buttons[mouse_over[0]][mouse_over[1]]
         if prev == mouse_over:
             if button.state == state:
                 return False#, False
@@ -1993,70 +2049,88 @@ class ButtonGrid(InteractiveDisplayComponentBase):
             button.state = state
             return True#, selected
         if self.navkeys_enabled:
-            self.button_grid[self.navkey_button[0]][self.navkey_button[1]].state = 0
+            self.buttons[self.navkey_button[0]][self.navkey_button[1]].state = 0
             self._navkey_button = mouse_over
         if prev is not None:
-            self.button_grid[prev[0]][prev[1]].state = 0
+            self.buttons[prev[0]][prev[1]].state = 0
         button.state = state
         return True#, False
+    """
+    #@property
+    #def navkeys(self):
+    #    return self.navkeys_def if self._navkeys is None else self._navkeys
     
-    @property
-    def navkeys(self):
-        return self.navkeys_def if self._navkeys is None else self._navkeys
+    #@navkeys.setter
+    #def navkeys(self, navkeys):
+    #    self._navkey_dict = None
+    #    self._navkeys = navkeys
+    #    return
     
-    @navkeys.setter
-    def navkeys(self, navkeys):
-        self._navkeys_dict = None
-        self._navkeys = navkeys
-        return
+    #@property
+    #def navkey_dict(self):
+    #    res = getattr(self, "_navkey_dict", None)
+    #    if res is None:
+    #        navkeys = self.navkeys
+    #        if navkeys is not None:
+    #            res = self.getNavkeyDict(navkeys)
+    #    return self.navkey_dict_def if res is None else res
     
-    @property
-    def navkeys_dict(self):
-        res = getattr(self, "_navkeys_dict", None)
-        if res is None:
-            navkeys = self.navkeys
-            if navkeys is not None:
-                res = self.getNavkeyDict(navkeys)
-        return self.navkeys_dict_def if res is None else res
+    #@staticmethod
+    #def getNavkeyDict(navkeys: Tuple[Tuple[Set[int]]]):
+    #    return createNavkeyDict(navkeys)
     
-    @staticmethod
-    def getNavkeyDict(navkeys: Tuple[Tuple[Set[int]]]):
-        return createNavkeyDict(navkeys)
+    #@property
+    #def navkey_cycle_delay_frame(self):
+    #    return self._navkey_cycle_delay_frame
     
-    @property
-    def navkey_cycle_delay_frame(self):
-        return self._navkey_cycle_delay_frame
+    #@property
+    #def navkey_status(self):
+    #    return self._navkey_status
     
-    @property
-    def navkey_status(self):
-        return self._navkey_status
+    #@property
+    #def navkey_button(self):
+    #    return self._navkey_button
     
-    @property
-    def navkey_button(self):
-        return self._navkey_button
-    
+    """
     def setNavkeyButton(self, navkey_button: Optional[Tuple[int]]) -> bool:
         prev = getattr(self, "_navkey_button", None)
         if self.mouse_over is not None or navkey_button == prev:
             return False
         self._navkey_button = navkey_button
         if prev is not None:
-            self.button_grid[prev[0]][prev[1]].state = 0
-        self.button_grid[navkey_button[0]][navkey_button[1]].state = 1
+            self.buttons[prev[0]][prev[1]].state = 0
+        self.buttons[navkey_button[0]][navkey_button[1]].state = 1
         return True
+    """
+
+    def customNavkeyButtonChangePropogation(
+        self,
+        new_val: Optional[Tuple[int, int]],
+        prev_val: Optional[Tuple[int, int]],
+    ) -> None:
+        print("Using customNavkeyButtonChangePropogation()")
+        if self.button_mouse_is_over:
+            return
+        if prev_val and self.buttons[prev_val[0]][prev_val[1]] is not None:
+            self.buttons[prev_val[0]][prev_val[1]].state = 0
+        if new_val and self.buttons[new_val[0]][new_val[1]] is not None:
+            self.buttons[new_val[0]][new_val[1]].state = 1
+        return
+
     
     def navkeyMoveCalculator(self, navkey: int, start_button: Tuple[int]) -> Tuple[int]:
+        print(f"Using navkeyMoveCalculator() with navkey = {navkey} and start_button = {start_button}")
         if not self.navkeys_enabled: return start_button
-        move = self.navkeys_dict.get(navkey, None)
+        move = self.navkey_dict.get(navkey, None)
         if move is None: return start_button
         #print(f"move = {move}")
         res = list(start_button)
-        button_array_shape = self.button_array_shape
+        grid_dims = self.grid_dims
         i = move[0]
         
         if move[1] == 0:
-            res[i] = (res[i] - 1) % button_array_shape[i]
-        else: res[i] = (res[i] + 1) % button_array_shape[i]
+            res[i] = (res[i] - 1) % grid_dims[i]
+        else: res[i] = (res[i] + 1) % grid_dims[i]
         return tuple(res)
     
     def navkeyMove(self, navkey_events: Optional[List[Tuple[int]]], navkeys_pressed: Optional[Set[int]]=None) -> Tuple[bool]:
@@ -2074,7 +2148,7 @@ class ButtonGrid(InteractiveDisplayComponentBase):
         default_status_func = lambda curr_key, navkey_set: [curr_key, navkey_set, 0, 0]
         
         if navkeys_pressed is None:
-            navkeys_pressed = checkKeysPressed(keys_to_check=self.navkeys_dict.keys())
+            navkeys_pressed = checkKeysPressed(keys_to_check=self.navkey_dict.keys())
         
         #if navkey_events or navkeys_pressed:
         #    print(navkey_events, navkeys_pressed)
@@ -2084,8 +2158,8 @@ class ButtonGrid(InteractiveDisplayComponentBase):
         
         def updateStates(orig: Tuple[int], curr: Tuple[int]) -> None:
             self._navkey_button = curr
-            self.button_grid[orig[0]][orig[1]].state = 0
-            self.button_grid[curr[0]][curr[1]].state = 1
+            self.buttons[orig[0]][orig[1]].state = 0
+            self.buttons[curr[0]][curr[1]].state = 1
             return
         
         if navkey_events:
@@ -2151,10 +2225,12 @@ class ButtonGrid(InteractiveDisplayComponentBase):
             res.append(i)
         return tuple(res)
     
-    def processEvents(self, b_inds0: Optional[Tuple[int]], b_inds0_mouse: Optional[Tuple[int]], b_inds1_mouse: Optional[Tuple[int]], events: List[Tuple[int]]) -> Tuple[Union[List[int], List[Tuple[int]], bool]]:
-        #print(b_inds0, b_inds0_mouse, b_inds1_mouse, events)
+    def processEvents(self, b_inds0: Optional[Tuple[int]], b_inds0_mouse: Optional[Tuple[int, int]], mouse_pos_curr: Optional[Tuple[int, int]], events: List[Tuple[int]]) -> Tuple[Union[List[int], List[Tuple[int]], bool]]:
+        #print(b_inds0, b_inds0_mouse, mouse_pos_curr, events)
+        
         if not self.mouse_enabled and not self.navkeys_enabled:
-            return None, [], False, None
+            return None, [], False, None, False
+        
         #enter_pressed = False
         selected_b_inds = []
         idx1 = 0
@@ -2162,6 +2238,8 @@ class ButtonGrid(InteractiveDisplayComponentBase):
         b_inds = b_inds0
         b_reset = False
         last_navkey = None
+        #mouse_over_button
+        #button_mouse_is_over = self.mouseOverWhichButton(pos)
         for tup in events:
             if tup[1] == 3 and self.mouse_enabled:
                 pos = tup[0].pos
@@ -2184,31 +2262,38 @@ class ButtonGrid(InteractiveDisplayComponentBase):
                 continue
             #print(tup)
             if tup[0].key in self.enter_keys:
+                #print("enter pressed")
                 #enter_pressed = True
                 #print("hi2")
                 b_reset = True
                 last_navkey = None
                 selected_b_inds.append(b_inds)
-            elif tup[0].key in self.navkeys_dict.keys():
+            elif tup[0].key in self.navkey_dict.keys():
                 b_reset = True
                 last_navkey = tup[0].key
                 b_inds = self.navkeyMoveCalculator(tup[0].key, b_inds)
+                #print(f"post navkeyMoveCalculator() b_inds = {b_inds}")
+        mouse_over_button = False
+        b_inds1_mouse = None if mouse_pos_curr is None else self.mouseOverWhichButton(mouse_pos_curr)
         if b_inds1_mouse is not None:
             b_reset = True
             last_navkey = None
             b_inds = b_inds1_mouse
+            mouse_over_button = True
             if b_inds_mouse == b_inds1_mouse:
                 for idx in range(idx1, len(selected_b_inds)):
                     selected_b_inds[idx] = b_inds_mouse
         #if selected_b_inds:
         #    print(selected_b_inds)
-        return b_inds, selected_b_inds, b_reset, last_navkey
+        return b_inds, selected_b_inds, b_reset, last_navkey, mouse_over_button
     
-    def eventLoop(self, events: Optional[List[int]]=None,\
-            keys_down: Optional[Set[int]]=None,\
-            mouse_status: Optional[Tuple[int]]=None,\
-            check_axes: Tuple[int]=(0, 1))\
-            -> Tuple[bool, bool, bool, Any]:
+    def eventLoop(
+        self,
+        events: Optional[List[int]]=None,
+        keys_down: Optional[Set[int]]=None,
+        mouse_status: Optional[Tuple[int]]=None,
+        check_axes: Tuple[int]=(0, 1),
+    ) -> Tuple[bool, bool, bool, Any]:
         quit = False
         running = True
         screen_changed = False
@@ -2218,12 +2303,14 @@ class ButtonGrid(InteractiveDisplayComponentBase):
         if mouse_enabled:
             if mouse_status is None:
                 mouse_status = self.user_input_processor.getMouseStatus()
-            b_inds0_mouse = self.mouse_over
-            b_inds1_mouse = self.mouseOverWhichButton(mouse_status[0])
-            lmouse_down = mouse_status[1][0]
+            b_inds0_mouse = self.button_mouse_is_over
+            #b_inds1_mouse = self.mouseOverWhichButton(mouse_status[0])
+            #print(b_inds1_mouse)
+            self.mouse_l_held = mouse_status[1][0]
         else:
             b_inds0_mouse = None
             b_inds1_mouse = None
+            self.mouse_l_held = False
         
         if events is None:
             quit, esc_pressed, events = self.user_input_processor.getEvents()
@@ -2233,8 +2320,13 @@ class ButtonGrid(InteractiveDisplayComponentBase):
         b_inds0 = b_inds0_mouse
         if b_inds0 is None and self.navkeys_enabled:
             b_inds0 = self.navkey_button
-        b_inds1, selected_b_inds, b_reset, last_navkey = self.processEvents(b_inds0, b_inds0_mouse, b_inds1_mouse, events)
-        
+        #print(events)
+        #print(self.navkeys)
+        #print(self.navkeys_enabled, self.navkeys_enablement)
+        #print(self.enter_keys)
+        b_inds1, selected_b_inds, b_reset, last_navkey, mouse_over_button = self.processEvents(b_inds0, b_inds0_mouse, mouse_status[0] if mouse_enabled else None, events)
+        #print(b_inds1, selected_b_inds, b_reset, last_navkey, mouse_over_button)
+        #print(f"post processEvents(), b_inds1 = {b_inds1}")
         # Checking for navkeys that are held down and have not yet
         # been overridden by new inputs
         #print(self._navkey_status)
@@ -2242,7 +2334,7 @@ class ButtonGrid(InteractiveDisplayComponentBase):
         if b_reset:
             self._navkey_status = [last_navkey, [0, 0]]
         else:
-            status = self._navkey_status
+            status = self.__dict__.get("_navkey_status", [None, [0, 0]])
             if keys_down is None:
                 keys_down = self.user_input_processor.getKeysHeldDown()
             if status[0] in keys_down:
@@ -2255,11 +2347,28 @@ class ButtonGrid(InteractiveDisplayComponentBase):
             else:
                 self._navkey_status = [None, [0, 0]]
         #print(self.navkey_status)
-        if (mouse_enabled and self.setMouseOver(b_inds1_mouse, lmouse_down))\
-                or (self.navkeys_enabled and self.setNavkeyButton(b_inds1)):
-            screen_changed = True
-        #print(quit, esc_pressed, (screen_changed, selected))
+        #self.navkey_button = b_inds1
+        #if (mouse_enabled and self.setMouseOver(b_inds1_mouse, lmouse_down))\
+        #        or (self.navkeys_enabled and self.setNavkeyButton(b_inds1)):
+        #    screen_changed = True
+        #if (mouse_enabled and self.setMouseOver(b_inds1_mouse, lmouse_down)):
+        #    screen_changed = True
+        button_focus = False
+        if mouse_enabled and mouse_over_button:
+            self.button_mouse_is_over = b_inds1
+            #button_focus = self.setMouseOver(b_inds1_mouse, lmouse_down)
+        else:
+            self.button_mouse_is_over = ()
+            if self.navkeys_enabled:
+                self.navkey_button = b_inds1
+            #button_focus = b_inds1
+        #print(self.navkey_button)
+        #print(keys_down)
+        screen_changed = self.drawUpdateRequired()
         if screen_changed:
-            self._button_grid_surf = None
+            print("button grid redraw required")
+        #print(quit, esc_pressed, (screen_changed, selected))
+        #if screen_changed:
+        #    self._button_grid_surf = None
         return quit, running, screen_changed, selected_b_inds
 
