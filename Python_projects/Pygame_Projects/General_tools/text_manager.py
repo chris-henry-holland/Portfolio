@@ -47,6 +47,7 @@ class Text(ComponentBaseClass):
         "font": {"text_local_asc_desc_chars": True, "font_size_actual": (lambda obj: obj.font_size is None), "max_font_size_given_width": True, "updated": True},
         "font_color": {"updated": True},
         "max_shape": {"max_font_size_given_width": True, "font_size_actual": (lambda obj: obj.font_size is None), "max_shape_actual": True},
+        "max_font_size_given_width": {"font_size_actual": True},
         "font_size": {"font_size_actual": True},
         "font_size_actual": {"text_rect": True, "asc_desc_sizes_local": True, "asc_desc_sizes_global": True, "updated": True},
         "text_rect": {"shape": True},
@@ -172,9 +173,10 @@ class Text(ComponentBaseClass):
         return None if self.max_shape is None else self.max_shape
     
     def calculateMaxFontSizeGivenWidth(self) -> Real:
-        #print("using calculateMaxFontSizeGivenWidth()")
+        #print("using Text method calculateMaxFontSizeGivenWidth()")
+        #print(self.max_shape)
         if self.max_shape is None:
-            return None
+            return float("inf")
         if self.max_shape_actual[0] == float("inf"):
             return float("inf")
         res = findMaxFontSizeGivenWidth(self.font, [self.text], width=self.max_shape_actual[0],\
@@ -272,7 +274,7 @@ class Text(ComponentBaseClass):
             text_group = self.text_group
             #print(f"text_group.max_height = {text_group.max_height}")
             #print(f"text_group.max_font_size_given_heights = {text_group.max_font_size_given_heights}")
-            #print(f"text_group.max_font_size_given_widths = {text_group.max_font_size_given_widths}")
+            #print(f"text_group.max_font_sizes_given_widths = {text_group.max_font_sizes_given_widths}")
             #print(f"text_group.font_size = {text_group.font_size}")
             #print(f"text_group.font_size_actual = {text_group.font_size_actual}")
         return self.font.get_rect(self.text, size=self.font_size_actual)
@@ -311,6 +313,7 @@ class Text(ComponentBaseClass):
             func = getattr(self, attr, None)
             if func is None:
                 raise ValueError(f"Attribute {attr} not found")
+            #print(anchor_rel_pos, anchor_type)
             func(surf, anchor_rel_pos, anchor_type=anchor_type)
         return
 
@@ -383,6 +386,8 @@ class TextGroupElement(ComponentGroupElementBaseClass, Text):
         #print(f"prev_val = {prev_val}, val = {val}")
         #print(f"rm_dict = {rm_dict}, add_dict = {add_dict}")
         self.text_group._updateHeights(rm_dict, add_dict)
+        #print(self.text_group.heights_dict)
+        #print(self.text_group)
         #print("hello")
         #print(rm_dict, add_dict)
         #if self.text_group._updateHeights(rm_dict, add_dict):
@@ -417,9 +422,10 @@ class TextGroupElement(ComponentGroupElementBaseClass, Text):
         #self.__dict__["_max_font_size_given_width"] = new_val
         rm_font_sizes = {} if rm_font_size is None else {rm_font_size: 1}
         add_font_sizes = {} if add_font_size is None else {add_font_size: 1}
+        #print(f"rm_font_sizes = {rm_font_sizes}, add_font_sizes = {add_font_sizes}")
         self.text_group._updateMaxFontSizesGivenWidths(\
                 rm_font_sizes, add_font_sizes)
-        
+        #print(self.text_group.max_font_sizes_given_widths_dict)
         #if _update_textgroup_max_font_size_given_width and\
         #        self.text_group._updateMaxFontSizesGivenWidths(\
         #        rm_font_sizes, add_font_sizes):
@@ -546,7 +552,7 @@ class TextGroup(ComponentGroupBaseClass):
         "max_height0": {"max_height": True},
         "max_height": {"max_font_size_given_heights": True},
         "max_font_size_given_heights": {"font_size_actual": (lambda obj: obj.font_size is None)},
-        "max_font_size_given_widths": {"font_size_actual": (lambda obj: obj.font_size is None)},
+        "max_font_sizes_given_widths": {"font_size_actual": (lambda obj: obj.font_size is None)},
         "font_size": {"font_size_actual": True},
         #"font_size_actual": {"asc_desc_sizes_global": True},
         "min_lowercase": {"text_global_asc_desc_chars": (lambda obj: obj.text_global_asc_desc_chars0 is None)},
@@ -565,7 +571,7 @@ class TextGroup(ComponentGroupBaseClass):
         "asc_desc_sizes_global": "calculateAscDescSizesGlobal",
         "max_height": "calculateMaxHeight",
         "max_font_size_given_heights": "calculateMaxFontSizeGivenHeights",
-        "max_font_size_given_widths": "calculateMaxFontSizeGivenWidths",
+        "max_font_sizes_given_widths": "calculateMaxFontSizeGivenWidths",
     }
     
     # Review- account for using element_inherited_attributes in ComponentGroupBaseClass
@@ -860,7 +866,7 @@ class TextGroup(ComponentGroupBaseClass):
         #print("hi3")
         if self.font_size_set:
             return
-        mx_sz_w = self.max_font_size_given_widths
+        mx_sz_w = self.max_font_sizes_given_widths
         #print("hi4")
         if mx_sz_w is None: mx_sz_w = float("inf")
         #print("hi5")
@@ -1016,12 +1022,12 @@ class TextGroup(ComponentGroupBaseClass):
     
     
     #@property
-    #def max_font_size_given_widths(self):
-    #    return getattr(self, "_max_font_size_given_widths", None)
+    #def max_font_sizes_given_widths(self):
+    #    return getattr(self, "_max_font_sizes_given_widths", None)
     """
     def _setGroupMaxFontSizeGivenWidths(self, font_size: Real) -> None:
         curr_font_size = self.font_size
-        self._max_font_size_given_widths = font_size
+        self._max_font_sizes_given_widths = font_size
         if self.font_size_set:
             return
         mx_sz_h = self.max_font_size_given_heights
@@ -1036,30 +1042,30 @@ class TextGroup(ComponentGroupBaseClass):
         self,
         font_size: Real,
         f: int=1,
-        reset_max_font_size_given_widths: bool=True,
+        reset_max_font_sizes_given_widths: bool=True,
     ) -> bool:
         #print("Using _addMaxFontSizeGivenWidth()")
-        res = (font_size < self.max_font_size_given_widths)
+        res = (font_size < self.max_font_sizes_given_widths)
         self.max_font_sizes_given_widths_dict.setdefault(font_size, 0)
         self.max_font_sizes_given_widths_dict[font_size] += f
-        if res and reset_max_font_size_given_widths:
-            self.max_font_size_given_widths = None
+        if res and reset_max_font_sizes_given_widths:
+            self.max_font_sizes_given_widths = None
         return res 
             
     def _removeMaxFontSizeGivenWidth(
         self,
         font_size: Real,
         f: int=1,
-        reset_max_font_size_given_widths: bool=True,
+        reset_max_font_sizes_given_widths: bool=True,
     ) -> bool:
         if self.max_font_sizes_given_widths_dict[font_size] > f:
             self.max_font_sizes_given_widths_dict[font_size] -= f
             return False
-        fs = self.max_font_size_given_widths
+        fs = self.max_font_sizes_given_widths
         self.max_font_sizes_given_widths_dict.pop(font_size)
         res = (fs == font_size)
-        if res and reset_max_font_size_given_widths:
-            self.max_font_size_given_widths = None
+        if res and reset_max_font_sizes_given_widths:
+            self.max_font_sizes_given_widths = None
         return res
         
         #fs0 = self._max_font_sizes_given_widths_dict.peekitem(0)[0]
@@ -1072,7 +1078,7 @@ class TextGroup(ComponentGroupBaseClass):
         self,
         rm_font_sizes: Dict[Real, int],
         add_font_sizes: Dict[Real, int],
-        reset_max_font_size_given_widths: bool=True
+        reset_max_font_sizes_given_widths: bool=True
     ) -> bool:
         #print("Using _updateMaxFontSizesGivenWidths()")
         #print(self.max_font_sizes_given_widths_dict)
@@ -1123,9 +1129,9 @@ class TextGroup(ComponentGroupBaseClass):
             if self.max_font_sizes_given_widths_dict[k] == f:
                 self.max_font_sizes_given_widths_dict.pop(k)
             else: self.max_font_sizes_given_widths_dict[k] -= f
-        res = self._addMaxFontSizeGivenWidth(mn_add, f=mn_add_f, reset_max_font_size_given_widths=reset_max_font_size_given_widths)\
+        res = self._addMaxFontSizeGivenWidth(mn_add, f=mn_add_f, reset_max_font_sizes_given_widths=reset_max_font_sizes_given_widths)\
                 if mn_add < mn_rm else\
-                self._removeMaxFontSizeGivenWidth(mn_rm, f=mn_rm_f, reset_max_font_size_given_widths=reset_max_font_size_given_widths)
+                self._removeMaxFontSizeGivenWidth(mn_rm, f=mn_rm_f, reset_max_font_sizes_given_widths=reset_max_font_sizes_given_widths)
         #print("Finished using _updateMaxFontSizesGivenWidths()")
         #print(self.max_font_sizes_given_widths_dict)
         return res
@@ -1144,10 +1150,10 @@ class TextGroup(ComponentGroupBaseClass):
         if self.font_size is not None:# and self.font_size != ():
             return self.font_size
         #print("hello")
-        #print(self.max_font_size_given_heights, self.max_font_size_given_widths)
+        #print(self.max_font_size_given_heights, self.max_font_sizes_given_widths)
         #print(self.max_height0)
         #print(self.max_height)
-        return min(self.max_font_size_given_heights, self.max_font_size_given_widths)
+        return min(self.max_font_size_given_heights, self.max_font_sizes_given_widths)
     
     """
     def setupTextObjects(
@@ -1282,7 +1288,7 @@ class TextGroup(ComponentGroupBaseClass):
         self._updateMaxFontSizesGivenWidths(
             rm_font_sizes,
             {},#add_font_sizes, # adding was handled when calling text_obj.max_font_size_given_width
-            reset_max_font_size_given_widths=True,
+            reset_max_font_sizes_given_widths=True,
         )
         #print("post _updateMaxFontSizesGivenWidths()")
         #print(self.max_font_sizes_given_widths_dict)

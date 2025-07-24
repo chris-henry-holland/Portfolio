@@ -17,6 +17,7 @@ from .buttons import (
     ButtonGrid,
 )
 from .menus import (
+    MenuOverlayBase,
     ButtonMenuOverlay,
     SliderAndButtonMenuOverlay,
 )
@@ -68,6 +69,7 @@ from .examples import (
     runExampleSliderPlusGroup1,
     runExampleSliderPlusGrid1,
     #runExampleSliders1,
+    runExampleMenuOverlayBase1,
     runExampleButtonMenuOverlay1,
     runExampleSliderAndButtonMenuOverlay1,
 )

@@ -32,6 +32,7 @@ from General_tools import (
     SliderPlusGroup,
     SliderPlusGrid,
     #SliderPlusVerticalBattery,
+    MenuOverlayBase,
     ButtonMenuOverlay,
     SliderAndButtonMenuOverlay,
     Text,
@@ -247,8 +248,7 @@ def runExampleButtonGroup1() -> None:
     #button.shape = (300, 100)
     button.text_borders_rel=((0, 0), (0.2, 0.2), 1, 0)
     #button.mouse_enabled = False
-    
-    
+
 def runExampleButtonGrid1() -> None:
     screen_size = (700, 700)
     framerate = 60
@@ -280,7 +280,7 @@ def runExampleButtonGrid1() -> None:
         fill_colors=(None, (named_colors_def["red"], 0.2), (named_colors_def["red"], 0.5), 2),
         outline_widths=((1,), (2,), (3,), 1),
         outline_colors=((named_colors_def["black"], 1), (named_colors_def["blue"], 0.8), 1, 1),
-        mouse_enabled=False,
+        mouse_enabled=True,
         navkeys_enabled=True,
         navkey_cycle_delay_frame=(30, 10, 10, 10, 5),
     )
@@ -343,7 +343,7 @@ def runExampleButtonGrid1() -> None:
     button_grid = ButtonGrid((500, 400),\
             button_text, text_groups, (100, 100),\
             anchor_type="topleft", screen_topleft_to_component_anchor_offset=(0, 0),\
-            button_gap_rel_shape=(0.2, 0.2),\
+            button_gaps_rel_shape=(0.2, 0.2),\
             font_colors=((named_colors_def["white"], 0.5), (named_colors_def["yellow"], 1), (named_colors_def["blue"], 1), (named_colors_def["green"], 1)),\
             text_borders_rel=((0.1, 0.2), (0, 0), 1, 0),\
             fill_colors=(None, (named_colors_def["red"], 0.2), (named_colors_def["red"], 0.5), 2),\
@@ -1137,6 +1137,88 @@ def runExampleSliders1() -> None:
     return
 """
 
+def runExampleMenuOverlayBase1() -> None:
+    screen_shape = (700, 700)
+    framerate = 30
+    pg.init()
+    screen = pg.display.set_mode(screen_shape)
+    screen_color = named_colors_def["gray"]
+    screen.fill(screen_color)
+    pg.display.update(pg.Rect(0, 0, *screen_shape))
+    
+    screen_cp = pg.Surface.copy(screen)
+    
+    exit_press_keys = None
+    exit_release_keys = {pg.K_p}
+    
+    menu_overlay = MenuOverlayBase(
+        shape=screen_shape,
+        framerate=framerate,
+        overlay_color=(named_colors_def["yellow"], 0.3),
+        mouse_enabled=True,
+        navkeys_enabled=True,
+        navkeys=(({K_LEFT}, {K_RIGHT}), ({K_UP}, {K_DOWN})),
+        #exit_press_keys=exit_press_keys,
+        #exit_release_keys=exit_release_keys,
+    )
+    
+    text_group = TextGroup([], max_height0=None, font=None, font_size=None, min_lowercase=True, text_global_asc_desc_chars=None)
+    anchor_type = "centre"
+    font_color = (named_colors_def["black"], 1)
+    text_list = [
+        ({"text": "Hello", "font_color": font_color, "anchor_type0": anchor_type}, ((0.2, 1), (0.2, 0.5))),
+        ({"text": "Goodbye", "font_color": font_color, "anchor_type0": anchor_type}, ((0.2, 0.2), (0.4, 0.5))),
+        ({"text": "name", "font_color": font_color, "anchor_type0": anchor_type}, ((0.2, 0.2), (0.6, 0.5))),
+        ({"text": ",", "font_color": font_color, "anchor_type0": anchor_type}, ((0.2, 0.2), (0.7, 0.5))),
+        ({"text": "'", "font_color": font_color, "anchor_type0": anchor_type}, ((0.2, 0.2), (0.8, 0.5))),
+    ]
+    print(f"menu text group: {text_group}")
+    #text_list = [
+    #    (("Hello", text_color), ((0.2, 0.2), (0.2, 0.1), anchor_type)),
+    #    (("Goodbye", text_color), ((0.2, 0.2), (0.4, 0.1), anchor_type)),
+    #    (("name", text_color), ((0.2, 0.2), (0.6, 0.1), anchor_type)),
+    #    ((",", text_color), ((0.2, 0.2), (0.7, 0.1), anchor_type)),
+    #    (("'", None, text_color), ((0.2, 0.2), (0.8, 0.1), anchor_type)),
+    #]
+    
+    add_text_list = [x[0] for x in text_list]
+    text_objs = text_group.addTextObjects(add_text_list)
+    print("added menu text objects to menu")
+    for text_obj, (_, pos_tup) in zip(text_objs, text_list):
+        max_shape_rel, anchor_rel_pos_rel = pos_tup
+        menu_overlay.addText(text_obj, max_shape_rel, anchor_rel_pos_rel)
+    print("\nhello\n")
+    print(text_group.max_font_sizes_given_widths_dict)
+    print(text_group.heights_dict)
+    print(text_group)
+    screen_changed = True
+    clock = pg.time.Clock()
+    
+    while True:
+        #print("hello")
+        quit, esc_pressed, event_loop_kwargs = menu_overlay.getRequiredInputs()
+        #print(quit, esc_pressed, event_loop_kwargs)
+        running = not esc_pressed
+        if quit or not running:
+            pg.quit()
+            return
+        change = False
+        quit, running, chng, actions = menu_overlay.eventLoop(check_axes=(0, 1), **event_loop_kwargs)
+        if quit or not running:
+            pg.quit()
+            return
+        for action in actions:
+            action()
+        if chng: change = True
+        if change: screen_changed = True
+        if screen_changed:
+            screen.blit(screen_cp, (0, 0))
+            menu_overlay.draw(screen)
+            pg.display.flip()
+        clock.tick(framerate)
+        screen_changed = False
+    return
+
 def runExampleButtonMenuOverlay1() -> None:
     screen_shape = (700, 700)
     framerate = 30
@@ -1151,36 +1233,47 @@ def runExampleButtonMenuOverlay1() -> None:
     exit_press_keys = None
     exit_release_keys = {pg.K_p}
     
-    button_text = [["Hello", "Hello", "Hello", "Hello", "Goodbye"], ["Hello", "Hello", "Hello", "Hello", "Goodbye"]]
+    #button_text = [["Hello", "Hello", "Hello", "Hello", "Goodbye"], ["Hello", "Hello", "Hello", "Hello", "Goodbye"]]
+    button_text = [["Hello", "Hello"], ["Hello", "Hello"], ["Hello", "Hello"], ["Hello", "Hello"], ["Goodbye", "Goodbye"]]
     anchor_type = "center"
     
-    button_text_and_actions = []
-    for i1, row in enumerate(button_text):
-        button_text_and_actions.append([])
-        for i2, text in enumerate(row):
+    button_text_anchortype_and_actions = []
+    for i2, row in enumerate(button_text):
+        button_text_anchortype_and_actions.append([])
+        for i1, text in enumerate(row):
             action = functools.partial(print, f"selected button ({i1}, {i2})")
-            button_text_and_actions[-1].append(((text, ((anchor_type,), 0, 0, 0)), action))
+            button_text_anchortype_and_actions[-1].append((text, ((anchor_type,), 0, 0, 0), action))
     
-    menu_overlay = ButtonMenuOverlay(screen_shape=screen_shape, framerate=framerate,\
-            overlay_color=(named_colors_def["yellow"], 0.3),\
-            mouse_enabled=True, navkeys_enabled=True,\
-            navkeys=(({K_LEFT}, {K_RIGHT}), ({K_UP}, {K_DOWN})),\
-            navkey_cycle_delay_s=(0.5, 0.15),\
-            exit_press_keys=exit_press_keys,\
-            exit_release_keys=exit_release_keys)
+    menu_overlay = ButtonMenuOverlay(
+        shape=screen_shape,
+        framerate=framerate,
+        overlay_color=(named_colors_def["yellow"], 0.3),
+        mouse_enabled=True,
+        navkeys_enabled=True,
+        navkeys=(({K_LEFT}, {K_RIGHT}), ({K_UP}, {K_DOWN})),
+        navkey_cycle_delay_s=(0.5, 0.15),
+        #exit_press_keys=exit_press_keys,
+        #exit_release_keys=exit_release_keys,
+    )
     
     
-    button_text_groups = tuple((TextGroup([], max_height0=None, font=None, font_size=None, min_lowercase=True, text_global_asc_desc_chars=None),) for _ in range(4))
-    menu_overlay.setButtons((0.5, 0.2), "midtop",\
-            (0.6, 0.3), wh_ratio_range=(0.6, 2),\
-            button_text_and_actions=button_text_and_actions,\
-            text_groups=button_text_groups,\
-            button_gap_rel_shape=(0.2, 0.2),\
-            font_colors=((named_colors_def["white"], 0.5), (named_colors_def["yellow"], 1), (named_colors_def["blue"], 1), (named_colors_def["green"], 1)),
-            text_borders_rel=((0.2, 0.2), (0, 0), 1, 0),\
-            fill_colors=(None, (named_colors_def["red"], 0.2), (named_colors_def["red"], 0.5), 2),\
-            outline_widths=((1,), (2,), (3,), 1),\
-            outline_colors=((named_colors_def["black"], 1), (named_colors_def["blue"], 1), 1, 1))
+    #button_text_groups = tuple((TextGroup([], max_height0=None, font=None, font_size=None, min_lowercase=True, text_global_asc_desc_chars=None),) for _ in range(4))
+    menu_overlay.setupButtonGrid(
+        anchor_pos_norm=(0.5, 0.2),
+        anchor_type="midtop",
+        button_grid_max_shape_norm=(0.6, 0.3),
+        wh_ratio_range=(0.6, 2),
+        button_text_anchortype_and_actions=button_text_anchortype_and_actions,
+        text_groups=None,#button_text_groups,
+        button_gaps_rel_shape=(0.2, 0.2),
+        font_colors=((named_colors_def["white"], 0.5), (named_colors_def["yellow"], 1), (named_colors_def["blue"], 1), (named_colors_def["green"], 1)),
+        text_borders_rel=((0.2, 0.2), (0, 0), 1, 0),
+        fill_colors=(None, (named_colors_def["red"], 0.2), (named_colors_def["red"], 0.5), 2),
+        outline_widths=((1,), (2,), (3,), 1),
+        outline_colors=((named_colors_def["black"], 1), (named_colors_def["blue"], 1), 1, 1)
+    )
+
+    print("\nhello\n")
     
     text_group = TextGroup([], max_height0=None, font=None, font_size=None, min_lowercase=True, text_global_asc_desc_chars=None)
     anchor_type = "centre"
@@ -1311,7 +1404,7 @@ def runExampleSliderAndButtonMenuOverlay1() -> None:
         wh_ratio_range=(1, 20),
         button_text_and_actions=button_text_and_actions,
         text_groups=button_text_groups,
-        button_gap_rel_shape=(0.05, 0.1),
+        button_gaps_rel_shape=(0.05, 0.1),
         font_colors=((named_colors_def["white"], 0.5), (named_colors_def["yellow"], 1), (named_colors_def["blue"], 1), (named_colors_def["green"], 1)),
         text_borders_rel=((0.05, 0.2), (0.05, 0.18), 1, 0),
         fill_colors=(None, (named_colors_def["red"], 0.2), (named_colors_def["red"], 0.5), 2),

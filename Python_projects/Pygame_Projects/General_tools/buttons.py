@@ -33,7 +33,6 @@ from .utils import Real, ColorOpacity
 
 from .display_base_classes import (
     InteractiveDisplayComponentBase,
-    ComponentBaseClass,
     ComponentGroupBaseClass,
     ComponentGroupElementBaseClass,
     checkHiddenKwargs,
@@ -962,6 +961,7 @@ class ButtonGroupElement(ComponentGroupElementBaseClass, Button):
     def createTextObjects(self) -> None:
         print("Using ButtonGroupElement method createTextObjects()")
         add_text_dict_lsts = {}
+        print(self.button_group.text_groups)
         for idx, text_group_tup in enumerate(self.button_group.text_groups):
             if text_group_tup is None: continue
             elif isinstance(text_group_tup, int):
@@ -1024,7 +1024,7 @@ class ButtonGroup(ComponentGroupBaseClass):
             ]
         },
         **{
-            "text_groups": ((lambda obj: obj.createTextGroups()), ("n_state",)),
+            "text_groups": ((lambda obj: ButtonGroup.createTextGroups()), ("n_state",)),
         }
     }
 
@@ -1110,9 +1110,10 @@ class ButtonGroup(ComponentGroupBaseClass):
     #) -> Tuple[Union[Optional["Text"], int]]:
     #    return
 
-    def createTextGroups(self) -> None:
+    @classmethod
+    def createTextGroups(cls) -> None:
         res = []
-        for _ in range(self.n_state):
+        for _ in range(cls.n_state):
             res.append((TextGroup(
                 text_list=[],
                 max_height0=None,
@@ -1124,7 +1125,7 @@ class ButtonGroup(ComponentGroupBaseClass):
                 #_container_obj=self,
             ),))
         #print(res)
-        return res
+        return tuple(res)
     
 class ButtonGrid(InteractiveDisplayComponentBase):
     #navkeys_def = navkeys_def_glob
@@ -2109,6 +2110,8 @@ class ButtonGrid(InteractiveDisplayComponentBase):
         prev_val: Optional[Tuple[int, int]],
     ) -> None:
         print("Using customNavkeyButtonChangePropogation()")
+        if prev_val and self.buttons[prev_val[0]][prev_val[1]] is not None:
+            self.buttons[prev_val[0]][prev_val[1]].state = 0
         if self.button_mouse_is_over:
             return
         if prev_val and self.buttons[prev_val[0]][prev_val[1]] is not None:
@@ -2119,7 +2122,7 @@ class ButtonGrid(InteractiveDisplayComponentBase):
 
     
     def navkeyMoveCalculator(self, navkey: int, start_button: Tuple[int]) -> Tuple[int]:
-        print(f"Using navkeyMoveCalculator() with navkey = {navkey} and start_button = {start_button}")
+        #print(f"Using navkeyMoveCalculator() with navkey = {navkey} and start_button = {start_button}")
         if not self.navkeys_enabled: return start_button
         move = self.navkey_dict.get(navkey, None)
         if move is None: return start_button
@@ -2226,6 +2229,7 @@ class ButtonGrid(InteractiveDisplayComponentBase):
         return tuple(res)
     
     def processEvents(self, b_inds0: Optional[Tuple[int]], b_inds0_mouse: Optional[Tuple[int, int]], mouse_pos_curr: Optional[Tuple[int, int]], events: List[Tuple[int]]) -> Tuple[Union[List[int], List[Tuple[int]], bool]]:
+        #print("Using processEvents()")
         #print(b_inds0, b_inds0_mouse, mouse_pos_curr, events)
         
         if not self.mouse_enabled and not self.navkeys_enabled:
@@ -2318,7 +2322,7 @@ class ButtonGrid(InteractiveDisplayComponentBase):
                 running = False
         
         b_inds0 = b_inds0_mouse
-        if b_inds0 is None and self.navkeys_enabled:
+        if not b_inds0 and self.navkeys_enabled:
             b_inds0 = self.navkey_button
         #print(events)
         #print(self.navkeys)

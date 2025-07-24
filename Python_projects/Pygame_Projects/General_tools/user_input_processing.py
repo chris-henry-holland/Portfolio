@@ -320,21 +320,21 @@ class UserInputProcessor:
         esc_pressed = False
         events = []
         all_events = pg.event.get()
-        if all_events:
-            print(all_events)
+        #if all_events:
+        #    print(all_events)
         #print(all_events)
         #if all_events: print(all_events)
         for event in all_events:
             if event.type == KEYDOWN:
                 #print(event, self.key_press_event_filter_actual(obj, event))
-                print("hi")
+                #print("hi")
                 if event.key == K_ESCAPE:
                     esc_pressed = True
                 if self.key_press_event_filter_actual(obj, event):
-                    print("passed filter")
+                    #print("passed filter")
                     events.append((event, 0))
-                else:
-                    print("did not pass filter")
+                #else:
+                #    print("did not pass filter")
             elif event.type == KEYUP:
                 if self.key_release_event_filter_actual(obj, event):
                     events.append((event, 1))

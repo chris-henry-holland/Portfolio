@@ -25,38 +25,88 @@ from .buttons import ButtonGrid
 from .sliders import SliderPlusGrid
 from .text_manager import TextGroup
 
-from .display_base_classes import InteractiveDisplayComponentBase
+from .display_base_classes import (
+    InteractiveDisplayComponentBase,
+    checkHiddenKwargs,
+)
+
+overlay_color_def = (named_colors_def["white"], 0.5)
+framerate_def = 60
 
 class MenuOverlayBase(InteractiveDisplayComponentBase):
-    navkeys_def = navkeys_def_glob
-    navkey_dict_def = createNavkeyDict(navkeys_def)
+    #navkeys_def = navkeys_def_glob
+    #navkey_dict_def = createNavkeyDict(navkeys_def)
 
-    dynamic_displ_attrs = []
+    reset_graph_edges = {
+        #"screen_shape": {"shape": True},
+        "overlay_bg_surf": {"static_bg_surf": True},
+        "text_surf": {"static_bg_surf": True},
+        "static_bg_surf": {"display_surf": True},
+    }
+
+    attribute_calculation_methods = {
+        #"shape": "calculateShape",
+        #"anchor_type": "calculateAnchorType",
+        #"anchor_rel_pos": "calculateAnchorRelativePosition",
+
+        "overlay_bg_surf": "createOverlayBackgroundSurface",
+        "text_surf": "createTextSurface",
+        "static_bg_surf": "createStaticBackgroundSurface",
+
+        "overlay_bg_img_constructor": "createOverlayBackgroundImageConstructor",
+        "text_img_constructor": "createTextImageConstructor",
+        "static_bg_img_constructor": "createStaticBackgroundImageConstructor",
+    }
+
+    attribute_default_functions = {
+        "text_objects": ((lambda obj: []),),
+        "framerate": ((lambda obj: framerate_def),),
+        "overlay_color": ((lambda obj: overlay_color_def),),
+        "navkeys_enabled": ((lambda obj: True),),
+        "mouse_enabled": ((lambda obj: True),),
+    }
+
+    
     static_bg_components = ["overlay_bg", "text"]
+    dynamic_displ_attrs = []
+    #displ_component_attrs = ["static_bg", "dynamic_displ_attrs"]
 
     def __init__(
         self,
-        screen_shape: Tuple[Real]=(700, 700),
-        framerate: Real=60,
+        shape: Tuple[Real],
+        framerate: Real,
         overlay_color: Optional[Tuple[Union[Tuple[int], Real]]]=None,
-        mouse_enabled: bool=True, navkeys_enabled: bool=True,
+        mouse_enabled: Optional[bool]=None,
+        navkeys_enabled: Optional[bool]=None,
         navkeys: Optional[Tuple[Tuple[Set[int]]]]=None,
         enter_keys: Optional[Set[int]]=None,
-        exit_press_keys: Optional[Set[int]]=None,
-        exit_release_keys: Optional[Set[int]]=None
+        #exit_press_keys: Optional[Set[int]]=None,
+        #exit_release_keys: Optional[Set[int]]=None,
+        **kwargs,
     ) -> None:
+        
+        #print("Initializing menu overlay")
+
+        checkHiddenKwargs(type(self), kwargs)
+        #kwargs["shape"] = screen_shape
+        #kwargs["anchor_rel_pos"] = (0, 0)
+        #kwargs["anchor_type"] = "topleft"
+
+        kwargs2 = self.initArgsManagement(locals(), kwargs=kwargs)
+        super().__init__(**kwargs2, anchor_rel_pos=(0, 0), anchor_type="topleft")
+        """
         super().__init__(
             screen_shape, (0, 0),
             anchor_type="topleft",
-            screen_topleft_offset=(0, 0),
+            screen_topleft_to_component_anchor_offset=(0, 0),
             mouse_enablement=(mouse_enabled, False, mouse_enabled),
             navkeys_enablement=(navkeys_enabled, navkeys_enabled, False),
             navkeys=navkeys,
             enter_keys_enablement=(False, navkeys_enabled, False),
-            enter_keys=enter_keys
+            enter_keys=enter_keys,
+            
         )
-        #print("Initializing menu overlay")
-        
+
         # Resetting the user input processor
         self._user_input_processor = None
         
@@ -80,7 +130,16 @@ class MenuOverlayBase(InteractiveDisplayComponentBase):
         self.text_objects = []
 
         return
+        """
+    #def calculateShape(self):
+    #    return self.screen_shape
 
+    def calculateAnchorType(self):
+        return "topleft"
+    
+    def calculateAnchorRelativePosition(self):
+        return (0, 0)
+    """
     @property
     def exit_press_keys(self):
         return self._exit_press_keys
@@ -106,8 +165,8 @@ class MenuOverlayBase(InteractiveDisplayComponentBase):
             return
         self._exit_release_keys = exit_release_keys
         self._user_input_processor = None
-    
-    
+    """
+    """
     @property
     def user_input_processor(self):
         res = getattr(self, "_user_input_processor", None)
@@ -183,7 +242,7 @@ class MenuOverlayBase(InteractiveDisplayComponentBase):
     #@property
     #def navkey_cycle_delay_frame(self):
     #    return self._navkey_cycle_delay_frame
-    
+    """
     @staticmethod
     def timeTupleSecondToFrame(framerate: Real, time_tuple: Tuple[Real]) -> Tuple[int]:
         return tuple(round(x * framerate) for x in time_tuple)
@@ -192,19 +251,38 @@ class MenuOverlayBase(InteractiveDisplayComponentBase):
         print("Using ButtonMenuOverlay method textPrinter()")
         surf_shape = (surf.get_width(), surf.get_height())
         for text_obj, max_shape_rel, anchor_screen_pos_norm in self.text_objects:
+            print(f"setting text object max shape to {tuple(x * y for x, y in zip(surf_shape, max_shape_rel))}")
+            print(text_obj.reset_graph_edges)#.get(text_obj.attr_dict["max_shape"], None))
             text_obj.max_shape = tuple(x * y for x, y in zip(surf_shape, max_shape_rel))
-            print(max_shape_rel, surf_shape, text_obj.max_shape)
+            print(f"text_obj._max_font_size_given_width = {text_obj.__dict__.get('_max_font_size_given_width', None)}")
+            #print(max_shape_rel, surf_shape, text_obj.max_shape)
             text_obj.anchor_rel_pos0 = tuple(x * y for x, y in zip(surf_shape, anchor_screen_pos_norm))
+            print(max_shape_rel, surf_shape, text_obj.max_shape, text_obj.anchor_rel_pos0)
+            print(text_obj.font_size)
+        
         for text_obj, _, _ in self.text_objects:
             #anchor_screen_pos = tuple(x * y for x, y in zip(surf_shape, anchor_screen_pos_norm))
+            print(f"font size = {text_obj.font_size}")
             text_obj.draw(surf)
         return
     
-    def addText(self, text_obj: "Text", max_shape_rel: Tuple[Real],\
-            anchor_screen_pos_norm: Tuple[Real]) -> None:
+    def addText(
+        self,
+        text_obj: "Text",
+        max_shape_rel: Tuple[Real],
+        anchor_screen_pos_norm: Tuple[Real]
+    ) -> None:
         self.text_objects.append((text_obj, max_shape_rel, anchor_screen_pos_norm))
+        text_obj.__dict__["container_obj"] = self
+        text_obj.__dict__["_container_attr_reset_dict"] = {"updated": {"text_surf": (lambda container_obj, obj: getattr(obj, "updated", False))}}
+        #print(f"max font size given width = {text_obj.max_font_size_given_width}")
+        #text_obj.updated = True
+        #text_obj.__dict__.setdefault("_container_attr_reset_dict", {})
+        #text_obj.__dict__["_container_attr_reset_dict"].setdefault("updated", {})
+        #text_obj.__dict__["_container_attr_reset_dict"]["updated"][""]
         return
     
+    """
     @property
     def overlay_color(self):
         return self._overlay_color
@@ -214,7 +292,8 @@ class MenuOverlayBase(InteractiveDisplayComponentBase):
         self._overlay_color = overlay_color
         self._overlay = None
         return
-    
+    """
+    """
     @property
     def overlay_bg_surf(self):
         res = getattr(self, "_overlay_bg_surf", None)
@@ -222,15 +301,15 @@ class MenuOverlayBase(InteractiveDisplayComponentBase):
             res = self.createOverlayBackgroundSurface()
             self._overlay_bg_surf = res
         return res
-    
+    """
     def createOverlayBackgroundSurface(self) -> "pg.Surface":
         if self.overlay_color is None: return ()
-        overlay_bg_surf = pg.Surface(self.screen_shape, pg.SRCALPHA)
+        overlay_bg_surf = pg.Surface(self.shape, pg.SRCALPHA)
         color, alpha0 = self.overlay_color
         overlay_bg_surf.set_alpha(alpha0 * 255)
         overlay_bg_surf.fill(color)
         return overlay_bg_surf
-    
+    """
     @property
     def overlay_bg_img_constructor(self):
         res = getattr(self, "_overlay_bg_img_constructor", None)
@@ -238,13 +317,13 @@ class MenuOverlayBase(InteractiveDisplayComponentBase):
             res = self.createOverlayBackgroundImageConstructor()
             self._overlay_bg_img_constructor = res
         return res
-    
+    """
     def createOverlayBackgroundImageConstructor(self):
         overlay_bg_surf = self.overlay_bg_surf
         if overlay_bg_surf == ():
             return lambda surf: None
         return lambda surf: surf.blit(overlay_bg_surf, (0, 0))
-    
+    """
     @property
     def text_surf(self):
         res = getattr(self, "_text_surf", None)
@@ -252,14 +331,15 @@ class MenuOverlayBase(InteractiveDisplayComponentBase):
             res = self.createTextSurface()
             self._text_surf = res
         return res
-    
+    """
     def createTextSurface(self):
+        print("Using createTextSurface()")
         if not self.text_objects:
             return ()
-        surf = pg.Surface(self.screen_shape, pg.SRCALPHA)
+        surf = pg.Surface(self.shape, pg.SRCALPHA)
         self.textPrinter(surf)
         return surf
-    
+    """
     @property
     def text_img_constructor(self):
         res = getattr(self, "_text_img_constructor", None)
@@ -267,13 +347,13 @@ class MenuOverlayBase(InteractiveDisplayComponentBase):
             res = self.createTextImageConstructor()
             self._text_img_constructor = res
         return res
-    
+    """
     def createTextImageConstructor(self):
         text_surf = self.text_surf
         if text_surf == ():
             return lambda surf: None
         return lambda surf: surf.blit(text_surf, (0, 0))
-        
+    """
     @property
     def static_bg_surf(self):
         res = getattr(self, "_static_bg_surf", None)
@@ -281,7 +361,7 @@ class MenuOverlayBase(InteractiveDisplayComponentBase):
             res = self.createStaticBackgroundSurface()
             self._static_bg_surf = res
         return res
-    
+    """
     def createStaticBackgroundSurface(self) -> None:
         #print("updating static background images")
         attrs = self.static_bg_components
@@ -290,12 +370,12 @@ class MenuOverlayBase(InteractiveDisplayComponentBase):
             if getattr(self, surf_attr, None) != ():
                 break
         else: return ()
-        static_bg_surf = pg.Surface(self.screen_shape, pg.SRCALPHA)
+        static_bg_surf = pg.Surface(self.shape, pg.SRCALPHA)
         for attr in attrs:
             img_constr_attr = f"{attr}_img_constructor"
             getattr(self, img_constr_attr)(static_bg_surf)
         return static_bg_surf
-    
+    """
     @property
     def static_bg_img_constructor(self):
         res = getattr(self, "_static_bg_img_constructor", None)
@@ -303,14 +383,22 @@ class MenuOverlayBase(InteractiveDisplayComponentBase):
             res = self.createStaticBackgroundImageConstructor()
             self._static_bg_img_constructor = res
         return res
-    
-    def createStaticBackgroundImageConstructor(self):
+    """
+    def createStaticBackgroundImageConstructor(self) -> Callable[["MenuOverlayBase", "pg.Surface"], None]:
         #print("creating background constructor")
         static_bg_surf = self.static_bg_surf
         if static_bg_surf == ():
             return lambda surf: None
-        return lambda surf: surf.blit(static_bg_surf, (0, 0))
+        return lambda obj, surf: surf.blit(static_bg_surf, (0, 0))
     
+    def createDisplaySurface(self) -> Optional["pg.Surface"]:
+        surf = pg.Surface(self.shape, pg.SRCALPHA)
+        for attr in ["static_bg"] + self.dynamic_displ_attrs:
+            constructor_func = getattr(self, f"{attr}_img_constructor", (lambda obj, surf: None))
+            constructor_func(self, surf)
+        return surf
+
+    """
     def draw(self, surf: "pg.Surface") -> None:
         shape = surf.get_width(), surf.get_height()
         self.screen_shape = shape
@@ -330,31 +418,32 @@ class MenuOverlayBase(InteractiveDisplayComponentBase):
                 else:
                     obj.draw(surf)
         return
-    
+    """
+    """
     def getRequiredInputs(self):
         #print("Using MenuOverlay method getRequiredInputs()")
         quit, esc_pressed, events = self.user_input_processor.getEvents(self)
         return quit, esc_pressed, {"events": events,\
                 "keys_down": self.user_input_processor.getKeysHeldDown(self),\
                 "mouse_status": self.user_input_processor.getMouseStatus(self)}
-    
+    """
     
     def eventLoop(
         self,
         events: Optional[List[int]]=None,
         keys_down: Optional[Set[int]]=None,
         mouse_status: Optional[Tuple[int]]=None,
-        check_axes: Tuple[int]=(0, 1)
+        check_axes: Tuple[int]=(0, 1),
     ) -> Tuple[bool, bool, bool, Any]:
         ((quit, esc_pressed), (events, keys_down, mouse_status, check_axes)) = self.getEventLoopArguments(events=events, keys_down=keys_down, mouse_status=mouse_status, check_axes=check_axes)
         #print(events)
         running = not quit and not esc_pressed
-        screen_changed = False
+        #screen_changed = False
         quit2, running2, screen_changed2, actions = self._eventLoop(events, keys_down, mouse_status, check_axes)
         if quit2: quit = True
         if not running2: running = False
-        if screen_changed2: screen_changed = True
-        
+        #if screen_changed2: screen_changed = True
+        screen_changed = self.drawUpdateRequired()
         return quit, running, screen_changed, actions
         """
         #print("using menu eventLoop() method")
@@ -401,33 +490,269 @@ class MenuOverlayBase(InteractiveDisplayComponentBase):
 class ButtonMenuOverlay(MenuOverlayBase):
     #navkeys_def = navkeys_def_glob
     #navkey_dict_def = createNavkeyDict(navkeys_def)
+
+    reset_graph_edges = {
+        "shape": {"button_grid_shape_actual": True},
+        "button_grid_max_shape_norm": {"button_grid_shape_actual": True},
+        "button_grid_wh_ratio_range": {"button_grid_shape_actual": True},
+        "button_grid_anchor_pos_norm": {"button_grid_anchor_pos_actual": True},
+        #"button_grid_shape_actual": {"button_grid_surf": True},
+        "button_grid_surf": {"display_surf": True},
+        "framerate": {"navkey_cycle_delay_frame": True},
+        "navkey_cycle_delay_s": {"navkey_cycle_delay_frame": True},
+    }
+
+    custom_attribute_change_propogation_methods = {
+        "button_grid_shape_actual": "customButtonGridShapeActualChangePropogation",
+        "button_grid_anchor_pos_actual": "customButtonGridAnchorPositionActualChangePropogation",
+    }
+
+    attribute_calculation_methods = {
+        "navkey_cycle_delay_frame": "calculateNavkeyCycleDelayFrame",
+        #"button_grid_spatial_props": "calculateButtonGridSpatialProperties",
+        "button_grid_shape_actual": "calculateButtonGridShapeActual",
+        "button_grid_anchor_pos_actual": "calculateButtonGridAnchorPositionActual",
+
+        #"button_grid_surf": "createStaticButtonGridSurface",
+
+        "button_grid_img_constructor": "createButtonGridImageConstructor",
+    }
+
+    attribute_default_functions = {
+        "navkey_cycle_delay_s": ((lambda obj: (0.5, 0.2)),),
+        "button_grid_uip_idx": ((lambda obj: -1),),
+        "button_grid_max_shape_norm": ((lambda obj: ()),),
+        "button_grid_wh_ratio_range": ((lambda obj: ()),),
+        "button_grid_anchor_pos_norm": ((lambda obj: ()),),
+        "button_grid": ((lambda obj: None),),
+    }
+
+    #dynamic_displ_attrs = []
+    dynamic_displ_attrs = MenuOverlayBase.dynamic_displ_attrs + ["button_grid"]
+    #static_bg_components = MenuOverlayBase.static_bg_components
     
-    dynamic_displ_attrs = ["buttons"]
+    
     #static_bg_components = ["overlay_bg", "text"]
 
-    def __init__(self, screen_shape: Tuple[Real]=(700, 700), framerate: Real=60,\
-            overlay_color: Optional[Tuple[Union[Tuple[int], Real]]]=None,\
-            mouse_enabled: bool=True, navkeys_enabled: bool=True,\
-            navkeys: Optional[Tuple[Tuple[Set[int]]]]=None,\
-            navkey_cycle_delay_s: Tuple[int]=(0.5, 0.2),\
-            enter_keys: Optional[Set[int]]=None,\
-            exit_press_keys: Optional[Set[int]]=None,\
-            exit_release_keys: Optional[Set[int]]=None):
-        
+    def __init__(
+        self,
+        shape: Tuple[Real],
+        framerate: Real,
+        overlay_color: Optional[Tuple[Union[Tuple[int], Real]]]=None,
+        mouse_enabled: bool=True,
+        navkeys_enabled: bool=True,
+        navkeys: Optional[Tuple[Tuple[Set[int]]]]=None,
+        navkey_cycle_delay_s: Optional[Tuple[int]]=None,
+        enter_keys: Optional[Set[int]]=None,
+        #exit_press_keys: Optional[Set[int]]=None,
+        #exit_release_keys: Optional[Set[int]]=None
+        **kwargs,
+    ):
+        print(kwargs)
+        checkHiddenKwargs(type(self), kwargs)
+
+        kwargs2 = self.initArgsManagement(locals(), kwargs=kwargs, rm_args=["navkey_cycle_delay_s"])
+        super().__init__(**kwargs2)
+        """
         super().__init__(
-            screen_shape=screen_shape,
+            shape=shape,
             framerate=framerate,
             overlay_color=overlay_color,
             mouse_enabled=mouse_enabled,
             navkeys=navkeys,
             enter_keys=enter_keys,
-            exit_press_keys=exit_press_keys,
-            exit_release_keys=exit_release_keys,
+            #exit_press_keys=exit_press_keys,
+            #exit_release_keys=exit_release_keys,
         )
 
         self._navkey_cycle_delay_s = navkey_cycle_delay_s
         self.setNavkeyCycleDelayFrame()
-        self.buttons_uip_idx = None
+        self.button_grid_uip_idx = None
+        """
+    
+    def customButtonGridShapeActualChangePropogation(
+        self,
+        new_val: Optional[Tuple[int, int]],
+        prev_val: Optional[Tuple[int, int]],
+    ) -> None:
+        button_grid = self.button_grid
+        if button_grid is None: return
+        button_grid.shape = new_val
+        return
+    
+    def customButtonGridAnchorPositionActualChangePropogation(
+        self,
+        new_val: Optional[Tuple[int, int]],
+        prev_val: Optional[Tuple[int, int]],
+    ) -> None:
+        button_grid = self.button_grid
+        if button_grid is None: return
+        button_grid.anchor_pos = new_val
+        return
+    
+    def calculateNavkeyCycleDelayFrame(self) -> int:
+        return self.timeTupleSecondToFrame(self.framerate, self.navkey_cycle_delay_s)
+
+    def calculateButtonGridShapeActual(self) -> Tuple[int, int]:
+        max_shape_norm = self.button_grid_max_shape_norm
+        wh_rng = self.button_grid_wh_ratio_range
+        
+        if not max_shape_norm or not wh_rng: return ()
+        parent_shape = self.shape
+        shape_actual = [x * y for x, y in zip(parent_shape, max_shape_norm)]
+        
+        wh_ratio = shape_actual[0] / shape_actual[1]
+        if wh_ratio < wh_rng[0]:
+            shape_actual[1] *= wh_ratio / wh_rng[0]
+        elif wh_ratio > shape_actual[1]:
+            shape_actual[0] *= wh_rng[1] / wh_ratio
+        return tuple(shape_actual)
+    
+    def calculateButtonGridAnchorPositionActual(self) -> Tuple[int, int]:
+        anchor_pos_norm = self.button_grid_anchor_pos_norm
+        if not anchor_pos_norm: return ()
+        parent_shape = self.shape
+        anchor_pos_actual = tuple(x * y for x, y in zip(parent_shape, anchor_pos_norm))
+        return anchor_pos_actual
+    
+    def createButtonGridImageConstructor(self) -> Callable[["ButtonMenuOverlay", "pg.Surface"], None]:
+        def constructor(obj: ButtonMenuOverlay, surf: "pg.Surface") -> None:
+            print("Using button grid constructor")
+            button_grid = obj.button_grid
+            if not button_grid: return
+            print("button grid is not None")
+            return button_grid.button_grid_img_constructor(button_grid, surf)
+        return constructor
+    
+    # Review- add type hints
+    def setupButtonGrid(
+        self,
+        anchor_pos_norm: Tuple[Real],
+        anchor_type: str,
+        button_grid_max_shape_norm: Tuple[Real],
+        button_text_anchortype_and_actions: List[List[Optional[Tuple[Union[str, Tuple[Union[Tuple[str], int]]], Union[str, Tuple[Union[Tuple[str], int]]], Callable]]]],
+        wh_ratio_range: Optional[Tuple[Real]]=None,
+        text_groups: Optional[Tuple[Union[Optional[Tuple["TextGroup"]], int]]]=None,
+        button_gaps_rel_shape=None,
+        #fonts=None,
+        #font_sizes=None,
+        font_colors=None,
+        text_borders_rel=None,
+        fill_colors=None,
+        outline_widths=None,
+        outline_colors=None
+    ) -> None:
+        
+        grid_dims = (len(button_text_anchortype_and_actions[0]), len(button_text_anchortype_and_actions))
+        if wh_ratio_range is None:
+            wh_ratio_range = (0, float("inf"))
+        self.setAttributes({
+            "button_grid_max_shape_norm": button_grid_max_shape_norm,
+            "button_grid_anchor_pos_norm": anchor_pos_norm,
+            "button_grid_wh_ratio_range": wh_ratio_range,
+        })
+
+        button_grid = ButtonGrid(
+            grid_dims=grid_dims,
+            shape=self.button_grid_shape_actual,
+            anchor_rel_pos=self.button_grid_anchor_pos_actual,
+            anchor_type=anchor_type,
+            screen_topleft_to_component_anchor_offset=self.screen_topleft_to_component_anchor_offset,
+            button_gaps_rel_shape=button_gaps_rel_shape,
+            text_groups=text_groups,
+            font_colors=font_colors,
+            text_borders_rel=text_borders_rel,
+            fill_colors=fill_colors,
+            outline_widths=outline_widths,
+            outline_colors=outline_colors,
+            mouse_enabled=self.mouse_enabled,
+            navkeys_enabled=self.navkeys_enabled,
+            navkeys=self.navkeys,
+            navkey_cycle_delay_frame=self.navkey_cycle_delay_frame,
+            enter_keys=self.enter_keys,
+            _from_container=True,
+            _container_obj=self,
+            _container_attr_reset_dict={"changed_since_last_draw": {"display_surf": (lambda container_obj, obj: obj.drawUpdateRequired())}},
+        )
+        
+        button_actions = [[] for _ in range(grid_dims[0])]
+        for i2, row in enumerate(button_text_anchortype_and_actions):
+            for i1, tup in enumerate(row):
+                if tup is None:
+                    button_actions[i1].append(None)
+                (text, anchor_types, action) = tup
+                button_grid.setupButtonGridElement(
+                    grid_inds=(i1, i2),
+                    text=text,
+                    text_anchor_types=anchor_types,
+                )
+                button_actions[i1].append(action)
+        
+        if self.button_grid_uip_idx != -1:
+            self.user_input_processor.removeSubUIP(self.button_grid_uip_idx)
+        self.button_grid_uip_idx = self.user_input_processor.addSubUIP(button_grid.user_input_processor)
+        
+        #print(button_grid.mouse_enabled)
+        #button_grid.grid_shape = overall_shape
+        #button_grid.dims = (*topleft, *overall_shape)
+        #print(button_grid.dims)
+        self.button_grid = button_grid
+        self.button_actions = button_actions
+        return
+    
+    def _eventLoop(
+        self,
+        events: List[int],
+        keys_down: Set[int],
+        mouse_status: Tuple[int],
+        check_axes: Tuple[int]=(0, 1),
+    ) -> Tuple[bool, bool, bool, list]:
+        #print("Using ButtonMenuOverlay method _eventLoop()")
+        #((quit, esc_pressed), (events, keys_down, mouse_status, check_axes)) = self.getEventLoopArguments(events=events, keys_down=keys_down, mouse_status=mouse_status, check_axes=check_axes)
+        #print(events)
+        #running = not quit and not esc_pressed
+        #screen_changed = False
+        button_grid = getattr(self, "button_grid", None)
+
+        quit, running, screen_changed, actions = super()._eventLoop(events, keys_down, mouse_status, check_axes)
+
+        if button_grid is not None:
+            quit2, running2, change, selected_b_inds = button_grid.eventLoop(
+                events=events,
+                keys_down=keys_down,
+                mouse_status=mouse_status,
+                check_axes=check_axes
+            )
+            if change: screen_changed = True
+            if quit2: quit = True
+            if not running2: running = False
+            actions.extend([self.button_actions[b_inds[0]][b_inds[1]] for b_inds in selected_b_inds])
+        screen_changed = self.drawUpdateRequired()
+        return quit, running, screen_changed, actions
+    """
+    def calculateButtonGridSpatialProperties(self) -> Tuple[Tuple[int, int], Tuple[int, int], Tuple[int, int]]:
+        bsp_rel = self.buttons_spatial_props_rel
+        if bsp_rel is None:
+            return ()
+        (anchor_screen_pos_norm, anchor_type, overall_shape_rel,\
+                wh_ratio_range) = bsp_rel
+        
+        screen_shape = self.shape
+        anchor_screen_pos = tuple(x * y for x, y in zip(screen_shape, anchor_screen_pos_norm))
+        
+        overall_shape = [x * y for x, y in zip(screen_shape, overall_shape_rel)]
+        #print(overall_shape)
+        wh_ratio = overall_shape[0] / overall_shape[1]
+        if wh_ratio < wh_ratio_range[0]:
+            overall_shape[1] *= wh_ratio / wh_ratio_range[0]
+        elif wh_ratio > wh_ratio_range[1]:
+            overall_shape[0] *= wh_ratio_range[1] / wh_ratio
+        
+        overall_shape = tuple(overall_shape)
+        topleft_pos = topLeftFromAnchorPosition(overall_shape, anchor_type, anchor_screen_pos)
+        
+        return (anchor_screen_pos, topleft_pos, overall_shape)
+    """
     """
     @property
     def exit_press_keys(self):
@@ -535,6 +860,9 @@ class ButtonMenuOverlay(MenuOverlayBase):
     def getNavkeyDict(navkeys: Tuple[Tuple[Set[int]]]):
         return createNavkeyDict(navkeys)
     """
+
+    
+    """
     @property
     def navkey_cycle_delay_s(self):
         return self._navkey_cycle_delay_s
@@ -551,17 +879,20 @@ class ButtonMenuOverlay(MenuOverlayBase):
     def navkey_cycle_delay_frame(self):
         return self._navkey_cycle_delay_frame
     """
+    """
     @staticmethod
     def timeTupleSecondToFrame(framerate: Real, time_tuple: Tuple[Real]) -> Tuple[int]:
         return tuple(round(x * framerate) for x in time_tuple)
     """
+    """
     def setNavkeyCycleDelayFrame(self) -> None:
-        res = self.timeTupleSecondToFrame(self._framerate, self._navkey_cycle_delay_s)
+        res = self.timeTupleSecondToFrame(self.framerate, self.navkey_cycle_delay_s)
         self._navkey_cycle_delay_frame = res
         buttons = getattr(self, "buttons", None)
         if buttons is not None:
             buttons.navkey_cycle_delay_frame = res
         return
+    """
     """
     def textPrinter(self, surf: "pg.Surface") -> None:
         print("Using ButtonMenuOverlay method textPrinter()")
@@ -580,6 +911,7 @@ class ButtonMenuOverlay(MenuOverlayBase):
         self.text_objects.append((text_obj, max_shape_rel, anchor_screen_pos_norm))
         return
     """
+    """
     @property
     def buttons_spatial_props_rel(self):
         return getattr(self, "_buttons_spatial_props_rel", None)
@@ -592,7 +924,7 @@ class ButtonMenuOverlay(MenuOverlayBase):
         self._resetButtonsSpatialProperties()
         return
     
-    """
+    
     @property
     def buttons_spatial_props(self):
         res = getattr(self, "_buttons_spatial_props", None)
@@ -600,7 +932,6 @@ class ButtonMenuOverlay(MenuOverlayBase):
             res = self.findButtonsSpatialProperties()
             self._buttons_spatial_props = res
         return res
-    """
     
     def findButtonsSpatialProperties(self) -> Tuple[Any]:
         bsp_rel = self.buttons_spatial_props_rel
@@ -609,7 +940,7 @@ class ButtonMenuOverlay(MenuOverlayBase):
         (anchor_screen_pos_norm, anchor_type, overall_shape_rel,\
                 wh_ratio_range) = bsp_rel
         
-        screen_shape = self.screen_shape
+        screen_shape = self.shape
         anchor_screen_pos = tuple(x * y for x, y in zip(screen_shape, anchor_screen_pos_norm))
         
         overall_shape = [x * y for x, y in zip(screen_shape, overall_shape_rel)]
@@ -623,28 +954,29 @@ class ButtonMenuOverlay(MenuOverlayBase):
         overall_shape = tuple(overall_shape)
         topleft = topLeftFromAnchorPosition(overall_shape, anchor_type, anchor_screen_pos)
         
-        return (topleft, overall_shape)
+        return (anchor_screen_pos, topleft, overall_shape)
     
     def _resetButtonsSpatialProperties(self) -> None:
         if not self.buttons: return
         #bsp_rel = self.buttons_spatial_props_rel
         bsp = self.findButtonsSpatialProperties()
         if not bsp: return
-        topleft, overall_shape = bsp
+        _, topleft, overall_shape = bsp
         self.buttons.dims = (*topleft, *overall_shape)
         return
-    
-    def setButtons(
+    """
+    """
+    def setupButtons(
         self,
         anchor_screen_pos_norm: Tuple[Real],
         anchor_type: str,
         overall_shape_rel: Tuple[Real],
         wh_ratio_range: Tuple[Real],
-        button_text_and_actions: List[List[Tuple[str, Any]]],
-        text_groups: Tuple[Union[Optional[Tuple["TextGroup"]], int]],
-        button_gap_rel_shape=(0.2, 0.2),
-        fonts=None,
-        font_sizes=None,
+        button_text_anchortype_and_actions: List[List[Optional[Tuple[Union[str, Tuple[Union[Tuple[str], int]]], Union[str, Tuple[Union[Tuple[str], int]]], Callable]]]],
+        text_groups: Optional[Tuple[Union[Optional[Tuple["TextGroup"]], int]]]=None,
+        button_gaps_rel_shape=(0.2, 0.2),
+        #fonts=None,
+        #font_sizes=None,
         font_colors=None,
         text_borders_rel=None,
         fill_colors=None,
@@ -655,24 +987,18 @@ class ButtonMenuOverlay(MenuOverlayBase):
         self._buttons_spatial_props_rel = (anchor_screen_pos_norm, anchor_type,\
                 overall_shape_rel, wh_ratio_range)
         
-        (topleft, overall_shape) = self.findButtonsSpatialProperties()
+        (anchor_screen_pos, topleft, overall_shape) = self.findButtonsSpatialProperties()
         
-        button_text, button_actions = [], []
-        for row in button_text_and_actions:
-            button_text.append([])
-            button_actions.append([])
-            for text, action in row:
-                button_text[-1].append(text)
-                button_actions[-1].append(action)
-        
+        grid_dims = (len(button_text_anchortype_and_actions[0]), len(button_text_anchortype_and_actions))
+
         button_grid = ButtonGrid(
-            overall_shape,
-            button_text,
-            text_groups,
-            topleft,
-            anchor_type="topleft",
-            screen_topleft_offset=self.screen_topleft_offset,
-            button_gap_rel_shape=button_gap_rel_shape,
+            grid_dims=grid_dims,
+            shape=overall_shape,
+            anchor_rel_pos=anchor_screen_pos,
+            anchor_type=anchor_type,
+            screen_topleft_to_component_anchor_offset=self.screen_topleft_to_component_anchor_offset,
+            button_gaps_rel_shape=button_gaps_rel_shape,
+            text_groups=text_groups,
             font_colors=font_colors,
             text_borders_rel=text_borders_rel,
             fill_colors=fill_colors,
@@ -681,13 +1007,27 @@ class ButtonMenuOverlay(MenuOverlayBase):
             mouse_enabled=self.mouse_enabled,
             navkeys_enabled=self.navkeys_enabled,
             navkeys=self.navkeys,
-            navkey_cycle_delay_frame=self.navkey_cycle_delay_frame)
+            navkey_cycle_delay_frame=self.navkey_cycle_delay_frame,
+            enter_keys=self.enter_keys,
+        )
         
+        button_actions = [[] for _ in range(grid_dims[0])]
+        for i2, row in enumerate(button_text_anchortype_and_actions):
+            for i1, tup in enumerate(row):
+                if tup is None:
+                    button_actions[i1].append(None)
+                (text, anchor_types, action) = tup
+                button_grid.setupButtonGridElement(
+                    grid_inds=(i1, i2),
+                    text=text,
+                    text_anchor_types=anchor_types,
+                )
+                button_actions[i1].append(action)
         
-        if self.buttons_uip_idx is not None:
+        if self.buttons_uip_idx != -1:
             self.user_input_processor.removeSubUIP(self.buttons_uip_idx)
         self.buttons_uip_idx = self.user_input_processor.addSubUIP(button_grid.user_input_processor)
-        """
+        ""
         button_grid = ButtonGrid(topleft, (200, 50),
             button_text, button_gap_rel_shape=button_gap_rel_shape,
             fonts=fonts, font_sizes=font_sizes,
@@ -699,7 +1039,7 @@ class ButtonMenuOverlay(MenuOverlayBase):
             navkeys=self.navkeys,
             navkey_cycle_delay_frame=self.navkey_cycle_delay_frame,
             text_global_asc_desc_chars=None)
-        """
+        ""
         
         #print(button_grid.mouse_enabled)
         #button_grid.grid_shape = overall_shape
@@ -708,6 +1048,7 @@ class ButtonMenuOverlay(MenuOverlayBase):
         self.buttons = button_grid
         self.button_actions = button_actions
         return
+    """
     """
     @property
     def overlay_color(self):
@@ -868,7 +1209,7 @@ class ButtonMenuOverlay(MenuOverlayBase):
     #        mouse_pressed: Optional[Tuple[int]]=None,\
     #        check_axes: Tuple[int]=(0, 1))\
     #        -> Tuple[Union[bool, Tuple[int]]]:
-    
+    """
     def _eventLoop(
         self,
         events: List[int],
@@ -896,9 +1237,9 @@ class ButtonMenuOverlay(MenuOverlayBase):
             if quit2: quit = True
             if not running2: running = False
             actions.extend([self.button_actions[b_inds[0]][b_inds[1]] for b_inds in selected_b_inds])
-        
+        screen_changed = self.drawUpdateRequired()
         return quit, running, screen_changed, actions
-        """
+        ""
         for slider, inds in self.sliderPlusIterator():
             (quit2, running2, screen_changed2, val_dict) = slider.eventLoop(
                 events=events,
@@ -958,32 +1299,37 @@ class ButtonMenuOverlay(MenuOverlayBase):
         #action = None if selected is None else\
         #        self.button_actions[selected[0]][selected[1]]
         return quit, running, (screen_changed, actions)
-        """
+        ""
+    """
 
 class SliderAndButtonMenuOverlay(ButtonMenuOverlay):
     
     dynamic_displ_attrs = ["sliders"]
     #static_bg_components = ["overlay_bg", "text"]
 
-    def __init__(self, screen_shape: Tuple[Real]=(700, 700), framerate: Real=60,\
-            overlay_color: Optional[Tuple[Union[Tuple[int], Real]]]=None,\
-            mouse_enabled: bool=True, navkeys_enabled: bool=True,\
-            navkeys: Optional[Tuple[Tuple[Set[int]]]]=None,\
-            navkey_cycle_delay_s: Tuple[int]=(0.5, 0.2),\
-            enter_keys: Optional[Set[int]]=None,\
-            exit_press_keys: Optional[Set[int]]=None,\
-            exit_release_keys: Optional[Set[int]]=None):
+    def __init__(
+        self,
+        shape: Tuple[Real]=(700, 700),
+        framerate: Real=60,
+        overlay_color: Optional[Tuple[Union[Tuple[int], Real]]]=None,
+        mouse_enabled: bool=True, navkeys_enabled: bool=True,
+        navkeys: Optional[Tuple[Tuple[Set[int]]]]=None,
+        navkey_cycle_delay_s: Tuple[int]=(0.5, 0.2),
+        enter_keys: Optional[Set[int]]=None,
+        #exit_press_keys: Optional[Set[int]]=None,
+        #exit_release_keys: Optional[Set[int]]=None
+    ):
         
         super().__init__(
-            screen_shape=screen_shape,
+            shape=shape,
             framerate=framerate,
             overlay_color=overlay_color,
             mouse_enabled=mouse_enabled,
             navkeys=navkeys,
             navkey_cycle_delay_s=navkey_cycle_delay_s,
             enter_keys=enter_keys,
-            exit_press_keys=exit_press_keys,
-            exit_release_keys=exit_release_keys,
+            #exit_press_keys=exit_press_keys,
+            #exit_release_keys=exit_release_keys,
         )
 
         self.sliders_uip_idx = None
@@ -1008,7 +1354,7 @@ class SliderAndButtonMenuOverlay(ButtonMenuOverlay):
         (anchor_screen_pos_norm, anchor_type, overall_shape_rel,\
                 wh_ratio_range) = bsp_rel
         
-        screen_shape = self.screen_shape
+        screen_shape = self.shape
         anchor_screen_pos = tuple(x * y for x, y in zip(screen_shape, anchor_screen_pos_norm))
         
         overall_shape = [x * y for x, y in zip(screen_shape, overall_shape_rel)]
@@ -1090,7 +1436,7 @@ class SliderAndButtonMenuOverlay(ButtonMenuOverlay):
             slider_gaps_rel_shape=slider_gaps_rel_shape,
             anchor_rel_pos=topleft,
             anchor_type="topleft",
-            screen_topleft_offset=self.screen_topleft_offset,
+            screen_topleft_to_component_anchor_offset=self.screen_topleft_to_component_anchor_offset,
             demarc_numbers_text_group=demarc_numbers_text_group,
             thumb_radius_rel=thumb_radius_rel,
             demarc_line_lens_rel=demarc_line_lens_rel,

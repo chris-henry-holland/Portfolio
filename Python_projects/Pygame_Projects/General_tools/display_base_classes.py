@@ -761,6 +761,8 @@ class ComponentBaseClass(ABC):
         #    print(f"container_attr_reset_dict = {container_attr_reset_dict}")
 
         def setAttrCustom(attr: str, sub_attr: str, val: Any) -> None:
+            if attr == "max_font_size_given_width":
+                print(f"Using setAttrCustom() for {attr}")
             #if attr.lstrip("_") in {"text_shapes"}:
             #    print(f"setting attribute {attr} to {val} for {self}")
             #if sub_attr not in self.__dict__.keys():
@@ -873,6 +875,9 @@ class ComponentBaseClass(ABC):
                 val_prev = self.__dict__.get(sub_attr, None)
                 if val == val_prev: continue
                 setAttrCustom(attr, sub_attr, val)
+                if attr == "max_shape":
+                    r_vars = [self.attr_list[idx2] for idx2 in reset_graph[idx].keys()]
+                    print(f"max_shape dependent variables being reset: {r_vars}")
                 for idx2, funcs in reset_graph[idx].items():
                     #if attr == "thumb_x":
                     #    print(attr_list[idx2])
@@ -932,7 +937,8 @@ class ComponentBaseClass(ABC):
         #if "display_surf" in setattr_dict.keys():
         #    print("hola")
         #    print("_display_surf" in self.__dict__.keys(), "display_surf" in self.__dict__.keys())
-        #print(f"attributes changed: {changed_attrs_dict}")
+        if "max_shape" in setattr_dict.keys():
+            print(f"attributes changed for {self}: {changed_attrs_dict}")
         return changed_attrs_dict
     
     def __setattr__(self, attr: str, val: Any) -> None:

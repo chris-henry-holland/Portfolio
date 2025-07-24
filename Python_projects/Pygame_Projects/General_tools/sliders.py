@@ -196,7 +196,8 @@ class Slider(InteractiveDisplayComponentBase):
             name = f"slider {self.unnamed_count}"
         #self.name = name
         Slider.slider_names.add(name)
-        super().__init__(**self.initArgsManagement(locals(), kwargs=kwargs, rm_args=["init_val"]), slider_held=False, val_raw=init_val)
+        kwargs2 = self.initArgsManagement(locals(), kwargs=kwargs, rm_args=["init_val"])
+        super().__init__(**kwargs2, slider_held=False, val_raw=init_val)
     
     #def setMouseEnabled(self, prev_val: bool) -> None:
     #    #print("using method setMouseEnablement()")
@@ -1653,9 +1654,9 @@ class SliderPlus(InteractiveDisplayComponentBase):
         #print(f"value text anchor position = {res}")
         return res
     
-    def setValueTextShape(self, prev_val: Optional[Tuple[int, int]]) -> None:
-        #print("setting title shape for text object")
-        return self._setValueTextObjectAttribute("val_text_shape", "max_shape")
+    #def setValueTextShape(self, prev_val: Optional[Tuple[int, int]]) -> None:
+    #    #print("setting title shape for text object")
+    #    return self._setValueTextObjectAttribute("val_text_shape", "max_shape")
     
     def createValueTextImageConstructor(self) -> Callable[["SliderPlus", "pg.Surface"], None]:
         #print("creating text image constructors")
