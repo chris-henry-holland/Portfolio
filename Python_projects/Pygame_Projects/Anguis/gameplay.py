@@ -38,6 +38,7 @@ from General_tools import (
     navkeys_def_glob,
     named_colors_def,
     font_def_func,
+    MenuOverlayBase,
     ButtonMenuOverlay,
     Text,
     TextGroup,
@@ -375,34 +376,42 @@ class GamePlay:
         self._pause_keys = pause_keys
         return
     
-    def getPauseOverlay(self) -> "ButtonMenuOverlay":
+    def getPauseOverlay(self) -> "MenuOverlayBase":
         #print("Using getPauseOverlay()")
         #print("Creating MenuOverlay object")
-        pause_overlay = ButtonMenuOverlay(self.screen_shape, framerate=60,\
-            overlay_color=(named_colors_def["green"], 0.5),\
-            mouse_enabled=False, navkeys_enabled=False,\
-            exit_press_keys={pg.K_p})
+        pause_overlay = MenuOverlayBase(
+            shape=self.screen_shape,
+            framerate=60,
+            overlay_color=(named_colors_def["green"], 0.5),
+            mouse_enabled=False,
+            navkeys_enabled=False,
+            #exit_press_keys={pg.K_p},
+            #navkey_cycle_delay_s=navkey_cycle_delay_s,
+            #navkeys=None,
+            #enter_keys=None,
+        )
+
         max_height_rel = 0.3
         max_width_rel = 0.8
         anchor_type = "center"
-        anchor_pos_rel = (0.5, 0.5)
+        anchor_rel_pos_rel = (0.5, 0.5)
         font_color = (named_colors_def["red"], 1)
         #text_list = [
-        #    ("Paused", anchor_pos_rel, anchor_type, max_width_rel, font_color),
+        #    ("Paused", anchor_rel_pos_rel, anchor_type, max_width_rel, font_color),
         #]
         #pause_overlay.addTextGroup(text_list, max_height_rel, font=None,\
         #        font_size=None)
         text_group = TextGroup([], max_height0=None, font=None, font_size=None, min_lowercase=True, text_global_asc_desc_chars=None)
         text_list = [
-            ({"text": "Pause", "font_color": font_color, "anchor_type0": anchor_type}, ((max_width_rel, max_height_rel), anchor_pos_rel)),
+            ({"text": "Pause", "font_color": font_color, "anchor_type0": anchor_type}, ((max_width_rel, max_height_rel), anchor_rel_pos_rel)),
         ]
         
         add_text_list = [x[0] for x in text_list]
         text_objs = text_group.addTextObjects(add_text_list)
         for text_obj, (_, pos_tup) in zip(text_objs, text_list):
-            max_shape_rel, anchor_pos_rel = pos_tup
+            max_shape_rel, anchor_rel_pos_rel = pos_tup
             pause_overlay.addText(text_obj, max_shape_rel,\
-                    anchor_pos_rel)
+                    anchor_rel_pos_rel)
         return pause_overlay
     
     @property    
@@ -414,50 +423,68 @@ class GamePlay:
         return res
     
     def getDeathOverlay(self, mouse_enabled: bool=True, navkeys_enabled: bool=True) -> "ButtonMenuOverlay":
-        death_overlay = ButtonMenuOverlay(self.screen_shape, framerate=60,\
-            overlay_color=(named_colors_def["red"], 0.5),\
-            mouse_enabled=navkeys_enabled, navkeys_enabled=navkeys_enabled,\
-            exit_press_keys={pg.K_p})
+        death_overlay = ButtonMenuOverlay(
+            shape=self.screen_shape,
+            framerate=60,
+            overlay_color=(named_colors_def["red"], 0.5),
+            mouse_enabled=mouse_enabled,
+            navkeys_enabled=navkeys_enabled,
+            #exit_press_keys={pg.K_p},
+            #navkey_cycle_delay_s=navkey_cycle_delay_s,
+            #navkeys=None,
+            #enter_keys=None,
+        )
+        #death_overlay = ButtonMenuOverlay(self.screen_shape, framerate=60,\
+        #    overlay_color=(named_colors_def["red"], 0.5),\
+        #    mouse_enabled=navkeys_enabled, navkeys_enabled=navkeys_enabled,\
+        #    exit_press_keys={pg.K_p})
         
         max_height_rel = 0.2
         max_width_rel = 0.8
         anchor_type = "midbottom"
-        anchor_pos_rel = (0.5, 0.45)
+        anchor_rel_pos_rel = (0.5, 0.45)
         font_color = (named_colors_def["white"], 1)
         
         text_group = TextGroup([], max_height0=None, font=None, font_size=None, min_lowercase=True, text_global_asc_desc_chars=None)
         text_list = [
-            ({"text": "Game over", "font_color": font_color, "anchor_type0": anchor_type}, ((max_width_rel, max_height_rel), anchor_pos_rel)),
+            ({"text": "Game over", "font_color": font_color, "anchor_type0": anchor_type}, ((max_width_rel, max_height_rel), anchor_rel_pos_rel)),
         ]
         
         add_text_list = [x[0] for x in text_list]
         text_objs = text_group.addTextObjects(add_text_list)
         for text_obj, (_, pos_tup) in zip(text_objs, text_list):
-            max_shape_rel, anchor_pos_rel = pos_tup
+            max_shape_rel, anchor_rel_pos_rel = pos_tup
             death_overlay.addText(text_obj, max_shape_rel,\
-                    anchor_pos_rel)
+                    anchor_rel_pos_rel)
         
         #text_list = [
-        #    ("Game Over", anchor_pos_rel, anchor_type, max_width_rel, font_color),
+        #    ("Game Over", anchor_rel_pos_rel, anchor_type, max_width_rel, font_color),
         #]
         #death_overlay.addTextGroup(text_list, max_height_rel, font=None,\
         #        font_size=None)
         
-        button_text_groups = tuple((TextGroup([], max_height0=None, font=None, font_size=None, text_global_asc_desc_chars=None),) for _ in range(4))
-        button_text_and_actions =\
-                [[(("Retry", "center"), (lambda: ((True,), False, False)))],\
-                [(("Main menu", "center"), (lambda: ((False,), False, False)))]]
+        #button_text_groups = tuple((TextGroup([], max_height0=None, font=None, font_size=None, text_global_asc_desc_chars=None),) for _ in range(4))
+        button_text_anchortypes_and_actions = [
+            [
+                ("Retry", "center", (lambda: ((True,), False, False))),
+                ("Main menu", "center", (lambda: ((False,), False, False)))
+            ]
+        ]
         
-        death_overlay.setButtons((0.5, 0.55), "midtop",\
-            (0.8, 0.1), wh_ratio_range=(2, 10),\
-            button_text_and_actions=button_text_and_actions,\
-            text_groups=button_text_groups,\
-            button_gap_rel_shape=(0.1, 0.2),\
+        death_overlay.setupButtonGrid(
+            anchor_pos_norm=(0.5, 0.55),
+            anchor_type="midtop",
+            button_grid_max_shape_norm=(0.8, 0.1),
+            button_text_anchortype_and_actions=button_text_anchortypes_and_actions,
+            wh_ratio_range=(2, 10),
+            text_groups=None,
+            button_gaps_rel_shape=(0.1, 0.2),
             font_colors=((named_colors_def["white"], 0.5), (named_colors_def["yellow"], 1), (named_colors_def["blue"], 1), (named_colors_def["green"], 1)),
-            text_borders_rel=((0.2, 0.2), (0.1, 0.1), 1, 0),\
-            fill_colors=(None, (named_colors_def["red"], 0.2), (named_colors_def["red"], 0.5), 2),\
-            outline_widths=((1,), (2,), (3,), 1),\
-            outline_colors=((named_colors_def["black"], 1), (named_colors_def["blue"], 1), 1, 1))
+            text_borders_rel=((0.2, 0.2), (0.1, 0.1), 1, 0),
+            fill_colors=(None, (named_colors_def["red"], 0.2), (named_colors_def["red"], 0.5), 2),
+            outline_widths=((1,), (2,), (3,), 1),
+            outline_colors=((named_colors_def["black"], 1), (named_colors_def["blue"], 1), 1, 1),
+        )
         return death_overlay
     
     @property
@@ -622,16 +649,16 @@ class GamePlay:
         return res
     
     @property
-    def title_text_anchor_pos(self):
-        res = getattr(self, "_title_text_anchor_pos", None)
+    def title_text_anchor_rel_pos(self):
+        res = getattr(self, "_title_text_anchor_rel_pos", None)
         if res is None:
             res = self.findTitleTextAnchorPosition()
-            self._title_text_anchor_pos = res
+            self._title_text_anchor_rel_pos = res
         return res
     
     def findTitleTextAnchorPosition(self):
-        anchor_pos = (self.border[0][0], self.border[1][0] / 2)
-        return tuple(x * self.head_size for x in anchor_pos)
+        anchor_rel_pos = (self.border[0][0], self.border[1][0] / 2)
+        return tuple(x * self.head_size for x in anchor_rel_pos)
     
     @property
     def title_text_max_shape(self):
@@ -646,7 +673,7 @@ class GamePlay:
         return tuple(x * self.head_size for x in max_shape)
     
     def createTitleText(self):
-        #anchor_pos = self.title_text_anchor_pos
+        #anchor_rel_pos = self.title_text_anchor_rel_pos
         max_shape = self.title_text_max_shape
         return Text(max_shape, "Anguis", font=None,
             font_size=None, font_color=(named_colors_def["white"], 1))
@@ -663,8 +690,8 @@ class GamePlay:
         def func(surf) -> None:
             text_obj = self.title_text
             text_obj.max_shape = self.title_text_max_shape
-            text_obj.anchor_pos = self.title_text_anchor_pos
-            text_obj.draw(surf, self.title_text_anchor_pos, anchor_type="midleft")
+            text_obj.anchor_rel_pos = self.title_text_anchor_rel_pos
+            text_obj.draw(surf, self.title_text_anchor_rel_pos, anchor_type="midleft")
         return func
         
     @property
@@ -686,18 +713,18 @@ class GamePlay:
         
         num_max_width = self.arena_shape[0] * 0.1
         num_max_width_pixel = num_max_width * self.head_size
-        num_anchor_pos = (self.border[0][0] + self.arena_shape[0] - num_max_width, self.border[1][0] * 0.9)
-        num_anchor_pos_pixel = tuple(x * self.head_size for x in num_anchor_pos)
+        num_anchor_rel_pos = (self.border[0][0] + self.arena_shape[0] - num_max_width, self.border[1][0] * 0.9)
+        num_anchor_rel_pos_pixel = tuple(x * self.head_size for x in num_anchor_rel_pos)
         txt_max_width = self.arena_shape[0] * 0.3
         txt_max_width_pixel = txt_max_width * self.head_size
-        txt_anchor_pos = num_anchor_pos
-        txt_anchor_pos_pixel = tuple(x * self.head_size for x in txt_anchor_pos)
+        txt_anchor_rel_pos = num_anchor_rel_pos
+        txt_anchor_rel_pos_pixel = tuple(x * self.head_size for x in txt_anchor_rel_pos)
         
         max_h = self.border[1][0] * 0.25
         max_h_pixel = max_h * self.head_size
         
-        text_list = [{"text": "Score: ", "anchor_pos0": txt_anchor_pos_pixel, "anchor_type0": "bottomright", "max_shape": (None, txt_max_width_pixel), "font_color": (named_colors_def["black"], 1)},\
-                {"text": "0", "anchor_pos0": num_anchor_pos_pixel, "anchor_type0": "bottomleft", "max_shape": (None, num_max_width_pixel), "font_color": (named_colors_def["black"], 1)}]
+        text_list = [{"text": "Score: ", "anchor_rel_pos0": txt_anchor_rel_pos_pixel, "anchor_type0": "bottomright", "max_shape": (None, txt_max_width_pixel), "font_color": (named_colors_def["black"], 1)},\
+                {"text": "0", "anchor_rel_pos0": num_anchor_rel_pos_pixel, "anchor_type0": "bottomleft", "max_shape": (None, num_max_width_pixel), "font_color": (named_colors_def["black"], 1)}]
         for d in range(10):
             s = str(d) * max_n_dig
             text_list.append({"text": s, "max_shape": (None, num_max_width_pixel)})

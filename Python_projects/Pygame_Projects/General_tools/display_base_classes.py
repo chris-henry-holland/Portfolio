@@ -4,6 +4,7 @@ import bisect
 import copy
 import functools
 import heapq
+import math
 import os
 import sys
 import weakref
@@ -126,14 +127,14 @@ class ComponentBaseClass(ABC):
         # to other objects have been initialized
         #print(self.attr_list)
         #print(self.getAttributeChangePropogationFunctions().keys())
-        print(f"\nInitializing attributes with custom reset functions")
-        print([self.attr_list[idx] for idx in self.getAttributeChangePropogationFunctions().keys()])
+        #print(f"\nInitializing attributes with custom reset functions")
+        #print([self.attr_list[idx] for idx in self.getAttributeChangePropogationFunctions().keys()])
         for idx in self.getAttributeChangePropogationFunctions().keys():
             attr = self.attr_list[idx]
             sub_attr = f"_{attr}"
-            print(attr)
-            print(f"self._{attr} = {self.__dict__.get(sub_attr, None)}")
-            print(getattr(self, self.attr_list[idx]))
+            #print(attr)
+            #print(f"self._{attr} = {self.__dict__.get(sub_attr, None)}")
+            #print(getattr(self, self.attr_list[idx]))
         #self.setupClass()
     
     @classmethod
@@ -692,6 +693,10 @@ class ComponentBaseClass(ABC):
         return True
     
     def setAttributes(self, setattr_dict: Dict[str, Any], _from_container: bool=False, _calculated_override: bool=False, **kwargs) -> Dict[str, Tuple[Any, Any]]:
+        #if "display_surf" in setattr_dict.keys():
+        #    print(f"Using setAttributes() for {self} with setattr_dict = {setattr_dict}")
+        #    print(f"self.changed_since_last_draw = {self.changed_since_last_draw}")
+        #    print(f"self._display_surf = {self.__dict__.get('_display_surf', None)}")
         #if "changed_since_last_draw" in setattr_dict.keys():
         #    print("Using setAttributes")
         #if len(setattr_dict.keys() - {"state"}) >= 1:
@@ -760,9 +765,14 @@ class ComponentBaseClass(ABC):
         #if container_attr_reset_dict:
         #    print(f"container_attr_reset_dict = {container_attr_reset_dict}")
 
+        #if "display_surf" in setattr_dict.keys():
+        #    print(f"reset_graph = {reset_graph}")
+
         def setAttrCustom(attr: str, sub_attr: str, val: Any) -> None:
-            if attr == "max_font_size_given_width":
-                print(f"Using setAttrCustom() for {attr}")
+            #if attr in {"changed_since_last_draw", "display_surf"}:
+            #    print(f"Using setAttrCustom() for {self} to set {attr} to {val}")
+            #if attr == "max_font_size_given_width":
+            #    print(f"Using setAttrCustom() for {attr}")
             #if attr.lstrip("_") in {"text_shapes"}:
             #    print(f"setting attribute {attr} to {val} for {self}")
             #if sub_attr not in self.__dict__.keys():
@@ -875,9 +885,11 @@ class ComponentBaseClass(ABC):
                 val_prev = self.__dict__.get(sub_attr, None)
                 if val == val_prev: continue
                 setAttrCustom(attr, sub_attr, val)
-                if attr == "max_shape":
-                    r_vars = [self.attr_list[idx2] for idx2 in reset_graph[idx].keys()]
-                    print(f"max_shape dependent variables being reset: {r_vars}")
+                #if attr == "changed_since_last_draw":
+                #    print(f"post setAttrCustom() self._{attr} = {self.__dict__.get(sub_attr, None)}")
+                #if attr == "max_shape":
+                #    r_vars = [self.attr_list[idx2] for idx2 in reset_graph[idx].keys()]
+                #    #print(f"max_shape dependent variables being reset: {r_vars}")
                 for idx2, funcs in reset_graph[idx].items():
                     #if attr == "thumb_x":
                     #    print(attr_list[idx2])
@@ -899,6 +911,9 @@ class ComponentBaseClass(ABC):
                     qu.append((idx2, None))
             return# reset_funcs
         bfs(inds)
+        #if "changed_since_last_draw" in setattr_dict.keys():
+        #    print(f"Finished bfs in setAttributes() for {self} with setattr_dict = {setattr_dict}")
+        #    print(f"self._changed_since_last_draw = {self.__dict__.get('_changed_since_last_draw', None)}")
         #reset_funcs.extend(bfs(inds))
         #if len(setattr_dict.keys() - {"state"}) >= 1:
         #    print(f"reset_funcs: {reset_funcs}")
@@ -937,8 +952,11 @@ class ComponentBaseClass(ABC):
         #if "display_surf" in setattr_dict.keys():
         #    print("hola")
         #    print("_display_surf" in self.__dict__.keys(), "display_surf" in self.__dict__.keys())
-        if "max_shape" in setattr_dict.keys():
-            print(f"attributes changed for {self}: {changed_attrs_dict}")
+        #if "max_shape" in setattr_dict.keys():
+        #    print(f"attributes changed for {self}: {changed_attrs_dict}")
+        #if "display_surf" in setattr_dict.keys() or "changed_since_last_draw" in setattr_dict.keys():
+        #    print(f"Finished using setAttributes() for {self} with setattr_dict = {setattr_dict}")
+        #    print(f"self.changed_since_last_draw = {self.changed_since_last_draw}")
         return changed_attrs_dict
     
     def __setattr__(self, attr: str, val: Any) -> None:
@@ -1379,8 +1397,9 @@ class DisplayComponentBase(ComponentBaseClass):
         "anchor_type": {"topleft_rel_pos": True},
         "topleft_rel_pos": {"screen_topleft_to_component_topleft_offset": True, "changed_since_last_draw": True},
         "screen_topleft_to_component_anchor_offset": {"screen_topleft_to_component_topleft_offset": True},
-        "display_surf": {"changed_since_last_draw": True}
+        "display_surf": {"changed_since_last_draw": True},
     }
+
     custom_attribute_change_propogation_methods = {}
     
     attribute_calculation_methods = {
@@ -1418,6 +1437,28 @@ class DisplayComponentBase(ComponentBaseClass):
         # Position of the topleft relative to the screen origin (the screen topleft)
         return self.calculateScreenPositionFromRelativePosition(self.topleft_rel_pos)
     
+    @staticmethod
+    def calculateMaxShapeActualGivenWidthHeightRatioRange(
+        max_shape_norm: Tuple[Real, Real],
+        ref_shape: Tuple[int, int],
+        wh_ratio_range: Optional[Tuple[Optional[Real], Optional[Real]]],
+    ) -> Tuple[int, int]:
+        if not max_shape_norm or not ref_shape: return ()
+        if not wh_ratio_range:
+            wh_ratio_range = [0, float("inf")]
+        else:
+            wh_ratio_range = list(wh_ratio_range)
+            if wh_ratio_range[0] is None: wh_ratio_range[0] = 0
+            if wh_ratio_range[1] is None: wh_ratio_range[1] = float("inf")
+        shape_actual = [x * y for x, y in zip(ref_shape, max_shape_norm)]
+        
+        wh_ratio = shape_actual[0] / shape_actual[1]
+        if wh_ratio < wh_ratio_range[0]:
+            shape_actual[1] *= wh_ratio / wh_ratio_range[0]
+        elif wh_ratio > shape_actual[1]:
+            shape_actual[0] *= wh_ratio_range[1] / wh_ratio
+        return tuple(math.floor(x) for x in shape_actual)
+
     def createDisplaySurface(self) -> Optional["pg.Surface"]:
         surf = pg.Surface(self.shape, pg.SRCALPHA)
         return surf
@@ -1426,9 +1467,10 @@ class DisplayComponentBase(ComponentBaseClass):
         return True
 
     def draw(self, surf: "pg.Surface") -> None:
-        #print("Using DisplayComponentBase method draw()")
+        #print(f"Using DisplayComponentBase method draw() for {self}")
         surf.blit(self.display_surf, self.topleft_rel_pos)
         self.setAttributes({"changed_since_last_draw": False}, _calculated_override=True)
+        #print(f"drawn for {self}, self._display_surf = {self.__dict__.get('_display_surf', None)}, self.changed_since_last_draw = {self.changed_since_last_draw}")
         #print(self.changed_since_last_draw)
         return
 

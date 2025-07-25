@@ -959,9 +959,9 @@ class ButtonGroupElement(ComponentGroupElementBaseClass, Button):
         )
     
     def createTextObjects(self) -> None:
-        print("Using ButtonGroupElement method createTextObjects()")
+        #print("Using ButtonGroupElement method createTextObjects()")
         add_text_dict_lsts = {}
-        print(self.button_group.text_groups)
+        #print(self.button_group.text_groups)
         for idx, text_group_tup in enumerate(self.button_group.text_groups):
             if text_group_tup is None: continue
             elif isinstance(text_group_tup, int):
@@ -979,14 +979,14 @@ class ButtonGroupElement(ComponentGroupElementBaseClass, Button):
                 }
             )
             add_text_dict_lsts[text_group_tup[0]][1].append(idx)
-        print(add_text_dict_lsts)
+        #print(add_text_dict_lsts)
         res = [None] * self.n_state
         for grp, (add_text_dict_lst, idx_lst) in add_text_dict_lsts.items():
-            print(f"adding text objects for {grp}")
+            #print(f"adding text objects for {grp}")
             text_objs = grp.addTextObjects(add_text_dict_lst)
-            print(f"finished adding text objects for {grp}")
-            print(grp.max_font_sizes_given_widths_dict)
-            print(grp.heights_dict)
+            #print(f"finished adding text objects for {grp}")
+            #print(grp.max_font_sizes_given_widths_dict)
+            #print(grp.heights_dict)
             for text_obj, idx in zip(text_objs, idx_lst):
                 res[idx] = (text_obj,)
         return res
@@ -2122,7 +2122,7 @@ class ButtonGrid(InteractiveDisplayComponentBase):
 
     
     def navkeyMoveCalculator(self, navkey: int, start_button: Tuple[int]) -> Tuple[int]:
-        #print(f"Using navkeyMoveCalculator() with navkey = {navkey} and start_button = {start_button}")
+        print(f"Using navkeyMoveCalculator() with navkey = {navkey} and start_button = {start_button}")
         if not self.navkeys_enabled: return start_button
         move = self.navkey_dict.get(navkey, None)
         if move is None: return start_button
@@ -2136,7 +2136,9 @@ class ButtonGrid(InteractiveDisplayComponentBase):
         else: res[i] = (res[i] + 1) % grid_dims[i]
         return tuple(res)
     
+    """
     def navkeyMove(self, navkey_events: Optional[List[Tuple[int]]], navkeys_pressed: Optional[Set[int]]=None) -> Tuple[bool]:
+        print("Using ButtonGrid method navkeyMove()")
         # Consider adding option to ignore navigation keystrokes for
         # which the opposite navigation key is currently held down
         # (e.g. ignore left keystroke if the right navigation key
@@ -2188,6 +2190,7 @@ class ButtonGrid(InteractiveDisplayComponentBase):
         #print("hello")
         
         delay_lst = self.navkey_cycle_delay_frame
+        print(f"delay_lst = {delay_lst}")
         status[3] = (status[3] + 1) % delay_lst[status[2]]
         #print(status)
         if not status[3]:
@@ -2199,6 +2202,7 @@ class ButtonGrid(InteractiveDisplayComponentBase):
                 screen_changed = True
         status[1] = navkeys_pressed
         return False, screen_changed
+    """
     """
     def getRequiredInputs(self) -> Tuple[Union[bool, Dict[str, Union[List[int], Tuple[Union[Tuple[int], int]]]]]]:
         quit, esc_pressed, events = self.user_input_processor.getEvents()
@@ -2310,6 +2314,7 @@ class ButtonGrid(InteractiveDisplayComponentBase):
             b_inds0_mouse = self.button_mouse_is_over
             #b_inds1_mouse = self.mouseOverWhichButton(mouse_status[0])
             #print(b_inds1_mouse)
+            #print(f"mouse_status = {mouse_status}")
             self.mouse_l_held = mouse_status[1][0]
         else:
             b_inds0_mouse = None
@@ -2339,16 +2344,20 @@ class ButtonGrid(InteractiveDisplayComponentBase):
             self._navkey_status = [last_navkey, [0, 0]]
         else:
             status = self.__dict__.get("_navkey_status", [None, [0, 0]])
+            
             if keys_down is None:
                 keys_down = self.user_input_processor.getKeysHeldDown()
+            #print(f"status = {status}, keys_down = {keys_down}")
             if status[0] in keys_down:
                 delay_lst = self.navkey_cycle_delay_frame
+                #print(f"delay_lst = {delay_lst}")
                 status[1][1] += 1
                 if status[1][1] == delay_lst[status[1][0]]:
                     b_inds1 = self.navkeyMoveCalculator(status[0], b_inds1)
                     status[1][1] = 0
                     status[1][0] += (status[1][0] < len(delay_lst) - 1)
             else:
+                #print("resetting navkey status")
                 self._navkey_status = [None, [0, 0]]
         #print(self.navkey_status)
         #self.navkey_button = b_inds1
@@ -2357,7 +2366,7 @@ class ButtonGrid(InteractiveDisplayComponentBase):
         #    screen_changed = True
         #if (mouse_enabled and self.setMouseOver(b_inds1_mouse, lmouse_down)):
         #    screen_changed = True
-        button_focus = False
+        #button_focus = False
         if mouse_enabled and mouse_over_button:
             self.button_mouse_is_over = b_inds1
             #button_focus = self.setMouseOver(b_inds1_mouse, lmouse_down)
@@ -2370,7 +2379,7 @@ class ButtonGrid(InteractiveDisplayComponentBase):
         #print(keys_down)
         screen_changed = self.drawUpdateRequired()
         if screen_changed:
-            print("button grid redraw required")
+            print("button grid re-draw required")
         #print(quit, esc_pressed, (screen_changed, selected))
         #if screen_changed:
         #    self._button_grid_surf = None

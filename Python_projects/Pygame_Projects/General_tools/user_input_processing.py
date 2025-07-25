@@ -120,6 +120,7 @@ class UserInputProcessor:
     @property
     def keys_down_func_actual(self):
         func = self.keys_down_func
+        #print(f"keys_down_func = {func}")
         return (lambda obj: func) if isinstance(func, bool) else func
     
     @staticmethod
@@ -226,6 +227,9 @@ class UserInputProcessor:
         if res is True:
             return True
         for uip in getattr(self, "sub_uips", []):
+            #if attr_name == "get_mouse_status_func":
+            #    print("found sub uip for mouse status")
+            #    print(uip)
             if uip is None: continue
             res = self.mergeBooleanFunctions(res, getattr(uip, attr_name))
             if res is True:
@@ -243,10 +247,11 @@ class UserInputProcessor:
     @property
     def get_mouse_status_func_actual(self):
         func = self.get_mouse_status_func
+        #print(f"get_mouse_status_func = {func}")
         return (lambda obj: func) if isinstance(func, bool) else func
     
     def addSubUIP(self, sub_uip: "UserInputProcessor", obj_func: Optional[Callable[[Any], Any]]=None) -> int:
-        #print("calling addSubUIP")
+        #print("calling addSubUIP()")
         #print(f"mouse press event filter = {self.mouse_press_event_filter}")
         #print(f"key press event filter = {self.key_press_event_filter}")
         if self.sub_uips_free_inds:
@@ -256,8 +261,10 @@ class UserInputProcessor:
             idx = len(self.sub_uips)
             self.sub_uips.append(sub_uip)
         keys_down_prev = getattr(self, "_keys_down_func", False)
-        self._keys_down_func = self.mergeSetFunctions(keys_down_prev,\
-                sub_uip.keys_down_func)
+        add_func = sub_uip.keys_down_func
+        keys_down_add = add_func if obj_func is None else (lambda obj: add_func(obj_func(obj)))
+            
+        self._keys_down_func = self.mergeSetFunctions(keys_down_prev, keys_down_add)
         
         def otherObjectFilter(attr: str, sub_uip: "UserInputProcessor", obj_func: Optional[Callable[[Any], Any]]) -> Union[Callable[[Any, int], bool]]:
             fltr_orig = getattr(sub_uip, attr, False)
@@ -290,6 +297,7 @@ class UserInputProcessor:
             #print("hello")
             bool_func2 = functools.partial(lambda bf, of, obj: bf(of(obj)), bool_func2, obj_func)
         self._get_mouse_status_func = self.mergeBooleanFunctions(bool_func1, bool_func2)
+        #print(bool_func1, bool_func2, self._get_mouse_status_func)
         #print(f"mouse press event filter = {self.mouse_press_event_filter}")
         #print(f"key press event filter = {self.key_press_event_filter}")
         #print(f"get_mouse_status_func = {self.get_mouse_status_func}")
@@ -324,6 +332,7 @@ class UserInputProcessor:
         #    print(all_events)
         #print(all_events)
         #if all_events: print(all_events)
+        #print(f"mouse release filter: {self.mouse_release_event_filter_actual}")
         for event in all_events:
             if event.type == KEYDOWN:
                 #print(event, self.key_press_event_filter_actual(obj, event))
@@ -366,7 +375,9 @@ class UserInputProcessor:
         #return {x for x in keys_to_check if kp[x]}
     
     def getMouseStatus(self, obj: Any) -> Tuple[Tuple[int]]:
+        #print("Using getMouseStatus()")
         gms = self.get_mouse_status_func_actual(obj)
+        #print(gms)
         return (pg.mouse.get_pos(), pg.mouse.get_pressed())\
                 if gms and pg.mouse.get_focused()\
                 else ()

@@ -79,16 +79,28 @@ class Game:
         return res
         
     def getMenuOverlay(self, mouse_enabled: bool=True, navkeys_enabled: bool=True) -> "ButtonMenuOverlay":
-    
-        menu_overlay = ButtonMenuOverlay(self.screen_shape, framerate=self.menu_framerate,\
-            overlay_color=self.menu_overlay_color,\
-            mouse_enabled=navkeys_enabled, navkeys_enabled=navkeys_enabled)
         
         max_height_rel = 0.2
         max_width_rel = 0.8
         anchor_type = "midbottom"
         anchor_pos_rel = (0.5, 0.3)
         font_color = (named_colors_def["white"], 1)
+        navkey_cycle_delay_s = (0.4, 0.2, 0.2, 0.2, 0.1)
+
+        #menu_overlay = ButtonMenuOverlay(self.screen_shape, framerate=self.menu_framerate,\
+        #    overlay_color=self.menu_overlay_color,\
+        #    mouse_enabled=mouse_enabled, navkeys_enabled=navkeys_enabled)
+        print(f"menu framerate = {self.menu_framerate}")
+        menu_overlay = ButtonMenuOverlay(
+            shape=self.screen_shape,
+            framerate=self.menu_framerate,
+            overlay_color=self.menu_overlay_color,
+            mouse_enabled=mouse_enabled,
+            navkeys_enabled=navkeys_enabled,
+            navkey_cycle_delay_s=navkey_cycle_delay_s,
+            #navkeys=None,
+            #enter_keys=None,
+        )
         
         text_group = TextGroup([], max_height0=None, font=None, font_size=None, min_lowercase=True, text_global_asc_desc_chars=None)
         text_list = [
@@ -103,18 +115,34 @@ class Game:
             menu_overlay.addText(text_obj, max_shape_rel,\
                     anchor_pos_rel)
         
-        button_text_groups = tuple((TextGroup([], max_height0=None, font=None, font_size=None, min_lowercase=True, text_global_asc_desc_chars=None),) for _ in range(4))
+        #button_text_groups = tuple((TextGroup([], max_height0=None, font=None, font_size=None, min_lowercase=True, text_global_asc_desc_chars=None),) for _ in range(4))
         #button_text_and_actions =\
         #        [[(("Play game", "center"), (lambda: (0, True, False, True, False))),\
         #        (("Options", "center"), (lambda: (-1, True, False, True, False))),\
         #        (("Exit", "center"), (lambda: (-1, True, False, False, True)))]]
-        button_anchor_pos_tup = ("center", 0, 0, 0)
-        button_text_and_actions =\
-                [[(("Play game", button_anchor_pos_tup), 1),\
-                (("Watch bot", button_anchor_pos_tup), 2),\
-                (("Options", button_anchor_pos_tup), 3),\
-                (("Exit", button_anchor_pos_tup), 0)]]
+        button_anchor_pos_tup = (("center",), 0, 0, 0)
+        button_text_anchortype_and_actions = [
+            [("Play game", button_anchor_pos_tup, 1)],
+            [("Watch bot", button_anchor_pos_tup, 2)],
+            [("Options", button_anchor_pos_tup, 3)],
+            [("Exit", button_anchor_pos_tup, 0)],
+        ]
         
+        menu_overlay.setupButtonGrid(
+            anchor_pos_norm=(0.5, 0.35),
+            anchor_type="midtop",
+            button_grid_max_shape_norm=(0.5, 0.55),
+            button_text_anchortype_and_actions=button_text_anchortype_and_actions,
+            wh_ratio_range=(0.1, 10),
+            text_groups=None,#button_text_groups,
+            button_gaps_rel_shape=(0.1, 0.1),
+            font_colors=((named_colors_def["white"], 0.5), (named_colors_def["yellow"], 1), (named_colors_def["blue"], 1), (named_colors_def["green"], 1)),
+            text_borders_rel=((0.2, 0.2), (0.1, 0.1), 1, 0),
+            fill_colors=(None, (named_colors_def["red"], 0.2), (named_colors_def["red"], 0.5), 2),
+            outline_widths=((1,), (2,), (3,), 1),
+            outline_colors=((named_colors_def["black"], 1), (named_colors_def["blue"], 1), 1, 1),
+        )
+        """
         menu_overlay.setButtons((0.5, 0.35), "midtop",\
             (0.5, 0.55), wh_ratio_range=(0.1, 10),\
             button_text_and_actions=button_text_and_actions,\
@@ -125,6 +153,7 @@ class Game:
             fill_colors=(None, (named_colors_def["red"], 0.2), (named_colors_def["red"], 0.5), 2),\
             outline_widths=((1,), (2,), (3,), 1),\
             outline_colors=((named_colors_def["black"], 1), (named_colors_def["blue"], 1), 1, 1))
+        """
         return menu_overlay
     
     @property

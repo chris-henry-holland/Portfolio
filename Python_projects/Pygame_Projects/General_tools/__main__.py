@@ -30,5 +30,5 @@ from General_tools import (
 #runExampleSliderPlusGrid1()
 
 #runExampleMenuOverlayBase1()
-runExampleButtonMenuOverlay1()
-#runExampleSliderAndButtonMenuOverlay1()
+#runExampleButtonMenuOverlay1()
+runExampleSliderAndButtonMenuOverlay1()
