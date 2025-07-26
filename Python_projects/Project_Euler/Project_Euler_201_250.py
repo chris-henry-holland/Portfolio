@@ -3695,9 +3695,10 @@ def compositeCoresilienceAReciprocalSum(n_max: int=2 * 10 ** 11) -> int:
         return res
     
     p_mx = isqrt(n_max)
+    p_mx0 = isqrt(n_max)
     res = 0
     for p in ps.endlessPrimeGenerator():
-        if p > p_mx: break
+        if p > p_mx0: break
         num = p ** 2 - p + 1
         fact_mn = 2 * p - 1
         fact_mx = n_max // p + p + 1
@@ -3707,6 +3708,7 @@ def compositeCoresilienceAReciprocalSum(n_max: int=2 * 10 ** 11) -> int:
             #print(p, q, p * q)
             res += p * q
     #return res
+    print(res)
     ref = 3 * 5 * 17 * 353
     def recur(num: int, phi: int, n_remain_p: int, prev_p: int=None) -> int:
         res = 0
@@ -3745,18 +3747,21 @@ def compositeCoresilienceAReciprocalSum(n_max: int=2 * 10 ** 11) -> int:
             return res
             """
         j0 = 1 if prev_p is None else bisect.bisect_right(ps.p_lst, prev_p)
-        p_mx = integerNthRoot(n_max // num, n_remain_p)
-        #if n_remain_p == 4: print(f"num = {num}, n_max = {n_max}, p_mx = {p_mx}")
+        p_mx2 = min(integerNthRoot(n_max // num, n_remain_p), p_mx)
+        #if n_remain_p == 4: print(f"num = {num}, n_max = {n_max}, p_mx = {p_mx2}")
         for j in range(j0, len(ps.p_lst)):
             p = ps.p_lst[j]
-            if p > p_mx: break
+            if p > p_mx2: break
+            if prev_p is None:
+                print(f"n_p = {n_remain_p}, p1 = {p}, p_max = {p_mx2}")
             res += recur(num * p, phi * (p - 1), n_remain_p - 1, prev_p=p)
         return res
 
     #print("hello")
-    for n_p in range(5, math.floor(math.log(n_max, 3)) + 1):
+    for n_p in range(3, 7):#math.floor(math.log(n_max, 3)) + 1):
         print(f"n_p = {n_p}")
         res += recur(1, 1, n_p, prev_p=None)
+        print(res)
     
     return res
     """
@@ -4059,7 +4064,7 @@ def numberToItsOwnPowerSubsetDivisibleByNumberCount(n_max: int=250250, div: int=
     return res
 
 if __name__ == "__main__":
-    to_evaluate = {238}
+    to_evaluate = {245}
     since0 = time.time()
 
     if not to_evaluate or 201 in to_evaluate:
