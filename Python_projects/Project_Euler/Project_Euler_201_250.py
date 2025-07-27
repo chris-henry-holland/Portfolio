@@ -3694,29 +3694,49 @@ def compositeCoresilienceAReciprocalSum(n_max: int=2 * 10 ** 11) -> int:
             res *= p ** (f - 1)
         return res
     
-    p_mx = isqrt(n_max)
-    p_mx0 = isqrt(n_max)
+    #p_mx = isqrt(n_max)
+    #p_mx0 = isqrt(n_max)
     res = 0
+    #found = []
     for p in ps.endlessPrimeGenerator():
-        if p > p_mx0: break
         num = p ** 2 - p + 1
+        #if num > n_max: break
         fact_mn = 2 * p - 1
         fact_mx = n_max // p + p + 1
+        if fact_mx < fact_mn: break
         for fact in calculateFactorsInRange(num, fact_min=fact_mn, fact_max=fact_mx):
             q = fact - p + 1
-            if not primeCheck(q): continue
+            if p == q or not primeCheck(q): continue
             #print(p, q, p * q)
             res += p * q
+            #found.append(p * q)
     #return res
     print(res)
     ref = 3 * 5 * 17 * 353
-    def recur(num: int, phi: int, n_remain_p: int, prev_p: int=None) -> int:
+    def recur(num: int, phi: int, n_remain_p: int, prev_p_idx: int=None) -> int:
         res = 0
+        prev_p = ps.p_lst[prev_p_idx] if prev_p_idx is not None else 2
         if n_remain_p == 1:
             #d = num * phi - phi + num
             #mx = n_max + phi - (phi * n_max - 1) // num + 1#(n_max - phi) // (num - phi)
             #if num == ref:
             #    print(num, phi, d, mx)
+            #mult_mn = (prev_p + phi) // (num - phi) + 1
+            p_mx3 = n_max // num
+            p_idx_ub = bisect.bisect_right(ps.p_lst, p_mx3)
+            prod = num * phi - phi + num
+            for p_idx in range(prev_p_idx, p_idx_ub):
+                p = ps.p_lst[p_idx]
+                fact = (num - phi) * p + phi
+                if (prod % fact): continue
+                ans = num * p
+                phi2 = phi * (p - 1)
+                if (ans - 1) % (ans - phi2): continue
+                print(ans, phi2, ans - phi2, ans - 1)
+                res += ans
+                #found.append(ans)
+            return res
+            """
             fact_mn = (num - phi) * ((2 if prev_p is None else prev_p) + 1) + phi
             fact_mx = ((num - phi) * n_max) // num + phi
             for fact in calculateFactorsInRange(num * phi - phi + num, fact_min=fact_mn, fact_max=fact_mx):
@@ -3732,6 +3752,7 @@ def compositeCoresilienceAReciprocalSum(n_max: int=2 * 10 ** 11) -> int:
                 res += ans
             return res
             """
+            """
             for mult in range(d, mx + 1, d):
                 
                 p, r = divmod(mult - phi, num - phi)
@@ -3746,23 +3767,33 @@ def compositeCoresilienceAReciprocalSum(n_max: int=2 * 10 ** 11) -> int:
                 res += ans
             return res
             """
-        j0 = 1 if prev_p is None else bisect.bisect_right(ps.p_lst, prev_p)
-        p_mx2 = min(integerNthRoot(n_max // num, n_remain_p), p_mx)
+        #j0 = 1 if prev_p is None else bisect.bisect_right(ps.p_lst, prev_p)
+        j0 = prev_p_idx + 1 if prev_p_idx is not None else 1
+        p_mx2 = integerNthRoot(n_max // num, n_remain_p)
+        res2 = 0
         #if n_remain_p == 4: print(f"num = {num}, n_max = {n_max}, p_mx = {p_mx2}")
         for j in range(j0, len(ps.p_lst)):
             p = ps.p_lst[j]
             if p > p_mx2: break
-            if prev_p is None:
-                print(f"n_p = {n_remain_p}, p1 = {p}, p_max = {p_mx2}")
-            res += recur(num * p, phi * (p - 1), n_remain_p - 1, prev_p=p)
+            if prev_p_idx is None:
+                since1 = time.time()
+            ans = recur(num * p, phi * (p - 1), n_remain_p - 1, prev_p_idx=j)
+            res += ans
+            res2 += ans
+            if prev_p_idx is None:
+                print(f"n_p = {n_remain_p}, p1 = {p}, p_max = {p_mx2}, total for this p1 = {ans}, cumulative total = {res}, time taken for this p1 = {time.time() - since1} seconds")
         return res
 
     #print("hello")
-    for n_p in range(3, 7):#math.floor(math.log(n_max, 3)) + 1):
+    res2 = 0
+    for n_p in range(3, math.floor(math.log(n_max, 2)) + 1):
         print(f"n_p = {n_p}")
-        res += recur(1, 1, n_p, prev_p=None)
-        print(res)
-    
+        ans = recur(1, 1, n_p, prev_p_idx=None)
+        res2 += ans
+        res += ans
+        print(ans, res2, res)
+    print(res2)
+    #print(sorted(found))
     return res
     """
 
@@ -4312,7 +4343,7 @@ if __name__ == "__main__":
 
     if not to_evaluate or 245 in to_evaluate:
         since = time.time() 
-        res = compositeCoresilienceAReciprocalSum(n_max=2 * 10 ** 11)
+        res = compositeCoresilienceAReciprocalSum(n_max=10 ** 11)
         print(f"Solution to Project Euler #245 = {res}, calculated in {time.time() - since:.4f} seconds")
 
     if not to_evaluate or 246 in to_evaluate:
