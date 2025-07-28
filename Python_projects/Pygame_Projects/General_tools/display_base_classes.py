@@ -1467,7 +1467,8 @@ class DisplayComponentBase(ComponentBaseClass):
         return True
 
     def draw(self, surf: "pg.Surface") -> None:
-        #print(f"Using DisplayComponentBase method draw() for {self}")
+        print(f"Using DisplayComponentBase method draw() for {self}")
+        print(f"self = {self}, surf = {surf}, self.display_surf = {self.display_surf}, self.anchor_rel_pos = {self.anchor_rel_pos}, self.shape = {self.shape}, self.anchor_type = {self.anchor_type}, self.topleft_rel_pos = {self.topleft_rel_pos}")
         surf.blit(self.display_surf, self.topleft_rel_pos)
         self.setAttributes({"changed_since_last_draw": False}, _calculated_override=True)
         #print(f"drawn for {self}, self._display_surf = {self.__dict__.get('_display_surf', None)}, self.changed_since_last_draw = {self.changed_since_last_draw}")

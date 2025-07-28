@@ -4115,7 +4115,7 @@ def numberToItsOwnPowerSubsetDivisibleByNumberCount(n_max: int=250250, div: int=
     return res
 
 if __name__ == "__main__":
-    to_evaluate = {245}
+    to_evaluate = {251}
     since0 = time.time()
 
     if not to_evaluate or 201 in to_evaluate:
@@ -4436,3 +4436,10 @@ for n in range(1, n_max + 1):
     if res != res2:
         print(n, res, res2)
 """
+
+for k in range(1, 101):
+    #num = 8 * a ** 3 + 15 * a ** 2 + 6 * a - 1
+    #if not num % 27:
+    #    print(a, num // 27)
+    num = 8 * k - 3
+    print(k, 3 * k - 1, num, k ** 2 * num)

@@ -597,7 +597,7 @@ class ButtonMenuOverlay(MenuOverlayBase):
     ) -> None:
         button_grid = self.button_grid
         if button_grid is None: return
-        button_grid.anchor_pos = new_val
+        button_grid.anchor_rel_pos = new_val
         return
 
     def customNavkeyCycleDelayFrameChangePropogation(
@@ -1343,33 +1343,33 @@ class ButtonMenuOverlay(MenuOverlayBase):
 class SliderAndButtonMenuOverlay(ButtonMenuOverlay):
     
     reset_graph_edges = {
-        "shape": {"slider_grid_shape_actual": True},
-        "slider_grid_max_shape_norm": {"slider_grid_shape_actual": True},
-        "slider_grid_wh_ratio_range": {"slider_grid_shape_actual": True},
-        "slider_grid_anchor_pos_norm": {"slider_grid_anchor_pos_actual": True},
+        "shape": {"slider_plus_grid_shape_actual": True},
+        "slider_plus_grid_max_shape_norm": {"slider_plus_grid_shape_actual": True},
+        "slider_plus_grid_wh_ratio_range": {"slider_plus_grid_shape_actual": True},
+        "slider_plus_grid_anchor_pos_norm": {"slider_plus_grid_anchor_pos_actual": True},
     }
 
     custom_attribute_change_propogation_methods = {
-        "slider_grid_shape_actual": "customSliderGridShapeActualChangePropogation",
-        "slider_grid_anchor_pos_actual": "customSliderGridAnchorPositionActualChangePropogation",
+        "slider_plus_grid_shape_actual": "customSliderGridShapeActualChangePropogation",
+        "slider_plus_grid_anchor_pos_actual": "customSliderGridAnchorPositionActualChangePropogation",
     }
 
     attribute_calculation_methods = {
-        "slider_grid_shape_actual": "calculateSliderGridShapeActual",
-        "slider_grid_anchor_pos_actual": "calculateSliderGridAnchorPositionActual",
+        "slider_plus_grid_shape_actual": "calculateSliderGridShapeActual",
+        "slider_plus_grid_anchor_pos_actual": "calculateSliderGridAnchorPositionActual",
 
-        "slider_grid_img_constructor": "createSliderGridImageConstructor",
+        "slider_plus_grid_img_constructor": "createSliderGridImageConstructor",
     }
 
     attribute_default_functions = {
-        "slider_grid_uip_idx": ((lambda obj: -1),),
-        "slider_grid_max_shape_norm": ((lambda obj: ()),),
-        "slider_grid_wh_ratio_range": ((lambda obj: ()),),
-        "slider_grid_anchor_pos_norm": ((lambda obj: ()),),
-        "slider_grid": ((lambda obj: None),),
+        "slider_plus_grid_uip_idx": ((lambda obj: -1),),
+        "slider_plus_grid_max_shape_norm": ((lambda obj: ()),),
+        "slider_plus_grid_wh_ratio_range": ((lambda obj: ()),),
+        "slider_plus_grid_anchor_pos_norm": ((lambda obj: ()),),
+        "slider_plus_grid": ((lambda obj: None),),
     }
 
-    dynamic_displ_attrs = ButtonMenuOverlay.dynamic_displ_attrs + ["sliders"]
+    dynamic_displ_attrs = ButtonMenuOverlay.dynamic_displ_attrs + ["slider_plus_grid"]
 
     def __init__(
         self,
@@ -1412,9 +1412,9 @@ class SliderAndButtonMenuOverlay(ButtonMenuOverlay):
         new_val: Optional[Tuple[int, int]],
         prev_val: Optional[Tuple[int, int]],
     ) -> None:
-        slider_grid = self.slider_grid
-        if slider_grid is None: return
-        slider_grid.shape = new_val
+        slider_plus_grid = self.slider_plus_grid
+        if slider_plus_grid is None: return
+        slider_plus_grid.shape = new_val
         return
     
     def customSliderGridAnchorPositionActualChangePropogation(
@@ -1422,14 +1422,14 @@ class SliderAndButtonMenuOverlay(ButtonMenuOverlay):
         new_val: Optional[Tuple[int, int]],
         prev_val: Optional[Tuple[int, int]],
     ) -> None:
-        slider_grid = self.slider_grid
-        if slider_grid is None: return
-        slider_grid.anchor_pos = new_val
+        slider_plus_grid = self.slider_plus_grid
+        if slider_plus_grid is None: return
+        slider_plus_grid.anchor_rel_pos = new_val
         return
 
     def calculateSliderGridShapeActual(self) -> Tuple[int, int]:
-        max_shape_norm = self.slider_grid_max_shape_norm
-        wh_ratio_rng = self.slider_grid_wh_ratio_range
+        max_shape_norm = self.slider_plus_grid_max_shape_norm
+        wh_ratio_rng = self.slider_plus_grid_wh_ratio_range
 
         return self.calculateMaxShapeActualGivenWidthHeightRatioRange(
             max_shape_norm,
@@ -1450,7 +1450,7 @@ class SliderAndButtonMenuOverlay(ButtonMenuOverlay):
         """
     
     def calculateSliderGridAnchorPositionActual(self) -> Tuple[int, int]:
-        anchor_pos_norm = self.slider_grid_anchor_pos_norm
+        anchor_pos_norm = self.slider_plus_grid_anchor_pos_norm
         if not anchor_pos_norm: return ()
         parent_shape = self.shape
         anchor_pos_actual = tuple(x * y for x, y in zip(parent_shape, anchor_pos_norm))
@@ -1459,88 +1459,101 @@ class SliderAndButtonMenuOverlay(ButtonMenuOverlay):
     
     def createSliderGridImageConstructor(self) -> Callable[["SliderAndButtonMenuOverlay", "pg.Surface"], None]:
         def constructor(obj: SliderAndButtonMenuOverlay, surf: "pg.Surface") -> None:
-            slider_grid = obj.slider_grid
-            if not slider_grid: return
-            return slider_grid.draw(surf)
+            slider_plus_grid = obj.slider_plus_grid
+            if not slider_plus_grid: return
+            return slider_plus_grid.draw(surf)
         return constructor
     
-    # Review- add type hints
-    def setupSliderGrid(
+    def setupSliderPlusGrid(
         self,
         anchor_pos_norm: Tuple[Real],
         anchor_type: str,
-        slider_grid_max_shape_norm: Tuple[Real],
-        button_text_anchortype_and_actions: List[List[Optional[Tuple[Union[str, Tuple[Union[Tuple[str], int]]], Union[str, Tuple[Union[Tuple[str], int]]], Callable]]]],
+        slider_plus_grid_max_shape_norm: Tuple[Real],
+        slider_plus_parameters: List[List[Dict]],
+        slider_plus_gaps_rel_shape: Optional[Tuple[Real, Real]]=None,
         wh_ratio_range: Optional[Tuple[Real]]=None,
-        text_groups: Optional[Tuple[Union[Optional[Tuple["TextGroup"]], int]]]=None,
-        button_gaps_rel_shape=None,
-        #fonts=None,
-        #font_sizes=None,
-        font_colors=None,
-        text_borders_rel=None,
-        fill_colors=None,
-        outline_widths=None,
-        outline_colors=None,
+        demarc_numbers_text_group: Optional["TextGroup"]=None,
+        thumb_radius_rel: Optional[Real]=None,
+        demarc_line_lens_rel: Optional[Tuple[Real]]=None,
+        demarc_numbers_max_height_rel: Optional[Real]=None,
+        track_color: Optional[ColorOpacity]=None,
+        thumb_color: Optional[ColorOpacity]=None,
+        demarc_numbers_color: Optional[ColorOpacity]=None,
+        demarc_line_colors: Optional[ColorOpacity]=None,
+        thumb_outline_color: Optional[ColorOpacity]=None,
+        slider_shape_rel: Optional[Tuple[Real]]=None,
+        slider_borders_rel: Optional[Tuple[Real]]=None,
+        title_text_group: Optional["TextGroup"]=None,
+        title_anchor_type: Optional[str]=None,
+        title_color: Optional[ColorOpacity]=None,
+        val_text_group: Optional["TextGroup"]=None,
+        val_text_anchor_type: Optional[str]=None,
+        val_text_color: Optional[ColorOpacity]=None,
     ) -> None:
+
+        # slider_plus_parameters dictionary options:
+        #    title: str,
+        #    val_range: Tuple[Real],
+        #    increment_start: Real,
+        #    increment: Optional[Real]=None,
+        #    init_val: Optional[Real]=None,
+        #    demarc_numbers_dp: Optional[int]=None,
+        #    demarc_intervals: Optional[Tuple[Real]]=None,
+        #    demarc_start_val: Optional[Real]=None,
+        #    val_text_dp: Optional[int]=None,
+        #    name: Optional[str]=None,
         
-        grid_dims = (len(button_text_anchortype_and_actions[0]), len(button_text_anchortype_and_actions))
+        grid_dims = (len(slider_plus_parameters[0]), len(slider_plus_parameters))
         if wh_ratio_range is None:
             wh_ratio_range = (0, float("inf"))
         self.setAttributes({
-            "button_grid_max_shape_norm": button_grid_max_shape_norm,
-            "button_grid_anchor_pos_norm": anchor_pos_norm,
-            "button_grid_wh_ratio_range": wh_ratio_range,
+            "slider_plus_grid_max_shape_norm": slider_plus_grid_max_shape_norm,
+            "slider_plus_grid_anchor_pos_norm": anchor_pos_norm,
+            "slider_plus_grid_wh_ratio_range": wh_ratio_range,
         })
-        print(f"navkey_cycle_delay_s = {self.navkey_cycle_delay_s}")
-        print(f"navkey_cycle_delay_frame = {self.navkey_cycle_delay_frame}")
-        button_grid = ButtonGrid(
+
+        slider_plus_grid = SliderPlusGrid(
             grid_dims=grid_dims,
-            shape=self.button_grid_shape_actual,
-            anchor_rel_pos=self.button_grid_anchor_pos_actual,
+            shape=self.slider_plus_grid_shape_actual,
+            slider_plus_gaps_rel_shape=slider_plus_gaps_rel_shape,
+            anchor_rel_pos=self.slider_plus_grid_anchor_pos_actual,
             anchor_type=anchor_type,
             screen_topleft_to_component_anchor_offset=self.screen_topleft_to_component_anchor_offset,
-            button_gaps_rel_shape=button_gaps_rel_shape,
-            text_groups=text_groups,
-            font_colors=font_colors,
-            text_borders_rel=text_borders_rel,
-            fill_colors=fill_colors,
-            outline_widths=outline_widths,
-            outline_colors=outline_colors,
+            demarc_numbers_text_group=demarc_numbers_text_group,
+            thumb_radius_rel=thumb_radius_rel,
+            demarc_line_lens_rel=demarc_line_lens_rel,
+            demarc_numbers_max_height_rel=demarc_numbers_max_height_rel,
+            track_color=track_color,
+            thumb_color=thumb_color,
+            demarc_numbers_color=demarc_numbers_color,
+            demarc_line_colors=demarc_line_colors,
+            thumb_outline_color=thumb_outline_color,
+            slider_shape_rel=slider_shape_rel,
+            slider_borders_rel=slider_borders_rel,
+            title_text_group=title_text_group,
+            title_anchor_type=title_anchor_type,
+            title_color=title_color,
+            val_text_group=val_text_group,
+            val_text_anchor_type=val_text_anchor_type,
+            val_text_color=val_text_color,
             mouse_enabled=self.mouse_enabled,
-            navkeys_enabled=self.navkeys_enabled,
-            navkeys=self.navkeys,
-            navkey_cycle_delay_frame=self.navkey_cycle_delay_frame,
-            enter_keys=self.enter_keys,
             _from_container=True,
             _container_obj=self,
             _container_attr_reset_dict={"changed_since_last_draw": {"display_surf": (lambda container_obj, obj: obj.drawUpdateRequired())}},
         )
         
-        button_actions = [[] for _ in range(grid_dims[0])]
-        for i2, row in enumerate(button_text_anchortype_and_actions):
-            for i1, tup in enumerate(row):
-                if tup is None:
-                    button_actions[i1].append(None)
-                (text, anchor_types, action) = tup
-                button_grid.setupButtonGridElement(
+        for i2, row in enumerate(slider_plus_parameters):
+            for i1, params_dict in enumerate(row):
+                slider_plus_grid.setupSliderPlusGridElement(
                     grid_inds=(i1, i2),
-                    text=text,
-                    text_anchor_types=anchor_types,
+                    **params_dict,
                 )
-                button_actions[i1].append(action)
         
-        self.button_grid = button_grid
-        self.button_actions = button_actions
-        if self.button_grid_uip_idx != -1:
-            self.user_input_processor.removeSubUIP(self.button_grid_uip_idx)
+        self.slider_plus_grid = slider_plus_grid
+        if self.slider_plus_grid_uip_idx != -1:
+            self.user_input_processor.removeSubUIP(self.slider_plus_grid_uip_idx)
         #print("adding button grid uip")
-        self.button_grid_uip_idx = self.user_input_processor.addSubUIP(button_grid.user_input_processor, obj_func=(lambda obj: obj.button_grid))
-        #print("added button grid uip to button menu uip")
-        
-        #print(button_grid.mouse_enabled)
-        #button_grid.grid_shape = overall_shape
-        #button_grid.dims = (*topleft, *overall_shape)
-        #print(button_grid.dims)
+        self.slider_plus_grid_uip_idx = self.user_input_processor.addSubUIP(slider_plus_grid.user_input_processor, obj_func=(lambda obj: obj.slider_plus_grid))
         return
     
     def _eventLoop(
@@ -1554,9 +1567,9 @@ class SliderAndButtonMenuOverlay(ButtonMenuOverlay):
         quit, running, screen_changed, actions = super()._eventLoop(events, keys_down, mouse_status, check_axes)
         #print(f"mouse_status = {mouse_status}")
 
-        slider_grid = getattr(self, "slider_grid", None)
-        if slider_grid is not None:
-            quit2, running2, change, selected_b_inds = slider_grid.eventLoop(
+        slider_plus_grid = getattr(self, "slider_plus_grid", None)
+        if slider_plus_grid is not None:
+            quit2, running2, change, selected_b_inds = slider_plus_grid.eventLoop(
                 events=events,
                 keys_down=keys_down,
                 mouse_status=mouse_status,
@@ -1669,7 +1682,7 @@ class SliderAndButtonMenuOverlay(ButtonMenuOverlay):
                         "be the same.")
         grid_dims = (n_cols, n_rows)
 
-        slider_grid = SliderPlusGrid(
+        slider_plus_grid = SliderPlusGrid(
             grid_dims,
             overall_shape,
             slider_gaps_rel_shape=slider_gaps_rel_shape,
@@ -1698,17 +1711,17 @@ class SliderAndButtonMenuOverlay(ButtonMenuOverlay):
         
         if self.sliders_uip_idx is not None:
             self.user_input_processor.removeSubUIP(self.sliders_uip_idx)
-        self.sliders_uip_idx = self.user_input_processor.addSubUIP(slider_grid.user_input_processor)
+        self.sliders_uip_idx = self.user_input_processor.addSubUIP(slider_plus_grid.user_input_processor)
 
         for idx2, slider_row in enumerate(slider_elements):
             for idx1, slider_dict in enumerate(slider_row):
                 if slider_dict is None: continue
-                slider_grid.setupSliderPlusGridElement(
+                slider_plus_grid.setupSliderPlusGridElement(
                     (idx1, idx2),
                     **slider_dict,
                 )
 
-        self.sliders = slider_grid
+        self.sliders = slider_plus_grid
         return
     
     def _eventLoop(

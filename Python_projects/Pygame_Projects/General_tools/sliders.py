@@ -2070,7 +2070,7 @@ class SliderPlusGrid(InteractiveDisplayComponentBase):
     reset_graph_edges = {
         "grid_dims": {"grid_layout": True},
         "shape": {"grid_layout": True},
-        "slider_gaps_rel_shape": {"grid_layout": True},
+        "slider_plus_gaps_rel_shape": {"grid_layout": True},
         "grid_layout": {"slider_plus_shape": True, "slider_gaps": True, "slider_topleft_locations": True, "display_surf": True},
         "slider_plus_shape": {"display_surf": True},
         "slider_gaps": {"display_surf": True},
@@ -2119,7 +2119,7 @@ class SliderPlusGrid(InteractiveDisplayComponentBase):
             ]
         },
         **{
-            "slider_gaps_rel_shape": ((lambda obj: (0., 0.)),),
+            "slider_plus_gaps_rel_shape": ((lambda obj: (0., 0.)),),
             "sliders": ((lambda obj: [[None] * obj.grid_dims[1] for _ in range(obj.grid_dims[0])])),
         }
     }
@@ -2188,7 +2188,7 @@ class SliderPlusGrid(InteractiveDisplayComponentBase):
         self,
         grid_dims: Tuple[int, int],
         shape: Tuple[Real, Real],
-        slider_gaps_rel_shape: Optional[Tuple[Real, Real]]=None,
+        slider_plus_gaps_rel_shape: Optional[Tuple[Real, Real]]=None,
         anchor_rel_pos: Tuple[Real, Real]=None,
         anchor_type: Optional[str]=None,
         screen_topleft_to_component_anchor_offset: Optional[Tuple[Real, Real]]=None,
@@ -2346,7 +2346,7 @@ class SliderPlusGrid(InteractiveDisplayComponentBase):
     def calculateGridLayout(self) -> Tuple[Tuple[int, int], Tuple[float, float]]:
         shape = []
         gaps = []
-        for tot_len, n_sliders, rel_gap_size in zip(self.shape, self.grid_dims, self.slider_gaps_rel_shape):
+        for tot_len, n_sliders, rel_gap_size in zip(self.shape, self.grid_dims, self.slider_plus_gaps_rel_shape):
             shape.append(round(tot_len / (rel_gap_size * (n_sliders - 1) + n_sliders)))
             gaps.append((tot_len - n_sliders * shape[-1]) / (n_sliders - 1) if n_sliders > 1 else 0.)
         return tuple(shape), tuple(gaps)
@@ -2370,6 +2370,7 @@ class SliderPlusGrid(InteractiveDisplayComponentBase):
         return (x_lst, y_lst)
 
     def createDisplaySurface(self) -> "pg.Surface":
+        print("Using SliderPlusGrid method createDisplaySurface()")
         #print("creating display surface")
         #print(f"shape = {self.shape}")
         surf = pg.Surface(self.shape, pg.SRCALPHA)

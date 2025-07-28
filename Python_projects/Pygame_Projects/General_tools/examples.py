@@ -1379,6 +1379,32 @@ def runExampleSliderAndButtonMenuOverlay1() -> None:
     
     exit_press_keys = None
     exit_release_keys = {pg.K_p}
+
+    slider_plus_parameters = []
+    
+    slider_plus_parameters.append([{
+        "title": "Number of fruits",
+        "val_range": (1, 6),
+        "increment_start": 1,
+        "increment": 1,
+        "init_val": 1,
+        "demarc_numbers_dp": 0,
+        "demarc_intervals": (1,),
+        "demarc_start_val": 1,
+        "val_text_dp": 0,
+    }])
+
+    slider_plus_parameters.append([{
+        "title": "Speed",
+        "val_range": (1, 20),
+        "increment_start": 0,
+        "increment": 1,
+        "init_val": 1,
+        "demarc_numbers_dp": 0,
+        "demarc_intervals": (4,),
+        "demarc_start_val": 0,
+        "val_text_dp": 0,
+    }])
     
     #button_text = [["Hello", "Hello", "Hello", "Hello", "Goodbye"], ["Hello", "Hello", "Hello", "Hello", "Goodbye"]]
     button_text = [["Apply", "Reset", "Return"]]
@@ -1391,7 +1417,7 @@ def runExampleSliderAndButtonMenuOverlay1() -> None:
             action = functools.partial(print, f"selected button ({i1}, {i2})")
             button_text_anchortype_and_actions[-1].append((text, ((anchor_type,), 0, 0, 0), action))
     
-    menu_overlay = ButtonMenuOverlay(
+    menu_overlay = SliderAndButtonMenuOverlay(
         shape=screen_shape,
         framerate=framerate,
         overlay_color=(named_colors_def["yellow"], 0.3),
@@ -1401,6 +1427,32 @@ def runExampleSliderAndButtonMenuOverlay1() -> None:
         navkey_cycle_delay_s=(.4, 0.2, 0.1),
         #exit_press_keys=exit_press_keys,
         #exit_release_keys=exit_release_keys,
+    )
+    
+    menu_overlay.setupSliderPlusGrid(
+        anchor_pos_norm=(0.5, 0.5),
+        anchor_type="center",
+        slider_plus_grid_max_shape_norm=(0.8, 0.55),
+        slider_plus_parameters=slider_plus_parameters,
+        slider_plus_gaps_rel_shape=(0.2, 0.2),
+        wh_ratio_range=(0.5, 2),
+        demarc_numbers_text_group=None,
+        thumb_radius_rel=1,
+        demarc_line_lens_rel=(0.5,),
+        demarc_numbers_max_height_rel=1.5,
+        track_color=(named_colors_def["gray"], 1),
+        thumb_color=(named_colors_def["silver"], 1),
+        demarc_numbers_color=(named_colors_def["white"], 1),
+        demarc_line_colors=((named_colors_def["gray"], 1),),
+        thumb_outline_color=None,
+        slider_shape_rel=(0.7, 0.6),
+        slider_borders_rel=(0.05, 0.1),
+        title_text_group=None,
+        title_anchor_type="topleft",
+        title_color=(named_colors_def["white"], 1),
+        val_text_group=None,
+        val_text_anchor_type="midright",
+        val_text_color=(named_colors_def["white"], 1),
     )
     
     #button_text_groups = tuple((TextGroup([], max_height0=None, font=None, font_size=None, min_lowercase=True, text_global_asc_desc_chars=None),) for _ in range(4))
@@ -1416,9 +1468,9 @@ def runExampleSliderAndButtonMenuOverlay1() -> None:
         text_borders_rel=((0.2, 0.2), (0.1, 0.1), 1, 0),
         fill_colors=(None, (named_colors_def["red"], 0.2), (named_colors_def["red"], 0.5), 2),
         outline_widths=((1,), (2,), (3,), 1),
-        outline_colors=((named_colors_def["black"], 1), (named_colors_def["blue"], 1), 1, 1)
+        outline_colors=((named_colors_def["black"], 1), (named_colors_def["blue"], 1), 1, 1),
     )
-
+    
     print("\nhello\n")
     
     text_group = TextGroup([], max_height0=None, font=None, font_size=None, min_lowercase=True, text_global_asc_desc_chars=None)
