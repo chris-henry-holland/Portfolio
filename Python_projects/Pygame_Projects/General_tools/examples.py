@@ -93,7 +93,7 @@ def runExampleButton1() -> None:
     
     
     screen_changed = True
-    print("\nhello\n")
+    #print("\nhello\n")
     button.text = "change"
     button.shape = (500, 500)
     clock = pg.time.Clock()
@@ -161,8 +161,8 @@ def runExampleButtonGroup1() -> None:
     )
 
     buttons = []
-    print(button_group.text_groups[0][0].max_font_sizes_given_widths_dict)
-    print(button_group.text_groups[0][0].heights_dict)
+    #button_group.text_groups[0][0].max_font_sizes_given_widths_dict)
+    #print(button_group.text_groups[0][0].heights_dict)
     buttons.append(
         button_group.addButton(
             text="adfsadfdsafdsafdsa",
@@ -175,8 +175,8 @@ def runExampleButtonGroup1() -> None:
         )
     )
     
-    print(button_group.text_groups[0][0].max_font_sizes_given_widths_dict)
-    print(button_group.text_groups[0][0].heights_dict)
+    #print(button_group.text_groups[0][0].max_font_sizes_given_widths_dict)
+    #print(button_group.text_groups[0][0].heights_dict)
     
     buttons.append(
         button_group.addButton(
@@ -196,18 +196,18 @@ def runExampleButtonGroup1() -> None:
         return
     drawButtons(screen, buttons)
     screen_changed = True
-    print("hi")
+    #print("hi")
     button_group.button_shape = (500, 200)
 
-    print(buttons[0].__dict__.get("_text_anchor_rel_positions", None))
-    print(buttons[0].__dict__.get("_button_surfs", None))
+    #print(buttons[0].__dict__.get("_text_anchor_rel_positions", None))
+    #print(buttons[0].__dict__.get("_button_surfs", None))
     
     #button_group.button_shape = (500, 300)
-    print(button_group.text_groups[0][0].max_font_sizes_given_widths_dict)
-    print(button_group.text_groups[0][0].heights_dict)
+    #print(button_group.text_groups[0][0].max_font_sizes_given_widths_dict)
+    #print(button_group.text_groups[0][0].heights_dict)
     buttons[0].text = "goodbye"
-    print(button_group.text_groups[0][0].max_font_sizes_given_widths_dict)
-    print(button_group.text_groups[0][0].heights_dict)
+    #print(button_group.text_groups[0][0].max_font_sizes_given_widths_dict)
+    #print(button_group.text_groups[0][0].heights_dict)
     
     clock = pg.time.Clock()
     
@@ -480,7 +480,7 @@ def runExampleSlider1() -> None:
             pg.quit()
             break
         if chng: screen_changed = True
-        print(f"redraw required = {screen_changed}")
+        #print(f"redraw required = {screen_changed}")
         if screen_changed:
             print(f"new slider value = {val}")
             screen.blit(screen_cp, (0, 0))
@@ -616,7 +616,7 @@ def runExampleSliderGroup1() -> None:
             if not chng: continue
             screen_changed = True
             print(f"new slider value for {slider.name} = {val}")
-        print(f"redraw required = {screen_changed}")
+        #print(f"redraw required = {screen_changed}")
         if screen_changed:
             screen.blit(screen_cp, (0, 0))
             drawSliders(screen, sliders)
@@ -694,7 +694,7 @@ def runExampleSliderPlus1() -> None:
     #print(f"original title shape = {slider_plus.title_shape}")
     ttg = slider_plus.title_text_group
     tto = slider_plus.title_text_obj
-    print("\nhello\n")
+    #print("\nhello\n")
     slider_plus.shape = (500, 150)
     #slider_plus.slider_borders_rel = (0, 0)
 
@@ -734,7 +734,7 @@ def runExampleSliderPlus1() -> None:
             pg.quit()
             break
         if chng: screen_changed = True
-        print(f"redraw required = {screen_changed}")
+        #print(f"redraw required = {screen_changed}")
         if screen_changed:
             print(f"new slider value = {val}")
             screen.blit(screen_cp, (0, 0))
@@ -892,7 +892,7 @@ def runExampleSliderPlusGroup1() -> None:
             if not chng: continue
             screen_changed = True
             #print(f"new slider value for {slider.name} = {val}")
-        print(f"redraw required = {screen_changed}")
+        #print(f"redraw required = {screen_changed}")
         if screen_changed:
             screen.blit(screen_cp, (0, 0))
             drawSliders(screen, sliders)
@@ -916,7 +916,7 @@ def runExampleSliderPlusGrid1() -> None:
     slider_grid = SliderPlusGrid(
         grid_dims=grid_dims,
         shape=(400, 400),
-        slider_gaps_rel_shape=(0.1, 0.1),
+        slider_plus_gaps_rel_shape=(0.1, 0.1),
         anchor_rel_pos=(50, 50),
         anchor_type="topleft",
         screen_topleft_to_component_anchor_offset=None,
@@ -939,7 +939,7 @@ def runExampleSliderPlusGrid1() -> None:
         val_text_color=(named_colors_def["black"], 1.),
         mouse_enabled=True,
     )
-    print("hi1")
+    
     slider_grid.setupSliderPlusGridElement(
         grid_inds=(0, 1),
         title="Slider 1",
@@ -953,7 +953,7 @@ def runExampleSliderPlusGrid1() -> None:
         val_text_dp=0,
         name=None,
     )
-    print("hi2")
+    
     slider_grid.setupSliderPlusGridElement(
         grid_inds=(0, 0),
         title="Slider 2asdfsadfsad",
@@ -967,7 +967,6 @@ def runExampleSliderPlusGrid1() -> None:
         val_text_dp=2,
         name=None,
     )
-    print("hi3")
     """
     slider_grid.setupSliderPlusGridElement(
         grid_inds=(0, 2),
@@ -996,7 +995,7 @@ def runExampleSliderPlusGrid1() -> None:
         val_text_dp=2,
         name=None,
     )
-    print("hi4")
+    
     """
     sliders.append(
         slider_group.addSliderPlus(
@@ -1079,11 +1078,11 @@ def runExampleSliderPlusGrid1() -> None:
         if quit or not running:
             pg.quit()
             break
-        print(f"redraw required = {screen_changed}")
+        #print(f"redraw required = {screen_changed}")
         if chng: screen_changed = True
         if screen_changed:
             screen.blit(screen_cp, (0, 0))
-            print(f"drawing slider grid")
+            #print(f"drawing slider grid")
             slider_grid.draw(screen)
             pg.display.flip()
         clock.tick(framerate)
@@ -1172,7 +1171,7 @@ def runExampleMenuOverlayBase1() -> None:
         ({"text": ",", "font_color": font_color, "anchor_type0": anchor_type}, ((0.2, 0.2), (0.7, 0.5))),
         ({"text": "'", "font_color": font_color, "anchor_type0": anchor_type}, ((0.2, 0.2), (0.8, 0.5))),
     ]
-    print(f"menu text group: {text_group}")
+    #print(f"menu text group: {text_group}")
     #text_list = [
     #    (("Hello", text_color), ((0.2, 0.2), (0.2, 0.1), anchor_type)),
     #    (("Goodbye", text_color), ((0.2, 0.2), (0.4, 0.1), anchor_type)),
@@ -1183,14 +1182,14 @@ def runExampleMenuOverlayBase1() -> None:
     
     add_text_list = [x[0] for x in text_list]
     text_objs = text_group.addTextObjects(add_text_list)
-    print("added menu text objects to menu")
+    #print("added menu text objects to menu")
     for text_obj, (_, pos_tup) in zip(text_objs, text_list):
         max_shape_rel, anchor_rel_pos_rel = pos_tup
         menu_overlay.addText(text_obj, max_shape_rel, anchor_rel_pos_rel)
-    print("\nhello\n")
-    print(text_group.max_font_sizes_given_widths_dict)
-    print(text_group.heights_dict)
-    print(text_group)
+    #print("\nhello\n")
+    #print(text_group.max_font_sizes_given_widths_dict)
+    #print(text_group.heights_dict)
+    #print(text_group)
     screen_changed = True
     clock = pg.time.Clock()
     
@@ -1273,7 +1272,7 @@ def runExampleButtonMenuOverlay1() -> None:
         outline_colors=((named_colors_def["black"], 1), (named_colors_def["blue"], 1), 1, 1)
     )
 
-    print("\nhello\n")
+    #print("\nhello\n")
     
     text_group = TextGroup([], max_height0=None, font=None, font_size=None, min_lowercase=True, text_global_asc_desc_chars=None)
     anchor_type = "centre"
@@ -1285,7 +1284,7 @@ def runExampleButtonMenuOverlay1() -> None:
         ({"text": ",", "font_color": font_color, "anchor_type0": anchor_type}, ((0.2, 0.2), (0.7, 0.1))),
         ({"text": "'", "font_color": font_color, "anchor_type0": anchor_type}, ((0.2, 0.2), (0.8, 0.1))),
     ]
-    print(f"menu text group: {text_group}")
+    #print(f"menu text group: {text_group}")
     #text_list = [
     #    (("Hello", text_color), ((0.2, 0.2), (0.2, 0.1), anchor_type)),
     #    (("Goodbye", text_color), ((0.2, 0.2), (0.4, 0.1), anchor_type)),
@@ -1296,7 +1295,7 @@ def runExampleButtonMenuOverlay1() -> None:
     
     add_text_list = [x[0] for x in text_list]
     text_objs = text_group.addTextObjects(add_text_list)
-    print("added menu text objects to menu")
+    #print("added menu text objects to menu")
     for text_obj, (_, pos_tup) in zip(text_objs, text_list):
         max_shape_rel, anchor_rel_pos_rel = pos_tup
         menu_overlay.addText(text_obj, max_shape_rel,\
@@ -1339,7 +1338,7 @@ def runExampleButtonMenuOverlay1() -> None:
         if change: screen_changed = True
         #print(f"screen changed = {screen_changed}")
         if screen_changed:
-            print("screen changed")
+            #print("screen changed")
             screen.blit(screen_cp, (0, 0))
             menu_overlay.draw(screen)
             pg.display.flip()
@@ -1471,7 +1470,7 @@ def runExampleSliderAndButtonMenuOverlay1() -> None:
         outline_colors=((named_colors_def["black"], 1), (named_colors_def["blue"], 1), 1, 1),
     )
     
-    print("\nhello\n")
+    #print("\nhello\n")
     
     text_group = TextGroup([], max_height0=None, font=None, font_size=None, min_lowercase=True, text_global_asc_desc_chars=None)
     anchor_type = "centre"
@@ -1483,7 +1482,7 @@ def runExampleSliderAndButtonMenuOverlay1() -> None:
         ({"text": ",", "font_color": font_color, "anchor_type0": anchor_type}, ((0.2, 0.2), (0.7, 0.1))),
         ({"text": "'", "font_color": font_color, "anchor_type0": anchor_type}, ((0.2, 0.2), (0.8, 0.1))),
     ]
-    print(f"menu text group: {text_group}")
+    #print(f"menu text group: {text_group}")
     #text_list = [
     #    (("Hello", text_color), ((0.2, 0.2), (0.2, 0.1), anchor_type)),
     #    (("Goodbye", text_color), ((0.2, 0.2), (0.4, 0.1), anchor_type)),
@@ -1494,7 +1493,7 @@ def runExampleSliderAndButtonMenuOverlay1() -> None:
     
     add_text_list = [x[0] for x in text_list]
     text_objs = text_group.addTextObjects(add_text_list)
-    print("added menu text objects to menu")
+    #print("added menu text objects to menu")
     for text_obj, (_, pos_tup) in zip(text_objs, text_list):
         max_shape_rel, anchor_rel_pos_rel = pos_tup
         menu_overlay.addText(text_obj, max_shape_rel,\
@@ -1537,7 +1536,7 @@ def runExampleSliderAndButtonMenuOverlay1() -> None:
         if change: screen_changed = True
         #print(f"screen changed = {screen_changed}")
         if screen_changed:
-            print("screen changed")
+            #print("screen changed")
             screen.blit(screen_cp, (0, 0))
             menu_overlay.draw(screen)
             pg.display.flip()

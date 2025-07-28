@@ -680,8 +680,8 @@ class ButtonMenuOverlay(MenuOverlayBase):
             "button_grid_anchor_pos_norm": anchor_pos_norm,
             "button_grid_wh_ratio_range": wh_ratio_range,
         })
-        print(f"navkey_cycle_delay_s = {self.navkey_cycle_delay_s}")
-        print(f"navkey_cycle_delay_frame = {self.navkey_cycle_delay_frame}")
+        #print(f"navkey_cycle_delay_s = {self.navkey_cycle_delay_s}")
+        #print(f"navkey_cycle_delay_frame = {self.navkey_cycle_delay_frame}")
         button_grid = ButtonGrid(
             grid_dims=grid_dims,
             shape=self.button_grid_shape_actual,
@@ -763,7 +763,7 @@ class ButtonMenuOverlay(MenuOverlayBase):
             if not running2: running = False
             actions.extend([self.button_actions[b_inds[0]][b_inds[1]] for b_inds in selected_b_inds])
         screen_changed = self.drawUpdateRequired()
-        if screen_changed: print(f"button menu overlay redraw required")
+        #if screen_changed: print(f"button menu overlay redraw required")
         #print("Finishing ButtonMenuOverlay method _eventLoop()")
         #print(f"button menu overlay display surface = {self.__dict__.get('_display_surf', None)}, {'display_surf' in self.getPendingAttributeChanges()}")#{self.__dict__.get('_display_surf', None)}")
         return quit, running, screen_changed, actions
@@ -1580,7 +1580,7 @@ class SliderAndButtonMenuOverlay(ButtonMenuOverlay):
             if not running2: running = False
             #actions.extend([self.button_actions[b_inds[0]][b_inds[1]] for b_inds in selected_b_inds])
         screen_changed = self.drawUpdateRequired()
-        if screen_changed: print(f"slider and button menu overlay redraw required")
+        #if screen_changed: print(f"slider and button menu overlay redraw required")
         #print("Finishing SliderAndButtonMenuOverlay method _eventLoop()")
         #print(f"button menu overlay display surface = {self.__dict__.get('_display_surf', None)}, {'display_surf' in self.getPendingAttributeChanges()}")#{self.__dict__.get('_display_surf', None)}")
         return quit, running, screen_changed, actions

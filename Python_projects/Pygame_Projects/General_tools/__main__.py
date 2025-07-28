@@ -27,7 +27,7 @@ from General_tools import (
 #runExampleSliderGroup1()
 #runExampleSliderPlus1()
 #runExampleSliderPlusGroup1()
-#runExampleSliderPlusGrid1()
+runExampleSliderPlusGrid1()
 
 #runExampleMenuOverlayBase1()
 #runExampleButtonMenuOverlay1()

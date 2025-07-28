@@ -275,7 +275,7 @@ class Button(InteractiveDisplayComponentBase):
         return self.setTextObjectsUpdates(self.text_objects)
     
     def customButtonTextChangePropogation(self, new_val: Tuple[Union[int, Tuple[str]]], prev_val: Tuple[Union[int, Tuple[str]]]) -> None:
-        print(f"Using customButtonTextChangePropogation() with new_val = {new_val}, prev_val = {prev_val}")
+        #print(f"Using customButtonTextChangePropogation() with new_val = {new_val}, prev_val = {prev_val}")
         #print(self.text, len(self.text))
         #print(self.text_objects, len(self.text_objects))
         for idx, s_tup in enumerate(new_val):
@@ -390,7 +390,7 @@ class Button(InteractiveDisplayComponentBase):
         self,
         shape: Optional[Tuple[Real]]=None,
     ) -> None:
-        print("Using calculateTextShapes()")
+        #print("Using calculateTextShapes()")
         if shape is None:
             shape = self.shape
         res = []
@@ -409,7 +409,7 @@ class Button(InteractiveDisplayComponentBase):
             text_object_tup, text_borders_rel = props
             text_shape = getTextMaxShape(self.shape, text_borders_rel)
             res.append(text_shape)
-        print(f"calculated text shapes = {res}")
+        #print(f"calculated text shapes = {res}")
         return res
     
     def customTextShapesChangePropogation(
@@ -417,7 +417,7 @@ class Button(InteractiveDisplayComponentBase):
         new_val: Optional[Tuple[Real]],
         prev_val: Optional[Tuple[Real]],
     ) -> None:
-        print("using customTextShapesChangePropogation()")
+        #print("using customTextShapesChangePropogation()")
         text_objs = self.text_objects
         text_shapes = new_val#self.text_shapes
         for text_obj_tup, text_shape in zip(text_objs, text_shapes):
@@ -425,7 +425,7 @@ class Button(InteractiveDisplayComponentBase):
                 continue
             if isinstance(text_shape, int):
                 text_shape = text_shapes[text_shape]
-            print(f"setting text object max shape to {text_shape}")
+            #print(f"setting text object max shape to {text_shape}")
             text_obj_tup[0].max_shape = text_shape
         return
     """
@@ -439,7 +439,7 @@ class Button(InteractiveDisplayComponentBase):
     def calculateTextAnchorPositions(
         self
     ) -> Tuple[Union[int, Tuple[Real, Real]]]:
-        print("Using calculateTextAnchorPositions()")
+        #print("Using calculateTextAnchorPositions()")
         shape = self.shape
         res = []
         for i in range(self.n_state):
@@ -1345,7 +1345,7 @@ class ButtonGrid(InteractiveDisplayComponentBase):
     ) -> Button:
         # Review- add mechanism for communicating from a constituent slider
         # that its value has changed.
-        print(grid_inds, self.grid_dims)
+        #print(grid_inds, self.grid_dims)
         if any(idx < 0 or idx >= m for idx, m in zip(grid_inds, self.grid_dims)):
             raise IndexError("The grid indices given are not in the allowed range")
         attr_dict = {
@@ -1358,7 +1358,7 @@ class ButtonGrid(InteractiveDisplayComponentBase):
             "name": name,
         }
         if self.buttons[grid_inds[0]][grid_inds[1]] is None:
-            print(f"creating button at grid indices {grid_inds}")
+            #print(f"creating button at grid indices {grid_inds}")
             container_attr_resets = {"changed_since_last_draw": {"display_surf": (lambda container_obj, obj: obj.drawUpdateRequired())}}
             self.buttons[grid_inds[0]][grid_inds[1]] = self.button_group.addButton(
                 _from_container=True,
@@ -1454,7 +1454,7 @@ class ButtonGrid(InteractiveDisplayComponentBase):
             for button, grid_inds in obj.buttonIterator():
                 i1, i2 = grid_inds
                 #if i2 == 0: continue
-                print(f"grid inds {(i1, i2)}")
+                #print(f"grid inds {(i1, i2)}")
                 button.anchor_type = "topleft"
                 button.anchor_rel_pos = (self.button_topleft_locations[0][i1], self.button_topleft_locations[1][i2])
                 button.draw(surf)
@@ -2000,9 +2000,8 @@ class ButtonGrid(InteractiveDisplayComponentBase):
         new_val: Optional[Tuple[int, int]],
         prev_val: Optional[Tuple[int, int]],
     ) -> None:
-        print(new_val, prev_val)
+        #print(new_val, prev_val)
         if not new_val:
-            print("hello")
             if not prev_val: return
             self.buttons[prev_val[0]][prev_val[1]].state = int(self.navkeys_enabled)
             return
@@ -2109,7 +2108,7 @@ class ButtonGrid(InteractiveDisplayComponentBase):
         new_val: Optional[Tuple[int, int]],
         prev_val: Optional[Tuple[int, int]],
     ) -> None:
-        print("Using customNavkeyButtonChangePropogation()")
+        #print("Using customNavkeyButtonChangePropogation()")
         if prev_val and self.buttons[prev_val[0]][prev_val[1]] is not None:
             self.buttons[prev_val[0]][prev_val[1]].state = 0
         if self.button_mouse_is_over:
@@ -2122,7 +2121,7 @@ class ButtonGrid(InteractiveDisplayComponentBase):
 
     
     def navkeyMoveCalculator(self, navkey: int, start_button: Tuple[int]) -> Tuple[int]:
-        print(f"Using navkeyMoveCalculator() with navkey = {navkey} and start_button = {start_button}")
+        #print(f"Using navkeyMoveCalculator() with navkey = {navkey} and start_button = {start_button}")
         if not self.navkeys_enabled: return start_button
         move = self.navkey_dict.get(navkey, None)
         if move is None: return start_button
@@ -2378,8 +2377,8 @@ class ButtonGrid(InteractiveDisplayComponentBase):
         #print(self.navkey_button)
         #print(keys_down)
         screen_changed = self.drawUpdateRequired()
-        if screen_changed:
-            print("button grid re-draw required")
+        #if screen_changed:
+        #    print("button grid re-draw required")
         #print(quit, esc_pressed, (screen_changed, selected))
         #if screen_changed:
         #    self._button_grid_surf = None

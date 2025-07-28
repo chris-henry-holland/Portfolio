@@ -189,7 +189,7 @@ class Slider(InteractiveDisplayComponentBase):
         name: Optional[str]=None,
         **kwargs,
     ) -> None:
-        print("Creating Slider")
+        #print("Creating Slider")
         checkHiddenKwargs(type(self), kwargs)
         if name is None:
             Slider.unnamed_count += 1
@@ -656,7 +656,7 @@ class Slider(InteractiveDisplayComponentBase):
             -> Union["pg.Surface", tuple]:
         #print("creating static background surface")
         surf = pg.Surface(self.shape, pg.SRCALPHA)
-        surf.set_alpha(255)
+        #surf.set_alpha(255)
         #surf.fill((255, 0, 0))
         
         constructor_attrs = [f"{attr}_img_constructor"\
@@ -1454,8 +1454,8 @@ class SliderPlus(InteractiveDisplayComponentBase):
         if not title_text_obj: return ()
         #print("hello2")
         surf = pg.Surface(self.title_shape, pg.SRCALPHA)
-        surf.set_alpha(255)
-        surf.fill((0, 0, 255))
+        #surf.set_alpha(255)
+        #surf.fill((0, 0, 255))
         #print(self.title_anchor_rel_pos, self.title_anchor_type)
         #print(title_text_obj.font_size)
         title_text_obj.draw(surf, anchor_rel_pos=self.title_anchor_rel_pos, anchor_type=self.title_anchor_type)
@@ -1486,7 +1486,7 @@ class SliderPlus(InteractiveDisplayComponentBase):
             -> Union["pg.Surface", tuple]:
         #print("creating static background surface")
         surf = pg.Surface(self.shape, pg.SRCALPHA)
-        surf.set_alpha(255)
+        #surf.set_alpha(255)
         #surf.fill((0, 255, 0))
         
         constructor_attrs = [f"{attr}_img_constructor"\
@@ -1696,7 +1696,7 @@ class SliderPlus(InteractiveDisplayComponentBase):
         #print("hello2")
         surf = pg.Surface(self.val_text_shape, pg.SRCALPHA)
         #surf.set_alpha(100)
-        surf.fill((0, 255, 255))
+        #surf.fill((0, 255, 255))
         #print(self.title_anchor_rel_pos, self.title_anchor_type)
         anchor_offset = topLeftAnchorOffset(self.val_text_shape, self.val_text_anchor_type)
         #print(f"anchor offset = {anchor_offset}")
@@ -2299,7 +2299,7 @@ class SliderPlusGrid(InteractiveDisplayComponentBase):
             "name": name,
         }
         if self.sliders[grid_inds[0]][grid_inds[1]] is None:
-            print(f"creating slider plus at grid indices {grid_inds}")
+            #print(f"creating slider plus at grid indices {grid_inds}")
             container_attr_resets = {"changed_since_last_draw": {"display_surf": (lambda container_obj, obj: obj.drawUpdateRequired())}}
             self.sliders[grid_inds[0]][grid_inds[1]] = self.slider_plus_group.addSliderPlus(
                 _from_container=True,
@@ -2308,7 +2308,7 @@ class SliderPlusGrid(InteractiveDisplayComponentBase):
                 **attr_dict,
                 **kwargs,
             )
-            print(self.sliders[grid_inds[0]][grid_inds[1]].__dict__.get("_display_surf", None))
+            #print(self.sliders[grid_inds[0]][grid_inds[1]].__dict__.get("_display_surf", None))
         else:
             self.sliders[grid_inds[0]][grid_inds[1]].setAttributes(
                 attr_dict,
@@ -2370,7 +2370,7 @@ class SliderPlusGrid(InteractiveDisplayComponentBase):
         return (x_lst, y_lst)
 
     def createDisplaySurface(self) -> "pg.Surface":
-        print("Using SliderPlusGrid method createDisplaySurface()")
+        #print("Using SliderPlusGrid method createDisplaySurface()")
         #print("creating display surface")
         #print(f"shape = {self.shape}")
         surf = pg.Surface(self.shape, pg.SRCALPHA)
@@ -2388,7 +2388,7 @@ class SliderPlusGrid(InteractiveDisplayComponentBase):
 
     def createSliderGridImageConstructor(self) -> Callable:
         def constructor(obj: SliderPlusGrid, surf: "pg.Surface") -> None:
-            print("using slider grid constructor")
+            #print("using slider grid constructor")
             n_slider = 0
             # Workaround to prevent the possibility that changes to one
             # of the later sliders causes the display surface of an earlier
@@ -2398,12 +2398,12 @@ class SliderPlusGrid(InteractiveDisplayComponentBase):
             for slider, grid_inds in obj.sliderPlusIterator():
                 i1, i2 = grid_inds
                 #if i2 == 0: continue
-                print(f"grid inds {(i1, i2)}")
+                #print(f"grid inds {(i1, i2)}")
                 slider.anchor_type = "topleft"
                 slider.anchor_rel_pos = (self.slider_topleft_locations[0][i1], self.slider_topleft_locations[1][i2])
                 slider.draw(surf)
                 n_slider += 1
-            print(f"n_slider = {n_slider}")
+            #print(f"n_slider = {n_slider}")
             """
             for i1, slider_row in enumerate(self.sliders):
                 x = self.slider_topleft_locations[0][i1]
@@ -2460,8 +2460,8 @@ class SliderPlusGrid(InteractiveDisplayComponentBase):
                 mouse_status=mouse_status,
                 check_axes=check_axes,
             )
-            if screen_changed2:
-                print(f"slider at {inds} changed")
+            #if screen_changed2:
+            #    print(f"slider at {inds} changed")
             quit = quit or quit2
             running = running and running2
             #screen_changed = screen_changed or screen_changed2
