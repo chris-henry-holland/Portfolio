@@ -3712,22 +3712,42 @@ def compositeCoresilienceAReciprocalSum(n_max: int=2 * 10 ** 11) -> int:
             #found.append(p * q)
     #return res
     print(res)
-    ref = 3 * 5 * 17 * 353
+    ref = 257 * 359
     def recur(num: int, phi: int, n_remain_p: int, prev_p_idx: int=None) -> int:
         res = 0
         prev_p = ps.p_lst[prev_p_idx] if prev_p_idx is not None else 2
         if n_remain_p == 1:
             #d = num * phi - phi + num
             #mx = n_max + phi - (phi * n_max - 1) // num + 1#(n_max - phi) // (num - phi)
-            #if num == ref:
-            #    print(num, phi, d, mx)
+            
             #mult_mn = (prev_p + phi) // (num - phi) + 1
             p_mx3 = n_max // num
+            if p_mx3 > ps.p_lst[-1]:
+                fact_mn = (num - phi) * ((2 if prev_p is None else prev_p) + 1) + phi
+                fact_mx = ((num - phi) * n_max) // num + phi
+                for fact in calculateFactorsInRange(num * phi - phi + num, fact_min=fact_mn, fact_max=fact_mx):
+                    p, r = divmod(fact - phi, num - phi)
+                    #if num == ref:
+                    #    print(num, fact, p, r)
+                    if r or not primeCheck(p): continue
+                    ans = num * p
+                    phi2 = phi * (p - 1)
+                    if (ans - 1) % (ans - phi2): continue
+                    print(ans, phi2, ans - phi2, ans - 1)
+                    #print(ans, num, phi, p, phi2, ans - phi2, ans - 1, (num - phi) * p + phi)
+                    res += ans
+                return res
             p_idx_ub = bisect.bisect_right(ps.p_lst, p_mx3)
             prod = num * phi - phi + num
+            #if num == ref:
+            #    print(num, phi, p_mx3, prod)
             for p_idx in range(prev_p_idx, p_idx_ub):
                 p = ps.p_lst[p_idx]
                 fact = (num - phi) * p + phi
+                if num == ref and p == 1057477:
+                    ans = num * p
+                    phi2 = phi * (p - 1)
+                    print("hi", num, p, prod % fact, ans, phi2, (ans - 1) % (ans - phi2))
                 if (prod % fact): continue
                 ans = num * p
                 phi2 = phi * (p - 1)
@@ -4343,7 +4363,7 @@ if __name__ == "__main__":
 
     if not to_evaluate or 245 in to_evaluate:
         since = time.time() 
-        res = compositeCoresilienceAReciprocalSum(n_max=10 ** 11)
+        res = compositeCoresilienceAReciprocalSum(n_max=2 * 10 ** 11)
         print(f"Solution to Project Euler #245 = {res}, calculated in {time.time() - since:.4f} seconds")
 
     if not to_evaluate or 246 in to_evaluate:
