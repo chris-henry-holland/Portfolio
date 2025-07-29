@@ -3019,9 +3019,13 @@ def playingBoardTourCount(n_rows: int=4, n_cols: int=10 ** 12, start_row: int=0,
 
 # Problem 238
 def infiniteStringTourDigitSumStartSum(n_max: int=2 * 10 ** 15, s_0: int=14025256, s_mod: int=20300713, base: int=10) -> int:
-    
-    
-    it = iter(blumBlumShubPseudoRandomGenerator(s_0=s_0, s_mod=s_mod, t_min=0, t_max=s_mod - 1))
+    """
+    Solution to Project Euler #238
+    """
+    # Review- Try to make faster
+    # Consider alternative approach where iterate over the sums
+    # rather than the starting values.
+    it = itertools.chain([s_0], blumBlumShubPseudoRandomGenerator(s_0=s_0, s_mod=s_mod, t_min=0, t_max=s_mod - 1))
     term_dig_counts_cumu = [0]
     term_dig_sums_cumu = [0]
     z_count_cumu = [0]
@@ -3057,14 +3061,51 @@ def infiniteStringTourDigitSumStartSum(n_max: int=2 * 10 ** 15, s_0: int=1402525
             terms_cumu[-1].append(terms_cumu[-1][-1] + d)
             terms_z_count_cumu[-1].append(terms_z_count_cumu[-1][-1] + (not d))
         """
+    print(len(seen))
     print(len(terms))
     print(term_dig_counts_cumu[-1])
     print(term_dig_sums_cumu[-1])
     print(z_count_cumu[-1])
     print(cycle_start)
 
-    def getTermCounts(idx: int) -> Tuple[List[int], List[int]]:
-        print(idx, len(terms))
+    def getDigit(idx: int) -> int:
+        if idx < term_dig_counts_cumu[-1]:
+            idx2 = idx
+        else:
+            idx0 = term_dig_counts_cumu[cycle_start]
+            idx2 = ((idx - idx0) % (term_dig_counts_cumu[-1] - idx0)) + idx0
+        i = bisect.bisect_right(term_dig_counts_cumu, idx2) - 1
+        j = idx2 - term_dig_counts_cumu[i]
+        #print(f"idx = {idx}, i = {i}, j = {j}")
+        n_dig = term_dig_counts_cumu[i + 1] - term_dig_counts_cumu[i]
+        num = terms[i]
+        num //= base ** (n_dig - j - 1)
+        return num % base
+
+    def cycleDigitGenerator() -> Generator[int, None, None]:
+        for term in terms[cycle_start:]:
+            num2 = term
+            lst = []
+            while num2:
+                num2, d = divmod(num2, base)
+                lst.append(d)
+            for d in reversed(lst):
+                yield d
+        return
+
+    def reversedCycleDigitGenerator() -> Generator[int, None, None]:
+        for term in terms[cycle_start:][::-1]:
+            num2 = term
+            while num2:
+                num2, d = divmod(num2, base)
+                yield d
+        return
+    
+    #for idx in range(11):
+    #    print(idx, getDigit(idx))
+
+    def getTermCounts(idx: int) -> Tuple[List[int], List[int], List[int]]:
+        #print(idx, len(terms))
         num = terms[idx]
         lst = []
         while num:
@@ -3077,17 +3118,173 @@ def infiniteStringTourDigitSumStartSum(n_max: int=2 * 10 ** 15, s_0: int=1402525
             z_cumu.append(z_cumu[-1] + (not d))
             digs_cumu.append(digs_cumu[-1] + d)
         return lst, digs_cumu, z_cumu
+    
+    def calculateIndexStartCounts(start_idx: int, prefixes: List[int]) -> int:
+        #print(start_idx, prefixes)
+        n_max2 = n_max + (prefixes[0] if prefixes else 0)
 
+        q1, r1 = divmod(start_idx - term_dig_counts_cumu[cycle_start], term_dig_counts_cumu[-1])
+        i = bisect.bisect_right(term_dig_counts_cumu, r1 + term_dig_counts_cumu[cycle_start]) - 1
+        term_digs, term_digs_cumu, zcc = getTermCounts(i)
+
+        start_z_cnt = q1 * (z_count_cumu[-1] - z_count_cumu[cycle_start]) + z_count_cumu[i] + zcc[r1 - term_dig_counts_cumu[i]]
+        res = -(start_idx - start_z_cnt)
+        print(f"initial subtraction for start_idx {start_idx} = {res}")
+
+        q2, r2 = divmod(n_max2 - term_dig_sums_cumu[cycle_start], term_dig_sums_cumu[-1] - term_dig_sums_cumu[cycle_start])
+        i = bisect.bisect_right(term_dig_sums_cumu, r2 + term_dig_sums_cumu[cycle_start]) - 1
+        term_digs, term_digs_cumu, z_counts_cumu = getTermCounts(i)
+        #print(i, term_digs_cumu, r2 + term_dig_sums_cumu[cycle_start] - term_dig_sums_cumu[i])
+        j = bisect.bisect_right(term_digs_cumu, r2 + term_dig_sums_cumu[cycle_start] - term_dig_sums_cumu[i]) - 1
+        res += term_dig_counts_cumu[cycle_start] - z_count_cumu[cycle_start] +\
+                q2 * (term_dig_counts_cumu[-1] - term_dig_counts_cumu[cycle_start] - z_count_cumu[-1] + z_count_cumu[cycle_start]) +\
+                (term_dig_counts_cumu[i] - term_dig_counts_cumu[cycle_start] - z_count_cumu[i] + z_count_cumu[cycle_start]) +\
+                (j - z_counts_cumu[j])
+        if not prefixes:
+            return res
+
+        prefs2 = sorted([x % (term_dig_sums_cumu[-1] - term_dig_sums_cumu[cycle_start]) for x in prefixes])
+
+        if cycle_start: return -1 # TODO
+        #cumu_qu = deque()
+        #cumu_set = set()
+        cumu_curr = 0
+        cumu_lst = [0]
+        for d in reversedCycleDigitGenerator():
+            if not d: continue
+            cumu_curr += d
+            if cumu_curr > prefs2[-1]:
+                cumu_curr -= d
+                break
+            cumu_lst.append(cumu_curr)
+        cumu_qu = deque(cumu_curr - x for x in reversed(cumu_lst))
+        cumu_set = set(cumu_qu)
+        #print(cumu_qu, cumu_set)
+        #for d in cycleDigitGenerator():
+        #    if not d: continue
+        #    cumu_curr += d
+        #    cumu_mn = cumu_curr - prefs2[-1]
+        #    while cumu_qu and cumu_qu[0] < cumu_mn:
+        #        cumu_set.remove(cumu_qu.popleft())
+        #    cumu_qu.append(cumu_curr)
+        #    cumu_set.add(cumu_curr)
+        mult = q2 - q1
+        print(f"mult = {mult}")
+        idx1 = (start_idx - term_dig_counts_cumu[cycle_start]) % (term_dig_counts_cumu[-1] - term_dig_counts_cumu[cycle_start])
+        idx2 = term_dig_counts_cumu[i] - term_dig_counts_cumu[cycle_start] + j
+        #print(i, j)
+        #print(f"idx1 = {idx1}, idx2 = {idx2}")
+        rpt_cnt = 0
+        for idx, d in enumerate(cycleDigitGenerator()):
+            if idx == idx1: mult += 1
+            if idx == idx2:
+                mult -= 1
+                if not mult and idx >= idx1:
+                    break
+            if not d:
+                continue
+            cumu_curr += d
+            cumu_mn = cumu_curr - prefs2[-1]
+            while cumu_qu and cumu_qu[0] < cumu_mn:
+                cumu_set.remove(cumu_qu.popleft())
+            #print(cumu_qu, {cumu_curr - x for x in prefs2})
+            for pref in prefs2:
+                if cumu_curr - pref in cumu_set:
+                    #print(f"mult = {mult}")
+                    #res -= mult
+                    rpt_cnt += mult
+                    break
+            #if not cumu_set.isdisjoint({cumu_curr - x for x in prefs2}):
+            #    res -= mult
+            #    rpt_cnt += mult
+            cumu_qu.append(cumu_curr)
+            cumu_set.add(cumu_curr)
+        res -= rpt_cnt
+        print(f"new value count = {res}, number of repeats = {rpt_cnt}")
+        return res
+        """
+        n_max2 = n_max + prefs[0]
+        q1, r1 = divmod(start_idx, term_dig_counts_cumu[-1])
+        q2, r2 = divmod(n_max2 - term_dig_sums_cumu[cycle_start], term_dig_sums_cumu[-1] - term_dig_sums_cumu[cycle_start])
+
+        prefs2 = sorted([x % (term_dig_sums_cumu[-1] - term_dig_sums_cumu[cycle_start]) for x in prefixes])
+        if 0 in prefs2: return 0
+
+        if q1 == q2:
+
+
+        mult = max(0, q2 - q1 - 2)
+        if mult:
+            
+
+        #idx0 = bisect.bisect_right(term_dig_counts_cumu, start_idx) - 1
+
+
+        #ini = term_dig_sums_cumu[cycle_start]
+        """
+    
+    prefs = []
+    n_terms = calculateIndexStartCounts(0, prefs)
+    res = n_terms
+    k_vals_found = n_terms
+    for start_idx in itertools.count(1):
+        d = getDigit(start_idx - 1)
+        if not d: continue
+        prefs = [x + d for x in prefs]
+        prefs.append(d)
+        print(f"start_idx = {start_idx}, d = {d}, number of k values found = {k_vals_found} of {n_max}, res = {res}")
+        print(f"prefs = {prefs}")
+        #if start_idx > 50: break
+        
+        n_terms = calculateIndexStartCounts(start_idx, prefs)
+
+        k_vals_found += n_terms
+        res += n_terms * (start_idx + 1)
+        if k_vals_found == n_max: break
+        
+    return res
+    """
     q, r = divmod(n_max - term_dig_sums_cumu[cycle_start], term_dig_sums_cumu[-1] - term_dig_sums_cumu[cycle_start])
     i = bisect.bisect_right(term_dig_sums_cumu, r + term_dig_sums_cumu[cycle_start]) - 1
     term_digs, term_digs_cumu, z_counts_cumu = getTermCounts(i)
     j = bisect.bisect_right(term_digs_cumu, term_dig_sums_cumu[i] - term_dig_sums_cumu[cycle_start]) - 1
-    n1 = term_dig_counts_cumu[cycle_start] - z_count_cumu[cycle_start] +\
+    n_terms = term_dig_counts_cumu[cycle_start] - z_count_cumu[cycle_start] +\
             q * (term_dig_counts_cumu[-1] - term_dig_counts_cumu[cycle_start] - z_count_cumu[-1] + z_count_cumu[cycle_start]) +\
             (term_dig_counts_cumu[i] - term_dig_counts_cumu[cycle_start] - z_count_cumu[i] + z_count_cumu[cycle_start]) +\
             (j - z_counts_cumu[j])
-    print(n1)
+    k_vals_found = n_terms
+    #k_vals_found2 = calculateIndexStartCounts(0, [])
+    print(k_vals_found)
+    for i in range(16):
+        print(i, calculateIndexStartCounts(i, []))
     return -1
+    res = n_terms
+    prefs = []
+    
+    for start_idx in itertools.count(1):
+        d = getDigit(start_idx - 1)
+        if not d: continue
+        prefs = [x + d for x in prefs]
+        prefs.append(d)
+        n_max2 = n_max + prefs[0]
+
+        q, r = divmod(n_max2 - term_dig_sums_cumu[cycle_start], term_dig_sums_cumu[-1] - term_dig_sums_cumu[cycle_start])
+        i = bisect.bisect_right(term_dig_sums_cumu, r + term_dig_sums_cumu[cycle_start]) - 1
+        term_digs, term_digs_cumu, z_counts_cumu = getTermCounts(i)
+        j = bisect.bisect_right(term_digs_cumu, term_dig_sums_cumu[i] - term_dig_sums_cumu[cycle_start]) - 1
+        n_terms = term_dig_counts_cumu[cycle_start] - z_count_cumu[cycle_start] +\
+                q * (term_dig_counts_cumu[-1] - term_dig_counts_cumu[cycle_start] - z_count_cumu[-1] + z_count_cumu[cycle_start]) +\
+                (term_dig_counts_cumu[i] - term_dig_counts_cumu[cycle_start] - z_count_cumu[i] + z_count_cumu[cycle_start]) +\
+                (j - z_counts_cumu[j])
+
+        k_vals_found += n_terms
+        res += n_terms * (start_idx + 1)
+        if k_vals_found == n_max: break
+    
+    #print(n1)
+    print(k_vals_found)
+    return -1
+    """
 
 # Problem 239
 def partialDerangementCount(n_tot: int, n_subset: int, n_subset_deranged: int) -> int:
@@ -4115,7 +4312,7 @@ def numberToItsOwnPowerSubsetDivisibleByNumberCount(n_max: int=250250, div: int=
     return res
 
 if __name__ == "__main__":
-    to_evaluate = {251}
+    to_evaluate = {250}
     since0 = time.time()
 
     if not to_evaluate or 201 in to_evaluate:
@@ -4323,7 +4520,7 @@ if __name__ == "__main__":
 
     if not to_evaluate or 238 in to_evaluate:
         since = time.time() 
-        res = infiniteStringTourDigitSumStartSum(n_max=10 ** 3, s_0=14025256, s_mod=20300713, base=10)
+        res = infiniteStringTourDigitSumStartSum(n_max=2 * 10 ** 15, s_0=14025256, s_mod=20300713, base=10)
         print(f"Solution to Project Euler #238 = {res}, calculated in {time.time() - since:.4f} seconds")
 
     if not to_evaluate or 239 in to_evaluate:
@@ -4436,10 +4633,11 @@ for n in range(1, n_max + 1):
     if res != res2:
         print(n, res, res2)
 """
-
+"""
 for k in range(1, 101):
     #num = 8 * a ** 3 + 15 * a ** 2 + 6 * a - 1
     #if not num % 27:
     #    print(a, num // 27)
     num = 8 * k - 3
     print(k, 3 * k - 1, num, k ** 2 * num)
+"""
