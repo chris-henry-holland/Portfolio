@@ -148,10 +148,9 @@ def cardanoTripletCount(sum_max: int=11 * 10 ** 7) -> int:
     return res
 
 # Problem 253
-def constructingLinearPuzzleMaxSegmentCountDistribution(n_pieces: int) -> List[int]:
+def constructingLinearPuzzleMaxSegmentCountDistribution0(n_pieces: int) -> List[int]:
     
-    # Review- consider working in reverse, starting from a
-    # completed puzzle and removing segments one by one
+    
     if n_pieces == 1: return [0, 1]
 
     def addDistribution(distr: List[int], distr_add: List[int], mn_val: int=0) -> None:
@@ -336,47 +335,89 @@ def constructingLinearPuzzleMaxSegmentCountDistribution(n_pieces: int) -> List[i
         res.append(res_cumu[i] - res_cumu[i - 1])
     return res
 
-"""
-def constructingLinearPuzzleMaxSegmentCountDistribution2(n_pieces: int) -> List[int]:
+def constructingLinearPuzzleMaxSegmentCountDistribution(n_pieces: int) -> List[int]:
+    
+    # Review- Look into the binary tree solution of Lucy_Hedgehog
+    if n_pieces == 1: return [0, 1]
 
-    # From https://github.com/roosephu/project-euler/blob/master/253.cpp
-    n = n_pieces + 3
-    arr = [[[[[0] * 2 for _ in range(2)] for _ in range(n)] for _ in range(n)] for _ in range(n)]
-    arr[1][1][1][0][0] = 1
-    arr[1][1][1][0][1] = 1
-    arr[1][1][1][1][0] = 1
+    def addDistribution(distr: List[int], distr_add: List[int], mn_val: int=0) -> None:
+        for _ in range(max(mn_val + 1, len(distr_add)) - len(distr)):
+            distr.append(distr[-1])
+        for j in range(mn_val, len(distr)):
+            #print(j)
+            distr[j] += distr_add[min(j, len(distr_add) - 1)]
+        while len(distr) > 1 and distr[-1] == distr[-2]:
+            distr.pop()
+        return
 
-    for i1 in range(1, n_pieces + 1):
-        for i2 in range(1, n_pieces + 1):
-            for i3 in range(n_pieces + 1):
-                for j1 in range(2):
-                    for j2 in range(2):
-                        if not arr[i1][i2][i3][j1][j2] or (i3 == 1 and j1 == 1 and j2 == 1):
-                            continue
-                        print(f"i1 = {i1}, i2 = {i2}, i3 = {i3}, j1 = {j1}, j2 = {j2}")
-                        if not j1:
-                            if i3 > 0:
-                                arr[i1 + 1][i2][i3][0][j2] += arr[i1][i2][i3][j1][j2]
-                                arr[i1 + 1][i2][i3][1][j2] += arr[i1][i2][i3][j1][j2]
-                            arr[i1 + 1][max(i2, i3 + 1)][i3 + 1][0][j2] += arr[i1][i2][i3][j1][j2]
-                            arr[i1 + 1][max(i2, i3 + 1)][i3 + 1][1][j2] += arr[i1][i2][i3][j1][j2]
-                        if not j1:
-                            if i3:
-                                arr[i1 + 1][i2][i3][j1][0] += arr[i1][i2][i3][j1][j2]
-                                arr[i1 + 1][i2][i3][j1][1] += arr[i1][i2][i3][j1][j2]
-                            arr[i1 + 1][max(i2, i3 + 1)][i3 + 1][j1][0] += arr[i1][i2][i3][j1][j2]
-                            arr[i1 + 1][max(i2, i3 + 1)][i3 + 1][j1][1] += arr[i1][i2][i3][j1][j2]
-                        i3_ = i3 - 1 if i1 else 1
+    def distributionProduct(distr1: List[int], distr2: List[int], mn_val: int=0) -> None:
+        if mn_val >= len(distr1) + len(distr2) - 2:
+            res = [0] * (mn_val + 1)
+            res[-1] = distr1[-1] * distr2[-1]
+            return res
+        res = [0] * (len(distr1) + len(distr2) - 1)
+        for i1 in range(len(distr1)):
+            if not distr1[i1]: continue
+            for i2 in range(max(0, mn_val - i1), len(distr2)):
+                res[i1 + i2] += distr1[i1] * distr2[i2]
+        return res
+    
+    memo = {}
+    def recur(seg_lens: Dict[int, int]) -> List[int]:
+        if not seg_lens:
+            return [1]
+        seg_lens2 = tuple(sorted((k, v) for k, v in seg_lens.items()))
+        args = seg_lens2
+        if args in memo.keys(): return memo[args]
+        n_pieces = (sum(seg_lens.values()) if seg_lens else 0)
+        res = [0] * (n_pieces + 1)
+        
+        for seg_len in list(seg_lens.keys()):
+            f = seg_lens[seg_len]
+            seg_lens[seg_len] -= 1
+            if not seg_lens[seg_len]: seg_lens.pop(seg_len)
+            if seg_len == 1:
+                distr = [f * x for x in recur(seg_lens)]
+                addDistribution(res, distr, mn_val=n_pieces)
+                seg_lens[seg_len] = seg_lens.get(seg_len, 0) + 1
+                continue
+            seg_lens[seg_len - 1] = seg_lens.get(seg_len - 1, 0) + 1
+            distr = [2 * f * x for x in recur(seg_lens)]
+            addDistribution(res, distr, mn_val=n_pieces)
+            seg_lens[seg_len - 1] -= 1
+            if not seg_lens[seg_len - 1]: seg_lens.pop(seg_len - 1)
+            for i in range(1, (seg_len >> 1)):
+                i2 = seg_len - i - 1
+                seg_lens[i] = seg_lens.get(i, 0) + 1
+                seg_lens[i2] = seg_lens.get(i2, 0) + 1
+                distr = [2 * f * x for x in recur(seg_lens)]
+                addDistribution(res, distr, mn_val=n_pieces)
+                seg_lens[i] -= 1
+                if not seg_lens[i]: seg_lens.pop(i)
+                seg_lens[i2] -= 1
+                if not seg_lens[i2]: seg_lens.pop(i2)
+            if seg_len & 1:
+                i = seg_len >> 1
+                seg_lens[i] = seg_lens.get(i, 0) + 2
+                distr = [f * x for x in recur(seg_lens)]
+                addDistribution(res, distr, mn_val=n_pieces)
+                seg_lens[i] -= 2
+                if not seg_lens[i]: seg_lens.pop(i)
+            
+            seg_lens[seg_len] = seg_lens.get(seg_len, 0) + 1
+        memo[args] = res
+        return res
 
-                        if i3 > 1:
-                            arr[i1 + 1][i2][i3 - 1][j1][j2] += i3_ * arr[i1][i2][i3][j1][j2]
-                        if i3 > 0:
-                            arr[i1 + 1][i2][i3][j1][j2] += 2 * i3_ * arr[i1][i2][i3][j1][j2]
-                        arr[i1 + 1][max(i2, i3 + 1)][i3 + 1][j1][j2] += i3_ * arr[i1][i2][i3][j1][j2]
-    res = [arr[n_pieces][i2][1][1][1] for i2 in range(n_pieces + 1)]
-    print(arr)
+    res_cumu = recur({n_pieces: 1})
+    #res_cumu = recur([n_pieces], False, False)
+    print(f"len(memo) = {len(memo)}")
+    #print(f"res_cumu = {res_cumu}")
+    #print(memo)
+    res = [res_cumu[0]]
+    for i in range(1, len(res_cumu)):
+        res.append(res_cumu[i] - res_cumu[i - 1])
     return res
-"""
+
 def constructingLinearPuzzleMaxSegmentCountMeanFraction(n_pieces: int) -> CustomFraction:
     denom = 0
     numer = 0
