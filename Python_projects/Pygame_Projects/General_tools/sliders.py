@@ -71,7 +71,7 @@ class Slider(InteractiveDisplayComponentBase):
         "thumb_radius": {"thumb_surf": True, "slider_ranges_surf": True},
         "thumb_color": {"thumb_surf": True},
         
-        "val_raw": {"val": True},
+        "val_raw": {"val": True, "thumb_x_screen_raw": True},
         "thumb_x_screen_raw": {"val": True},
 
         "val": {"thumb_x": True},
@@ -102,7 +102,7 @@ class Slider(InteractiveDisplayComponentBase):
         reset_graph_edges["slider_component_dimensions"][attr] = True
     
     #custom_attribute_change_propogation_methods = {
-    #    "val_raw": "setValueRaw",
+    #    "val_raw": "customValueRawChangePropogation",
     #}
     
     attribute_calculation_methods = {
@@ -213,14 +213,30 @@ class Slider(InteractiveDisplayComponentBase):
         #if "_display_surf" in self.__dict__.keys():
         #    print(f"self._display_surf = {self.__dict__['_display_surf']}")
         return changed_attrs_dict
+
+    def setValueDirectly(self, new_val: Real) -> None:
+        print(f"new_val = {new_val}")
+        thumb_x_screen_raw = getattr(self, "thumb_x_screen_raw", None)
+        if thumb_x_screen_raw is not None:
+            # Ensuring that val_raw is reset in the case where the value
+            # specified is identical to the previous one when the actual
+            # value has been changed in the meantime by the setting of
+            # thumb_x_screen_raw to a new value
+            self.val_raw = None
+            self.val_raw
+        #self.val_raw = None
+        #self.val_raw
+        self.val_raw = new_val
+        print(f"new_val = {new_val}, self.val_raw = {self.val_raw}")
+        return
     
     def calculateMouseEnablement(self) -> None:
         #print("calculating mouse enablement")
         mouse_enabled = self.mouse_enabled
         return (mouse_enabled, mouse_enabled, mouse_enabled)
     
-    def setValueRaw(self, new_val: Real, prev_val: Real) -> None:
-        #print("Using setValueRaw()")
+    def customValueRawChangePropogation(self, new_val: Real, prev_val: Real) -> None:
+        #print("Using customValueRawChangePropogation()")
         self.__dict__["_thumb_x_screen_raw"] = None
         chng_dict = self.getPendingAttributeChanges()
         if "thumb_x_screen_raw" in chng_dict.keys():
@@ -243,7 +259,9 @@ class Slider(InteractiveDisplayComponentBase):
     
     def calculateValue(self) -> Real:
         #print("calculating value")
-        thumb_x_screen_raw = getattr(self, "thumb_x_screen_raw", None) #__dict__.get("_thumb_x_screen_raw", None)
+        #thumb_x_screen_raw = self.__dict__.get("_thumb_x_screen_raw", self.getPendingAttributeChanges().get("thumb_x_screen_raw", None))#getattr(self, "thumb_x_screen_raw", None) #__dict__.get("_thumb_x_screen_raw", None)
+        thumb_x_screen_raw = getattr(self, "thumb_x_screen_raw", None)
+        #print(f"thumb_x_screen_raw = {thumb_x_screen_raw}")
         if thumb_x_screen_raw is not None:
             return self.x2Val(thumb_x_screen_raw - self.screen_topleft_to_component_topleft_offset[0])
         return self.findNearestValue(self.val_raw)
@@ -2325,6 +2343,9 @@ class SliderPlusGrid(InteractiveDisplayComponentBase):
         if any(idx < 0 or idx >= m for idx, m in zip(grid_inds, self.grid_dims)):
             raise IndexError("The grid indices given are not in the allowed range")
         return self.sliders[grid_inds[0]][grid_inds[1]]
+
+    def __getitem__(self, grid_inds: Tuple[int]) -> Optional[SliderPlus]:
+        return self.getSliderPlus(grid_inds)
 
     def getSliderPlusValue(self, grid_inds: Tuple[int, int]) -> Optional[Real]:
         slider = self.getSliderPlus(grid_inds)

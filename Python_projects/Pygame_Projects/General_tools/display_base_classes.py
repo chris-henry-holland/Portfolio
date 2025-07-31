@@ -693,7 +693,7 @@ class ComponentBaseClass(ABC):
         return True
     
     def setAttributes(self, setattr_dict: Dict[str, Any], _from_container: bool=False, _calculated_override: bool=False, **kwargs) -> Dict[str, Tuple[Any, Any]]:
-        #if "display_surf" in setattr_dict.keys():
+        #if "val_raw" in setattr_dict.keys():
         #    print(f"Using setAttributes() for {self} with setattr_dict = {setattr_dict}")
         #    print(f"self.changed_since_last_draw = {self.changed_since_last_draw}")
         #    print(f"self._display_surf = {self.__dict__.get('_display_surf', None)}")
@@ -769,6 +769,8 @@ class ComponentBaseClass(ABC):
         #    print(f"reset_graph = {reset_graph}")
 
         def setAttrCustom(attr: str, sub_attr: str, val: Any) -> None:
+            #if attr == "thumb_x_screen_raw":
+            #    print(f"Using setAttrCustom() for {self} to set {attr} to {val}")
             #if attr in {"changed_since_last_draw", "display_surf"}:
             #    print(f"Using setAttrCustom() for {self} to set {attr} to {val}")
             #if attr == "max_font_size_given_width":
@@ -872,7 +874,6 @@ class ComponentBaseClass(ABC):
         def bfs(inds: List[Tuple[int, Any]]) -> None:#Tuple[List[Callable[["DisplayComponentBase"], None]]]:
             #reset_funcs = []
             #for idx in inds:
-                
             qu = deque(inds)
             seen = set([x[0] for x in inds])
             while qu:

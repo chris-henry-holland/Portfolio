@@ -866,7 +866,7 @@ class GamePlay:
     def updateKeyBuffer(self, key_buffer_qu: deque):
         # Checking user inputs
         quit, esc_pressed, input_dict = self.getRequiredInputs()
-        running = not esc_pressed
+        running = not esc_pressed and not quit
         events = input_dict["events"]
         #quit, running, events = self.getRequiredInputs()[:3]
         
@@ -976,6 +976,7 @@ class GamePlay:
             # Update the display
             pg.display.flip()
             running, quit, mv = move_func()#self.userInputDirection(key_buffer_qu, framerate, clock)
+            #print(f"running = {running}, quit = {quit}")
             #print(f"mv = {mv}")
             if not running: break
             alive, hit_fruit = self.head.move(mv)
