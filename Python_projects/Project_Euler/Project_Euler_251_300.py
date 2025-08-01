@@ -436,22 +436,99 @@ def constructingLinearPuzzleMaxSegmentCountMeanFloat(n_pieces: int=40) -> float:
     print(frac)
     return frac.numerator / frac.denominator
 
+# Problem 260
+def stoneGamePlayerTwoWinningConfigurationsGenerator(n_piles: int, pile_size_max: int) -> Generator[Tuple[int], None, None]:
+    # Using Sprague-Grundy
+
+    memo = {}
+    def winning(state: List[int]) -> bool:
+        state = tuple(sorted(state))
+        if state[-1] == 0: return False
+        args = state
+        if args in memo.keys(): return memo[args]
+        #res = 0
+        #seen = SortedSet()
+        res = False
+        for bm in range(1, 1 << n_piles):
+            idx_lst = []
+            mx = float("inf")
+            for i in range(n_piles):
+                if bm & 1:
+                    mx = min(mx, state[i])
+                    idx_lst.append(i)
+                    if bm == 1: break
+                bm >>= 1
+            state2 = list(state)
+            for sub in range(1, mx + 1):
+                for idx in idx_lst:
+                    state2[idx] -= 1
+                if not winning(state2):
+                    res = True
+                    break
+            else: continue
+            break
+        memo[args] = res
+        return res
+    
+    curr = []
+    def recur(idx: int) -> Generator[Tuple[int], None, None]:
+        if idx == n_piles - 1:
+            #print(curr)
+            mn = curr[-1] if curr else 0
+            curr.append(mn)
+            for _ in range(mn, pile_size_max + 1):
+                if not winning(curr):
+                    yield tuple(curr)
+                    break
+                curr[-1] += 1
+            curr.pop()
+            return
+        mn = curr[-1] if curr else 0
+        curr.append(mn)
+        for _ in range(mn, pile_size_max + 1):
+            yield from recur(idx + 1)
+            curr[-1] += 1
+        curr.pop()
+        return
+    
+    yield from recur(0)
+
+def stoneGamePlayerTwoWinningConfigurationsSum(n_piles: int=3, pile_size_max: int=1000) -> int:
+    res = 0
+    cnt = 0
+    for state in stoneGamePlayerTwoWinningConfigurationsGenerator(n_piles=n_piles, pile_size_max=pile_size_max):
+        print(state)
+        cnt += 1
+        res += sum(state)
+    print(f"number of states where player 2 is winning = {cnt}")
+    return res
+
 # Problem 265
 def findAllBinaryCircles(n: int) -> List[int]:
-    length = 1 << n
+    if n == 1: return [1]
+    s_len = 1 << n
     Trie = lambda: defaultdict(Trie)
     init_lst = [1] + ([0] * n) + [1]
 
-    curr_trie = Trie()
+    full_trie = Trie()
+    trie_lst = []
+    for i0 in range(len(init_lst)):
+        t = full_trie
+        t["tot"] = t.get("tot", 0) + 1
+        length = min(n, len(init_lst) - i0)
+        for j in range(length):
+            t = t[init_lst[i0 + j]]
+            t["tot"] = t.get("tot", 0) + 1
+        if length < n:
+            #print(i0, init_lst[i0:i0 + length], t)
+            trie_lst.append(t)
     
-    
-    t = curr_trie
-    
+    """
     for num in init_lst:
         t["tot"] = 1
         t = t[num]
-    trie_lst = []
-    t = curr_trie
+    
+    t = full_trie
     t["tot"] = t.get("tot", 0) + n + 1
     for i0 in range(n):
         t2 = t[1]
@@ -460,28 +537,35 @@ def findAllBinaryCircles(n: int) -> List[int]:
         t = t[0]
         t["tot"] = n - i0
     trie_lst = trie_lst[::-1]
+    """
     dig_lst = list(init_lst)
-
+    #print(full_trie)
+    #print(trie_lst)
     res = []
 
     def removeSubs(trie: "Trie") -> None:
 
         def recur2(t: "Trie", num: int, t0: Optional["Trie"]) -> None:
             if t0 is not None and "sub" not in t.keys(): return
-            for num in range(2):
-                if not num in t.keys(): continue
-                recur(t[num], num, t)
-            t["tot"] -= t["sub"]
+            for num2 in range(2):
+                if not num2 in t.keys(): continue
+                recur2(t[num2], num2, t)
+            sub = t.pop("sub", 0)
+            if not sub: return
+            t["tot"] -= sub
             if t["tot"] or t0 is None: return
+            #print(t0, t, num)
             t0.pop(num)
             return
         recur2(trie, -1, None)
         return
 
     def recur(idx: int, trie_lst: List["Trie"]) -> None:
-        if idx == length:
+        if idx == s_len:
+            #print("hi")
             n_exp0 = 1
-            for i, t in trie_lst:
+            #print(full_trie)
+            for i, t in enumerate(trie_lst):
                 n_exp = n_exp0
                 for j in range(i + 1):
                     num = dig_lst[j]
@@ -501,14 +585,60 @@ def findAllBinaryCircles(n: int) -> List[int]:
                 ans <<= 1
                 if dig_lst[0]: ans += 1
                 res.append(ans)
+                #print(ans, format(ans, "b"), len(trie_lst))
+                #print(full_trie)
             for t in trie_lst:
                 removeSubs(t)
             return
         
+        dig_lst.append(0)
+        full_trie["tot"] = full_trie.get("tot", 0) + 1
+        for num in range(2):
+            n_exp = 1
+            to_stop = False
+            for t in trie_lst:
+                t2 = t[num]
+                if t2.get("tot", 0) >= n_exp:
+                    to_stop = True
+                    break
+                n_exp <<= 1
+            else:
+                t = full_trie[num]
+                if t.get("tot", 0) >= n_exp:
+                    to_stop = True
+            if to_stop: continue
+            dig_lst[-1] = num
+            trie_lst2 = []
+            t2 = trie_lst[0][num]
+            t2["tot"] = t2.get("num", 0) + 1
+            for t in trie_lst[1:]:
+                t2 = t[num]
+                t2["tot"] = t2.get("tot", 0) + 1
+                trie_lst2.append(t2)
+            
+            t2 = full_trie[num]
+            t2["tot"] = t2.get("tot", 0) + 1
+            trie_lst2.append(t2)
+            recur(idx + 1, trie_lst2)
+            for t2 in trie_lst2:
+                t2["tot"] -= 1
+            t2 = trie_lst[0][num]
+            t2["tot"] -= 1
+        full_trie["tot"] -= 1
+        dig_lst.pop()
+    
+    recur(n + 2, trie_lst)
 
+    return res
+
+def allBinaryCirclesSum(n: int=5) -> List[int]:
+    """
+    Solution to Project Euler #265
+    """
+    return sum(findAllBinaryCircles(n))
 
 if __name__ == "__main__":
-    to_evaluate = {253}
+    to_evaluate = {260}
     since0 = time.time()
 
     if not to_evaluate or 251 in to_evaluate:
@@ -521,6 +651,15 @@ if __name__ == "__main__":
         res = constructingLinearPuzzleMaxSegmentCountMeanFloat(n_pieces=40)
         print(f"Solution to Project Euler #253 = {res}, calculated in {time.time() - since:.4f} seconds")
     
+    if not to_evaluate or 260 in to_evaluate:
+        since = time.time()
+        res = stoneGamePlayerTwoWinningConfigurationsSum(n_piles=3, pile_size_max=100)
+        print(f"Solution to Project Euler #260 = {res}, calculated in {time.time() - since:.4f} seconds")
+
+    if not to_evaluate or 265 in to_evaluate:
+        since = time.time()
+        res = allBinaryCirclesSum(n=5)
+        print(f"Solution to Project Euler #265 = {res}, calculated in {time.time() - since:.4f} seconds")
 
     print(f"Total time taken = {time.time() - since0:.4f} seconds")
 
