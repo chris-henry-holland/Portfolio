@@ -24,14 +24,23 @@ from General_tools import (
 from gameplay import GamePlay
 
 class Game:
-    def __init__(self, head_size=25, arena_shape=(16, 15),
-            head_init_pos=None, head_init_direct=(0, 1),
-            move_rate=15, n_frame_per_move=2,
-            n_fruit=1, border=((1, 1), (4, 1)),
-            font=None, auto=False, auto_startpos=(1, 1),
-            auto_fruitpos=(((-2, 1), (1, 0)), ((-2, -2), (0, 1)),
-            ((1, -2), (-1, 0)), ((1, 1), (0, -1))),
-            navkeys=None, menu_framerate: int=60):
+    def __init__(
+        self,
+        head_size: int=25,
+        arena_shape: Tuple[int, int]=(16, 15),
+        head_init_pos: Optional[Tuple[int, int]]=None,
+        head_init_direct: Tuple[int, int]=(0, 1),
+        move_rate: float=15,
+        n_frame_per_move: float=2,
+        n_fruit: int=1,
+        border: Tuple[Tuple[int, int], Tuple[int, int]]=((1, 1), (4, 1)),
+        font: Optional["pg.freetype"]=None,
+        auto: bool=False,
+        auto_startpos: Tuple[int, int]=(1, 1),
+        auto_fruitpos: List[Tuple[Tuple[int, int], Tuple[int, int]]]=(((-2, 1), (1, 0)), ((-2, -2), (0, 1)), ((1, -2), (-1, 0)), ((1, 1), (0, -1))),
+        navkeys: Optional[Tuple[Tuple[Set[int]]]]=None,
+        menu_framerate: int=60,
+    ):
         pg.init()
         self.head_size = head_size
         self.arena_shape = arena_shape
@@ -65,6 +74,7 @@ class Game:
         self.button_border = 0.4 # relative to head_size
         self.menu_arrow_cycle_delay_s = (0.5, 0.1)
         
+        self.navkeys = navkeys
         self.enter_keys = enter_keys_def_glob
         self.menu_nav_keys = ({K_DOWN}, {K_UP})
     
@@ -84,7 +94,7 @@ class Game:
                 border=self.border,
                 font=self.font,
                 auto=False,
-                navkeys=None
+                navkeys=self.navkeys,
             )
             self._gameplay = res
         return res
@@ -197,8 +207,8 @@ class Game:
             mouse_enabled=mouse_enabled,
             navkeys_enabled=navkeys_enabled,
             navkey_cycle_delay_s=navkey_cycle_delay_s,
-            #navkeys=None,
-            #enter_keys=None,
+            navkeys=self.navkeys,
+            enter_keys=self.enter_keys,
         )
         
         text_group = TextGroup([], max_height0=None, font=None, font_size=None, min_lowercase=True, text_global_asc_desc_chars=None)
@@ -231,7 +241,7 @@ class Game:
 
         slider_plus_parameters.append([{
             "title": "Speed",
-            "val_range": (1, 20),
+            "val_range": (4, 24),
             "increment_start": 0,
             "increment": 1,
             "init_val": 1,
@@ -240,7 +250,31 @@ class Game:
             "demarc_start_val": 0,
             "val_text_dp": 0,
         }])
+
+        slider_plus_parameters.append([{
+            "title": "Arena width",
+            "val_range": (10, 100),
+            "increment_start": 0,
+            "increment": 1,
+            "init_val": 10,
+            "demarc_numbers_dp": 0,
+            "demarc_intervals": (10,),
+            "demarc_start_val": 0,
+            "val_text_dp": 0,
+        }])
         
+        slider_plus_parameters.append([{
+            "title": "Arena height",
+            "val_range": (10, 100),
+            "increment_start": 0,
+            "increment": 1,
+            "init_val": 10,
+            "demarc_numbers_dp": 0,
+            "demarc_intervals": (10,),
+            "demarc_start_val": 0,
+            "val_text_dp": 0,
+        }])
+
         settings_menu_overlay.setupSliderPlusGrid(
             anchor_pos_norm=(0.5, 0.5),
             anchor_type="center",
@@ -311,12 +345,32 @@ class Game:
         smo = self.settings_menu_overlay
         # Number of fruits
         smo.slider_plus_grid[0, 0].slider.setValueDirectly(self.n_fruit)
-        print(f"self.n_fruit = {self.n_fruit}, fruit count slider value = {smo.slider_plus_grid[0, 0].val}, slider value raw = {getattr(smo.slider_plus_grid[0, 0], 'val_raw', None)}")
+        print(f"self.n_fruit = {self.n_fruit}, fruit count slider value = {smo.slider_plus_grid[0, 0].val}, slider value raw = {getattr(smo.slider_plus_grid[0, 0], '_val_raw', None)}")
+        smo.slider_plus_grid[0, 1].slider.setValueDirectly(self.move_rate)
+        smo.slider_plus_grid[0, 2].slider.setValueDirectly(self.arena_shape[0])
+        smo.slider_plus_grid[0, 3].slider.setValueDirectly(self.arena_shape[1])
         return
 
     def applySettingsMenuSliders(self) -> None:
         smo = self.settings_menu_overlay
         self.n_fruit = smo.slider_plus_grid[0, 0].val
+        self.move_rate = smo.slider_plus_grid[0, 1].val
+        self.arena_shape = (smo.slider_plus_grid[0, 2].val, smo.slider_plus_grid[0, 3].val)
+        return
+
+    def _resetScreen(self) -> None:
+        self._screen = pg.display.set_mode(self.screen_shape)
+        for menu_attr in ("_main_menu_overlay", "_settings_menu_overlay"):
+            menu = getattr(self, menu_attr, None)
+            if menu is None: continue
+            menu.shape = self.screen_shape
+            print(f"self.screen_shape = {self.screen_shape}, {menu} shape = {menu.shape}")
+        #gameplay_obj = getattr(self, "_gameplay", None)
+        #if gameplay_obj is not None:
+        #    gameplay_obj.head_size = self.head_size
+        #     gameplay_obj.arena_shape = self.arena_shape
+        #    gameplay_obj.border = self.border
+        return
 
     @property
     def border(self):
@@ -326,6 +380,14 @@ class Game:
     def border(self, border):
         self._arena_ul = None
         self._border = border
+
+        gameplay_obj = getattr(self, "_gameplay", None)
+        if gameplay_obj is not None:
+            gameplay_obj.border = border
+        
+        if getattr(self, "_screen", None) is not None:
+            self._resetScreen()
+        return
     
     @property
     def head_size(self):
@@ -337,6 +399,14 @@ class Game:
         self._screen_shape = None
         self._arena_ul = None
         self._head_size = head_size
+
+        gameplay_obj = getattr(self, "_gameplay", None)
+        if gameplay_obj is not None:
+            gameplay_obj.head_size = head_size
+        
+        if getattr(self, "_screen", None) is not None:
+            self._resetScreen()
+        return
     
     @property
     def arena_shape(self):
@@ -349,6 +419,15 @@ class Game:
         self._auto_fruitpos = None
         self._arena_ul = None
         self._arena_shape = arena_shape
+        
+        gameplay_obj = getattr(self, "_gameplay", None)
+        if gameplay_obj is not None:
+            print("setting gameplay object arena shape")
+            gameplay_obj.arena_shape = arena_shape
+        
+        if getattr(self, "_screen", None) is not None:
+            self._resetScreen()
+        return
     
     @property
     def arena_dims(self):
@@ -378,14 +457,18 @@ class Game:
             return screen_shape
         self._screen_shape = tuple(self.head_size * (x + sum(y))\
                 for x, y in zip(self.arena_shape, self.border))
-        
+        #screen = getattr(self, "_screen", None)
+        #if screen is not None:
+        #    #screen.size = self._screen_shape
+        #    self._screen = pg.display.set_mode(self._screen_shape)
         return self._screen_shape
     
     @property
     def screen(self):
         screen = getattr(self, "_screen", None)
         if screen is None:
-            self._screen = pg.display.set_mode(self.screen_shape)
+            self._resetScreen()
+            #self._screen = pg.display.set_mode(self.screen_shape)
             pg.display.set_caption("Anguis")
         return self._screen
     
@@ -409,6 +492,19 @@ class Game:
         gameplay_obj = getattr(self, "_gameplay", None)
         if gameplay_obj is not None:
             gameplay_obj.n_fruit = new_n_fruit
+        return
+    
+    @property
+    def move_rate(self) -> int:
+        return self._move_rate
+    
+    @move_rate.setter
+    def move_rate(self, new_move_rate: int) -> None:
+        if new_move_rate == getattr(self, "_move_rate", None): return
+        self._move_rate = new_move_rate
+        gameplay_obj = getattr(self, "_gameplay", None)
+        if gameplay_obj is not None:
+            gameplay_obj.move_rate = new_move_rate
         return
     
     @property
@@ -594,5 +690,10 @@ class Game:
         return self.mainMenu()
 
 if __name__ == "__main__":
-    game = Game(move_rate=15, n_fruit=1, head_init_direct=(0, 0))
+    game = Game(
+        arena_shape=(15, 16),
+        move_rate=15,
+        n_fruit=1,
+        head_init_direct=(0, 0)
+    )
     game.run()

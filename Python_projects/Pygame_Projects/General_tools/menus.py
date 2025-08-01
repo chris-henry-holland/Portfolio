@@ -39,6 +39,10 @@ class MenuOverlayBase(InteractiveDisplayComponentBase):
 
     reset_graph_edges = {
         #"screen_shape": {"shape": True},
+        "shape": {"overlay_bg_surf": True},
+
+        "overlay_color": {"overlay_bg_surf": True},
+
         "overlay_bg_surf": {"static_bg_surf": True},
         "text_surf": {"static_bg_surf": True},
         "static_bg_surf": {"display_surf": True},
@@ -303,6 +307,7 @@ class MenuOverlayBase(InteractiveDisplayComponentBase):
         return res
     """
     def createOverlayBackgroundSurface(self) -> "pg.Surface":
+        print("Using createOverlayBackgroundSurface()")
         if self.overlay_color is None: return ()
         overlay_bg_surf = pg.Surface(self.shape, pg.SRCALPHA)
         color, alpha0 = self.overlay_color
@@ -318,11 +323,19 @@ class MenuOverlayBase(InteractiveDisplayComponentBase):
             self._overlay_bg_img_constructor = res
         return res
     """
-    def createOverlayBackgroundImageConstructor(self):
+    def createOverlayBackgroundImageConstructor(self) -> Callable[["pg.Surface"], None]:
         overlay_bg_surf = self.overlay_bg_surf
         if overlay_bg_surf == ():
             return lambda surf: None
-        return lambda surf: surf.blit(overlay_bg_surf, (0, 0))
+        
+        def constructor(obj: "MenuOverlayBase", surf: "pg.Surface") -> None:
+            print("Using overlay background surface constructor")
+            overlay_bg_surf = self.overlay_bg_surf
+            if not overlay_bg_surf: return
+            surf.blit(overlay_bg_surf, (0, 0))
+            return
+        
+        return constructor
     """
     @property
     def text_surf(self):
@@ -332,7 +345,7 @@ class MenuOverlayBase(InteractiveDisplayComponentBase):
             self._text_surf = res
         return res
     """
-    def createTextSurface(self):
+    def createTextSurface(self) -> "pg.Surface":
         #print("Using createTextSurface()")
         if not self.text_objects:
             return ()
@@ -348,11 +361,18 @@ class MenuOverlayBase(InteractiveDisplayComponentBase):
             self._text_img_constructor = res
         return res
     """
-    def createTextImageConstructor(self):
-        text_surf = self.text_surf
-        if text_surf == ():
-            return lambda surf: None
-        return lambda surf: surf.blit(text_surf, (0, 0))
+    def createTextImageConstructor(self) -> Callable[["MenuOverlayBase", "pg.Surface"], None]:
+        def constructor(obj: "MenuOverlayBase", surf: "pg.Surface") -> None:
+            text_surf = self.text_surf
+            if not text_surf: return
+            surf.blit(text_surf, (0, 0))
+            return
+
+        #text_surf = self.text_surf
+        #if text_surf == ():
+        #    return lambda obj, surf: None
+        
+        return constructor
     """
     @property
     def static_bg_surf(self):
@@ -373,7 +393,7 @@ class MenuOverlayBase(InteractiveDisplayComponentBase):
         static_bg_surf = pg.Surface(self.shape, pg.SRCALPHA)
         for attr in attrs:
             img_constr_attr = f"{attr}_img_constructor"
-            getattr(self, img_constr_attr)(static_bg_surf)
+            getattr(self, img_constr_attr)(self, static_bg_surf)
         return static_bg_surf
     """
     @property
@@ -385,11 +405,20 @@ class MenuOverlayBase(InteractiveDisplayComponentBase):
         return res
     """
     def createStaticBackgroundImageConstructor(self) -> Callable[["MenuOverlayBase", "pg.Surface"], None]:
+        def constructor(obj: "MenuOverlayBase", surf: "pg.Surface") -> None:
+            static_bg_surf = self.static_bg_surf
+            if not static_bg_surf: return
+            surf.blit(static_bg_surf, (0, 0))
+            return
+        
+        return constructor
+        """
         #print("creating background constructor")
         static_bg_surf = self.static_bg_surf
         if static_bg_surf == ():
             return lambda surf: None
         return lambda obj, surf: surf.blit(static_bg_surf, (0, 0))
+        """
     
     def createDisplaySurface(self) -> Optional["pg.Surface"]:
         #print("Using MenuOverlayBase method createDisplaySurface()")
@@ -585,6 +614,7 @@ class ButtonMenuOverlay(MenuOverlayBase):
         new_val: Optional[Tuple[int, int]],
         prev_val: Optional[Tuple[int, int]],
     ) -> None:
+        print("Using customButtonGridShapeActualChangePropogation()")
         button_grid = self.button_grid
         if button_grid is None: return
         button_grid.shape = new_val
@@ -595,6 +625,7 @@ class ButtonMenuOverlay(MenuOverlayBase):
         new_val: Optional[Tuple[int, int]],
         prev_val: Optional[Tuple[int, int]],
     ) -> None:
+        print("Using customButtonGridAnchorPositionActualChangePropogation()")
         button_grid = self.button_grid
         if button_grid is None: return
         button_grid.anchor_rel_pos = new_val

@@ -503,14 +503,36 @@ class GamePlay:
         pos = divmod(pos_flat, self.arena_shape[1])
         return self.screenPosition(pos)
     
+    def _resetGameDimensions(self) -> None:
+        print("Using _resetGameDimensions()")
+        self._arena_dims = None
+        self._screen_shape = None
+        self._auto_fruitpos = None
+        self._arena_topleft = None
+        self._arena = None
+        self._score_text_max_height = None
+        self._score_text_static_max_width = None
+        self._score_text_number_max_width = None
+        self._score_text_static_bottomright_pos = None
+        self._score_text_number_bottomleft_pos = None
+        self._static_bg_surf = None
+
+        for menu_attr in ("_pause_overlay", "_death_overlay"):
+            menu = getattr(self, menu_attr, None)
+            if menu is None: continue
+            menu.shape = self.screen_shape
+            #print(f"self.screen_shape = {self.screen_shape}, {menu} shape = {menu.shape}")
+        return
+
     @property
     def border(self):
         return self._border
     
     @border.setter
     def border(self, border):
-        self._arena_topleft = None
         self._border = border
+        self._resetGameDimensions()
+        return
     
     @property
     def head_size(self):
@@ -518,10 +540,12 @@ class GamePlay:
     
     @head_size.setter
     def head_size(self, head_size):
-        self._arena_dims = None
-        self._screen_shape = None
-        self._arena_topleft = None
         self._head_size = head_size
+        self._resetGameDimensions()
+        #self._arena_dims = None
+        #self._screen_shape = None
+        #self._arena_topleft = None
+        return
     
     @property
     def arena_shape(self):
@@ -529,17 +553,16 @@ class GamePlay:
     
     @arena_shape.setter
     def arena_shape(self, arena_shape):
-        self._arena_dims = None
-        self._screen_shape = None
-        self._auto_fruitpos = None
-        self._arena_topleft = None
         self._arena_shape = arena_shape
+        self._resetGameDimensions()
+        return
     
     @property
     def arena_dims(self):
         arena_dims = getattr(self, "_arena_dims", None)
         if arena_dims is not None:
             return arena_dims
+        print("calculating arena_dims")
         self._arena_dims = tuple(self._head_size * x for x in\
                                 self._arena_shape)
         return self._arena_dims
@@ -591,31 +614,31 @@ class GamePlay:
         self._auto_fruitpos = tuple(auto_fruitpos)
         return self._auto_fruitpos
     
-    @property
-    def bg_surf(self):
-        res = getattr(self, "_bg_surf", None)
-        if res is None:
-            res = self.createBackgroundSurface()
-            self._bg_surf = res
-        return res
+    #@property
+    #def bg_surf(self):
+    #    res = getattr(self, "_bg_surf", None)
+    #    if res is None:
+    #        res = self.createBackgroundSurface()
+    #        self._bg_surf = res
+    #    return res
     
-    def createBackgroundSurface(self):
-        surf = pg.Surface(self.screen_shape)
-        color, alpha0 = self.bg_color
-        surf.set_alpha(alpha0 * 255)
-        surf.fill(color)
-        return surf
+    #def createBackgroundSurface(self):
+    #    surf = pg.Surface(self.screen_shape)
+    #    color, alpha0 = self.bg_color
+    #    surf.set_alpha(alpha0 * 255)
+    #    surf.fill(color)
+    #    return surf
     
-    @property
-    def bg_img_constructor(self):
-        res = getattr(self, "_bg_img_constructor", None)
-        if res is None:
-            res = self.createBackgroudImageConstructor()
-            self._bg_img_constructor = res
-        return res
-    
-    def createBackgroundImageConstructor(self) -> Callable[[], None]:
-        return lambda: self.screen.blit(self.bg_surf, (0, 0))
+    #@property
+    #def bg_img_constructor(self):
+    #    res = getattr(self, "_bg_img_constructor", None)
+    #    if res is None:
+    #        res = self.createBackgroudImageConstructor()
+    #        self._bg_img_constructor = res
+    #    return res
+    #
+    #def createBackgroundImageConstructor(self) -> Callable[[], None]:
+    #    return lambda: self.screen.blit(self.bg_surf, (0, 0))
     
     @property
     def arena(self):
@@ -626,6 +649,7 @@ class GamePlay:
         return res
     
     def createArena(self):
+        print("Using createArena()")
         return pg.Rect(*self.arena_topleft, *self.arena_dims)
     
     @property
@@ -652,11 +676,11 @@ class GamePlay:
     def title_text_anchor_rel_pos(self):
         res = getattr(self, "_title_text_anchor_rel_pos", None)
         if res is None:
-            res = self.findTitleTextAnchorPosition()
+            res = self.calculateTitleTextAnchorPosition()
             self._title_text_anchor_rel_pos = res
         return res
     
-    def findTitleTextAnchorPosition(self):
+    def calculateTitleTextAnchorPosition(self):
         anchor_rel_pos = (self.border[0][0], self.border[1][0] / 2)
         return tuple(x * self.head_size for x in anchor_rel_pos)
     
@@ -664,11 +688,11 @@ class GamePlay:
     def title_text_max_shape(self):
         res = getattr(self, "_title_text_max_shape", None)
         if res is None:
-            res = self.findTitleTextMaxShape()
+            res = self.calculateTitleTextMaxShape()
             self._title_text_max_shape = res
         return res
     
-    def findTitleTextMaxShape(self):
+    def calculateTitleTextMaxShape(self):
         max_shape = (self.arena_shape[0] * 0.48, self.border[1][0] * 0.9)
         return tuple(x * self.head_size for x in max_shape)
     
@@ -687,21 +711,70 @@ class GamePlay:
         return res
     
     def createTitleTextImageConstructor(self) -> Callable[["pg.Surface"], None]:
-        def func(surf) -> None:
+        def constructor(surf) -> None:
             text_obj = self.title_text
             text_obj.max_shape = self.title_text_max_shape
             text_obj.anchor_rel_pos = self.title_text_anchor_rel_pos
             text_obj.draw(surf, self.title_text_anchor_rel_pos, anchor_type="midleft")
-        return func
-        
+        return constructor
+    
+    def calculateScoreTextMaxHeight(self) -> float:
+        return self.border[1][0] * 0.25 * self.head_size
+
     @property
-    def score_text_group(self):
-        res = getattr(self, "_score_text_group", None)
+    def score_text_max_height(self):
+        res = getattr(self, "_score_text_max_height", None)
         if res is None:
-            res = self.createScoreTextGroup()
-            self._score_text_group = res
+            res = self.calculateScoreTextMaxHeight()
+            self._score_text_max_height = res
         return res
     
+    def calculateScoreTextStaticMaxWidth(self) -> float:
+        self.arena_shape[0] * 0.3 * self.head_size
+
+    @property
+    def score_text_static_max_width(self):
+        res = getattr(self, "_score_text_static_max_width", None)
+        if res is None:
+            res = self.calculateScoreTextStaticMaxWidth()
+            self._score_text_static_max_width = res
+        return res 
+    
+    def calculateScoreTextNumberMaxWidth(self) -> float:
+        return self.arena_shape[0] * 0.1 * self.head_size
+
+    @property
+    def score_text_number_max_width(self):
+        res = getattr(self, "_score_text_number_max_width", None)
+        if res is None:
+            res = self.calculateScoreTextNumberMaxWidth()
+            self._score_text_number_max_width = res
+        return res
+    
+    def calculateScoreTextStaticBottomRightPosition(self) -> Tuple[int, int]:
+        return ((self.border[0][0] + self.arena_shape[0]) * self.head_size - self.score_text_number_max_width, self.border[1][0] * 0.9 * self.head_size)
+        #re tuple(x * self.head_size for x in txt_anchor_rel_pos)
+
+    @property
+    def score_text_static_bottomright_pos(self):
+        res = getattr(self, "_score_text_static_bottomright_pos", None)
+        if res is None:
+            res = self.calculateScoreTextStaticBottomRightPosition()
+            self._score_text_static_bottomright_pos = res
+        return res
+
+    def calculateScoreTextNumberBottomLeftPosition(self) -> Tuple[int, int]:
+        return ((self.border[0][0] + self.arena_shape[0]) * self.head_size - self.score_text_number_max_width, self.border[1][0] * 0.9 * self.head_size)
+        #re tuple(x * self.head_size for x in txt_anchor_rel_pos)
+
+    @property
+    def score_text_number_bottomleft_pos(self):
+        res = getattr(self, "_score_text_number_bottomleft_pos", None)
+        if res is None:
+            res = self.calculateScoreTextNumberBottomLeftPosition()
+            self._score_text_number_bottomleft_pos = res
+        return res
+
     def createScoreTextGroup(self):
         max_score = self.arena_shape[0] * self.arena_shape[1] - self.n_fruit
         max_n_dig = 0
@@ -711,6 +784,7 @@ class GamePlay:
         max_n_dig = max(max_n_dig, 1)
         #nums = [str(d) * max_n_dig for d in range(10)]
         
+        """
         num_max_width = self.arena_shape[0] * 0.1
         num_max_width_pixel = num_max_width * self.head_size
         num_anchor_rel_pos = (self.border[0][0] + self.arena_shape[0] - num_max_width, self.border[1][0] * 0.9)
@@ -722,6 +796,15 @@ class GamePlay:
         
         max_h = self.border[1][0] * 0.25
         max_h_pixel = max_h * self.head_size
+        """
+        max_h_pixel = self.score_text_max_height
+
+        txt_max_width_pixel = self.score_text_number_max_width
+        txt_anchor_rel_pos_pixel = self.score_text_static_bottomright_pos
+
+        num_max_width_pixel = self.score_text_number_max_width
+        num_anchor_rel_pos_pixel = self.score_text_number_bottomleft_pos
+        
         
         text_list = [{"text": "Score: ", "anchor_rel_pos0": txt_anchor_rel_pos_pixel, "anchor_type0": "bottomright", "max_shape": (None, txt_max_width_pixel), "font_color": (named_colors_def["black"], 1)},\
                 {"text": "0", "anchor_rel_pos0": num_anchor_rel_pos_pixel, "anchor_type0": "bottomleft", "max_shape": (None, num_max_width_pixel), "font_color": (named_colors_def["black"], 1)}]
@@ -734,55 +817,130 @@ class GamePlay:
         return text_group, text_objs
     
     @property
+    def score_text_group_and_objs(self):
+        res = getattr(self, "_score_text_group_and_objs", None)
+        if res is None:
+            res = self.createScoreTextGroup()
+            self._score_text_group_and_objs = res
+        return res
+
+    @property
     def score_text_static(self):
-        return self.score_text_group[1][0]
+        return self.score_text_group_and_objs[1][0]
     
+    @property
+    def score_text_number(self):
+        return self.score_text_group_and_objs[1][1]
+    
+    def updateScoreTextStaticDimensions(self) -> None:
+        text_group, text_objs = self.score_text_group_and_objs
+        
+        max_h = self.score_text_max_height
+        text_group.max_height0 = max_h
+
+        max_w = self.score_text_static_max_width
+        
+        text_objs[0].max_shape = (None, max_w)
+        
+        anchor = self.score_text_static_bottomright_pos
+        print(f"static score text anchor position = {anchor}")
+        text_objs[0].anchor_rel_pos0 = anchor
+        return
+
+    def updateScoreTextNumberDimensions(self) -> None:
+        text_group, text_objs = self.score_text_group_and_objs
+        
+        max_h = self.score_text_max_height
+        text_group.max_height0 = max_h
+
+        max_w = self.score_text_number_max_width
+        
+        for i in range(1, len(text_objs)):
+            text_objs[i].max_shape = (None, max_w)
+
+        anchor = self.score_text_number_bottomleft_pos
+        text_objs[1].anchor_rel_pos0 = anchor
+        return
+
+    
+    
+    def createScoreTextStaticImageConstructor(self) -> Callable[["pg.Surface"], None]:
+        def constructor(surf) -> None:
+            text_obj = self.score_text_static
+            self.updateScoreTextStaticDimensions()
+            text_obj.draw(surf, self.score_text_static_bottomright_pos, anchor_type="bottomright")
+        return constructor
+
     @property
     def score_text_static_img_constructor(self):
         res = getattr(self, "_score_text_static_img_constructor", None)
         if res is None:
-            res = self.createTextImageConstructor(self.score_text_static)
+            res = self.createScoreTextStaticImageConstructor()
             self._score_text_static_img_constructor = res
         return res
     
-    def createTextImageConstructor(self, text_obj) -> Callable[["pg.Surface"], None]:
-        def func(surf: "pg.Surface") -> None:
-            #surf.set_alpha(255)
-            #surf.fill((0, 255, 255))
-            text_obj._screen = surf
-            text_obj.draw(surf)
-        return func
-    
-    @property
-    def score_text_number(self):
-        return self.score_text_group[1][1]
+    #def createTextImageConstructor(self, text_obj) -> Callable[["pg.Surface"], None]:
+    #    def constructor(surf: "pg.Surface") -> None:
+    #        #surf.set_alpha(255)
+    #        #surf.fill((0, 255, 255))
+    #        text_obj._screen = surf
+    #        text_obj.draw(surf)
+    #    return constructor
     
     @property
     def score_text_number_img_constructor(self):
         res = getattr(self, "_score_text_number_img_constructor", None)
         if res is None:
-            res = self.createTextImageConstructor(self.score_text_number)
+            res = self.createScoreTextNumberImageConstructor()
             self._score_text_number_img_constructor = res
         return res
     
+    def createScoreTextNumberImageConstructor(self) -> Callable[["pg.Surface"], None]:
+        def constructor(surf) -> None:
+            #print(f"constructing score text number")
+            self.updateScoreTextNumberDimensions()
+            text_obj = self.score_text_number
+            text_obj.draw(surf, self.score_text_number_bottomleft_pos, anchor_type="bottomleft")
+        return constructor
+
     @property
-    def static_bg_imgs_constructor(self):
-        res = getattr(self, "_static_bg_imgs_constructor", None)
+    def static_bg_img_constructor(self):
+        res = getattr(self, "_static_bg_img_constructor", None)
         if res is None:
-            res = self.constructStaticBackgroundImages()
+            res = self.createStaticBackgroundImageConstructor()
             self._static_bg_imgs_constructor = res
         return res
     
-    def constructStaticBackgroundImages(self) -> Callable[[], None]:
-        self._bg_surf = None
-        surf = self.bg_surf
-        for nm in self.static_bg_imgs_constructor_names:
-            constructor = getattr(self, f"{nm}_img_constructor", lambda surf: None)
-            constructor(surf)
-        return lambda: self.screen.blit(surf, (0, 0))
+    def createStaticBackgroundImageConstructor(self) -> Callable[[], None]:
+        def constructor(surf: "pg.Surface") -> None:
+            for nm in self.static_bg_imgs_constructor_names:
+                constructor = getattr(self, f"{nm}_img_constructor", lambda surf: None)
+                constructor(surf)
+            
+        return constructor
     
+    def createBackgroundSurface(self):
+        surf = pg.Surface(self.screen_shape)
+        color, alpha0 = self.bg_color
+        surf.set_alpha(alpha0 * 255)
+        surf.fill(color)
+        return surf
+
+    @property
+    def static_bg_surf(self) -> "pg.Surface":
+        res = getattr(self, "_static_bg_surf", None)
+        if res is None:
+            res = self.createBackgroundSurface()
+            self.static_bg_img_constructor(res)
+            self._static_bg_surf = res
+        return res
+
     def drawStaticBackgroundImages(self) -> None:
-        self.static_bg_imgs_constructor()
+        #self._bg_surf = None
+        #self.static_bg_imgs_constructor(self.bg_surf)
+        surf = self.static_bg_surf
+        if surf is not None:
+            self.screen.blit(surf, (0, 0))
         return
     
     def draw(self, score: int, overlay=None) -> None:

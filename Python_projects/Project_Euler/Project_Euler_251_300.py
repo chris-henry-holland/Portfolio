@@ -436,6 +436,77 @@ def constructingLinearPuzzleMaxSegmentCountMeanFloat(n_pieces: int=40) -> float:
     print(frac)
     return frac.numerator / frac.denominator
 
+# Problem 265
+def findAllBinaryCircles(n: int) -> List[int]:
+    length = 1 << n
+    Trie = lambda: defaultdict(Trie)
+    init_lst = [1] + ([0] * n) + [1]
+
+    curr_trie = Trie()
+    
+    
+    t = curr_trie
+    
+    for num in init_lst:
+        t["tot"] = 1
+        t = t[num]
+    trie_lst = []
+    t = curr_trie
+    t["tot"] = t.get("tot", 0) + n + 1
+    for i0 in range(n):
+        t2 = t[1]
+        t2["tot"] = 1
+        trie_lst.append(t2)
+        t = t[0]
+        t["tot"] = n - i0
+    trie_lst = trie_lst[::-1]
+    dig_lst = list(init_lst)
+
+    res = []
+
+    def removeSubs(trie: "Trie") -> None:
+
+        def recur2(t: "Trie", num: int, t0: Optional["Trie"]) -> None:
+            if t0 is not None and "sub" not in t.keys(): return
+            for num in range(2):
+                if not num in t.keys(): continue
+                recur(t[num], num, t)
+            t["tot"] -= t["sub"]
+            if t["tot"] or t0 is None: return
+            t0.pop(num)
+            return
+        recur2(trie, -1, None)
+        return
+
+    def recur(idx: int, trie_lst: List["Trie"]) -> None:
+        if idx == length:
+            n_exp0 = 1
+            for i, t in trie_lst:
+                n_exp = n_exp0
+                for j in range(i + 1):
+                    num = dig_lst[j]
+                    t = t[num]
+                    t["sub"] = t.get("sub", 0) + 1
+                    t["tot"] = t.get("tot", 0) + 1
+                    if t["tot"] > n_exp: break
+                    n_exp >>= 1
+                else:
+                    n_exp0 <<= 1
+                    continue
+                break
+            else:
+                ans = 0
+                for d in dig_lst[1:]:
+                    ans = (ans << 1) + d
+                ans <<= 1
+                if dig_lst[0]: ans += 1
+                res.append(ans)
+            for t in trie_lst:
+                removeSubs(t)
+            return
+        
+
+
 if __name__ == "__main__":
     to_evaluate = {253}
     since0 = time.time()
