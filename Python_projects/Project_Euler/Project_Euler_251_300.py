@@ -18,6 +18,7 @@ sys.path.append(os.path.join(os.path.dirname(__file__), "../Algorithms_and_Datas
 sys.path.append(os.path.join(os.path.dirname(__file__), "../Algorithms_and_Datastructures/Data_structures"))
 from misc_mathematical_algorithms import CustomFraction, gcd, lcm, isqrt, integerNthRoot
 from prime_sieves import PrimeSPFsieve, SimplePrimeSieve
+from pseudorandom_number_generators import blumBlumShubPseudoRandomGenerator
 
 # Problem 251
 def cardanoTripletGeneratorBySum(sum_max: Optional[int]=None) -> Generator[Tuple[int, Tuple[int, int, int]], None, None]:
@@ -145,6 +146,264 @@ def cardanoTripletCount(sum_max: int=11 * 10 ** 7) -> int:
             return res
         res += recur(0, b_curr=1, c_curr=c0)
 
+    return res
+
+# Problem 252
+def triangleDoubleArea(p1: Tuple[int, int], p2: Tuple[int, int], p3: Tuple[int, int]) -> int:
+    res = abs(p1[0] * (p2[1] - p3[1]) + p2[0] * (p3[1] - p1[1]) + p3[0] * (p1[1] - p2[1]))
+    #print(p1, p2, p3, res)
+    return res
+
+def calculateLargestEmptyConvexPolygonDoubleArea(points: List[Tuple[int, int]]) -> int:
+    # Review- try to make faster
+    n = len(points)
+    points.sort()
+    #print(points)
+
+    def calculateFullSlope(idx1: int, idx2: int) -> Tuple[bool, CustomFraction]:
+        pt1, pt2 = points[idx1], points[idx2]
+        diff = tuple(x - y for x, y in zip(pt2, pt1))
+        return (diff[0] < 0, CustomFraction(diff[1], diff[0]))
+
+    def largestDoubleAreaWithMinimumPoint(min_pt_idx: int) -> int:
+        
+        seen_order = [min_pt_idx]
+        area_stks = [[((False, CustomFraction(-1, 0)), 0)]]
+        ref_pt = points[min_pt_idx]
+        #print(min_pt_idx, ref_pt)
+        sweep_pts = []
+        for idx in range(min_pt_idx + 1, n):
+            pt = points[idx]
+            diff = tuple(x - y for x, y in zip(pt, ref_pt))
+            slope = CustomFraction(diff[1], diff[0])
+            sweep_pts.append((slope, diff, idx))
+        sweep_pts.sort()
+        res = 0
+        for _, _, idx in sweep_pts:
+            src_pts = []
+            for i in reversed(range(len(seen_order))):
+                idx0 = seen_order[i]
+                slope = calculateFullSlope(idx0, idx)
+                if src_pts and slope >= src_pts[-1][0]:
+                    continue
+                src_pts.append((slope, i))
+            #src_pts = src_pts[::-1]
+            #print(points[idx])
+            #print([(points[seen_order[tup[1]]], tup[0]) for tup in reversed(src_pts)])
+            #print(src_pts)
+            #print(area_stks)
+            stk = []
+            #print(idx, points[idx], src_pts)
+            for slope, i2 in reversed(src_pts):
+                j = bisect.bisect_right(area_stks[i2], (slope, float("inf"))) - 1
+                if j < 0: continue
+                idx2 = seen_order[i2]
+                #print(area_stks[j])
+                area0 = area_stks[i2][j][1]
+                
+                area = area0 + triangleDoubleArea(ref_pt, points[idx], points[idx2])
+                #print(i2, slope, area_stks[i2], j, area0, area, ref_pt, points[idx], points[idx2])
+                #print(stk)
+                if stk and area <= stk[-1][1]: continue
+                res = max(res, area)
+                stk.append((slope, area))
+            seen_order.append(idx)
+            area_stks.append(stk)
+        #print(seen_order)
+        #print([points[idx] for idx in seen_order])
+        #print(area_stks)
+        return res
+    
+    res = 0
+    for idx in range(n):
+        if not idx % 10:
+            print(f"{idx} of {n} vertices processed")
+        ans = largestDoubleAreaWithMinimumPoint(idx)
+        if ans > res:
+            #print(points[idx], ans)
+            res = max(res, ans)
+        #break
+    return res
+    """
+    points = [tuple(x) for x in points]
+    if len(points) < 3: return sorted(set(points))
+
+    comp = (lambda x, y: x <= y) if include_border_points else (lambda x, y: x < y)
+    
+    ref_pt = min(points)
+    sorted_pts = []
+    min_x_pts = []
+    for pos in points:
+        if pos[0] == ref_pt[0]:
+            min_x_pts.append(pos)
+            continue
+        diff = tuple(x - y for x, y in zip(pos, ref_pt))
+        slope = diff[1] / diff[0]
+        sorted_pts.append((slope, diff, pos))
+    sorted_pts.sort()
+    
+    if len(min_x_pts) > 1:
+        if include_border_points:
+            tail = sorted(min_x_pts)
+            pos = tail.pop()
+            sorted_pts.append((None, tuple(x - y for x, y in zip(pos, ref_pt)), pos))
+            tail = tail[::-1]
+        else:
+            pos = max(min_x_pts)
+            sorted_pts.append((None, tuple(x - y for x, y in zip(pos, ref_pt)), pos))
+            tail = [ref_pt]
+    else:
+        tail = []
+        tup0 = sorted_pts.pop()
+        diff0 = tup0[1]
+        while sorted_pts and diff0[0] * sorted_pts[-1][1][1] == diff0[1] * sorted_pts[-1][1][0]:
+            tail.append(sorted_pts.pop()[2])
+        tail = tail[::-1] if include_border_points else []
+        tail.append(ref_pt)
+        sorted_pts.append(tup0)
+    stk = [(sorted_pts[0][2], tuple(x - y for x, y in zip(sorted_pts[0][2], ref_pt)))]
+    order = [x[0] for x in stk]
+    for i in range(1, len(sorted_pts)):
+        pos = sorted_pts[i][2]
+        while stk:
+            diff = tuple(x - y for x, y in zip(pos, stk[-1][0]))
+            cross_prod = stk[-1][1][0] * diff[1] -\
+                    stk[-1][1][1] * diff[0]
+            if comp(0, cross_prod): break
+            stk.pop()
+        
+        stk.append((pos, tuple(x - y for x, y in zip(pos, (stk[-1][0] if stk else ref_pt)))))
+    res = [x[0] for x in stk] + tail
+
+    return [res[-1], *res[:-1]]
+    """
+
+def calculateLargestEmptyConvexPolygonAreaFloat(points: List[Tuple[int, int]]) -> float:
+    return 0.5 * calculateLargestEmptyConvexPolygonDoubleArea(points)
+
+def blumBlueShubPseudoRandomPointGenerator(
+        n_dim: int=2,
+        s_0: int=290797,
+        s_mod: int=50515093,
+        t_min: int=-1000,
+        t_max: int=999,
+) -> Generator[Tuple[Tuple[int, int], Tuple[int, int]], None, None]:
+    """
+    Generator yielding pseudo-random pints in n_dim-dimensional
+    space whose end points have integer Cartesian coordinates based
+    on the terms in a Blum Blum Shub sequence for a given seed value,
+    modulus and value range.
+
+    Each group of consecutive (n_dim) values in the specified Blum Blum
+    Shub sequence produces the (in order) the Cartesian coordinates of
+    a point.
+
+    To find the terms in the Blum Blum Shub sequence for a given seed
+    value, modulus and value range the following sequence s_i is used,
+    calculated from the recurrence relation:
+        s_(i + 1) = s_i * s_i (mod s_mod)
+    where s_0 is the seed value and s_mod is the modulus for this Blum
+    Blum Shub sequence.
+    For strictly positive integers i, the i:th term in the Blum Blum Shub
+    sequence, t_i is given by:
+        t_n = s_i + t_min (mod t_max - t_min + 1)
+    where t_min and t_max are the minimum and maximum values respectively
+    of the value range.
+
+    Note that the generator never terminates and thus any
+    iterator over this generator must include provision to
+    terminate (e.g. a break or return statement), otherwise
+    it would result in an infinite loop.
+
+    Args:
+        Optional named:
+        n_dim (int): The number of dimensions of the space for which
+                points are to be generated.
+            Default: 2
+        s_0 (int): Integer giving the seed value for this Blum Blum Shub
+                sequence.
+            Default: 290797
+        s_mod (int): Integer strictly greater than 1 giving the modulus
+                for this Blum Blum Shub sequence.
+            Default: 50515093
+        t_min (int): Integer giving the smallest value possible
+                for terms in the Blum Blum Shub sequence, and so the
+                smallest value possible for any coordinate for the
+                end points of the line segments.
+            Default: -1000
+        t_max (int): Integer giving the smallest value possible
+                for terms in the Blum Blum Shub sequence, and so the
+                largest value possible for any coordinate for the
+                end points of the line segments. Must be no smaller
+                than t_min.
+            Default: 999
+    
+    Yields:
+    n_dim-tuple of ints, with each integer value being between min_value
+    and max_value inclusive, representing the Cartesian coordinates of
+    a point based on the given Blum Blum Shub sequence as specified above.
+    """
+    it = iter(blumBlumShubPseudoRandomGenerator(s_0=s_0, s_mod=s_mod, t_min=t_min, t_max=t_max))
+    while True:
+        yield tuple(next(it) for _ in range(n_dim))
+    return
+
+def blumBlumShubPseudoRandomTwoDimensionalPointsLargestEmptyConvexHoleArea(
+        n_points: int=500,
+        blumblumshub_s_0: int=290797,
+        blumblumshub_s_mod: int=50515093,
+        coord_min: int=-1000,
+        coord_max: int=999,
+) -> int:
+    """
+    Solution to Project Euler #252
+
+    TODO
+
+
+    For details regarding the point generation, see the documentation
+    of blumBlueShubPseudoRandomPointGenerator(), from which (for the
+    given Blum Blum Shub parameters) the first n_points values are
+    taken as the points to be analysed.
+    
+    Args:
+        Optional named:
+        n_points (int): The number of points to be generated for which the
+                largest area of any convex hole is to be calculated.
+            Default=500
+        blumblumshub_s_0 (int): Integer giving the seed value for the Blum
+                Blum Shub sequence to be used to generate the line segments.
+            Default=290797
+        blumblumshub_s_mod (int): Integer strictly greater than 1 giving the
+                modulus for the Blum Blum Shub sequence to be used to generate
+                the line segments.
+            Default=50515093
+        coord_min (int): Integer giving the smalles value possible for either
+                x or y coordinate for the endpoints of the line segments.
+                Note that changes to this value will in general completely
+                change the line segments generated.
+            Default=-1000
+        coord_max (int): Integer giving the smalles value possible for either
+                x or y coordinate for the endpoints of the line segments.
+                Note that changes to this value will in general completely
+                change the line segments generated. Must be no smaller than
+                coord_min.
+            Default=999
+    
+    Returns:
+    Float (float) giving the largest area of any convex hole formed by the
+    n_points points generated by blumBlueShubPseudoRandomPointGenerator().
+    """
+    it = iter(blumBlueShubPseudoRandomPointGenerator(
+        n_dim=2,
+        s_0=blumblumshub_s_0,
+        s_mod=blumblumshub_s_mod,
+        t_min=coord_min,
+        t_max=coord_max,
+    ))
+    points = [next(it) for _ in range(n_points)]
+    #print(points)
+    res = calculateLargestEmptyConvexPolygonAreaFloat(points)
     return res
 
 # Problem 253
@@ -740,13 +999,24 @@ def allBinaryCirclesSum(n: int=5) -> List[int]:
     return sum(findAllBinaryCircles(n))
 
 if __name__ == "__main__":
-    to_evaluate = {260}
+    to_evaluate = {252}
     since0 = time.time()
 
     if not to_evaluate or 251 in to_evaluate:
         since = time.time()
         res = cardanoTripletCount(sum_max=11 * 10 ** 7)
         print(f"Solution to Project Euler #251 = {res}, calculated in {time.time() - since:.4f} seconds")
+
+    if not to_evaluate or 252 in to_evaluate:
+        since = time.time()
+        res = blumBlumShubPseudoRandomTwoDimensionalPointsLargestEmptyConvexHoleArea(
+            n_points=500,
+            blumblumshub_s_0=290797,
+            blumblumshub_s_mod=50515093,
+            coord_min=-1000,
+            coord_max=999,
+        )
+        print(f"Solution to Project Euler #252 = {res}, calculated in {time.time() - since:.4f} seconds")
 
     if not to_evaluate or 253 in to_evaluate:
         since = time.time()
