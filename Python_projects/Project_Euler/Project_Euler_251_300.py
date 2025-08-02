@@ -439,16 +439,45 @@ def constructingLinearPuzzleMaxSegmentCountMeanFloat(n_pieces: int=40) -> float:
 # Problem 260
 def stoneGamePlayerTwoWinningConfigurationsGenerator(n_piles: int, pile_size_max: int) -> Generator[Tuple[int], None, None]:
     # Using Sprague-Grundy
-
-    memo = {}
+    if pile_size_max < 0: return
+    #state0 = tuple([0] * n_piles)
+    #yield state0
+    """
+    seen_non_winning = set()
     def winning(state: List[int]) -> bool:
         state = tuple(sorted(state))
-        if state[-1] == 0: return False
-        args = state
-        if args in memo.keys(): return memo[args]
+        print(f"state = {state}")
+        length = len(state)
+        for idx, num in enumerate(state):
+            length -= 1
+            if not num or idx and num == state[idx - 1]: continue
+            sub = state[idx]
+            for bm in range(1 << length):
+                state2 = list(state)
+                
+                state2[idx] = 0
+                for i in range(length):
+                    if bm & 1:
+                        state2[idx + i + 1] -= sub
+                        if bm == 1: break
+                    bm >>= 1
+                print(f"state2 = {state2}")
+                if tuple(sorted(state2)) in seen_non_winning:
+                    print(f"non-winning state 2 = {state2}")
+                    return True
+        seen_non_winning.add(state)
+        return False
+                
+    """
+    seen_non_winning = set()#{state0}
+    def winning(state: List[int]) -> bool:
+        state = tuple(sorted(state))
+        print(f"state = {state}")
+        #if state[-1] == 0: return False
+        #args = state
+        #if args in memo.keys(): return memo[args]
         #res = 0
         #seen = SortedSet()
-        res = False
         for bm in range(1, 1 << n_piles):
             idx_lst = []
             mx = float("inf")
@@ -462,18 +491,16 @@ def stoneGamePlayerTwoWinningConfigurationsGenerator(n_piles: int, pile_size_max
             for sub in range(1, mx + 1):
                 for idx in idx_lst:
                     state2[idx] -= 1
-                if not winning(state2):
-                    res = True
-                    break
-            else: continue
-            break
-        memo[args] = res
-        return res
+                if tuple(sorted(state2)) in seen_non_winning:
+                    print(f"non-winning state 2 = {state2}")
+                    return True
+        seen_non_winning.add(state)
+        return False
     
     curr = []
     def recur(idx: int) -> Generator[Tuple[int], None, None]:
+        """
         if idx == n_piles - 1:
-            #print(curr)
             mn = curr[-1] if curr else 0
             curr.append(mn)
             for _ in range(mn, pile_size_max + 1):
@@ -483,6 +510,48 @@ def stoneGamePlayerTwoWinningConfigurationsGenerator(n_piles: int, pile_size_max
                 curr[-1] += 1
             curr.pop()
             return
+        """
+        if idx == n_piles - 2:
+            
+            #print(curr)
+            mn = curr[-1] if curr else 0
+            skipped_gaps = SortedSet()
+            nxt_nonskipped_gap = 0
+            curr.extend([0, 0])
+            seen = set()
+            for i1 in range(mn, pile_size_max + 1):
+                if i1 in seen: continue
+                #print(i1, nxt_nonskipped_gap, skipped_gaps, seen)
+                curr[-2] = i1
+                for j in reversed(range(len(skipped_gaps))):
+                    i2 = i1 + skipped_gaps[~j]
+                    if i2 > pile_size_max: break
+                    curr[-1] = i2
+                    if not winning(curr):
+                        yield tuple(curr)
+                        seen.add(i2)
+                        skipped_gaps.pop(~j)
+                        break
+                if i1 in seen: continue
+                gap = pile_size_max - i1
+                for gap in range(nxt_nonskipped_gap, pile_size_max - i1 + 1):
+                    i2 = i1 + gap
+                    if i2 in seen: continue
+                    
+                    curr[-1] = i2
+                    if not winning(curr):
+                        yield tuple(curr)
+                        seen.add(i2)
+                        break
+                    skipped_gaps.add(gap)
+                nxt_nonskipped_gap = gap + 1
+                seen.add(i1)
+            curr.pop()
+            curr.pop()
+            return
+        
+            
+            
         mn = curr[-1] if curr else 0
         curr.append(mn)
         for _ in range(mn, pile_size_max + 1):
@@ -493,14 +562,47 @@ def stoneGamePlayerTwoWinningConfigurationsGenerator(n_piles: int, pile_size_max
     
     yield from recur(0)
 
+def stoneGamePlayerTwoWinningConfigurationsGenerator2(pile_size_max: int) -> Generator[Tuple[int], None, None]:
+    # Based on https://euler.stephan-brumme.com/260/
+    # Review- generalise to any number of piles
+    def enc(j1: int, j2: int) -> int:
+        #if a > b: a, b = b, a
+        return j1 * (pile_size_max + 1) + j2
+
+    one = [False] * ((pile_size_max + 1) ** 2)
+    two = [False] * ((pile_size_max + 1) ** 2)
+    three = [False] * ((pile_size_max + 1) ** 2)
+
+    for i1 in range(pile_size_max + 1):
+        for i2 in range(i1, pile_size_max + 1):
+            if one[enc(i1, i2)]: continue
+            for i3 in range(i2, pile_size_max + 1):
+                if (one[enc(i1, i3)] or one[enc(i2, i3)] or two[enc(i2 - i1, i3)] or two[enc(i3 - i1, i2)] or two[enc(i3 - i2, i1)] or three[enc(i2 - i1, i3 - i1)]):
+                    continue
+                yield (i1, i2, i3)
+                one[enc(i1, i2)] = True
+                one[enc(i1, i3)] = True
+                one[enc(i2, i3)] = True
+                two[enc(i2 - i1, i3)] = True
+                two[enc(i3 - i1, i2)] = True
+                two[enc(i3 - i2, i1)] = True
+                three[enc(i2 - i1, i3 - i1)] = True
+                break
+    return
+
 def stoneGamePlayerTwoWinningConfigurationsSum(n_piles: int=3, pile_size_max: int=1000) -> int:
     res = 0
     cnt = 0
-    for state in stoneGamePlayerTwoWinningConfigurationsGenerator(n_piles=n_piles, pile_size_max=pile_size_max):
-        print(state)
+    counts = []
+    for state in stoneGamePlayerTwoWinningConfigurationsGenerator2(pile_size_max=pile_size_max): #stoneGamePlayerTwoWinningConfigurationsGenerator(n_piles=n_piles, pile_size_max=pile_size_max):
+        #print(state)
+        counts +=[0] * (state[-1] - len(counts) + 1)
+        for num in state:
+            counts[num] += 1
         cnt += 1
         res += sum(state)
     print(f"number of states where player 2 is winning = {cnt}")
+    print(counts)
     return res
 
 # Problem 265
@@ -653,7 +755,7 @@ if __name__ == "__main__":
     
     if not to_evaluate or 260 in to_evaluate:
         since = time.time()
-        res = stoneGamePlayerTwoWinningConfigurationsSum(n_piles=3, pile_size_max=100)
+        res = stoneGamePlayerTwoWinningConfigurationsSum(n_piles=3, pile_size_max=1000)
         print(f"Solution to Project Euler #260 = {res}, calculated in {time.time() - since:.4f} seconds")
 
     if not to_evaluate or 265 in to_evaluate:
