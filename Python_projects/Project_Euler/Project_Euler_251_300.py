@@ -695,6 +695,262 @@ def constructingLinearPuzzleMaxSegmentCountMeanFloat(n_pieces: int=40) -> float:
     print(frac)
     return frac.numerator / frac.denominator
 
+# Problem 254
+def calculateSmallestNumberDigitFrequenciesWithSumOfFactorialSumDigitsEqualToN(n: int, base: int=10) -> List[int]:
+    
+    mx_non_max_dig_tot = math.factorial(base - 1) - 1
+    mx_non_max_dig_n_dig = 0
+    num = mx_non_max_dig_tot
+    while num:
+        num //= base
+        mx_non_max_dig_n_dig += 1
+    mask = ~(1 << mx_non_max_dig_n_dig)
+    #tail = base ** mx_non_max_dig_n_dig
+    
+    factorials = [math.factorial(i) for i in range(base)]
+    
+    def upperBoundDigitSum(max_dig_count: int) -> int:
+        #num_max = factorials[-1] * (max_dig_count + 1) - 1
+        #n_dig = 0
+        #num2 = num_max
+        #while num2:
+        #    num2 //= base
+        #    n_dig += 1
+        #n_dig = max(n_dig, mx_non_max_dig_n_dig)
+        #return n_dig * (base - 1)
+        num = factorials[-1] * max_dig_count
+        num //= base ** mx_non_max_dig_n_dig
+        res = (base - 1) * mx_non_max_dig_n_dig
+        #print(res, num)
+        while num:
+            num, d = divmod(num, base)
+            res += d
+        return res
+    
+    # Review- why does this give such a close lower bound on the
+    # number of max digits required for a given factorial digit
+    # sum? (for values above 60 it is exact)
+    def upperBoundDigitSumCoarse(max_dig_count: int) -> int:
+        num_max = factorials[-1] * (max_dig_count + 1) - 1
+        n_dig = 0
+        num2 = num_max
+        while num2 >= base:
+            num2 //= base
+            n_dig += 1
+        #n_dig = max(n_dig, mx_non_max_dig_n_dig)
+        return n_dig * (base - 1) + num2
+        
+    
+    #for num in range(100):
+    #    print(num, upperBoundDigitSum(num))
+
+    # Review- Justify why this is > and not >= n
+    
+    if upperBoundDigitSumCoarse(0) > n:
+        lb = 0
+    elif upperBoundDigitSumCoarse(1) > n:
+        lb = 1
+    else:
+        lb = 1
+        while True:
+            lb2 = lb << 1
+            if upperBoundDigitSumCoarse(lb2) > n:
+                break
+            lb = lb2
+        lft, rgt = lb, lb2
+        while lft < rgt:
+            mid = lft + ((rgt - lft) >> 1)
+            if upperBoundDigitSumCoarse(mid) > n:
+                rgt = mid
+            else: lft = mid + 1
+        lb = lft
+    
+    curr = [0] * (base - 1)
+    def recur(dig_remain: int, target_dig_sum: int, dig_fact_sum: int, dig: int) -> None:
+        #print(f"Using recur() with dig_remain = {dig_remain}, target_dig_sum = {target_dig_sum}, dig_fact_sum = {dig_fact_sum}, dig = {dig}")
+        if not dig_remain:
+            g = 0
+            #print(num, dig_fact_sum)
+            while dig_fact_sum:
+                dig_fact_sum, r = divmod(dig_fact_sum, base)
+                g += r
+                if g > target_dig_sum: break
+            else:
+                return g == target_dig_sum
+            return False
+        elif dig >= base - 1: return
+        
+        min_n_add = max(0, dig_remain - (((base - 1) * (base - 2) - dig * (dig - 1)) >> 1))
+        max_n_add = min(dig_remain, dig) #if dig < base - 1 else dig_remain
+        #print(min_n_add, max_n_add)
+        #for _ in range(max_n_add):
+        #    num2 = num2 * base + dig
+        dig_fact_sum2 = dig_fact_sum + max_n_add * factorials[dig]
+        dig_remain2 = dig_remain - max_n_add
+        curr[dig] = max_n_add#max_n_add
+        for _ in reversed(range(min_n_add, max_n_add + 1)):
+            if recur(dig_remain2, target_dig_sum=target_dig_sum, dig_fact_sum=dig_fact_sum2, dig=dig + 1):
+                return True
+            dig_remain2 += 1
+            curr[dig] -= 1
+            dig_fact_sum2 -= factorials[dig]
+        curr[dig] = 0
+        return False
+
+    print(f"max digit count coarse lower bound = {lb}")
+    #print(upperBoundDigitSumCoarse(lb))
+    res = (-float("inf"), [])
+    for n_max_dig in itertools.count(lb):
+        
+        #print(f"n_max_dig = {n_max_dig}")
+        if n_max_dig >= -res[0]: break
+        if upperBoundDigitSum(n_max_dig) < n:
+            #print(f"skipping n_max_dig = {n_max_dig}")
+            continue
+        max_dig_val = factorials[-1] * n_max_dig
+        head = max_dig_val // (base ** (mx_non_max_dig_n_dig))
+        #nonmax_dig_contrib_mx_n_dig = 
+        tail_len = mx_non_max_dig_n_dig + 1
+        while head % base == base - 1:
+            head //= base
+            tail_len += 1
+        head //= base
+        target_dig_sum = n
+        head2 = head
+        while head2:
+            head2, d = divmod(head2, base)
+            target_dig_sum -= d
+        if target_dig_sum < 0: break
+        tail_init = max_dig_val % (base ** tail_len)
+        for n_nonmax_dig in range(min(((base - 2) * (base - 1)) >> 1, -res[0] - n_max_dig) + 1):
+            #print(f"n_max_dig = {n_max_dig}, n_nonmax_dig = {n_nonmax_dig}, target_dig_sum = {target_dig_sum}, tail_init = {tail_init}")
+            curr = [0] * (base - 1)
+            b = recur(n_nonmax_dig, target_dig_sum, dig_fact_sum=tail_init, dig=1)
+            if not b: continue
+            
+            ans = curr + ([n_max_dig])
+            print(f"possible solution: {ans}")
+            tot_n_dig = sum(ans)
+            res = max(res, (-tot_n_dig, ans))
+            break
+    return res[1]
+
+def calculateSmallestNumberDigitFrequenciesWithTheFirstNSumOfDigitFactorials(n_max: int, base: int=10) -> List[int]:
+
+    res = [[]]
+    for num in range(1, n_max + 1):
+        dig_freqs = calculateSmallestNumberDigitFrequenciesWithSumOfFactorialSumDigitsEqualToN(num, base=base)
+        print(num, dig_freqs)
+        res.append(dig_freqs)
+    return res
+
+def calculateSmallestNumberWithTheFirstNSumOfDigitFactorials0(n_max: int, base: int=10) -> List[int]:
+
+    factorials = [math.factorial(i) for i in range(base)]
+
+    res = [-1] * (n_max + 1)
+    n_seen = [0]
+    memo = set()
+    def recur(dig_remain: int, num: int=0, dig_fact_sum: int=0, dig: int=2) -> None:
+        if not dig_remain:
+            g = 0
+            #print(num, dig_fact_sum)
+            while dig_fact_sum:
+                dig_fact_sum, r = divmod(dig_fact_sum, base)
+                g += r
+                if g > n_max: break
+            else:
+                if res[g] >= 0: return
+                res[g] = num
+                n_seen[0] += 1
+                print(f"{g}: {num}, {dig_fact_sum}")
+            return
+        args = (dig_remain, dig_fact_sum, dig)
+        if args in memo: return
+        if dig == base - 1:
+            for _ in range(dig_remain):
+                num = (num + 1) * base - 1
+            return recur(0, num=num, dig_fact_sum=(dig_fact_sum + factorials[-1] * dig_remain), dig=base)
+        num2 = num
+        
+        max_n_add = min(dig_remain, dig) #if dig < base - 1 else dig_remain
+        for _ in range(max_n_add):
+            num2 = num2 * base + dig
+        dig_fact_sum2 = dig_fact_sum + max_n_add * factorials[dig]
+        dig_remain2 = dig_remain - max_n_add
+        for _ in reversed(range(max_n_add + 1)):
+            recur(dig_remain2, num=num2, dig_fact_sum=dig_fact_sum2, dig=dig + 1)
+            if n_seen[0] == n_max: break
+            dig_remain2 += 1
+            num2 //= base
+            dig_fact_sum2 -= factorials[dig]
+        memo.add(args)
+        return
+
+    for n_dig in itertools.count(1):
+        since = time.time()
+        recur(n_dig - 1, num=1, dig_fact_sum=1, dig=2)
+        recur(n_dig, num=0, dig_fact_sum=0, dig=2)
+        print(f"n_dig = {n_dig}, n_seen = {n_seen[0]} of {n_max}")
+        print(f"iteration time = {time.time() - since} seconds")
+        #print(res)
+        if n_seen[0] == n_max: break
+        #if n_dig > 10: break
+        
+    """
+    for n_dig in itertools.count(1):
+        
+        head = base ** (n_dig - 1)
+        dig_fact_sum = factorials[1] + factorials[0] * (n_dig - 1)
+        dig_remain = 0
+        for head_len in reversed(range(1, n_dig + 1)):
+            recur(n_dig - head_len, head, dig_fact_sum=dig_fact_sum, dig=2)
+            dig_remain += 1
+            head //= base
+            dig_fact_sum -= factorials[0]
+        recur(n_dig, num=0, dig_fact_sum=0, dig=2)
+        if n_seen[0] == n_max: break
+        print(f"n_dig = {n_dig}, n_seen = {n_seen[0]} of {n_max}")
+    """
+    return res
+
+def calculateSmallestNumberWithTheFirstNSumOfDigitFactorialsDigitSumTotal(n_max: int=150, base: int=10) -> int:
+    """
+    Solution to Project Euler #254
+    """
+    freq_lsts = calculateSmallestNumberDigitFrequenciesWithTheFirstNSumOfDigitFactorials(n_max, base=base)
+    print(freq_lsts)
+    res = 0
+    for freq_lst in freq_lsts[1:]:
+        for d, f in enumerate(freq_lst):
+            res += d * f
+    return res
+    """
+    sg_lst = calculateSmallestNumberWithTheFirstNSumOfDigitFactorials(n_max, base=base)
+    print(sg_lst)
+    fact_lst = [(-1, [])]
+    for num in sg_lst[1:]:
+        if num < 0:
+            fact_lst.append((-1, []))
+            continue
+        num2 = 0
+        num2_comps = []
+        while num:
+            num, d = divmod(num, base)
+            d2 = math.factorial(d)
+            num2 += d2
+            num2_comps.append(d2)
+        fact_lst.append((num2, num2_comps))
+    #print(fact_lst)
+    res = 0
+    for i in range(1, len(sg_lst)):
+        num = sg_lst[i]
+        while num:
+            num, d = divmod(num, base)
+            res += d
+    """
+    return res
+
 # Problem 260
 def stoneGamePlayerTwoWinningConfigurationsGenerator(n_piles: int, pile_size_max: int) -> Generator[Tuple[int], None, None]:
     # Using Sprague-Grundy
@@ -999,7 +1255,7 @@ def allBinaryCirclesSum(n: int=5) -> List[int]:
     return sum(findAllBinaryCircles(n))
 
 if __name__ == "__main__":
-    to_evaluate = {252}
+    to_evaluate = {254}
     since0 = time.time()
 
     if not to_evaluate or 251 in to_evaluate:
@@ -1022,6 +1278,11 @@ if __name__ == "__main__":
         since = time.time()
         res = constructingLinearPuzzleMaxSegmentCountMeanFloat(n_pieces=40)
         print(f"Solution to Project Euler #253 = {res}, calculated in {time.time() - since:.4f} seconds")
+
+    if not to_evaluate or 254 in to_evaluate:
+        since = time.time()
+        res = calculateSmallestNumberWithTheFirstNSumOfDigitFactorialsDigitSumTotal(n_max=150, base=10)
+        print(f"Solution to Project Euler #254 = {res}, calculated in {time.time() - since:.4f} seconds")
     
     if not to_evaluate or 260 in to_evaluate:
         since = time.time()
@@ -1051,4 +1312,22 @@ for k in range(1, 101):
     #    print(a, num // 27)
     num = 8 * k - 3
     print(k, 3 * k - 1, num, k ** 2 * num)
+"""
+"""
+def upperBoundDigitSumCoarse(max_dig_count: int, base: int=10) -> Tuple[int, int]:
+    num_max = math.factorial(base - 1) * (max_dig_count + 1) - 1
+    n_dig = 0
+    num2 = num_max
+    while num2 >= base:
+        num2 //= base
+        n_dig += 1
+    #n_dig = max(n_dig, mx_non_max_dig_n_dig)
+    return num_max, n_dig * (base - 1) + num2
+
+prev = -1
+for i in range(1, 10 ** 9):
+    n_dig = upperBoundDigitSumCoarse(i, base=10)[1]
+    if n_dig > prev:
+        print(i, n_dig)
+        prev = n_dig
 """
