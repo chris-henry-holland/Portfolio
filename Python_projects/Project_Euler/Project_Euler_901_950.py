@@ -154,8 +154,65 @@ def redBlackCardGameLastCardBlackProbabilityFloat(n_red_init: int=24690, n_black
     #print(res)
     #return res.numerator / res.denominator
 
+def sumOfSubsetElevisorsBruteForce(n_max: int) -> int:
+    res = 0
+    for bm in range(1, 1 << n_max):
+        ss = set()
+        for i in reversed(range(1, n_max + 1)):
+            if bm & 1:
+                for num in range(i << 1, n_max + 1, i):
+                    if num in ss:
+                        res += i
+                        break
+                ss.add(i)
+            bm >>= 1
+    return res
+
+def sumOfSubsetElevisorsBruteForce2(n_max: int) -> int:
+    res = 0
+    for num in range(1, n_max + 1):
+        if not num % 10 ** 5:
+            print(f"phase 1, num = {num} of {n_max - 1}")
+        n_mults = n_max // num
+        res = res + num * (pow(2, n_max - 1) - pow(2, n_max - n_mults))
+    return res
+
+def sumOfSubsetElevisors(n_max: int=10 ** 14, md: Optional[int]=1234567891) -> int:
+    """
+    Solution to Project Euler #944
+    """
+    rt = isqrt(n_max)
+    res = 0
+    mx = rt + 1
+    if rt * rt == n_max:
+        res = res + rt * (pow(2, n_max - 1, mod=md) - pow(2, n_max - rt, mod=md))
+        if md is not None: res %= md
+        mx -= 1
+    for num in range(1, mx):
+        if not num % 10 ** 5:
+            print(f"phase 1, num = {num} of {mx - 1}")
+        n_mults = n_max // num
+        res = res + num * (pow(2, n_max - 1, mod=md) - pow(2, n_max - n_mults, mod=md))
+        if md is not None: res %= md
+    #print(res)
+    for num in range(2, mx):
+        
+        if not num % 10 ** 5:
+            print(f"phase 2, num = {num} of {mx - 1}")
+        rgt = (n_max) // num
+        lft = max((n_max) // (num + 1), rt) + 1
+        #print(num, lft, rgt)
+        if rgt < lft: break
+        mult = (rgt * (rgt + 1) - lft * (lft - 1)) >> 1
+        if md is not None: mult %= md
+        ans = mult * (pow(2, n_max - 1, mod=md) - pow(2, n_max - num, mod=md))
+        res = res + ans
+        #print(num, mn, mx, mult, res)
+        if md is not None: res %= md
+    return res
+
 if __name__ == "__main__":
-    to_evaluate = {938}
+    to_evaluate = {944}
     since0 = time.time()
 
     if not to_evaluate or 938 in to_evaluate:
@@ -163,41 +220,17 @@ if __name__ == "__main__":
         res = redBlackCardGameLastCardBlackProbabilityFloat(n_red_init=24690, n_black_init=12345)
         print(f"Solution to Project Euler #938 = {res}, calculated in {time.time() - since:.4f} seconds")
 
+    if not to_evaluate or 944 in to_evaluate:
+        since = time.time()
+        res = sumOfSubsetElevisors(n_max=10 ** 14, md=1234567891)
+        print(f"Solution to Project Euler #944 = {res}, calculated in {time.time() - since:.4f} seconds")
 
     print(f"Total time taken = {time.time() - since0:.4f} seconds")
 
-
 """
-n_max = 1000
-for n in range(1, n_max + 1):
-    res = func(n)
-    res2 = func2(n)
-    if res != res2:
-        print(n, res, res2)
-"""
-"""
-for k in range(1, 101):
-    #num = 8 * a ** 3 + 15 * a ** 2 + 6 * a - 1
-    #if not num % 27:
-    #    print(a, num // 27)
-    num = 8 * k - 3
-    print(k, 3 * k - 1, num, k ** 2 * num)
-"""
-"""
-def upperBoundDigitSumCoarse(max_dig_count: int, base: int=10) -> Tuple[int, int]:
-    num_max = math.factorial(base - 1) * (max_dig_count + 1) - 1
-    n_dig = 0
-    num2 = num_max
-    while num2 >= base:
-        num2 //= base
-        n_dig += 1
-    #n_dig = max(n_dig, mx_non_max_dig_n_dig)
-    return num_max, n_dig * (base - 1) + num2
-
-prev = -1
-for i in range(1, 10 ** 9):
-    n_dig = upperBoundDigitSumCoarse(i, base=10)[1]
-    if n_dig > prev:
-        print(i, n_dig)
-        prev = n_dig
+for num in range(1, 17):
+    ans1 = sumOfSubsetElevisorsBruteForce(num)
+    ans2 = sumOfSubsetElevisorsBruteForce2(num)
+    ans = sumOfSubsetElevisors(n_max=num, md=None)
+    print(f"num = {num}, brute force 1 = {ans1}, brute force 2 = {ans2}, func = {ans}")
 """
