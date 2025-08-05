@@ -155,6 +155,7 @@ def redBlackCardGameLastCardBlackProbabilityFloat(n_red_init: int=24690, n_black
     #print(res)
     #return res.numerator / res.denominator
 
+
 # Problem 940
 def twoDimensionalRecurrenceFibonacciSum(k_min: int=2, k_max: int=50, md: Optional[int]=1123581313) -> int:
 
@@ -514,11 +515,70 @@ def sumOfSubsetElevisors(n_max: int=10 ** 14, md: Optional[int]=1234567891) -> i
         if md is not None: res %= md
     return res
 
-# Problem 947
+# Problem 945
+def xorMultiply(num1: int, num2: int) -> int:
+    if num1.bit_count() < num2.bit_count(): num1, num2 = num2, num1
+    res = 0
+    while num2:
+        if num2 & 1:
+            res ^= num1
+        num2 >>= 1
+        num1 <<= 1
+    return res
 
+def xorEquationNontrivialPrimitiveSolutionsGenerator(a_b_max: int) -> Generator[Tuple[int, int, int], None, None]:
+
+    sq_lst = [0]
+
+    sq_nxt = 1
+    for b in range(1, a_b_max + 1):
+        if b >= len(sq_lst):
+            sq_lst.append(xorMultiply(sq_nxt, sq_nxt))
+            sq_nxt += 1
+        b_sq = sq_lst[b]
+        for a in range(1 + (b & 1), b + 1, 2):
+            #if gcd(a, b) > 1: continue
+            a_sq = sq_lst[a]
+            num = a_sq ^ xorMultiply(2, xorMultiply(a, b)) ^ b_sq
+            while num > sq_lst[-1]:
+                sq_lst.append(xorMultiply(sq_nxt, sq_nxt))
+                sq_nxt += 1
+            c = bisect.bisect_left(sq_lst, num)
+            if c < len(sq_lst) and sq_lst[c] == num:
+                yield (a, b, c)
+    print(sq_lst)
+    return
+
+def xorEquationSolutionsCount(a_b_max: int=10 ** 7) -> int:
+    def solutionCheck(a, b, c) -> bool:
+        return xorMultiply(a, a) ^ xorMultiply(2, xorMultiply(a, b)) ^ xorMultiply(b, b) == xorMultiply(c, c)
+
+    res = a_b_max + 1
+    ab_pairs = {}
+    for triple in xorEquationNontrivialPrimitiveSolutionsGenerator(a_b_max):
+        print(triple)
+        a, b = triple[0], triple[1]
+        mult = a_b_max // b
+        while mult:
+            res += 1
+            mult >>= 1
+        ab_pairs.setdefault(a, [])
+        ab_pairs[a].append(b)
+        ab_pairs.setdefault(b, [])
+        ab_pairs[b].append(a)
+        #res += a_b_max // b
+        #for mult in range(2, (a_b_max // b) + 1):
+        #    triple2 = tuple(x * mult for x in triple)
+        #    if not solutionCheck(*triple2):
+        #        print(f"Multiple of solution is not a solution: {triple2} = {mult} * {triple}")
+    print("Pairs:")
+    for odd in sorted(ab_pairs.keys()):
+        if not odd & 1: continue
+        print(f"{format(odd, 'b')}: {[format(x, 'b') for x in sorted(ab_pairs[odd])]}")
+    return res
 
 if __name__ == "__main__":
-    to_evaluate = {940}
+    to_evaluate = {945}
     since0 = time.time()
 
     if not to_evaluate or 938 in to_evaluate:
@@ -536,6 +596,11 @@ if __name__ == "__main__":
         res = sumOfSubsetElevisors(n_max=10 ** 14, md=1234567891)
         print(f"Solution to Project Euler #944 = {res}, calculated in {time.time() - since:.4f} seconds")
 
+    #if not to_evaluate or 945 in to_evaluate:
+    #    since = time.time()
+    #    res = xorEquationSolutionsCount(a_b_max=127)
+    #    print(f"Solution to Project Euler #945 = {res}, calculated in {time.time() - since:.4f} seconds")
+
     print(f"Total time taken = {time.time() - since0:.4f} seconds")
 
 """
@@ -545,3 +610,7 @@ for num in range(1, 17):
     ans = sumOfSubsetElevisors(n_max=num, md=None)
     print(f"num = {num}, brute force 1 = {ans1}, brute force 2 = {ans2}, func = {ans}")
 """
+#a, b, c = 1, 8, 13
+#print(xorMultiply(a, a) ^ xorMultiply(2, xorMultiply(a, b)) ^ xorMultiply(b, b), xorMultiply(c, c))
+#for num in range(21):
+#    print(num, xorMultiply(num, num))
