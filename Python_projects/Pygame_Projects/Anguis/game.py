@@ -28,7 +28,7 @@ class Game:
         self,
         head_size: int=25,
         arena_shape: Tuple[int, int]=(16, 15),
-        head_init_pos: Optional[Tuple[int, int]]=None,
+        head_init_pos_func: Optional[Union[Tuple[int, int], Callable[["Gameplay"], Tuple[int, int]]]]=None,
         head_init_direct: Tuple[int, int]=(0, 1),
         move_rate: float=15,
         n_frame_per_move: float=2,
@@ -44,7 +44,7 @@ class Game:
         pg.init()
         self.head_size = head_size
         self.arena_shape = arena_shape
-        self.head_init_pos = head_init_pos
+        self.head_init_pos_func = head_init_pos_func
         self.head_init_direct = head_init_direct
         self.move_rate = move_rate
         self.n_frame_per_move = n_frame_per_move
@@ -86,7 +86,7 @@ class Game:
                 screen=self.screen,
                 head_size=self.head_size,
                 arena_shape=self.arena_shape,
-                head_init_pos=self.head_init_pos,
+                head_init_pos_func=self.head_init_pos_func,
                 head_init_direct=self.head_init_direct,
                 move_rate=self.move_rate,
                 n_frame_per_move=self.n_frame_per_move,

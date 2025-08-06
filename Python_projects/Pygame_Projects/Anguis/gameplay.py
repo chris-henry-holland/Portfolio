@@ -221,9 +221,13 @@ class HeadSprite(SquareSprite):
 # Define a tail section object
 class TailSprite(SquareSprite):
     def __init__(self, head: "HeadSprite", pos_flat: Tuple[int], color: Tuple[Union[Tuple[int], Real]]):
-        super().__init__(head.screen, head.arena_shape, pos_flat,\
-                color=color, size=head.size,\
-                screen_pos_func=head.screen_pos_func)
+        super().__init__(
+            head.screen,
+            head.arena_shape,
+            pos_flat,
+            color=color, size=head.size,
+            screen_pos_func=head.screen_pos_func,
+        )
 
 # Define the tail as a whole
 class TailSpriteQueue:
@@ -318,12 +322,22 @@ class GamePlay:
     
     pause_keys_def = {pg.K_p}
 
-    def __init__(self, screen=None, head_size=25, arena_shape=(16, 15),
-                head_init_pos=None, head_init_direct=(0, 1),
-                move_rate=15, n_frame_per_move=2,
-                n_fruit=1, border=((1, 1), (4, 1)),
-                font=None, auto=False, navkeys: Optional[Set[int]]=None,
-                pause_keys: Optional[Set[int]]=None):
+    def __init__(
+        self,
+        screen: Optional["pg.display"]=None,
+        head_size: int=25,
+        arena_shape: Tuple[int, int]=(16, 15),
+        head_init_pos_func: Optional[Union[Tuple[int, int], Callable[["Gameplay"], Tuple[int, int]]]]=None,
+        head_init_direct: Tuple[int, int]=(0, 1),
+        move_rate: Real=15,
+        n_frame_per_move: int=2,
+        n_fruit: int=1,
+        border=((1, 1), (4, 1)),
+        font: Optional["pg.freetype"]=None,
+        auto: bool=False,
+        navkeys: Optional[Set[int]]=None,
+        pause_keys: Optional[Set[int]]=None,
+    ):
         pg.init()
         self._screen = screen
         self.head_size = head_size
@@ -334,8 +348,13 @@ class GamePlay:
         self.border = border
         self.font = font_def_func() if font is None else font
         
-        self.head_init_pos = tuple(x // 2 for x in arena_shape)\
-                if head_init_pos is None else head_init_pos
+        #self.head_init_pos = tuple(x // 2 for x in arena_shape)\
+        #        if head_init_pos is None else head_init_pos
+        if head_init_pos_func is None:
+            head_init_pos_func = lambda gameplay_obj: tuple(x // 2 for x in gameplay_obj.arena_shape)
+        elif not callable(head_init_pos_func):
+            head_init_pos_func = lambda gameplay_obj: head_init_pos_func
+        self.head_init_pos_func = head_init_pos_func
         self.head_init_direct = head_init_direct
         self.auto = auto
         
@@ -350,10 +369,9 @@ class GamePlay:
                 
         #self.curr_auto_fruit = 0
         
-        hp = self.head_init_pos
-        hp_flat = hp[0] * arena_shape[1] + hp[1]
+        #hp = self.head_init_pos
+        #hp_flat = hp[0] * arena_shape[1] + hp[1]
         #self.head = HeadSprite(gameplay, pos_flat, mv=(1, 1))
-        
         
         self.screen_pos_func = self.screenPositionFromFlat
         
@@ -1024,6 +1042,7 @@ class GamePlay:
     def updateKeyBuffer(self, key_buffer_qu: deque):
         # Checking user inputs
         quit, esc_pressed, input_dict = self.getRequiredInputs()
+        
         running = not esc_pressed and not quit
         events = input_dict["events"]
         #quit, running, events = self.getRequiredInputs()[:3]
@@ -1036,6 +1055,9 @@ class GamePlay:
                 return (running, quit, True)
             if event_tup[0].key in self.navkeys_dict.keys():
                 key_buffer_qu.append(event_tup[0].key)
+        if esc_pressed:
+            print("escape key pressed")
+            print(f"running = {running}, quit = {quit}")
         return (running, quit, False)
     
     @property
@@ -1073,6 +1095,7 @@ class GamePlay:
             clock.tick(framerate)
             (running, quit, to_pause) =\
                     self.updateKeyBuffer(key_buffer_qu)
+            if not running: break
             if to_pause:
                 restart, quit = self.pause()
                 if quit:
@@ -1100,7 +1123,7 @@ class GamePlay:
         self.fruits = Fruits(self)
         
         # Set or reset the head to its initial position and direction
-        hp = self.head_init_pos
+        hp = self.head_init_pos_func(self)
         hp_flat = hp[0] * self.arena_shape[1] + hp[1]
         self.head = HeadSprite(self, hp_flat, self.head_init_direct)
         
