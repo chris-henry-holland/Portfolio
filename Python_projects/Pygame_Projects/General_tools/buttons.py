@@ -1352,12 +1352,24 @@ class ButtonGrid(InteractiveDisplayComponentBase):
             "text": text,
             "anchor_rel_pos": (0, 0),
             "anchor_type": "topleft",
-            "screen_topleft_to_parent_topleft_offset": self.screen_topleft_to_component_topleft_offset,
+            #"screen_topleft_to_parent_topleft_offset": self.screen_topleft_to_component_topleft_offset,
             "text_anchor_types": text_anchor_types,
             "mouse_enabled": self.mouse_enabled,
             "name": name,
         }
         if self.buttons[grid_inds[0]][grid_inds[1]] is None:
+            attr_corresp_dict = {
+                "mouse_enabled": "mouse_enabled",
+            }
+            container_attr_resets = {"changed_since_last_draw": {"display_surf": (lambda container_obj, obj: obj.drawUpdateRequired())}}
+            self.buttons[grid_inds[0]][grid_inds[1]] = self.createSubComponent(
+                component_class=ButtonGroupElement,
+                attr_correspondence_dict=attr_corresp_dict,
+                creation_kwargs=attr_dict,
+                container_attribute_resets=container_attr_resets,
+                custom_creation_function=self.button_group.addButton
+            )
+            """
             #print(f"creating button at grid indices {grid_inds}")
             container_attr_resets = {"changed_since_last_draw": {"display_surf": (lambda container_obj, obj: obj.drawUpdateRequired())}}
             self.buttons[grid_inds[0]][grid_inds[1]] = self.button_group.addButton(
@@ -1368,6 +1380,7 @@ class ButtonGrid(InteractiveDisplayComponentBase):
                 **kwargs,
             )
             #print(self.buttons[grid_inds[0]][grid_inds[1]].__dict__.get("_display_surf", None))
+            """
         else:
             self.buttons[grid_inds[0]][grid_inds[1]].setAttributes(
                 attr_dict,

@@ -864,6 +864,7 @@ class SliderGroupElement(ComponentGroupElementBaseClass, Slider):
         demarc_numbers_dp: Optional[int]=None,
         demarc_intervals: Optional[Tuple[Real]]=None,
         demarc_start_val: Optional[Real]=None,
+        mouse_enabled: Optional[bool]=None,
         name: Optional[str]=None,
         **kwargs,
     ) -> None:
@@ -892,7 +893,7 @@ class SliderGroupElement(ComponentGroupElementBaseClass, Slider):
             demarc_numbers_color=slider_group.demarc_numbers_color,
             demarc_line_colors=slider_group.demarc_line_colors,
             thumb_outline_color=slider_group.thumb_outline_color,
-            mouse_enabled=slider_group.mouse_enabled,
+            mouse_enabled=mouse_enabled,
             name=name,
             _group=slider_group,
             **kwargs,
@@ -974,7 +975,7 @@ class SliderGroup(ComponentGroupBaseClass):
             "demarc_numbers_color",
             "demarc_line_colors",
             "thumb_outline_color",
-            "mouse_enabled",
+            #"mouse_enabled",
         ]
     }
     
@@ -991,7 +992,7 @@ class SliderGroup(ComponentGroupBaseClass):
         "demarc_numbers_color": "demarc_numbers_color",
         "demarc_line_colors": "demarc_line_colors",
         "thumb_outline_color": "thumb_outline_color",
-        "mouse_enabled": "mouse_enabled",
+        #"mouse_enabled": "mouse_enabled",
     }
 
     element_attributes_affecting_group_attributes = {
@@ -1012,11 +1013,13 @@ class SliderGroup(ComponentGroupBaseClass):
         demarc_numbers_color: Optional[ColorOpacity]=None,
         demarc_line_colors: Optional[ColorOpacity]=None,
         thumb_outline_color: Optional[ColorOpacity]=None,
-        mouse_enabled: Optional[bool]=None,
+        #mouse_enabled: Optional[bool]=None,
         **kwargs,
     ) -> None:
         checkHiddenKwargs(type(self), kwargs)
-        super().__init__(**self.initArgsManagement(locals(), kwargs=kwargs))
+        
+        kwargs2 = self.initArgsManagement(locals(), kwargs=kwargs)
+        super().__init__(**kwargs2)
         
     
     def addSlider(
@@ -1031,6 +1034,7 @@ class SliderGroup(ComponentGroupBaseClass):
         demarc_numbers_dp: Optional[int]=None,
         demarc_intervals: Optional[Tuple[Real]]=None,
         demarc_start_val: Optional[Real]=None,
+        mouse_enabled: Optional[bool]=None,
         name: Optional[str]=None,
         **kwargs,
     ) -> "SliderGroupElement":
@@ -1046,6 +1050,7 @@ class SliderGroup(ComponentGroupBaseClass):
             demarc_numbers_dp=demarc_numbers_dp,
             demarc_intervals=demarc_intervals,
             demarc_start_val=demarc_start_val,
+            mouse_enabled=mouse_enabled,
             name=name,
             **kwargs,
         )
@@ -1821,6 +1826,7 @@ class SliderPlusGroupElement(ComponentGroupElementBaseClass, SliderPlus):
                 "demarc_numbers_dp": "demarc_numbers_dp",
                 "demarc_intervals": "demarc_intervals",
                 "demarc_start_val": "demarc_start_val",
+                "mouse_enabled": "mouse_enabled",
                 "name": "name",
             },
             "creation_function": (lambda slider_plus_group, **kwargs: slider_plus_group.slider_group.addSlider(**kwargs)),
@@ -1837,6 +1843,7 @@ class SliderPlusGroupElement(ComponentGroupElementBaseClass, SliderPlus):
                 "demarc_numbers_dp": None,
                 "demarc_intervals": None,
                 "demarc_start_val": None,
+                "mouse_enabled": None,
                 "name": None,
             },
             "container_attr_resets": {
@@ -1865,6 +1872,8 @@ class SliderPlusGroupElement(ComponentGroupElementBaseClass, SliderPlus):
         demarc_start_val: Optional[Real]=None,
         
         val_text_dp: Optional[int]=None,
+
+        mouse_enabled: Optional[bool]=None,
         
         name: Optional[str]=None,
         **kwargs,
@@ -1905,7 +1914,7 @@ class SliderPlusGroupElement(ComponentGroupElementBaseClass, SliderPlus):
             val_text_color=slider_plus_group.val_text_color,
             val_text_dp=val_text_dp,
 
-            mouse_enabled=slider_plus_group.mouse_enabled,
+            mouse_enabled=mouse_enabled,
             name=name,
             _group=slider_plus_group,
             **kwargs,
@@ -1984,7 +1993,7 @@ class SliderPlusGroup(ComponentGroupBaseClass):
                 "demarc_numbers_color": "demarc_numbers_color",
                 "demarc_line_colors": "demarc_line_colors",
                 "thumb_outline_color": "thumb_outline_color",
-                "mouse_enabled": "mouse_enabled",
+                #"mouse_enabled": "mouse_enabled",
             },
             #"creation_function": SliderGroup,
             "creation_function_args": {
@@ -1998,7 +2007,7 @@ class SliderPlusGroup(ComponentGroupBaseClass):
                 "demarc_numbers_color": None,
                 "demarc_line_colors": None,
                 "thumb_outline_color": None,
-                "mouse_enabled": None,
+                #"mouse_enabled": None,
             },
         }
     }
@@ -2013,7 +2022,7 @@ class SliderPlusGroup(ComponentGroupBaseClass):
         "demarc_numbers_color": "demarc_numbers_color",
         "demarc_line_colors": "demarc_line_colors",
         "thumb_outline_color": "thumb_outline_color",
-        "mouse_enabled": "mouse_enabled",
+        #"mouse_enabled": "mouse_enabled",
         "slider_shape_rel": "slider_shape_rel",
         "slider_borders_rel": "slider_borders_rel",
         "title_text_group": "title_text_group",
@@ -2035,7 +2044,7 @@ class SliderPlusGroup(ComponentGroupBaseClass):
         demarc_numbers_color: Optional[ColorOpacity]=None,
         demarc_line_colors: Optional[ColorOpacity]=None,
         thumb_outline_color: Optional[ColorOpacity]=None,
-        mouse_enabled: Optional[bool]=None,
+        #mouse_enabled: Optional[bool]=None,
         slider_shape_rel: Optional[Tuple[Real]]=None,
         slider_borders_rel: Optional[Tuple[Real]]=None,
         title_text_group: Optional["TextGroup"]=None,
@@ -2046,9 +2055,11 @@ class SliderPlusGroup(ComponentGroupBaseClass):
         val_text_color: Optional[ColorOpacity]=None,
         **kwargs,
     ) -> None:
-        checkHiddenKwargs(type(self), kwargs)
 
-        super().__init__(**self.initArgsManagement(locals(), kwargs=kwargs))
+        checkHiddenKwargs(type(self), kwargs)
+        
+        kwargs2 = self.initArgsManagement(locals(), kwargs=kwargs)
+        super().__init__(**kwargs2)
 
     def addSliderPlus(
         self,
@@ -2064,6 +2075,7 @@ class SliderPlusGroup(ComponentGroupBaseClass):
         demarc_intervals: Optional[Tuple[Real]]=None,
         demarc_start_val: Optional[Real]=None,
         val_text_dp: Optional[int]=None,
+        mouse_enabled: Optional[bool]=None,
         name: Optional[str]=None,
         **kwargs,
     ) -> "SliderGroupElement":
@@ -2082,6 +2094,7 @@ class SliderPlusGroup(ComponentGroupBaseClass):
             demarc_intervals=demarc_intervals,
             demarc_start_val=demarc_start_val,
             val_text_dp=val_text_dp,
+            mouse_enabled=mouse_enabled,
             name=name,
             **kwargs,
         )
@@ -2165,7 +2178,7 @@ class SliderPlusGrid(InteractiveDisplayComponentBase):
                 "demarc_numbers_color": "demarc_numbers_color",
                 "demarc_line_colors": "demarc_line_colors",
                 "thumb_outline_color": "thumb_outline_color",
-                "mouse_enabled": "mouse_enabled",
+                #"mouse_enabled": "mouse_enabled",
                 "slider_shape_rel": "slider_shape_rel",
                 "slider_borders_rel": "slider_borders_rel",
                 "title_text_group": "title_text_group",
@@ -2186,7 +2199,7 @@ class SliderPlusGrid(InteractiveDisplayComponentBase):
                 "demarc_numbers_color": None,
                 "demarc_line_colors": None,
                 "thumb_outline_color": None,
-                "mouse_enabled": None,
+                #"mouse_enabled": None,
                 "slider_shape_rel": None,
                 "slider_borders_rel": None,
                 "title_text_group": None,
@@ -2321,13 +2334,18 @@ class SliderPlusGrid(InteractiveDisplayComponentBase):
             "demarc_intervals": demarc_intervals,
             "demarc_start_val": demarc_start_val,
             "val_text_dp": val_text_dp,
+            "mouse_enabled": self.mouse_enabled,
             "name": name,
         }
+        
         if self.sliders[grid_inds[0]][grid_inds[1]] is None:
+            attr_corresp_dict = {
+                "mouse_enabled": "mouse_enabled",
+            }
             container_attr_resets = {"changed_since_last_draw": {"display_surf": (lambda container_obj, obj: obj.drawUpdateRequired())}}
             self.sliders[grid_inds[0]][grid_inds[1]] = self.createSubComponent(
-                component_class=SliderPlus,
-                attr_correspondence_dict={},
+                component_class=SliderPlusGroupElement,
+                attr_correspondence_dict=attr_corresp_dict,
                 creation_kwargs=attr_dict,
                 container_attribute_resets=container_attr_resets,
                 custom_creation_function=self.slider_plus_group.addSliderPlus

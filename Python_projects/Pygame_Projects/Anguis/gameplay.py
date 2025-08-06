@@ -403,6 +403,7 @@ class GamePlay:
             overlay_color=(named_colors_def["green"], 0.5),
             mouse_enabled=False,
             navkeys_enabled=False,
+            key_press_actions={x: (lambda: ((False,), False, False)) for x in self.pause_keys}
             #exit_press_keys={pg.K_p},
             #navkey_cycle_delay_s=navkey_cycle_delay_s,
             #navkeys=None,

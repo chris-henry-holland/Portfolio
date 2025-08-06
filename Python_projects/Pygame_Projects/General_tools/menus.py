@@ -68,12 +68,19 @@ class MenuOverlayBase(InteractiveDisplayComponentBase):
         "overlay_color": ((lambda obj: overlay_color_def),),
         "navkeys_enabled": ((lambda obj: True),),
         "mouse_enabled": ((lambda obj: True),),
+        "key_press_actions": ((lambda obj: {}),),
+        "key_release_actions": ((lambda obj: {}),),
     }
 
     
     static_bg_components = ["overlay_bg", "text"]
     dynamic_displ_attrs = []
     #displ_component_attrs = ["static_bg", "dynamic_displ_attrs"]
+
+    _user_input_processor = UserInputProcessor(
+        key_press_event_filter=lambda obj, event: MenuOverlayBase.menuKeyEventFilter(obj, event, obj.key_press_actions),
+        key_release_event_filter=lambda obj, event: MenuOverlayBase.menuKeyEventFilter(obj, event, obj.key_release_actions),
+    )
 
     def __init__(
         self,
@@ -84,6 +91,8 @@ class MenuOverlayBase(InteractiveDisplayComponentBase):
         navkeys_enabled: Optional[bool]=None,
         navkeys: Optional[Tuple[Tuple[Set[int]]]]=None,
         enter_keys: Optional[Set[int]]=None,
+        key_press_actions: Optional[Dict[int, Any]]=None,
+        key_release_actions: Optional[Dict[int, Any]]=None,
         #exit_press_keys: Optional[Set[int]]=None,
         #exit_release_keys: Optional[Set[int]]=None,
         **kwargs,
@@ -137,6 +146,11 @@ class MenuOverlayBase(InteractiveDisplayComponentBase):
         """
     #def calculateShape(self):
     #    return self.screen_shape
+
+    @staticmethod
+    def menuKeyEventFilter(obj: "MenuOverlayBase", event, key_actions: Dict[str, Any]) -> bool:
+        #print("Using menuKeyEventFilter()")
+        return event.key in key_actions.keys()
 
     def calculateAnchorType(self):
         return "topleft"
@@ -462,7 +476,7 @@ class MenuOverlayBase(InteractiveDisplayComponentBase):
     
     def eventLoop(
         self,
-        events: Optional[List[int]]=None,
+        events: Optional[List[Tuple["pg.Event", int]]]=None,
         keys_down: Optional[Set[int]]=None,
         mouse_status: Optional[Tuple[int]]=None,
         check_axes: Tuple[int]=(0, 1),
@@ -516,12 +530,20 @@ class MenuOverlayBase(InteractiveDisplayComponentBase):
     
     def _eventLoop(
         self,
-        events: List[int],
+        events: List[Tuple["pg.Event", int]],
         keys_down: Set[int],
         mouse_status: Tuple[int],
         check_axes: Tuple[int]=(0, 1),
     ) -> Tuple[bool, bool, bool, list]:
-        return False, True, False, []
+        actions = []
+        for event in events:
+            if event[1] == 0: act_dict = self.key_press_actions
+            elif event[1] == 1: act_dict = self.key_release_actions
+            else: continue
+            k = event[0].key
+            if k in act_dict.keys():
+                actions.append(act_dict[k])
+        return False, True, False, actions
 
 class ButtonMenuOverlay(MenuOverlayBase):
     #navkeys_def = navkeys_def_glob
@@ -1544,6 +1566,46 @@ class SliderAndButtonMenuOverlay(ButtonMenuOverlay):
             "slider_plus_grid_anchor_pos_norm": anchor_pos_norm,
             "slider_plus_grid_wh_ratio_range": wh_ratio_range,
         })
+        """
+        kwargs = {
+            grid_dims=grid_dims,
+            shape=self.slider_plus_grid_shape_actual,
+            slider_plus_gaps_rel_shape=slider_plus_gaps_rel_shape,
+            anchor_rel_pos=self.slider_plus_grid_anchor_pos_actual,
+            anchor_type=anchor_type,
+            screen_topleft_to_parent_topleft_offset=self.screen_topleft_to_parent_topleft_offset,
+            demarc_numbers_text_group=demarc_numbers_text_group,
+            thumb_radius_rel=thumb_radius_rel,
+            demarc_line_lens_rel=demarc_line_lens_rel,
+            demarc_numbers_max_height_rel=demarc_numbers_max_height_rel,
+            track_color=track_color,
+            thumb_color=thumb_color,
+            demarc_numbers_color=demarc_numbers_color,
+            demarc_line_colors=demarc_line_colors,
+            thumb_outline_color=thumb_outline_color,
+            slider_shape_rel=slider_shape_rel,
+            slider_borders_rel=slider_borders_rel,
+            title_text_group=title_text_group,
+            title_anchor_type=title_anchor_type,
+            title_color=title_color,
+            val_text_group=val_text_group,
+            val_text_anchor_type=val_text_anchor_type,
+            val_text_color=val_text_color,
+            mouse_enabled=self.mouse_enabled,
+        }
+        attr_corresp_dict = {
+
+        }
+        if self.buttons[grid_inds[0]][grid_inds[1]] is None:
+            container_attr_resets = {"changed_since_last_draw": {"display_surf": (lambda container_obj, obj: obj.drawUpdateRequired())}}
+            self.buttons[grid_inds[0]][grid_inds[1]] = self.createSubComponent(
+                component_class=ButtonGroupElement,
+                attr_correspondence_dict={},
+                creation_kwargs=attr_dict,
+                container_attribute_resets=container_attr_resets,
+                custom_creation_function=self.button_group.addButton
+            )
+        """
 
         slider_plus_grid = SliderPlusGrid(
             grid_dims=grid_dims,

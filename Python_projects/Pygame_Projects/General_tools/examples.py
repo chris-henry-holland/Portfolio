@@ -524,7 +524,6 @@ def runExampleSliderGroup1() -> None:
         demarc_numbers_color=None,
         demarc_line_colors=None,
         thumb_outline_color=None,
-        mouse_enabled=True,
     )
 
     sliders = []
@@ -541,6 +540,7 @@ def runExampleSliderGroup1() -> None:
             demarc_numbers_dp=0,
             demarc_intervals=(5,),
             demarc_start_val=1,
+            mouse_enabled=True,
             name=None,
         )
     )
@@ -558,6 +558,7 @@ def runExampleSliderGroup1() -> None:
             demarc_numbers_dp=None,
             demarc_intervals=(20, 10, 5),
             demarc_start_val=None,
+            mouse_enabled=True,
             name=None,
         )
     )
@@ -783,7 +784,7 @@ def runExampleSliderPlusGroup1() -> None:
         demarc_numbers_color=None,
         demarc_line_colors=None,
         thumb_outline_color=None,
-        mouse_enabled=True,
+        #mouse_enabled=True,
         slider_shape_rel=(.7, .7),
         slider_borders_rel=(0, 0),
         title_text_group=None,
@@ -811,6 +812,7 @@ def runExampleSliderPlusGroup1() -> None:
             demarc_intervals=(50, 10, 5),
             demarc_start_val=None,
             val_text_dp=0,
+            mouse_enabled=True,
             name=None,
         )
     )
@@ -829,6 +831,7 @@ def runExampleSliderPlusGroup1() -> None:
             demarc_intervals=(10,),
             demarc_start_val=1,
             val_text_dp=2,
+            mouse_enabled=True,
             name=None,
         )
     )

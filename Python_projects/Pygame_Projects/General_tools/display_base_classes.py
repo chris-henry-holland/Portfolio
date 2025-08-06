@@ -1639,13 +1639,15 @@ class InteractiveDisplayComponentBase(DisplayComponentBase):
     
     fixed_attributes = set()
     
-    _user_input_processor = UserInputProcessor(keys_down_func=keysDownFunction0,
-            key_press_event_filter=lambda obj, event: keyEventFilter0(obj, event, navkeys_enabled=obj.navkeys_enablement[1], enter_keys_enabled=obj.enter_keys_enablement[1]),
-            key_release_event_filter=lambda obj, event: keyEventFilter0(obj, event, navkeys_enabled=obj.navkeys_enablement[2], enter_keys_enabled=obj.enter_keys_enablement[2]),
-            mouse_press_event_filter=lambda obj, event: mouseEventFilter0(obj, event, mouse_enabled=obj.mouse_enablement[1]),
-            mouse_release_event_filter=lambda obj, event: mouseEventFilter0(obj, event, mouse_enabled=obj.mouse_enablement[2]),
-            other_event_filter=False,
-            get_mouse_status_func=(lambda obj: obj.mouse_enablement[0]))
+    _user_input_processor = UserInputProcessor(
+        keys_down_func=keysDownFunction0,
+        key_press_event_filter=lambda obj, event: keyEventFilter0(obj, event, navkeys_enabled=obj.navkeys_enablement[1], enter_keys_enabled=obj.enter_keys_enablement[1]),
+        key_release_event_filter=lambda obj, event: keyEventFilter0(obj, event, navkeys_enabled=obj.navkeys_enablement[2], enter_keys_enabled=obj.enter_keys_enablement[2]),
+        mouse_press_event_filter=lambda obj, event: mouseEventFilter0(obj, event, mouse_enabled=obj.mouse_enablement[1]),
+        mouse_release_event_filter=lambda obj, event: mouseEventFilter0(obj, event, mouse_enabled=obj.mouse_enablement[2]),
+        other_event_filter=False,
+        get_mouse_status_func=(lambda obj: obj.mouse_enablement[0])
+    )
     
     
     def __init__(
