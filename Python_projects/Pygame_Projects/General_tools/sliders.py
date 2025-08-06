@@ -56,8 +56,8 @@ class Slider(InteractiveDisplayComponentBase):
 
         #"component_dimensions": {"track_topleft": True, "track_shape": True, "thumb_radius": True, "demarc_numbers_max_height": True}
 
-        "track_topleft": {"x_range": True, "static_bg_surf": True, "demarc_surf": True, "slider_ranges_surf": True},
-        "track_shape": {"track_surf": True, "x_range": True, "demarc_surf": True, "slider_ranges_surf": True},
+        "track_topleft": {"x_range": True, "thumb_x": True, "static_bg_surf": True, "demarc_surf": True, "slider_ranges_surf": True},
+        "track_shape": {"x_range": True, "thumb_x": True, "track_surf": True, "demarc_surf": True, "slider_ranges_surf": True},
         "demarc_line_colors": {"demarc_surf": True},
         
         "demarc_numbers_color": {"demarc_surf": True},
@@ -75,14 +75,14 @@ class Slider(InteractiveDisplayComponentBase):
         "thumb_x_screen_raw": {"val": True},
 
         "val": {"thumb_x": True},
-        "thumb_x_screen": {"thumb_x": True},
+        "thumb_x": {"thumb_x_screen": True, "display_surf": True},
+        "thumb_x_screen": {"display_surf": True},
         
         "slider_ranges_surf": {"slider_ranges_screen": True},
         
         "track_surf": {"static_bg_surf": True},
         "demarc_surf": {"static_bg_surf": True},
         "static_bg_surf": {"display_surf": True},
-        "thumb_x": {"display_surf": True, "thumb_x_screen": True},
         "thumb_surf": {"display_surf": True},
     }
     
@@ -171,7 +171,7 @@ class Slider(InteractiveDisplayComponentBase):
         increment_start: Real,
         increment: Optional[Real]=None,
         anchor_type: Optional[str]=None,
-        screen_topleft_to_component_anchor_offset: Optional[Tuple[Real]]=None,
+        screen_topleft_to_parent_topleft_offset: Optional[Tuple[Real]]=None,
         init_val: Optional[Real]=None,
         demarc_numbers_text_group: Optional["TextGroup"]=None,
         demarc_numbers_dp: Optional[int]=None,
@@ -763,19 +763,23 @@ class Slider(InteractiveDisplayComponentBase):
         return vra[0] + round((vra[1] - vra[0]) * ((x - x_range[0]) / (self.increment * (x_range[1] - x_range[0])))) * self.increment
     
     def calculateSliderRangesSurface(self) -> Tuple[Tuple[Real]]:
-        #print("finding slider ranges surface")
+        print("Using calculateSliderRangesSurface()")
         y_extend = max(1, self.thumb_radius_rel - 1) * self.track_shape[1]
         x_extend = self.thumb_radius_rel * self.track_shape[1]
         return ((self.track_topleft[0] - x_extend, self.track_topleft[0] + self.track_shape[0] + x_extend), (self.track_topleft[1] - y_extend, self.track_topleft[1] + self.track_shape[1] + y_extend))
     
     def calculateSliderRangesScreen(self) -> Tuple[Tuple[Real]]:
-        return self.rangesSurface2RangesScreen(self.slider_ranges_surf)
+        print("Using calculateSliderRangesScreen()")
+        res = self.rangesSurface2RangesScreen(self.slider_ranges_surf)
+        print(f"new slider ranges screen = {res}")
+        return res
+
     
     def mouseOverSlider(self, mouse_pos: Tuple[int], check_axes: Tuple[int]=(0, 1)):
-        #print("checking mouseOverSlider()")
+        print("checking mouseOverSlider()")
         rngs = self.slider_ranges_screen
         #print(rngs, mouse_pos)
-        #print(mouse_pos, rngs, self.slider_ranges_surf, self.screen_topleft_to_component_anchor_offset)
+        #print(mouse_pos, rngs, self.slider_ranges_surf, self.screen_topleft_to_parent_topleft_offset)
         res = all(rngs[i][0] <= mouse_pos[i] <= rngs[i][1] for i in check_axes)
         #print(f"mouse over slider = {res}")
         return res
@@ -855,7 +859,7 @@ class SliderGroupElement(ComponentGroupElementBaseClass, Slider):
         increment_start: Real,
         increment: Optional[Real]=None,
         anchor_type: Optional[str]=None,
-        screen_topleft_to_component_anchor_offset: Optional[Tuple[Real]]=None,
+        screen_topleft_to_parent_topleft_offset: Optional[Tuple[Real]]=None,
         init_val: Optional[Real]=None,
         demarc_numbers_dp: Optional[int]=None,
         demarc_intervals: Optional[Tuple[Real]]=None,
@@ -874,7 +878,7 @@ class SliderGroupElement(ComponentGroupElementBaseClass, Slider):
             increment_start=increment_start,
             increment=increment,
             anchor_type=anchor_type,
-            screen_topleft_to_component_anchor_offset=screen_topleft_to_component_anchor_offset,
+            screen_topleft_to_parent_topleft_offset=screen_topleft_to_parent_topleft_offset,
             init_val=init_val,
             demarc_numbers_text_group=slider_group.demarc_numbers_text_group,
             demarc_numbers_dp=demarc_numbers_dp,
@@ -931,7 +935,7 @@ class SliderGroupElement(ComponentGroupElementBaseClass, Slider):
 class SliderGroup(ComponentGroupBaseClass):
     group_element_cls_func = lambda: SliderGroupElement
     
-    reset_graph_edges = {}
+    reset_graph_edges = {"slider_shape": {"slider_component_dimensions": True}}
 
     component_dim_determiners = ["shape", "demarc_numbers_max_height_rel", "thumb_radius_rel", "demarc_line_lens_rel"]
     for attr in component_dim_determiners:
@@ -1022,7 +1026,7 @@ class SliderGroup(ComponentGroupBaseClass):
         increment_start: Real,
         increment: Optional[Real]=None,
         anchor_type: Optional[str]=None,
-        screen_topleft_to_component_anchor_offset: Optional[Tuple[Real]]=None,
+        screen_topleft_to_parent_topleft_offset: Optional[Tuple[Real]]=None,
         init_val: Optional[Real]=None,
         demarc_numbers_dp: Optional[int]=None,
         demarc_intervals: Optional[Tuple[Real]]=None,
@@ -1037,7 +1041,7 @@ class SliderGroup(ComponentGroupBaseClass):
             increment_start=increment_start,
             increment=increment,
             anchor_type=anchor_type,
-            screen_topleft_to_component_anchor_offset=screen_topleft_to_component_anchor_offset,
+            screen_topleft_to_parent_topleft_offset=screen_topleft_to_parent_topleft_offset,
             init_val=init_val,
             demarc_numbers_dp=demarc_numbers_dp,
             demarc_intervals=demarc_intervals,
@@ -1048,7 +1052,7 @@ class SliderGroup(ComponentGroupBaseClass):
         return res
     
     def calculateSliderComponentDimensions(self):
-        #print("Using SliderGroup method calculateSliderComponentDimensions() here")
+        print("Using SliderGroup method calculateSliderComponentDimensions()")
         #print(len(self._elements_weakref))
         res = Slider._calculateMultipleSliderComponentDimensions(
             [slider_weakref() for slider_weakref in self._elements_weakref if slider_weakref is not None],
@@ -1059,7 +1063,7 @@ class SliderGroup(ComponentGroupBaseClass):
             demarc_numbers_min_gap_rel_height=1,
             demarc_numbers_min_gap_pixel=0,
         )
-        #print(f"value = {res}")
+        print(f"value = {res}")
         return res
         """
         #print("\ncreating TextGroup to calculate SliderGroup component dimensions")
@@ -1187,7 +1191,7 @@ class SliderPlus(InteractiveDisplayComponentBase):
                 "increment_start": "increment_start",
                 "increment": "increment",
                 "anchor_type": ((), lambda: "bottomleft"),
-                "screen_topleft_to_component_anchor_offset": "screen_topleft_to_component_topleft_offset",
+                "screen_topleft_to_parent_topleft_offset": "screen_topleft_to_component_topleft_offset",
                 "init_val": "init_val",
                 "demarc_numbers_text_group": "demarc_numbers_text_group",
                 "demarc_numbers_dp": "demarc_numbers_dp",
@@ -1212,7 +1216,7 @@ class SliderPlus(InteractiveDisplayComponentBase):
                 "increment_start": None,
                 "increment": None,
                 "anchor_type": None,
-                "screen_topleft_to_component_anchor_offset": None,
+                "screen_topleft_to_parent_topleft_offset": None,
                 "init_val": None,
                 "demarc_numbers_text_group": None,
                 "demarc_numbers_dp": None,
@@ -1250,7 +1254,7 @@ class SliderPlus(InteractiveDisplayComponentBase):
         increment_start: Real,
         increment: Optional[Real]=None,
         anchor_type: Optional[str]=None,
-        screen_topleft_to_component_anchor_offset: Optional[Tuple[Real]]=None,
+        screen_topleft_to_parent_topleft_offset: Optional[Tuple[Real]]=None,
         init_val: Optional[Real]=None,
         demarc_numbers_text_group: Optional["TextGroup"]=None,
         demarc_numbers_dp: Optional[int]=None,
@@ -1326,7 +1330,7 @@ class SliderPlus(InteractiveDisplayComponentBase):
             increment_start=self.increment_start,
             increment=self.increment,
             anchor_type="topleft",
-            screen_topleft_to_component_anchor_offset=self.screen_topleft_to_component_topleft_offset,
+            screen_topleft_to_parent_topleft_offset=self.screen_topleft_to_component_topleft_offset,
             init_val=self.init_val,
             demarc_numbers_text_group=self.demarc_numbers_text_group,
             demarc_numbers_dp=self.demarc_numbers_dp,
@@ -1351,12 +1355,14 @@ class SliderPlus(InteractiveDisplayComponentBase):
 
     @staticmethod
     def sliderShapeCalculator(slider_plus_shape: Tuple[int, int], slider_shape_rel: Tuple[float, float]) -> Tuple[int, int]:
+        print("Using SliderPlus method sliderShapeCalculator()")
         return tuple(math.floor(x * y) for x, y in zip(slider_plus_shape, slider_shape_rel)) 
 
     def calculateSliderShape(self) -> Tuple[int, int]:
         return self.sliderShapeCalculator(self.shape, self.slider_shape_rel)
     
     def calculateSliderBottomLeft(self) -> Tuple[int]:
+        print(f"Using calculateSliderBottomLeft()")
         return (0, self.shape[1])
     
     def calculateSliderBorders(self) -> Tuple[int]:
@@ -1806,10 +1812,11 @@ class SliderPlusGroupElement(ComponentGroupElementBaseClass, SliderPlus):
         "slider": {
             "class": SliderGroupElement,
             "attribute_correspondence": {
+                "anchor_rel_pos": "slider_bottomleft",
                 "val_range": "val_range",
                 "increment_start": "increment_start",
                 "increment": "increment",
-                "screen_topleft_to_component_anchor_offset": "screen_topleft_to_component_topleft_offset",
+                "screen_topleft_to_parent_topleft_offset": "screen_topleft_to_component_topleft_offset",
                 "init_val": "init_val",
                 "demarc_numbers_dp": "demarc_numbers_dp",
                 "demarc_intervals": "demarc_intervals",
@@ -1820,12 +1827,12 @@ class SliderPlusGroupElement(ComponentGroupElementBaseClass, SliderPlus):
             "creation_function_args": {
                 "slider_plus_group": "slider_plus_group",
                 #"shape": (("shape", "slider_shape_rel"), SliderPlus.sliderShapeCalculator),
-                "anchor_rel_pos": "slider_bottomleft",
+                "anchor_rel_pos": None,
                 "val_range": None,
                 "increment_start": None,
                 "increment": None,
                 "anchor_type": ((), (lambda: "bottomleft")),
-                "screen_topleft_to_component_anchor_offset": None,
+                "screen_topleft_to_parent_topleft_offset": None,
                 "init_val": None,
                 "demarc_numbers_dp": None,
                 "demarc_intervals": None,
@@ -1851,7 +1858,7 @@ class SliderPlusGroupElement(ComponentGroupElementBaseClass, SliderPlus):
         increment_start: Real,
         increment: Optional[Real]=None,
         anchor_type: Optional[str]=None,
-        screen_topleft_to_component_anchor_offset: Optional[Tuple[Real]]=None,
+        screen_topleft_to_parent_topleft_offset: Optional[Tuple[Real]]=None,
         init_val: Optional[Real]=None,
         demarc_numbers_dp: Optional[int]=None,
         demarc_intervals: Optional[Tuple[Real]]=None,
@@ -1874,7 +1881,7 @@ class SliderPlusGroupElement(ComponentGroupElementBaseClass, SliderPlus):
             increment_start=increment_start,
             increment=increment,
             anchor_type=anchor_type,
-            screen_topleft_to_component_anchor_offset=screen_topleft_to_component_anchor_offset,
+            screen_topleft_to_parent_topleft_offset=screen_topleft_to_parent_topleft_offset,
             init_val=init_val,
             demarc_numbers_text_group=slider_plus_group.demarc_numbers_text_group,
             demarc_numbers_dp=demarc_numbers_dp,
@@ -1981,7 +1988,7 @@ class SliderPlusGroup(ComponentGroupBaseClass):
             },
             #"creation_function": SliderGroup,
             "creation_function_args": {
-                "slider_shape": (("shape", "slider_shape_rel"), SliderPlus.sliderShapeCalculator),
+                "slider_shape": None,#(("shape", "slider_shape_rel"), SliderPlus.sliderShapeCalculator),
                 "demarc_numbers_text_group": None,
                 "thumb_radius_rel": None,
                 "demarc_line_lens_rel": None,
@@ -2051,7 +2058,7 @@ class SliderPlusGroup(ComponentGroupBaseClass):
         increment_start: Real,
         increment: Optional[Real]=None,
         anchor_type: Optional[str]=None,
-        screen_topleft_to_component_anchor_offset: Optional[Tuple[Real]]=None,
+        screen_topleft_to_parent_topleft_offset: Optional[Tuple[Real]]=None,
         init_val: Optional[Real]=None,
         demarc_numbers_dp: Optional[int]=None,
         demarc_intervals: Optional[Tuple[Real]]=None,
@@ -2069,7 +2076,7 @@ class SliderPlusGroup(ComponentGroupBaseClass):
             increment_start=increment_start,
             increment=increment,
             anchor_type=anchor_type,
-            screen_topleft_to_component_anchor_offset=screen_topleft_to_component_anchor_offset,
+            screen_topleft_to_parent_topleft_offset=screen_topleft_to_parent_topleft_offset,
             init_val=init_val,
             demarc_numbers_dp=demarc_numbers_dp,
             demarc_intervals=demarc_intervals,
@@ -2095,9 +2102,9 @@ class SliderPlusGrid(InteractiveDisplayComponentBase):
         "slider_topleft_locations": {"display_surf": True},
     }
     
-    #custom_attribute_change_propogation_methods = {
-    #    "title_shape": "setTitleShape",
-    #}
+    custom_attribute_change_propogation_methods = {
+        "screen_topleft_to_component_topleft_offset": "setTitleShape",
+    }
     
     attribute_calculation_methods = {
         "mouse_enablement": "calculateMouseEnablement",
@@ -2209,7 +2216,7 @@ class SliderPlusGrid(InteractiveDisplayComponentBase):
         slider_plus_gaps_rel_shape: Optional[Tuple[Real, Real]]=None,
         anchor_rel_pos: Tuple[Real, Real]=None,
         anchor_type: Optional[str]=None,
-        screen_topleft_to_component_anchor_offset: Optional[Tuple[Real, Real]]=None,
+        screen_topleft_to_parent_topleft_offset: Optional[Tuple[Real, Real]]=None,
         demarc_numbers_text_group: Optional["TextGroup"]=None,
         thumb_radius_rel: Optional[Real]=None,
         demarc_line_lens_rel: Optional[Tuple[Real]]=None,
@@ -2243,7 +2250,7 @@ class SliderPlusGrid(InteractiveDisplayComponentBase):
             shape,
             anchor_rel_pos,
             anchor_type=anchor_type,
-            screen_topleft_to_component_anchor_offset=screen_topleft_to_component_anchor_offset,
+            screen_topleft_to_parent_topleft_offset=screen_topleft_to_parent_topleft_offset,
             mouse_enablement=(mouse_enabled, False, mouse_enabled),
         )
         
@@ -2308,7 +2315,7 @@ class SliderPlusGrid(InteractiveDisplayComponentBase):
             "increment_start": increment_start,
             "increment": increment,
             "anchor_type": "topleft",
-            "screen_topleft_to_component_anchor_offset": self.screen_topleft_to_component_topleft_offset,
+            #"screen_topleft_to_parent_topleft_offset": self.screen_topleft_to_component_topleft_offset,
             "init_val": init_val,
             "demarc_numbers_dp": demarc_numbers_dp,
             "demarc_intervals": demarc_intervals,
@@ -2317,6 +2324,15 @@ class SliderPlusGrid(InteractiveDisplayComponentBase):
             "name": name,
         }
         if self.sliders[grid_inds[0]][grid_inds[1]] is None:
+            container_attr_resets = {"changed_since_last_draw": {"display_surf": (lambda container_obj, obj: obj.drawUpdateRequired())}}
+            self.sliders[grid_inds[0]][grid_inds[1]] = self.createSubComponent(
+                component_class=SliderPlus,
+                attr_correspondence_dict={},
+                creation_kwargs=attr_dict,
+                container_attribute_resets=container_attr_resets,
+                custom_creation_function=self.slider_plus_group.addSliderPlus
+            )
+            """
             #print(f"creating slider plus at grid indices {grid_inds}")
             container_attr_resets = {"changed_since_last_draw": {"display_surf": (lambda container_obj, obj: obj.drawUpdateRequired())}}
             self.sliders[grid_inds[0]][grid_inds[1]] = self.slider_plus_group.addSliderPlus(
@@ -2327,6 +2343,7 @@ class SliderPlusGrid(InteractiveDisplayComponentBase):
                 **kwargs,
             )
             #print(self.sliders[grid_inds[0]][grid_inds[1]].__dict__.get("_display_surf", None))
+            """
         else:
             self.sliders[grid_inds[0]][grid_inds[1]].setAttributes(
                 attr_dict,

@@ -310,7 +310,7 @@ class Game:
         button_text_anchortype_and_actions = [
             [
                 ("Apply", button_anchor_pos_tup, 1),
-                ("Reset", button_anchor_pos_tup, 2),
+                ("Revert", button_anchor_pos_tup, 2),
                 ("Return", button_anchor_pos_tup, 0),
             ]
         ]

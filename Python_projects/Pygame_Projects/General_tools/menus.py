@@ -39,7 +39,7 @@ class MenuOverlayBase(InteractiveDisplayComponentBase):
 
     reset_graph_edges = {
         #"screen_shape": {"shape": True},
-        "shape": {"overlay_bg_surf": True},
+        "shape": {"overlay_bg_surf": True, "text_surf": True},
 
         "overlay_color": {"overlay_bg_surf": True},
 
@@ -102,7 +102,7 @@ class MenuOverlayBase(InteractiveDisplayComponentBase):
         super().__init__(
             screen_shape, (0, 0),
             anchor_type="topleft",
-            screen_topleft_to_component_anchor_offset=(0, 0),
+            screen_topleft_to_parent_topleft_offset=(0, 0),
             mouse_enablement=(mouse_enabled, False, mouse_enabled),
             navkeys_enablement=(navkeys_enabled, navkeys_enabled, False),
             navkeys=navkeys,
@@ -252,7 +252,7 @@ class MenuOverlayBase(InteractiveDisplayComponentBase):
         return tuple(round(x * framerate) for x in time_tuple)
     
     def textPrinter(self, surf: "pg.Surface") -> None:
-        #print("Using ButtonMenuOverlay method textPrinter()")
+        print("Using MenuOverlayBase method textPrinter()")
         surf_shape = (surf.get_width(), surf.get_height())
         for text_obj, max_shape_rel, anchor_screen_pos_norm in self.text_objects:
             #print(f"setting text object max shape to {tuple(x * y for x, y in zip(surf_shape, max_shape_rel))}")
@@ -363,6 +363,7 @@ class MenuOverlayBase(InteractiveDisplayComponentBase):
     """
     def createTextImageConstructor(self) -> Callable[["MenuOverlayBase", "pg.Surface"], None]:
         def constructor(obj: "MenuOverlayBase", surf: "pg.Surface") -> None:
+            print("Using text image constructor")
             text_surf = self.text_surf
             if not text_surf: return
             surf.blit(text_surf, (0, 0))
@@ -527,7 +528,7 @@ class ButtonMenuOverlay(MenuOverlayBase):
     #navkey_dict_def = createNavkeyDict(navkeys_def)
 
     reset_graph_edges = {
-        "shape": {"button_grid_shape_actual": True},
+        "shape": {"button_grid_shape_actual": True, "button_grid_anchor_pos_actual": True},
         "button_grid_max_shape_norm": {"button_grid_shape_actual": True},
         "button_grid_wh_ratio_range": {"button_grid_shape_actual": True},
         "button_grid_anchor_pos_norm": {"button_grid_anchor_pos_actual": True},
@@ -626,6 +627,7 @@ class ButtonMenuOverlay(MenuOverlayBase):
         prev_val: Optional[Tuple[int, int]],
     ) -> None:
         print("Using customButtonGridAnchorPositionActualChangePropogation()")
+        print(f"new anchor position = {new_val}")
         button_grid = self.button_grid
         if button_grid is None: return
         button_grid.anchor_rel_pos = new_val
@@ -718,7 +720,7 @@ class ButtonMenuOverlay(MenuOverlayBase):
             shape=self.button_grid_shape_actual,
             anchor_rel_pos=self.button_grid_anchor_pos_actual,
             anchor_type=anchor_type,
-            screen_topleft_to_component_anchor_offset=self.screen_topleft_to_component_anchor_offset,
+            screen_topleft_to_parent_topleft_offset=self.screen_topleft_to_parent_topleft_offset,
             button_gaps_rel_shape=button_gaps_rel_shape,
             text_groups=text_groups,
             font_colors=font_colors,
@@ -1065,7 +1067,7 @@ class ButtonMenuOverlay(MenuOverlayBase):
             shape=overall_shape,
             anchor_rel_pos=anchor_screen_pos,
             anchor_type=anchor_type,
-            screen_topleft_to_component_anchor_offset=self.screen_topleft_to_component_anchor_offset,
+            screen_topleft_to_parent_topleft_offset=self.screen_topleft_to_parent_topleft_offset,
             button_gaps_rel_shape=button_gaps_rel_shape,
             text_groups=text_groups,
             font_colors=font_colors,
@@ -1374,7 +1376,7 @@ class ButtonMenuOverlay(MenuOverlayBase):
 class SliderAndButtonMenuOverlay(ButtonMenuOverlay):
     
     reset_graph_edges = {
-        "shape": {"slider_plus_grid_shape_actual": True},
+        "shape": {"slider_plus_grid_shape_actual": True, "slider_plus_grid_anchor_pos_actual": True},
         "slider_plus_grid_max_shape_norm": {"slider_plus_grid_shape_actual": True},
         "slider_plus_grid_wh_ratio_range": {"slider_plus_grid_shape_actual": True},
         "slider_plus_grid_anchor_pos_norm": {"slider_plus_grid_anchor_pos_actual": True},
@@ -1549,7 +1551,7 @@ class SliderAndButtonMenuOverlay(ButtonMenuOverlay):
             slider_plus_gaps_rel_shape=slider_plus_gaps_rel_shape,
             anchor_rel_pos=self.slider_plus_grid_anchor_pos_actual,
             anchor_type=anchor_type,
-            screen_topleft_to_component_anchor_offset=self.screen_topleft_to_component_anchor_offset,
+            screen_topleft_to_parent_topleft_offset=self.screen_topleft_to_parent_topleft_offset,
             demarc_numbers_text_group=demarc_numbers_text_group,
             thumb_radius_rel=thumb_radius_rel,
             demarc_line_lens_rel=demarc_line_lens_rel,
@@ -1719,7 +1721,7 @@ class SliderAndButtonMenuOverlay(ButtonMenuOverlay):
             slider_gaps_rel_shape=slider_gaps_rel_shape,
             anchor_rel_pos=topleft,
             anchor_type="topleft",
-            screen_topleft_to_component_anchor_offset=self.screen_topleft_to_component_anchor_offset,
+            screen_topleft_to_parent_topleft_offset=self.screen_topleft_to_parent_topleft_offset,
             demarc_numbers_text_group=demarc_numbers_text_group,
             thumb_radius_rel=thumb_radius_rel,
             demarc_line_lens_rel=demarc_line_lens_rel,

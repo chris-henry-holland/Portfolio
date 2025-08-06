@@ -75,7 +75,7 @@ def runExampleButton1() -> None:
         text_objects=None,
         anchor_rel_pos=(100, 100),
         anchor_type="topleft",
-        screen_topleft_to_component_anchor_offset=None,
+        screen_topleft_to_parent_topleft_offset=None,
         font_colors=((named_colors_def["white"], 0.5), (named_colors_def["yellow"], 1), (named_colors_def["blue"], 1), (named_colors_def["green"], 1)),
         text_borders_rel=((0.1, 0.2), (0, 0), 1, 0),
         text_anchor_types=(("midleft",), 0, 0, 0),
@@ -168,7 +168,7 @@ def runExampleButtonGroup1() -> None:
             text="adfsadfdsafdsafdsa",
             anchor_rel_pos=(350, 350),
             anchor_type="center",
-            screen_topleft_to_component_anchor_offset=(0, 0),
+            screen_topleft_to_parent_topleft_offset=(0, 0),
             text_anchor_types="center",
             mouse_enabled=True,
             name=None,
@@ -183,7 +183,7 @@ def runExampleButtonGroup1() -> None:
             text="Hello",
             anchor_rel_pos=(10, 10),
             anchor_type="topleft",
-            screen_topleft_to_component_anchor_offset=(0, 0),
+            screen_topleft_to_parent_topleft_offset=(0, 0),
             text_anchor_types="center",
             mouse_enabled=True,
             name=None,
@@ -272,7 +272,7 @@ def runExampleButtonGrid1() -> None:
         shape=(500, 400),
         anchor_rel_pos=(100, 100),
         anchor_type="topleft",
-        screen_topleft_to_component_anchor_offset=(0, 0),
+        screen_topleft_to_parent_topleft_offset=(0, 0),
         button_gaps_rel_shape=(0.2, 0.2),
         text_groups=text_groups,
         font_colors=((named_colors_def["white"], 0.5), (named_colors_def["yellow"], 1), (named_colors_def["blue"], 1), (named_colors_def["green"], 1)),
@@ -342,7 +342,7 @@ def runExampleButtonGrid1() -> None:
     
     button_grid = ButtonGrid((500, 400),\
             button_text, text_groups, (100, 100),\
-            anchor_type="topleft", screen_topleft_to_component_anchor_offset=(0, 0),\
+            anchor_type="topleft", screen_topleft_to_parent_topleft_offset=(0, 0),\
             button_gaps_rel_shape=(0.2, 0.2),\
             font_colors=((named_colors_def["white"], 0.5), (named_colors_def["yellow"], 1), (named_colors_def["blue"], 1), (named_colors_def["green"], 1)),\
             text_borders_rel=((0.1, 0.2), (0, 0), 1, 0),\
@@ -398,7 +398,7 @@ def runExampleSlider1() -> None:
     shape: Tuple[Real],
             anchor_rel_pos: Tuple[Real], anchor_type: str="topleft",
             demarc_numbers_text_group: Optional["Text"]=None,
-            surf_screen_topleft_to_component_anchor_offset: Tuple[Real]=(0, 0),
+            surf_screen_topleft_to_parent_topleft_offset: Tuple[Real]=(0, 0),
             val_range=(0, 100),
             demarc_intervals=(20, 10, 5), demarc_start_val=0, increment=None,
             increment_start=None, track_color=None, thumb_color=None, thumb_radius_rel=1,
@@ -414,7 +414,7 @@ def runExampleSlider1() -> None:
         increment_start=15,
         increment=5,
         anchor_type="center",
-        screen_topleft_to_component_anchor_offset=None,
+        screen_topleft_to_parent_topleft_offset=None,
         init_val=None,
         demarc_numbers_text_group=None,
         demarc_numbers_dp=None,
@@ -437,7 +437,7 @@ def runExampleSlider1() -> None:
     """
     slider = Slider((500, 70), (300, 200), anchor_type="center",
             demarc_numbers_text_group=None,
-            screen_topleft_to_component_anchor_offset=(0, 0), val_range=(0, 100),
+            screen_topleft_to_parent_topleft_offset=(0, 0), val_range=(0, 100),
             demarc_intervals=(20, 10, 5), demarc_start_val=35,
             increment=10, increment_start=15, track_color=(named_colors_def["gray"], 1),
             thumb_color=(named_colors_def["silver"], 1), thumb_radius_rel=1, init_val=None,
@@ -448,6 +448,8 @@ def runExampleSlider1() -> None:
     """
     address = id(slider)
     slider.draw(screen)
+    screen_changed = True
+
     #print(f"reference count = {ctypes.c_long.from_address(address)}")
     slider.shape = (400, 70)
     #print(slider.is_default_set)
@@ -463,7 +465,7 @@ def runExampleSlider1() -> None:
     #print(slider.mouse_enablement)
     
     
-    screen_changed = True
+    
     clock = pg.time.Clock()
     
     while True:
@@ -534,7 +536,7 @@ def runExampleSliderGroup1() -> None:
             increment_start=15,
             increment=5,
             anchor_type="center",
-            screen_topleft_to_component_anchor_offset=None,
+            screen_topleft_to_parent_topleft_offset=None,
             init_val=None,
             demarc_numbers_dp=0,
             demarc_intervals=(5,),
@@ -551,7 +553,7 @@ def runExampleSliderGroup1() -> None:
             increment_start=15,
             increment=0,
             anchor_type="center",
-            screen_topleft_to_component_anchor_offset=None,
+            screen_topleft_to_parent_topleft_offset=None,
             init_val=None,
             demarc_numbers_dp=None,
             demarc_intervals=(20, 10, 5),
@@ -574,7 +576,7 @@ def runExampleSliderGroup1() -> None:
     """
     slider = Slider((500, 70), (300, 200), anchor_type="center",
             demarc_numbers_text_group=None,
-            screen_topleft_to_component_anchor_offset=(0, 0), val_range=(0, 100),
+            screen_topleft_to_parent_topleft_offset=(0, 0), val_range=(0, 100),
             demarc_intervals=(20, 10, 5), demarc_start_val=35,
             increment=10, increment_start=15, track_color=(named_colors_def["gray"], 1),
             thumb_color=(named_colors_def["silver"], 1), thumb_radius_rel=1, init_val=None,
@@ -587,7 +589,7 @@ def runExampleSliderGroup1() -> None:
     #sliders[0].shape = (300, 70)
     #slider_group.slider_shape = (600, 600)
     #print("hello")
-    slider_group.track_color = (named_colors_def["black"], 0.5)
+    
     screen_changed = True
     #print(slider.__dict__.keys())
     #print(slider.mouse_enabled)
@@ -595,6 +597,9 @@ def runExampleSliderGroup1() -> None:
     #print(slider_group.is_default_set)
     #print(slider_group.demarc_line_colors)
     #print(sliders[0].demarc_line_colors)
+    slider_group.track_color = (named_colors_def["black"], 0.5)
+    print(f"changing the slider group shape")
+    slider_group.slider_shape = (300, 200)
     
     clock = pg.time.Clock()
     
@@ -638,7 +643,7 @@ def runExampleSliderPlus1() -> None:
     shape: Tuple[Real],
             anchor_rel_pos: Tuple[Real], anchor_type: str="topleft",
             demarc_numbers_text_group: Optional["Text"]=None,
-            surf_screen_topleft_to_component_anchor_offset: Tuple[Real]=(0, 0),
+            surf_screen_topleft_to_parent_topleft_offset: Tuple[Real]=(0, 0),
             val_range=(0, 100),
             demarc_intervals=(20, 10, 5), demarc_start_val=0, increment=None,
             increment_start=None, track_color=None, thumb_color=None, thumb_radius_rel=1,
@@ -649,13 +654,13 @@ def runExampleSliderPlus1() -> None:
     """
     slider_plus = SliderPlus(
         title="Slider 1",
-        shape=(600, 300),
+        shape=(800, 100),
         anchor_rel_pos=(300, 200),
         val_range=(0, 100),
         increment_start=15,
         increment=None,
         anchor_type="center",
-        screen_topleft_to_component_anchor_offset=None,
+        screen_topleft_to_parent_topleft_offset=None,
         init_val=None,
         demarc_numbers_text_group=None,
         demarc_numbers_dp=2,
@@ -685,6 +690,7 @@ def runExampleSliderPlus1() -> None:
     )
     address = id(slider_plus)
     slider_plus.draw(screen)
+    screen_changed = True
     #print(slider_plus.sub_component_dict)
     #print(slider_plus.slider)
     #print(f"mouse enabled = {slider_plus.slider.mouse_enabled}")
@@ -692,10 +698,10 @@ def runExampleSliderPlus1() -> None:
     #print(slider_plus.slider.slider_ranges_screen)
     #print("######################### changing shape")
     #print(f"original title shape = {slider_plus.title_shape}")
-    ttg = slider_plus.title_text_group
-    tto = slider_plus.title_text_obj
+    #ttg = slider_plus.title_text_group
+    #tto = slider_plus.title_text_obj
     #print("\nhello\n")
-    slider_plus.shape = (500, 150)
+    
     #slider_plus.slider_borders_rel = (0, 0)
 
     #print(slider_plus.shape)
@@ -715,9 +721,10 @@ def runExampleSliderPlus1() -> None:
     #print(tto.max_font_size_given_width)
     
     #print(f"new title shape = {slider_plus.title_shape}")
+
     slider_plus.track_color = (named_colors_def["black"], 0.2)
+    slider_plus.shape = (500, 100)
     
-    screen_changed = True
     clock = pg.time.Clock()
     
     while True:
@@ -766,7 +773,7 @@ def runExampleSliderPlusGroup1() -> None:
     screen_cp = pg.Surface.copy(screen)
 
     slider_group = SliderPlusGroup(
-        shape=(500, 300),
+        shape=(200, 70),
         demarc_numbers_text_group=None,
         thumb_radius_rel=1,
         demarc_line_lens_rel=None,
@@ -798,7 +805,7 @@ def runExampleSliderPlusGroup1() -> None:
             increment_start=15,
             increment=0,
             anchor_type="topleft",
-            screen_topleft_to_component_anchor_offset=None,
+            screen_topleft_to_parent_topleft_offset=None,
             init_val=None,
             demarc_numbers_dp=0,
             demarc_intervals=(50, 10, 5),
@@ -816,7 +823,7 @@ def runExampleSliderPlusGroup1() -> None:
             increment_start=15,
             increment=5,
             anchor_type="center",
-            screen_topleft_to_component_anchor_offset=None,
+            screen_topleft_to_parent_topleft_offset=None,
             init_val=None,
             demarc_numbers_dp=2,
             demarc_intervals=(10,),
@@ -833,9 +840,7 @@ def runExampleSliderPlusGroup1() -> None:
     #print(slider_group.demarc_line_colors)
     #slider_group.shape = (300, 300)
     #slider_group.slider_shape_rel = (.5, .4)
-    slider_group.title_color = (named_colors_def["silver"], .7)
-    slider_group.val_text_color = (named_colors_def["white"], .7)
-    slider_group.shape = (400, 150)
+    
     
     def drawSliders(screen: "pg.Surface", sliders: List["SliderPlus"]) -> None:
         for slider in sliders:
@@ -844,7 +849,7 @@ def runExampleSliderPlusGroup1() -> None:
     """
     slider = Slider((500, 70), (300, 200), anchor_type="center",
             demarc_numbers_text_group=None,
-            screen_topleft_to_component_anchor_offset=(0, 0), val_range=(0, 100),
+            screen_topleft_to_parent_topleft_offset=(0, 0), val_range=(0, 100),
             demarc_intervals=(20, 10, 5), demarc_start_val=35,
             increment=10, increment_start=15, track_color=(named_colors_def["gray"], 1),
             thumb_color=(named_colors_def["silver"], 1), thumb_radius_rel=1, init_val=None,
@@ -871,6 +876,11 @@ def runExampleSliderPlusGroup1() -> None:
     #slider_group.val_text_color = (named_colors_def["white"], 1)
     #slider_group.shape = (300, 200)
     #slider_group.slider_borders = (0, 0)
+    slider_group.title_color = (named_colors_def["silver"], .7)
+    slider_group.val_text_color = (named_colors_def["gray"], .7)
+
+    print("Changing slider group shape")
+    slider_group.shape = (500, 200)
     
     clock = pg.time.Clock()
     
@@ -917,9 +927,9 @@ def runExampleSliderPlusGrid1() -> None:
         grid_dims=grid_dims,
         shape=(400, 400),
         slider_plus_gaps_rel_shape=(0.1, 0.1),
-        anchor_rel_pos=(50, 50),
-        anchor_type="topleft",
-        screen_topleft_to_component_anchor_offset=None,
+        anchor_rel_pos=(300, 300),
+        anchor_type="center",
+        screen_topleft_to_parent_topleft_offset=None,
         demarc_numbers_text_group=None,
         thumb_radius_rel=1,
         demarc_line_lens_rel=None,
@@ -1005,7 +1015,7 @@ def runExampleSliderPlusGrid1() -> None:
             increment_start=15,
             increment=5,
             anchor_type="center",
-            screen_topleft_to_component_anchor_offset=None,
+            screen_topleft_to_parent_topleft_offset=None,
             init_val=None,
             demarc_numbers_dp=3,
             demarc_intervals=(20,),
@@ -1032,7 +1042,7 @@ def runExampleSliderPlusGrid1() -> None:
     """
     slider = Slider((500, 70), (300, 200), anchor_type="center",
             demarc_numbers_text_group=None,
-            screen_topleft_to_component_anchor_offset=(0, 0), val_range=(0, 100),
+            screen_topleft_to_parent_topleft_offset=(0, 0), val_range=(0, 100),
             demarc_intervals=(20, 10, 5), demarc_start_val=35,
             increment=10, increment_start=15, track_color=(named_colors_def["gray"], 1),
             thumb_color=(named_colors_def["silver"], 1), thumb_radius_rel=1, init_val=None,
@@ -1059,6 +1069,8 @@ def runExampleSliderPlusGrid1() -> None:
     #slider_group.val_text_color = (named_colors_def["white"], 1)
     #slider_group.shape = (300, 200)
     #slider_group.slider_borders = (0, 0)
+    print("changing slider grid shape")
+    slider_grid.shape = (500, 600)
     
     clock = pg.time.Clock()
     
@@ -1513,7 +1525,9 @@ def runExampleSliderAndButtonMenuOverlay1() -> None:
     menu_overlay.addTextGroup(text_list, max_height_rel, font=None,\
             font_size=None)
     """
+    menu_overlay.draw(screen)
     screen_changed = True
+    #menu_overlay.shape = 
     clock = pg.time.Clock()
     
     while True:

@@ -191,7 +191,7 @@ class Button(InteractiveDisplayComponentBase):
         text: Tuple[Union[Tuple[str], int]],
         anchor_rel_pos: Tuple[Real],
         anchor_type: Optional[str]=None,
-        screen_topleft_to_component_anchor_offset: Optional[Tuple[Real]]=None,
+        screen_topleft_to_parent_topleft_offset: Optional[Tuple[Real]]=None,
         text_objects: Tuple[Union[Optional["Text"], int]]=None,
         font_colors: Optional[Tuple[Optional[ColorOpacity], int]]=None,
         text_borders_rel: Optional[Tuple[Union[Optional[Tuple[Real]], int]]]=None,
@@ -213,7 +213,7 @@ class Button(InteractiveDisplayComponentBase):
         super().__init__(**self.initArgsManagement(locals(), kwargs=kwargs))
         """
         super().__init__(shape, anchor_rel_pos, anchor_type=anchor_type,\
-            screen_topleft_to_component_anchor_offset=screen_topleft_to_component_anchor_offset)
+            screen_topleft_to_parent_topleft_offset=screen_topleft_to_parent_topleft_offset)
         
         self.state = 0
         #self._shape = shape
@@ -221,7 +221,7 @@ class Button(InteractiveDisplayComponentBase):
         #self._anchor_type = anchor_type
         self._text_borders_rel = tuple([(0.2, 0.2)] + [0] * (self.n_state - 1)) if text_borders_rel is None else text_borders_rel
         self._text_anchor_types = tuple([("center",)] + [0] * (self.n_state - 1)) if text_anchor_types is None else text_anchor_types
-        self._screen_topleft_to_component_anchor_offset = screen_topleft_to_component_anchor_offset
+        self._screen_topleft_to_parent_topleft_offset = screen_topleft_to_parent_topleft_offset
         #print(f"self.text_anchor_types = {self.text_anchor_types}")
         
         self.text_objects = text_objects
@@ -918,7 +918,7 @@ class ButtonGroupElement(ComponentGroupElementBaseClass, Button):
         #text_objects=text_objects,
         anchor_rel_pos: Tuple[Real],
         anchor_type: Optional[str]=None,
-        screen_topleft_to_component_anchor_offset: Optional[Tuple[Real]]=None,
+        screen_topleft_to_parent_topleft_offset: Optional[Tuple[Real]]=None,
         text_anchor_types: Optional[Tuple[Union[Optional[Tuple[str]], int]]]=None,
         mouse_enabled: Optional[bool]=None,
         name: Optional[str]=None,
@@ -926,7 +926,7 @@ class ButtonGroupElement(ComponentGroupElementBaseClass, Button):
         #text: str,
         #anchor_rel_pos: Tuple[Real],
         #anchor_type: Optional[str]=None,
-        #screen_topleft_to_component_anchor_offset: Optional[Tuple[Real]]=None,
+        #screen_topleft_to_parent_topleft_offset: Optional[Tuple[Real]]=None,
         #font_colors: Optional[Tuple[Optional[ColorOpacity], int]]=None,
         #fill_colors: Optional[Tuple[Optional[ColorOpacity], int]]=None,
         #outline_colors: Optional[Tuple[Optional[ColorOpacity], int]]=None,
@@ -944,7 +944,7 @@ class ButtonGroupElement(ComponentGroupElementBaseClass, Button):
             text=text,
             anchor_rel_pos=anchor_rel_pos,
             anchor_type=anchor_type,
-            screen_topleft_to_component_anchor_offset=screen_topleft_to_component_anchor_offset,
+            screen_topleft_to_parent_topleft_offset=screen_topleft_to_parent_topleft_offset,
             text_objects=None,
             font_colors=button_group.font_colors,
             text_borders_rel=button_group.text_borders_rel,
@@ -1081,7 +1081,7 @@ class ButtonGroup(ComponentGroupBaseClass):
         text: Tuple[Union[Tuple[str], int]],
         anchor_rel_pos: Tuple[Real],
         anchor_type: Optional[str]=None,
-        screen_topleft_to_component_anchor_offset: Optional[Tuple[Real]]=None,
+        screen_topleft_to_parent_topleft_offset: Optional[Tuple[Real]]=None,
         text_anchor_types: Optional[Tuple[Union[Optional[Tuple[str]], int]]]=None,
         mouse_enabled: Optional[bool]=None,
         name: Optional[str]=None,
@@ -1095,7 +1095,7 @@ class ButtonGroup(ComponentGroupBaseClass):
             #text_objects=text_objects,
             anchor_rel_pos=anchor_rel_pos,
             anchor_type=anchor_type,
-            screen_topleft_to_component_anchor_offset=screen_topleft_to_component_anchor_offset,
+            screen_topleft_to_parent_topleft_offset=screen_topleft_to_parent_topleft_offset,
             text_anchor_types=text_anchor_types,
             mouse_enabled=mouse_enabled,
             name=name,
@@ -1250,7 +1250,7 @@ class ButtonGrid(InteractiveDisplayComponentBase):
         shape: Tuple[Real, Real],
         anchor_rel_pos: Tuple[Real, Real],
         anchor_type: Optional[str]=None,
-        screen_topleft_to_component_anchor_offset: Optional[Tuple[Real, Real]]=None,
+        screen_topleft_to_parent_topleft_offset: Optional[Tuple[Real, Real]]=None,
         button_gaps_rel_shape: Optional[Tuple[Optional[Real], Optional[Real]]]=None,
         text_groups: Optional[Tuple[Union[Optional[Tuple["TextGroup"]], int]]]=None,
         font_colors: Optional[Tuple[Optional[ColorOpacity], int]]=None,
@@ -1280,7 +1280,7 @@ class ButtonGrid(InteractiveDisplayComponentBase):
             shape,
             anchor_rel_pos,
             anchor_type=anchor_type,
-            screen_topleft_to_component_anchor_offset=screen_topleft_to_component_anchor_offset,
+            screen_topleft_to_parent_topleft_offset=screen_topleft_to_parent_topleft_offset,
             mouse_enablement=(mouse_enabled, False, mouse_enabled),
             navkeys_enablement=(navkeys_enabled, navkeys_enabled, False),
             navkeys=navkeys,
@@ -1295,7 +1295,7 @@ class ButtonGrid(InteractiveDisplayComponentBase):
         #self._button_array_shape = (len(button_text), len(button_text[0])) if button_text else (0, 0)
         """
         """
-        self._screen_topleft_to_component_anchor_offset = screen_topleft_to_component_anchor_offset
+        self._screen_topleft_to_parent_topleft_offset = screen_topleft_to_parent_topleft_offset
         self._grid_anchor_rel_pos = grid_anchor_rel_pos
         self._grid_anchor_type = grid_anchor_type
         """
@@ -1352,7 +1352,7 @@ class ButtonGrid(InteractiveDisplayComponentBase):
             "text": text,
             "anchor_rel_pos": (0, 0),
             "anchor_type": "topleft",
-            "screen_topleft_to_component_anchor_offset": self.screen_topleft_to_component_topleft_offset,
+            "screen_topleft_to_parent_topleft_offset": self.screen_topleft_to_component_topleft_offset,
             "text_anchor_types": text_anchor_types,
             "mouse_enabled": self.mouse_enabled,
             "name": name,
@@ -1581,14 +1581,14 @@ class ButtonGrid(InteractiveDisplayComponentBase):
     """
     """
     @property
-    def screen_topleft_to_component_anchor_offset(self):
-        return self._screen_topleft_to_component_anchor_offset
+    def screen_topleft_to_parent_topleft_offset(self):
+        return self._screen_topleft_to_parent_topleft_offset
     
-    @screen_topleft_to_component_anchor_offset.setter
-    def screen_topleft_to_component_anchor_offset(self, screen_topleft_to_component_anchor_offset: Tuple[Real]):
-        if screen_topleft_to_component_anchor_offset == getattr(self, "_screen_topleft_to_component_anchor_offset", None):
+    @screen_topleft_to_parent_topleft_offset.setter
+    def screen_topleft_to_parent_topleft_offset(self, screen_topleft_to_parent_topleft_offset: Tuple[Real]):
+        if screen_topleft_to_parent_topleft_offset == getattr(self, "_screen_topleft_to_parent_topleft_offset", None):
             return
-        self._screen_topleft_to_component_anchor_offset = screen_topleft_to_component_anchor_offset
+        self._screen_topleft_to_parent_topleft_offset = screen_topleft_to_parent_topleft_offset
         for attr in ("_button_ranges_screen",):
             setattr(self, attr, None)
         return
@@ -1862,7 +1862,7 @@ class ButtonGrid(InteractiveDisplayComponentBase):
         """
     
     def calculateButtonRangesScreen(self) -> Tuple[Tuple[Real]]:
-        offset = tuple(x + y for x, y in zip(self.screen_topleft_to_component_anchor_offset, self.topleft_rel_pos))
+        offset = tuple(x + y for x, y in zip(self.screen_topleft_to_parent_topleft_offset, self.topleft_rel_pos))
         res = []
         for rngs, d in zip(self.button_ranges_rel, offset):
             res.append([tuple(x + d for x in rng) for rng in rngs])
@@ -1895,9 +1895,9 @@ class ButtonGrid(InteractiveDisplayComponentBase):
    
     def findButtonRangesScreen(self):
         res = []
-        #for rngs, tl_displ, tl_offset in zip(self.button_ranges_gridwise, self.topleft, self.screen_topleft_to_component_anchor_offset):
+        #for rngs, tl_displ, tl_offset in zip(self.button_ranges_gridwise, self.topleft, self.screen_topleft_to_parent_topleft_offset):
         #    res.append([tuple(x + tl_displ + tl_offset for x in rng) for rng in rngs])
-        for rngs, stl_offset in zip(self.button_ranges_surf, self.screen_topleft_to_component_anchor_offset):
+        for rngs, stl_offset in zip(self.button_ranges_surf, self.screen_topleft_to_parent_topleft_offset):
             res.append([tuple(x + stl_offset for x in rng) for rng in rngs])
         return tuple(res)
      """

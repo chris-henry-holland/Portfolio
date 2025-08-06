@@ -126,10 +126,10 @@ class ComponentBaseClass(ABC):
         # Ensuring the attributes whose values are potentially propogated
         # to other objects have been initialized
         #print(self.attr_list)
-        #print(self.getAttributeChangePropogationFunctions().keys())
+        #print(self.getClassDefinedAttributeChangePropogationFunctions().keys())
         #print(f"\nInitializing attributes with custom reset functions")
-        #print([self.attr_list[idx] for idx in self.getAttributeChangePropogationFunctions().keys()])
-        for idx in self.getAttributeChangePropogationFunctions().keys():
+        #print([self.attr_list[idx] for idx in self.getClassDefinedAttributeChangePropogationFunctions().keys()])
+        for idx in self.getClassDefinedAttributeChangePropogationFunctions().keys():
             attr = self.attr_list[idx]
             sub_attr = f"_{attr}"
             #print(attr)
@@ -261,7 +261,8 @@ class ComponentBaseClass(ABC):
         chng_dict = self.getPendingAttributeChanges()
         it = chng_dict.keys() if attrs is None else {x.lstrip("_") for x in attrs}.intersection(chng_dict.keys())
         #print(chng_dict, it)
-        propogation_funcs = self.getAttributeChangePropogationFunctions()
+        cls_propogation_funcs = self.getClassDefinedAttributeChangePropogationFunctions()
+        inst_propogation_funcs = self.getInstanceAttributeChangePropogationFunctions()
         #print(propogation_funcs)
         calcfunc_dict = self.getAttributeCalculationFunctionDictionary()
         for attr in it:
@@ -284,10 +285,16 @@ class ComponentBaseClass(ABC):
             #    new_val = calcfunc_dict[attr][0](self)
             self.__dict__[sub_attr] = new_val
             if new_val == prev_val: continue
-            for func in propogation_funcs.get(self.attr2Index(attr), []):#[attr], []):
-                #if "max_font_size_given_width" in attrs:
-                #    print(f"Using propogation function {func} for attribute {attr}")
-                func(self, new_val, prev_val)
+            for prop_dict in [cls_propogation_funcs, inst_propogation_funcs]:
+                for func in prop_dict.get(self.attr2Index(attr), []):#[attr], []):
+                    #if "max_font_size_given_width" in attrs:
+                    #    print(f"Using propogation function {func} for attribute {attr}")
+                    func(self, new_val, prev_val)
+            #for prop_func_dict in (cls_propogation_funcs, inst_propogation_funcs):
+            #    for func in prop_func_dict.get(self.attr2Index(attr), []):#[attr], []):
+            #        #if "max_font_size_given_width" in attrs:
+            #        #    print(f"Using propogation function {func} for attribute {attr}")
+            #        func(self, new_val, prev_val)
             #if "max_font_size_given_width" in attrs:
             #    print(f"finished resolving attribute {attr}")
         #if "max_font_size_given_width" in attrs:
@@ -340,13 +347,28 @@ class ComponentBaseClass(ABC):
     def attr2Index(cls, attr: str)-> int:
         return cls._attr2Index(attr, cls.attr_list, cls.attr_dict, cls.reset_graph)
 
+    @staticmethod
+    def _setComponentAttribute(component: "ComponentBaseClass", component_attr_to_set: str, attr_calc: Union[str, Tuple[tuple, Callable]], obj: "ComponentBaseClass", new_val: Any, prev_val: Any) -> None:
+        # Note that the val and prev_val values are not used, but are included to fit with
+        # the expected calls of the function
+        if component is None: return
+        val = getattr(obj, attr_calc) if isinstance(attr_calc, str) else attr_calc[1](*[getattr(obj, x) for x in attr_calc[0]])
+        return component.setAttributes({component_attr_to_set: val}, _from_container=True)
+
+    @staticmethod
+    def _setNamedComponentAttribute(component_name: str, component_attr_to_set: str, attr_calc: Union[str, Tuple[tuple, Callable]], obj: "ComponentBaseClass", new_val: Any, prev_val: Any) -> None:
+        # Note that the val and prev_val values are not used, but are included to fit with
+        # the expected calls of the function
+        component = obj.__dict__.get(f"_{component_name}", None)
+        return ComponentBaseClass._setComponentAttribute(component, component_attr_to_set, attr_calc, obj, new_val, prev_val)
+
     @classmethod
     def createResetStructures(cls) -> Tuple[Union[List[str], Dict[str, int], List[Dict[int, Union[List[Callable[["DisplayComponentBase"], bool]]]]], Dict[int, List[Callable[[Any, "DisplayComponentBase"], None]]]]]:
         #print("Using createResetStructures()")
         attr_list = []
         attr_dict = {}
         reset_graph = []
-        attribute_change_propogation_funcs = {}
+        class_defined_attribute_change_propogation_funcs = {}
         
         def attr2Index(attr: str) -> int:
             return cls._attr2Index(attr, attr_list, attr_dict, reset_graph)
@@ -400,18 +422,14 @@ class ComponentBaseClass(ABC):
                     continue
                 
                 idx = attr2Index(attr)
-                attribute_change_propogation_funcs.setdefault(idx, [])
-                attribute_change_propogation_funcs[idx].append(functools.partial(meth))
+                class_defined_attribute_change_propogation_funcs.setdefault(idx, [])
+                class_defined_attribute_change_propogation_funcs[idx].append(functools.partial(meth))
         
-        def setComponentAttribute(component_name: str, component_attr_to_set: str, attr_calc: Union[str, Tuple[tuple, Callable]], obj: "ComponentBaseClass", new_val: Any, prev_val: Any) -> None:
-            component = obj.__dict__.get(f"_{component_name}", None)
-            if component is None: return
-            val = getattr(obj, attr_calc) if isinstance(attr_calc, str) else attr_calc[1](*[getattr(obj, x) for x in attr_calc[0]])
-            return component.setAttributes({component_attr_to_set: val}, _from_container=True)
         
-        #sub_components_dict = cls.__dict__.get("sub_components_dict", cls._createSubComponentsDictionary())
-        sub_components_dict = cls.getSubComponentsDictionary()
-        for component_name, sc_dict in sub_components_dict.items():
+        
+        #class_defined_sub_components_dict = cls.__dict__.get("class_defined_sub_components_dict", cls._createClassDefinedSubComponentsDictionary())
+        class_defined_sub_components_dict = cls.getClassDefinedSubComponentsDictionary()
+        for component_name, sc_dict in class_defined_sub_components_dict.items():
             attr_dict2 = sc_dict["attribute_correspondence"]
             for component_attr, attr_calc in attr_dict2.items():
                 parent_attr_lst = [attr_calc] if isinstance(attr_calc, str) else attr_calc[0]
@@ -419,13 +437,13 @@ class ComponentBaseClass(ABC):
                     #print(f"4, {parent_attr}")
                     idx = attr2Index(parent_attr)
                     #print(parent_attr, idx)
-                    attribute_change_propogation_funcs.setdefault(idx, [])
-                    attribute_change_propogation_funcs[idx].append(functools.partial(setComponentAttribute, component_name, component_attr, attr_calc))
+                    class_defined_attribute_change_propogation_funcs.setdefault(idx, [])
+                    class_defined_attribute_change_propogation_funcs[idx].append(functools.partial(cls._setNamedComponentAttribute, component_name, component_attr, attr_calc))
                 #if not isinstance(val_attr, str): continue
                 #for parent_attr in attr_lst:
                 #    idx = attr2Index(parent_attr)
-                #    attribute_change_propogation_funcs.setdefault(idx, [])
-                #    attribute_change_propogation_funcs[idx].append(functools.partial(setComponentAttribute, component_name, component_attr, parent_attr))
+                #    class_defined_attribute_change_propogation_funcs.setdefault(idx, [])
+                #    class_defined_attribute_change_propogation_funcs[idx].append(functools.partial(cls._setNamedComponentAttribute, component_name, component_attr, parent_attr))
         
         def updateFinalizerAttributeValue(attr: str, obj: "ComponentBaseClass", new_val: Any, prev_val: Any) -> None:
             #print(f"Using updateFinalizerAttributeValue() for {attr}")
@@ -440,27 +458,29 @@ class ComponentBaseClass(ABC):
         for attr in finalizer_attr_set:
             #print(f"5, {attr}")
             idx = attr2Index(attr)
-            attribute_change_propogation_funcs.setdefault(idx, [])
-            attribute_change_propogation_funcs[idx].append(functools.partial(updateFinalizerAttributeValue, attr))
+            class_defined_attribute_change_propogation_funcs.setdefault(idx, [])
+            class_defined_attribute_change_propogation_funcs[idx].append(functools.partial(updateFinalizerAttributeValue, attr))
         
         cls.reset_graph = reset_graph
         cls.attr_list = attr_list
         #print(f"attr_list = {attr_list}")
         cls.attr_dict = attr_dict
-        cls.attribute_change_propogation_funcs = attribute_change_propogation_funcs
-        crfs = {attr_list[x]: y for x, y in attribute_change_propogation_funcs.items()}
-        #print(f"attribute_change_propogation_funcs for class {cls} = {crfs}")
-        return (attr_list, attr_dict, reset_graph, attribute_change_propogation_funcs)
+        cls.class_defined_attribute_change_propogation_funcs = class_defined_attribute_change_propogation_funcs
+        crfs = {attr_list[x]: y for x, y in class_defined_attribute_change_propogation_funcs.items()}
+        #print(f"class_defined_attribute_change_propogation_funcs for class {cls} = {crfs}")
+        return (attr_list, attr_dict, reset_graph, class_defined_attribute_change_propogation_funcs)
     
     @classmethod
-    def getAttributeChangePropogationFunctions(cls) -> Dict[int, List[Callable[[Any, "DisplayComponentBase"], None]]]:
-        #print("using getAttributeChangePropogationFunctions()")
-        attribute_change_propogation_funcs = cls.__dict__.get("attribute_change_propogation_funcs", None)
-        if attribute_change_propogation_funcs is None:
+    def getClassDefinedAttributeChangePropogationFunctions(cls) -> Dict[int, List[Callable[[Any, "DisplayComponentBase"], None]]]:
+        #print("using getClassDefinedAttributeChangePropogationFunctions()")
+        class_defined_attribute_change_propogation_funcs = cls.__dict__.get("class_defined_attribute_change_propogation_funcs", None)
+        if class_defined_attribute_change_propogation_funcs is None:
             cls.createResetStructures()
-            attribute_change_propogation_funcs = cls.attribute_change_propogation_funcs
-        return attribute_change_propogation_funcs
-            
+            class_defined_attribute_change_propogation_funcs = cls.class_defined_attribute_change_propogation_funcs
+        return class_defined_attribute_change_propogation_funcs
+
+    def getInstanceAttributeChangePropogationFunctions(self) -> Dict[int, List[Callable[[Any, "DisplayComponentBase"], None]]]:
+        return self.__dict__.setdefault("_inst_attribute_change_propogation_funcs", {})
 
     def getComponentAttribute(self, component_name: str, component_attr: str) -> Any:
         return getattr(getattr(self, component_name), component_attr)
@@ -482,15 +502,15 @@ class ComponentBaseClass(ABC):
                     raise AttributeError(f"The class '{cls.__name__}' has no method {method_name}(), which is required to calculate the value of attribute '{attr}' of its instances.")
                 attr_calcfunc_dict[attr] = (functools.partial(attributeCalculator, method_name), is_calc_and_set(method_name))
         
-        #sub_components_dict = cls.__dict__.get("sub_components_dict", cls._createSubComponentsDictionary())
-        sub_components_dict = cls.getSubComponentsDictionary()
-        for component_nm, component_dict in sub_components_dict.items():
+        #class_defined_sub_components_dict = cls.__dict__.get("class_defined_sub_components_dict", cls._createClassDefinedSubComponentsDictionary())
+        class_defined_sub_components_dict = cls.getClassDefinedSubComponentsDictionary()
+        for component_nm, component_dict in class_defined_sub_components_dict.items():
             if component_nm in attr_calcfunc_dict.keys(): continue
-            attr_calcfunc_dict[component_nm] = (functools.partial((lambda cn, obj: obj.createSubComponent(cn)), component_nm), False)
+            attr_calcfunc_dict[component_nm] = (functools.partial((lambda cn, obj: obj.createClassDefinedSubComponent(cn)), component_nm), False)
             for component_attr, attrs in component_dict.get("container_attr_derivation", {}).items():
                 for attr in attrs:
                     if attr in attr_calcfunc_dict.keys(): continue
-                    if attr == "val": print(f"adding slider attribute {component_attr} to slider plus attribute {attr} in attr_calcfunc_dict")
+                    #if attr == "val": print(f"adding slider attribute {component_attr} to slider plus attribute {attr} in attr_calcfunc_dict")
                     attr_calcfunc_dict[attr] = (functools.partial((lambda cn, ca, obj: obj.getComponentAttribute(cn, ca)), component_nm, component_attr), False)
         return attr_calcfunc_dict
 
@@ -591,44 +611,106 @@ class ComponentBaseClass(ABC):
     # the component (key "attr_reset_component_funcs")
     
     @classmethod
-    def _createSubComponentsDictionary(cls) -> Dict[str, Dict[str, Any]]:
-        sub_components_dict = {}
+    def _createClassDefinedSubComponentsDictionary(cls) -> Dict[str, Dict[str, Any]]:
+        class_defined_sub_components_dict = {}
         for cls2 in cls.mro():
             sub_components_processed = cls2.__dict__.get("sub_components_processed", cls.processSubComponents())
             for component, component_dict in sub_components_processed.items():
-                sub_components_dict.setdefault(component, component_dict)
-        #cls.sub_components_dict = sub_components_dict
-        return sub_components_dict
+                class_defined_sub_components_dict.setdefault(component, component_dict)
+        #cls.class_defined_sub_components_dict = class_defined_sub_components_dict
+        return class_defined_sub_components_dict
 
     @classmethod
-    def getSubComponentsDictionary(cls) -> Dict[str, Dict[str, Any]]:
+    def getClassDefinedSubComponentsDictionary(cls) -> Dict[str, Dict[str, Any]]:
         #if "_attr_processing_dict" not in cls.__dict__.keys():
-        if cls.__dict__.get("_sub_components_dict", None) is None:
-            cls._sub_components_dict = cls._createSubComponentsDictionary()
-        return cls._sub_components_dict
+        if cls.__dict__.get("_class_defined_sub_components_dict", None) is None:
+            cls._class_defined_sub_components_dict = cls._createClassDefinedSubComponentsDictionary()
+        return cls._class_defined_sub_components_dict
     
     #@classmethod
-    #def createSubComponentsDictionary(cls) -> Dict[str, Dict[str, str]]:
+    #def createClassDefinedComponentsDictionary(cls) -> Dict[str, Dict[str, str]]:
     #    cls.createResetStructures()
-    #    return cls.sub_components_dict
+    #    return cls.class_defined_sub_components_dict
     
+    # Review- consider adding a corresponding delete sub-component function to
+    # remove functions on the parent updating attr_correspondence_dict attributes
+    # in a now non-existent child. This will probably require some restructuring
+    # of the instance attribute change propogation function dictionary.
+    def createSubComponent(
+        self,
+        component_class: type,
+        attr_correspondence_dict: Dict[str, Union[str, Tuple[Tuple[str], Callable]]],
+        creation_kwargs: Dict[str, Any],
+        container_attribute_resets: Dict[str, Union[bool, Callable[["ComponentBaseClass", "ComponentBaseClass"], None]]],
+        custom_creation_function: Optional[Callable],
+    ) -> Optional["ComponentBaseClass"]:
+        
+        creation_kwargs["_container_obj"] = self
+        if container_attribute_resets:
+            creation_kwargs["_container_attr_reset_dict"] = container_attribute_resets
+            #print(f"container_attr_resets = {container_attr_resets}")
+        #print(f"subcomponent creation kwargs = {kwargs}")
+        creation_function = component_class if custom_creation_function is None else custom_creation_function
+        component = creation_function(**creation_kwargs)
+        setattr_dict = {arg: (getattr(self, attr) if isinstance(attr, str) else attr[1](*[getattr(self, x) for x in attr[0]])) for arg, attr in attr_correspondence_dict.items()}
+        component.setAttributes(setattr_dict)
+        component._attr_container_dependent_set = {x for x in attr_correspondence_dict.values() if isinstance(x, str)}
+        
+        for component_attr, attr_calc in attr_correspondence_dict.items():
+            inst_prop_dict = self.getInstanceAttributeChangePropogationFunctions()
+            parent_attr_lst = [attr_calc] if isinstance(attr_calc, str) else attr_calc[0]
+            for parent_attr in parent_attr_lst:
+                #print(f"4, {parent_attr}")
+                idx = self.attr2Index(parent_attr)
+                #print(parent_attr, idx)
+                inst_prop_dict.setdefault(idx, [])
+                inst_prop_dict[idx].append(functools.partial(self._setComponentAttribute, component, component_attr, attr_calc))
+        
+        #if component._attr_container_dependent_set:
+        #    print(f"component._attr_container_dependent_set = {component._attr_container_dependent_set}")
+        #if container_attr_resets:
+        #    print(f"component dictionary: {component.__dict__.keys()}")
+        #    print(component.getPendingAttributeChanges())
+        #    #print(f"component._container_attr_reset_dict = {component._container_attr_reset_dict}")
+        return component
     
-    
-    def createSubComponent(self, component: str) -> Optional[Any]:
-        #print("Using createSubComponent()")
+    def createClassDefinedSubComponent(self, component: str) -> Optional["ComponentBaseClass"]:
+        #print("Using createClassDefinedSubComponent()")
         #return self._createSlider(Slider, attr_arg_dict)
         cls = type(self)
-        #sub_components_dict = cls.__dict__.get("sub_components_dict", cls.createSubComponentsDictionary())
-        sub_components_dict = cls.getSubComponentsDictionary()
-        if component not in sub_components_dict.keys(): return None
-        #component_cls, component_attr_dict, component_creator, component_creator_args_dict, container_attr_reset_dict = sub_components_dict[component]
-        sc_dict = sub_components_dict[component]
+        #class_defined_sub_components_dict = cls.__dict__.get("class_defined_sub_components_dict", cls.createClassDefinedSubComponentsDictionary())
+        class_defined_sub_components_dict = cls.getClassDefinedSubComponentsDictionary()
+        if component not in class_defined_sub_components_dict.keys(): return None
+
+        sc_dict = class_defined_sub_components_dict[component]
+
+        kwargs = {}
+        creation_args = sc_dict["creation_function_args"]
+        attr_correspondence_dict = sc_dict["attribute_correspondence"]
+        for arg, val_repr in creation_args.items():
+            if val_repr is None:
+                # Consider adding specific error in case arg not in attr_corresp_dict
+                val_repr = attr_correspondence_dict.get(arg, None)
+                #if val_repr is None: continue
+            #print(arg, val_repr, len(val_repr))
+            kwargs[arg] = getattr(self, val_repr) if isinstance(val_repr, str) else val_repr[1](*[getattr(self, x) for x in val_repr[0]])
+            #kwargs[arg] = getattr(self, val_repr) if isinstance(val_repr, str) else val_repr[0]
+        return self.createSubComponent(
+            component_class=sc_dict["class"],
+            attr_correspondence_dict=attr_correspondence_dict,
+            creation_kwargs=kwargs,
+            container_attribute_resets=sc_dict["container_attr_resets"],
+            custom_creation_function=sc_dict["creation_function"],
+        )
+        """
+        #component_cls, component_attr_dict, component_creator, component_creator_args_dict, container_attr_reset_dict = class_defined_sub_components_dict[component]
+        sc_dict = class_defined_sub_components_dict[component]
         component_cls = sc_dict["class"]
         attr_corresp_dict = sc_dict["attribute_correspondence"]
         creation_function = sc_dict["creation_function"]
         creation_function_args = sc_dict["creation_function_args"]
         container_attr_resets = sc_dict["container_attr_resets"]
-        container_attr_derivation = sc_dict["container_attr_derivation"]
+        # = sc_dict["container_attr_derivation"]
         
         #container_attr_resets2 = dict(container_attr_resets)
         #for component_attr, container_attrs in container_attr_derivation.items():
@@ -663,6 +745,7 @@ class ComponentBaseClass(ABC):
         #    print(component.getPendingAttributeChanges())
         #    #print(f"component._container_attr_reset_dict = {component._container_attr_reset_dict}")
         return component
+        """
     
     def calculateAndSetAttribute(self, attr: str) -> bool:
         #print(f"calculating and setting attribute {attr} for object {self.__str__()}")
@@ -686,10 +769,12 @@ class ComponentBaseClass(ABC):
                 val_prev = self.__dict__.get(sub_attr, None)
                 if val_new == val_prev: return
             self.__dict__[sub_attr] = val_new
-            attribute_change_propogation_funcs = self.getAttributeChangePropogationFunctions()
-            for func in attribute_change_propogation_funcs.get(self.attr_dict.get(attr, None), []):
-                #print(f"calling custom reset function from calculateAndSetAttribute(), {func}")
-                func(self, val_new, val_prev)
+            cls_attr_prop_dict = self.getClassDefinedAttributeChangePropogationFunctions()
+            inst_attr_prop_dict = self.getInstanceAttributeChangePropogationFunctions()
+            for prop_dict in [cls_attr_prop_dict, inst_attr_prop_dict]:
+                for func in prop_dict.get(self.attr_dict.get(attr, None), []):
+                    #print(f"calling custom reset function from calculateAndSetAttribute(), {func}")
+                    func(self, val_new, val_prev)
         return True
     
     def setAttributes(self, setattr_dict: Dict[str, Any], _from_container: bool=False, _calculated_override: bool=False, **kwargs) -> Dict[str, Tuple[Any, Any]]:
@@ -748,14 +833,14 @@ class ComponentBaseClass(ABC):
         #attr_deffunc_dict = cls.getAttributeDefaultFunctionDictionary()
         
         if "attr_list" not in cls.__dict__.keys():
-            attr_list, attr_dict, reset_graph, attribute_change_propogation_funcs = cls.createResetStructures()
+            attr_list, attr_dict, reset_graph, cls_attr_prop_dict = cls.createResetStructures()
         else:
             attr_list = cls.attr_list
             attr_dict = cls.attr_dict
             reset_graph = cls.reset_graph
-            attribute_change_propogation_funcs = cls.getAttributeChangePropogationFunctions()#attribute_change_propogation_funcs
+            cls_attr_prop_dict = cls.getClassDefinedAttributeChangePropogationFunctions()#class_defined_attribute_change_propogation_funcs
         inds = []
-        
+        inst_attr_prop_dict = self.getInstanceAttributeChangePropogationFunctions()
         container_reset_attrs = {}
         #attr_reset_dict = getattr(self, "_attr_reset_funcs", {})
         changed_attrs_dict = {}
@@ -795,14 +880,14 @@ class ComponentBaseClass(ABC):
                     container_reset_attrs[attr2] = func_lst
             
             #if attr in attr_deffunc_dict.keys():
-            #    reset_funcs.extend(attribute_change_propogation_funcs.get(idx
+            #    reset_funcs.extend(class_defined_attribute_change_propogation_funcs.get(idx
             #    #default_attrs.append(attr)
             #print(sub_attr)
-            #print(attribute_change_propogation_funcs)
+            #print(class_defined_attribute_change_propogation_funcs)
             #print(idx2)
-            #if attr not in attr_dict.keys() or attr_dict[attr] not in attribute_change_propogation_funcs.
+            #if attr not in attr_dict.keys() or attr_dict[attr] not in class_defined_attribute_change_propogation_funcs.
             #is_change_propogating_attr = False
-            is_change_propogating_attr = bool(attribute_change_propogation_funcs.get(self.attr_dict.get(attr, None), []))
+            is_change_propogating_attr = cls_attr_prop_dict.get(self.attr_dict.get(attr, None), []) or inst_attr_prop_dict.get(self.attr_dict.get(attr, None), [])
             #    is_change_propogating_attr = True
             #    #reset_funcs.append((func, val_prev))
             #if val is None:
@@ -858,7 +943,7 @@ class ComponentBaseClass(ABC):
             val_prev = self.__dict__.get(sub_attr, None)
             #if attr == "max_height0":
             #    print(f"max_height0 val_prev = {val_prev}, val = {val}")
-            for func in attribute_change_propogation_funcs.get(attr_dict.get(attr, None), []):
+            for func in class_defined_attribute_change_propogation_funcs.get(attr_dict.get(attr, None), []):
                 #if attr == "max_height":
                 #    print(f"reset function for max_height: {(func, val_prev)}")
                 reset_funcs.append((func, val_prev))
@@ -1254,7 +1339,7 @@ class ComponentGroupBaseClass(ComponentBaseClass):
     
     @classmethod
     def createResetStructures(cls) -> Tuple[Union[List[str], Dict[str, int], List[Dict[int, Union[List[Callable[["DisplayComponentBase"], bool]]]]], Dict[int, List[Callable[[], None]]]]]:
-        (attr_list, attr_dict, reset_graph, attribute_change_propogation_funcs) = super().createResetStructures()
+        (attr_list, attr_dict, reset_graph, class_defined_attribute_change_propogation_funcs) = super().createResetStructures()
         #el_inherit_attr_dict = cls.__dict__.get("el_inherit_attr_dict", cls.createElementInheritedAttributesDictionary())
         el_inherit_attr_dict = cls.getElementInheritedAttributesDictionary()
         
@@ -1273,10 +1358,10 @@ class ComponentGroupBaseClass(ComponentBaseClass):
         
         for grp_attr, el_attr in el_inherit_attr_dict.items():
             idx = cls._attr2Index(grp_attr, attr_list, attr_dict, reset_graph)
-            attribute_change_propogation_funcs.setdefault(idx, [])
-            attribute_change_propogation_funcs[idx].append(functools.partial(attributeInheritanceFunction, grp_attr, el_attr))
+            class_defined_attribute_change_propogation_funcs.setdefault(idx, [])
+            class_defined_attribute_change_propogation_funcs[idx].append(functools.partial(attributeInheritanceFunction, grp_attr, el_attr))
         
-        return (attr_list, attr_dict, reset_graph, attribute_change_propogation_funcs)
+        return (attr_list, attr_dict, reset_graph, class_defined_attribute_change_propogation_funcs)
     
     def _setMemberInheritedAttributes(self, set_group_attrs: Optional[Set[str]]=None) -> None:
         el_inherit_attr_dict = self.getElementInheritedAttributesDictionary()#cls.__dict__.get("el_inherit_attr_dict", cls.createElementInheritedAttributesDictionary())
@@ -1397,7 +1482,7 @@ class DisplayComponentBase(ComponentBaseClass):
         "anchor_rel_pos": {"topleft_rel_pos": True},
         "anchor_type": {"topleft_rel_pos": True},
         "topleft_rel_pos": {"screen_topleft_to_component_topleft_offset": True, "changed_since_last_draw": True},
-        "screen_topleft_to_component_anchor_offset": {"screen_topleft_to_component_topleft_offset": True},
+        "screen_topleft_to_parent_topleft_offset": {"screen_topleft_to_component_topleft_offset": True},
         "display_surf": {"changed_since_last_draw": True},
     }
 
@@ -1405,28 +1490,45 @@ class DisplayComponentBase(ComponentBaseClass):
     
     attribute_calculation_methods = {
         "topleft_rel_pos": "calculateTopLeftRelativePosition",#"calculateAndSetTopLeft",
-        "screen_topleft_to_component_topleft_offset": "calculateTopLeftScreenPosition",#"calculateAndSetTopLeftScreen",
+        "screen_topleft_to_component_topleft_offset": "calculateScreenTopleftToComponentTopleftOffset",#"calculateAndSetTopLeftScreen",
         "display_surf": "createDisplaySurface",
         "changed_since_last_draw": "calculateChangedSinceLastDraw",
     }
     
     attribute_default_functions = {
         "anchor_type": ((lambda obj: "topleft"),),
-        "screen_topleft_to_component_anchor_offset": ((lambda obj: (0, 0)),),
+        "screen_topleft_to_parent_topleft_offset": ((lambda obj: (0, 0)),),
     }
     
     fixed_attributes = set()
     
     def __init__(self, shape: Tuple[Real],\
             anchor_rel_pos: Tuple[Real], anchor_type: Optional[str]=None,\
-            screen_topleft_to_component_anchor_offset: Optional[Tuple[Real]]=None, **kwargs):
+            screen_topleft_to_parent_topleft_offset: Optional[Tuple[Real]]=None, **kwargs):
         
         super().__init__(**self.initArgsManagement(locals(), kwargs=kwargs))
         pg.init()
     
+    def createSubComponent(
+        self,
+        component_class: type,
+        attr_correspondence_dict: Dict[str, Union[str, Tuple[Tuple[str], Callable]]],
+        creation_kwargs: Dict[str, Optional[Union[str, Tuple[Tuple[str], Callable]]]],
+        container_attribute_resets: Dict[str, Union[bool, Callable[["ComponentBaseClass", "ComponentBaseClass"], None]]],
+        custom_creation_function: Optional[Callable],
+    ) -> Optional["ComponentBaseClass"]:
+        if issubclass(component_class, DisplayComponentBase):
+            attr_correspondence_dict.setdefault("screen_topleft_to_parent_topleft_offset", "screen_topleft_to_component_topleft_offset")
+        return super().createSubComponent(
+            component_class=component_class,
+            attr_correspondence_dict=attr_correspondence_dict,
+            creation_kwargs=creation_kwargs,
+            container_attribute_resets=container_attribute_resets,
+            custom_creation_function=custom_creation_function,
+        )
     
     def calculateScreenPositionFromRelativePosition(self, surf_pos: Tuple[Real]):
-        return tuple(x + y for x, y in zip(surf_pos, self.screen_topleft_to_component_anchor_offset))
+        return tuple(x + y for x, y in zip(surf_pos, self.screen_topleft_to_parent_topleft_offset))
     
     def calculateTopLeftRelativePosition(self) -> Tuple[int]:
         # Position of the topleft relative to the anchor
@@ -1434,9 +1536,12 @@ class DisplayComponentBase(ComponentBaseClass):
         return topLeftFromAnchorPosition(self.shape, self.anchor_type,\
                 self.anchor_rel_pos)
     
-    def calculateTopLeftScreenPosition(self):
+    def calculateScreenTopleftToComponentTopleftOffset(self):
+        print(f"Using calculateScreenTopleftToComponentTopleftOffset() for {self}")
         # Position of the topleft relative to the screen origin (the screen topleft)
-        return self.calculateScreenPositionFromRelativePosition(self.topleft_rel_pos)
+        res = self.calculateScreenPositionFromRelativePosition(self.topleft_rel_pos)
+        print(f"new topleft screen position for {self} = {res}")
+        return res
     
     @staticmethod
     def calculateMaxShapeActualGivenWidthHeightRatioRange(
@@ -1505,14 +1610,14 @@ def mouseEventFilter0(obj: "InteractiveDisplayComponentBase", event, mouse_enabl
 
 class InteractiveDisplayComponentBase(DisplayComponentBase):
     
-    #change_reset_attrs = {"anchor": ["ranges_surf", "ranges_screen"], "shape": ["ranges_surf", "ranges_screen"], "screen_topleft_to_component_anchor_offset": ["ranges_screen"]}
+    #change_reset_attrs = {"anchor": ["ranges_surf", "ranges_screen"], "shape": ["ranges_surf", "ranges_screen"], "screen_topleft_to_parent_topleft_offset": ["ranges_screen"]}
     
     reset_graph_edges = {
         "shape": {"ranges_surf": True},
         "anchor_rel_pos": {"ranges_surf": True},
         "anchor_type": {"ranges_surf": True},
         "ranges_surf": {"ranges_screen": True},
-        "screen_topleft_to_component_anchor_offset": {"ranges_screen": True},
+        "screen_topleft_to_parent_topleft_offset": {"ranges_screen": True},
         "navkeys": {"navkey_dict": True},
     }
     
@@ -1548,7 +1653,7 @@ class InteractiveDisplayComponentBase(DisplayComponentBase):
         shape: Tuple[Real],
         anchor_rel_pos: Tuple[Real],
         anchor_type: str="topleft",
-        screen_topleft_to_component_anchor_offset: Tuple[Real]=(0, 0),
+        screen_topleft_to_parent_topleft_offset: Tuple[Real]=(0, 0),
         mouse_enablement: Optional[Tuple[bool]]=None,
         navkeys_enablement: Optional[Tuple[bool]]=None,
         navkeys: Optional[Tuple[Tuple[Set[int]]]]=None,
@@ -1588,12 +1693,12 @@ class InteractiveDisplayComponentBase(DisplayComponentBase):
             if sub_uip is None: continue
             cls._user_input_processor.addSubUIP(sub_uip)
         
-        #sub_components_dict = cls.__dict__.get("sub_components_dict", cls.createSubComponentsDictionary())
-        sub_components_dict = cls.getSubComponentsDictionary()
-        for component_attr in sub_components_dict.keys():
+        #class_defined_sub_components_dict = cls.__dict__.get("class_defined_sub_components_dict", cls.createClassDefinedSubComponentsDictionary())
+        class_defined_sub_components_dict = cls.getClassDefinedSubComponentsDictionary()
+        for component_attr in class_defined_sub_components_dict.keys():
             #print("hello")
             #print(component_attr)
-            cls2 = sub_components_dict[component_attr]["class"]
+            cls2 = class_defined_sub_components_dict[component_attr]["class"]
             if not hasattr(cls2, "_resolveClassUserInputProcessors"):
                 continue
             #print("hi")
@@ -1647,10 +1752,10 @@ class InteractiveDisplayComponentBase(DisplayComponentBase):
     
     @classmethod
     def createInteractiveSubComponentsSet(cls) -> Set[str]:
-        #sub_components_dict = cls.__dict__.get("sub_components_dict", cls.createSubComponentsDictionary())
-        sub_components_dict = cls.getSubComponentsDictionary()
+        #class_defined_sub_components_dict = cls.__dict__.get("class_defined_sub_components_dict", cls.createClassDefinedSubComponentsDictionary())
+        class_defined_sub_components_dict = cls.getClassDefinedSubComponentsDictionary()
         interactive_sub_components_set = set()
-        for attr, sc_dict in sub_components_dict.items():
+        for attr, sc_dict in class_defined_sub_components_dict.items():
             cls2 = sc_dict["class"]
             if issubclass(cls2, InteractiveDisplayComponentBase):
                 interactive_sub_components_set.add(attr)
