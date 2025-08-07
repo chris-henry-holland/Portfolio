@@ -19,6 +19,7 @@ sys.path.append(os.path.join(os.path.dirname(__file__), "../Algorithms_and_Datas
 from misc_mathematical_algorithms import CustomFraction, gcd, lcm, isqrt, integerNthRoot
 from prime_sieves import PrimeSPFsieve, SimplePrimeSieve
 from pseudorandom_number_generators import blumBlumShubPseudoRandomGenerator
+from string_searching_algorithms import KnuthMorrisPratt
 
 # Problem 938
 def redBlackCardGameLastCardBlackProbabilityFraction(n_red_init: int, n_black_init: int) -> CustomFraction:
@@ -457,6 +458,399 @@ def twoDimensionalRecurrenceFibonacciSum(k_min: int=2, k_max: int=50, md: Option
     return res
     """
 
+# Problem 941
+def isStringPrimitive(s: Iterable) -> bool:
+    kmp = KnuthMorrisPratt(s)
+    l = len(s)
+    lps = kmp.lps
+    return lps[-1] < (l >> 1)
+
+def calculateStringPrimitiveRoot(s: Iterable) -> Iterable:
+    #print(s)
+    kmp = KnuthMorrisPratt(s)
+    l = len(s)
+    lps = kmp.lps
+    if lps[-1] < (l >> 1): return s
+    return s[:(l - lps[-1])]
+
+def calculateNumberLyndonWordIndexInLexicographicallySmallestDeBruijnSequence(num: int, w_len: int, base: int=10) -> Tuple[Tuple[int, int], int]:
+    # Using https://arxiv.org/pdf/1510.02637
+
+    # Review- try to implement finding the index in the De Bruijn sequence
+    # from the above paper
+    # Review- try to make faster
+    mult = base ** (w_len - 1)
+
+    def cycleWord(num: int, num_len: int) -> int:
+        num2, d = divmod(num, base)
+        return d * base ** (num_len - 1) + num2
+
+    def getSelfMinimalWord(num: int, num_len: int) -> Tuple[int, int]:
+        res = (num, 0)
+        num2 = num
+        #print(f"num = {format(num, 'b')}, num_len = {num_len}")
+        for i in range(1, num_len):
+            num2 = cycleWord(num2, num_len)
+            #print(f"num2 = {format(num2, 'b')}")
+            res = min(res, (num2, i))
+        return res
+    
+    def isPrimitive(num: int, length: int) -> bool:
+        s = []
+        num2 = num
+        for _ in range(length):
+            num2, d = divmod(num2, base)
+            s.append(d)
+        return isStringPrimitive(s)
+
+    def calculatePrimitiveRoot(num: int, length: int) -> Tuple[int, int]:
+        s = []
+        num2 = num
+        #print(f"length = {length}")
+        for _ in range(length):
+            num2, d = divmod(num2, base)
+            s.append(d)
+        digs = calculateStringPrimitiveRoot(s[::-1])
+        res = 0
+        for d in digs:
+            res = res * base + d
+        return (res, len(digs))
+
+    def calculateNextLyndon(lynd: int, lynd_len: int, n: int) -> Tuple[int, int]:
+        # Using Duval (1988)
+        #mult2 = base ** lynd_len
+        num = lynd
+        curr_len = lynd_len
+        while curr_len < n:
+            num = (base ** curr_len + 1) * num
+            curr_len <<= 1
+        num //= base ** (curr_len - n)
+        curr_len = n
+        while num % base == base - 1:
+            num //= base
+            curr_len -= 1
+        return num + 1, curr_len
+
+    def calculateNextLyndonInDeBruijn(lynd: int, lynd_len: int, n: int) -> Tuple[int, int]:
+        num = lynd
+        num_len = lynd_len
+        while True:
+            num, num_len = calculateNextLyndon(num, num_len, n)
+            if not n % num_len: break
+        return num, num_len
+    
+    # Try to find a more efficient method
+    def calculatePreviousLyndon(lynd: int, lynd_len: int, n: int) -> Tuple[int, int]:
+        #print("Using calculatePreviousLyndon()")
+        #print(lynd, lynd_len, n, format(lynd, "b"))
+        # Brute force
+        #num = lynd
+        #curr_len = lynd_len
+        num = lynd * base ** (n - lynd_len) - 1
+        curr_len = n
+        #while curr_len < n:
+        #    num = (base ** curr_len + 1) * num
+        #    curr_len <<= 1
+        #print(num)
+        d0 = num // (base ** (curr_len))
+        #num -= 1
+        #print(format(num, "b"), curr_len)
+        seen = set()
+        while True:
+            while num in seen: num -= 1
+            seen.add(num)
+            #print(num)
+            #print(num, format(num, "b"),)
+            while curr_len > 1 and num % base <= d0:
+                num //= base
+                curr_len -= 1
+            #print(num, format(num, "b"), curr_len)
+            if not n % curr_len and numberIsSelfMinimal(num, curr_len):
+                return num, curr_len
+            while curr_len < n:
+                num = (base ** curr_len + 1) * num
+                curr_len <<= 1
+            num //= base ** (curr_len - n)
+            curr_len = n
+            num -= 1
+        """
+        # Using Duval (1988)
+        mult2 = base ** lynd_len
+        suff = 0
+        num = lynd - 1
+        curr_len = lynd_len
+        while curr_len < n:
+            num = (base ** curr_len + 1) * num
+            curr_len <<= 1
+        num //= base ** (curr_len - n)
+        curr_len = n
+        while not num % base:
+            num //= base
+            curr_len -= 1
+        return num, curr_len
+        """
+
+    def calculatePreviousLyndonInDeBruijn(lynd: int, lynd_len: int, n: int) -> Tuple[int, int]:
+        num = lynd
+        num_len = lynd_len
+        while True:
+            num, num_len = calculatePreviousLyndon(num, num_len, n)
+            if not n % num_len: break
+        return num, num_len
+
+    def calculateSubstringPosition(num: int, num_len: int, substring_num: int, substring_num_len: int) -> int:
+        num_lst = []
+        substring_num_lst = []
+        num2 = substring_num
+        for _ in range(substring_num_len):
+            num2, d = divmod(num2, base)
+            substring_num_lst.append(d)
+        kmp = KnuthMorrisPratt(substring_num_lst[::-1])
+        num2 = num
+        for _ in range(num_len):
+            num2, d = divmod(num2, base)
+            num_lst.append(d)
+        for i in kmp.matchStartGenerator(num_lst[::-1]):
+            return i
+        return -1
+
+    def numberIsSelfMinimal(num: int, num_len: int) -> bool:
+        #print("Using numberIsSelfMinimal()")
+        #print(num, num_len, format(num, "b"))
+        if num_len == 1: return True
+        num_lst = []
+        num2 = num
+        for _ in range(num_len):
+            num2, d = divmod(num2, base)
+            num_lst.append(d)
+        num_lst = num_lst[::-1]
+        if num_lst[0] >= num_lst[-1]:
+            #print("false")
+            return False
+        kmp = KnuthMorrisPratt(num_lst)
+        if kmp.lps[-1] != 0:
+            #print("false")
+            return False
+        #print(num_lst)
+        #print("lps:")
+        #print(kmp.lps)
+        for i in range(1, num_len - 1):
+            j = kmp.lps[i]
+            #print(j, i + 1)
+            if num_lst[j] > num_lst[i + 1]:
+                #print("false")
+                return False
+        #print("true")
+        return True
+
+    def numberIsLyndon(num: int, num_len: int) -> bool:
+        if not isPrimitive(num, num_len): return False
+        return numberIsSelfMinimal(num, num_len)
+
+    def numberIsLyndonInDeBruijn(num: int, num_len: int, n: int) -> bool:
+        
+        if n % num_len: return False
+        return numberIsLyndon(num, num_len)
+
+    def findLargestSmallerSelfMinimalWordOfGivenLength(num: int, num_len: int, target_len: int) -> Tuple[int, int]:
+        #print(num, num_len)
+        res = -1
+        mult2 = 1
+        num2 = num
+        num2_len = num_len
+        while num2_len < target_len:
+            num2 = num2 * (base ** num2_len + 1)
+            num2_len <<= 1
+        #print(format(num2, "b"), num2_len)
+        num2 //= base ** (num2_len - target_len)
+        num2_len = target_len
+        #print(f"rescaled num = {format(num2, 'b')}, {num2_len}")
+        for _ in reversed(range(num2_len)):
+            #print(f"num2 = {format(num2, 'b')}, mult2 = {mult2}")
+            d = num2 % base
+            if d:
+                num2 -= 1
+                num3 = (num2 + 1) * mult2 - 1
+                #print(f"num3 = {num3}, {format(num3, 'b')}")
+                if num3 <= res: continue
+                if numberIsSelfMinimal(num3, target_len):
+                    res = num3
+            mult2 *= base
+            num2 //= base
+        return (res, target_len) if res >= 0 else (-1, 0)
+
+    def lexMax(num1: int, num1_len: int, num2: int, num2_len: int) -> Tuple[int, int]:
+        pair1, pair2 = (num1, num1_len), (num2, num2_len)
+        if num1_len < num2_len: pair1, pair2 = pair2, pair1
+        m1 = pair1[0]
+        m2 = pair2[0] * base ** (pair1[1] - pair2[1])
+        if m1 >= m2: return pair1
+        return pair2
+
+    #def calculateDeBruijnPrefixLengthUpToLyndonWord(lynd_w: int, lynd_w_len: int) -> int:
+    #    lynd_lst = []
+    #    num2 = lynd_w
+    #    for _ in range(lynd_w_len):
+    #        num2, d = divmod(num2, base)
+    #        lynd_lst.append(d)
+    #    lynd_lst = lynd_lst[::-1]
+    #    w_lst = lynd_lst * (w_len // lynd_w_len)
+    num_lst = []
+    num2 = num
+    for _ in range(w_len):
+        num2, d = divmod(num2, base)
+        num_lst.append(d)
+    num_lst = num_lst[::-1]
+    #print(f"\ndigits: {num_lst}")
+    
+    if not num: return ((0, 1), 0)
+    num2 = num
+    i = w_len
+    while not num2 % base:
+        num2 //= base
+        i -= 1
+    if num2 == base ** i - 1:
+        # Case a
+        #print("case a")
+        #print(format(num, "b"), w_len)
+        if i == 1: return ((1, 1), 0)
+        lynd = calculatePreviousLyndonInDeBruijn(1, 1, w_len)
+        #print(f"lynd = {lynd}, {format(lynd[0], 'b')}")
+        return (lynd, lynd[1] - i + 1)
+    prim, prim_len = calculatePrimitiveRoot(num, w_len)
+    #print(format(prim, "b"), prim_len)
+    lynd_k, beta_len = getSelfMinimalWord(prim, prim_len)
+    #print(format(lynd_k, "b"), beta_len)
+    alpha_len = prim_len - beta_len
+    alpha, beta = divmod(prim, base ** beta_len)
+    #print(f"alpha = {format(alpha, 'b')}, {alpha_len}, beta = {format(beta, 'b')}, {beta_len}")
+    
+    if alpha != base ** alpha_len - 1:
+        # Case b
+        #print("case b")
+        lynd1, lynd1_len = lynd_k, prim_len
+        lynd2, lynd2_len = calculateNextLyndonInDeBruijn(lynd1, lynd1_len, w_len)
+        num2 = base ** lynd2_len * lynd1 + lynd2
+        num2_len = lynd1_len + lynd2_len
+    else:
+        d = w_len // prim_len
+        if d > 1:
+            # Case c
+            #print("case c")
+            lynd2, lynd2_len = lynd_k, prim_len
+        else:
+            # Case d
+            #print("case d")
+            #print(f"beta = {format(beta, 'b')}, beta_len = {beta_len}")
+            
+            num2, num2_len = findLargestSmallerSelfMinimalWordOfGivenLength(beta, beta_len, w_len)
+            #print(f"num2 = {format(num2, 'b')}, num2_len = {num2_len}")
+            ans = calculatePrimitiveRoot(num2, num2_len) if num2_len > 0 else (-1, 0)
+            beta2 = beta
+            for beta2_len in reversed(range(1, beta_len)):
+                beta2 //= base
+                if numberIsLyndonInDeBruijn(beta2, beta2_len, w_len):
+                    ans = lexMax(*ans, beta2, beta2_len)
+                    break
+            #print(ans)
+            lynd2, lynd2_len = ans
+        lynd1, lynd1_len = calculatePreviousLyndonInDeBruijn(lynd2, lynd2_len, w_len)
+        lynd3, lynd3_len = calculateNextLyndonInDeBruijn(lynd2, lynd2_len, w_len)
+        #print(f"lynd1 = {(lynd1, lynd1_len)}, lynd2 = {(lynd2, lynd2_len)}, lynd3 = {(lynd3, lynd3_len)}")
+        #print(format(lynd1, "b"), format(lynd2, "b"), format(lynd3, "b"))
+        num2 = base ** lynd2_len * lynd1 + lynd2
+        num2 = base ** lynd3_len * num2 + lynd3
+        num2_len = lynd1_len + lynd2_len + lynd3_len
+        #print(num2, num2_len)
+    m2 = num2
+    num_lst = []
+    for _ in range(num2_len):
+        m2, d = divmod(m2, base)
+        num_lst.append(d)
+    #print(format(num, "b"), w_len)
+    #print(f"lyndon concatenation digits: {num_lst[::-1]}")
+    i = calculateSubstringPosition(num2, num2_len, num, w_len)
+    if i < 0: raise ValueError("Unexpected error occurred- num was not found in the expected location")
+    if i < lynd1_len: return ((lynd1, lynd1_len), i)
+    elif i < lynd1_len + lynd2_len: return ((lynd2, lynd2_len), i - lynd1_len)
+    return ((lynd3, lynd3_len), i - lynd1_len - lynd2_len)
+
+def calculateOrderOfNumbersInLexicographicallySmallestDeBruijnSequence(nums: Iterable[int], w_len: int, base: int=10) -> List[int]:
+    lst = []
+    for num in nums:
+        num2 = num
+        num_lst = []
+        for _ in range(w_len):
+            num2, d = divmod(num2, base)
+            num_lst.append(d)
+        if num2: print("too many digits")
+        #print(num_lst[::-1])
+        lynd, idx = calculateNumberLyndonWordIndexInLexicographicallySmallestDeBruijnSequence(num, w_len, base=base)
+        #print(num, lynd)
+        num2 = lynd[0]
+        num_lst = []
+        for _ in range(lynd[1]):
+            num2, d = divmod(num2, base)
+            num_lst.append(d)
+        #print(f"lyndon digits: {num_lst[::-1]}, start index = {idx}")
+        num2 = 0
+        mult2 = (base ** lynd[1])
+        for _ in range(w_len // lynd[1]):
+            num2 = num2 * mult2 + lynd[0]
+        lst.append((num2, idx, num))
+    lst.sort()
+    return [x[2] for x in lst]
+
+def calculateOrderSumOfNumbersInLexicographicallySmallestDeBruijnSequence(nums: Iterable[int], w_len: int, base: int=10, md: Optional[int]=None) -> List[int]:
+    res = 0
+    for i, num in enumerate(calculateOrderOfNumbersInLexicographicallySmallestDeBruijnSequence(nums, w_len, base=base), start=1):
+        res += i * num
+        if md is not None: res %= md
+    return res
+
+def linearRecurrencePseudoRandomNumberGenerator(
+    a0: int=0,
+    a_min: int=0,
+    a_max: int=10 ** 12 - 1,
+    k: int=920461,
+    m: int=800217387569,
+) -> Generator[int, None, None]:
+    a = a0
+    md = a_max - a_min + 1
+    while True:
+        a = (k * a + m) % md
+        yield a + a_min
+    return
+
+def calculateOrderSumOfLinearRecurrencePseudoRandomNumbersInLexicographicallySmallestDeBruijnSequence(
+    n_nums: int=10 ** 7,
+    w_len: int=12,
+    a0: int=0,
+    k: int=920461,
+    m: int=800217387569,
+    base: int=10,
+    md: Optional[int]=1234567891,
+)-> List[int]:
+    """
+    Solution to Project Euler #941
+    """
+    a_min = 0
+    a_max = base ** w_len - 1
+    
+    def numberGenerator() -> Generator[int, None, None]:
+        it = iter(linearRecurrencePseudoRandomNumberGenerator(
+            a0=a0,
+            a_min=a_min,
+            a_max=a_max,
+            k=k,
+            m=m,
+        ))
+        for _ in range(n_nums):
+            yield next(it)
+        return
+    
+    return calculateOrderSumOfNumbersInLexicographicallySmallestDeBruijnSequence(iter(numberGenerator()), w_len=w_len, base=base, md=md)
+
 # Problem 944
 def sumOfSubsetElevisorsBruteForce(n_max: int) -> int:
     res = 0
@@ -578,7 +972,7 @@ def xorEquationSolutionsCount(a_b_max: int=10 ** 7) -> int:
     return res
 
 if __name__ == "__main__":
-    to_evaluate = {945}
+    to_evaluate = {941}
     since0 = time.time()
 
     if not to_evaluate or 938 in to_evaluate:
@@ -590,6 +984,19 @@ if __name__ == "__main__":
         since = time.time()
         res = twoDimensionalRecurrenceFibonacciSum(k_min=2, k_max=50, md=1123581313)
         print(f"Solution to Project Euler #940 = {res}, calculated in {time.time() - since:.4f} seconds")
+
+    if not to_evaluate or 941 in to_evaluate:
+        since = time.time()
+        res = calculateOrderSumOfLinearRecurrencePseudoRandomNumbersInLexicographicallySmallestDeBruijnSequence(
+            n_nums=10 ** 7,
+            w_len=12,
+            a0=0,
+            k=920461,
+            m=800217387569,
+            base=10,
+            md=1234567891,
+        )
+        print(f"Solution to Project Euler #941 = {res}, calculated in {time.time() - since:.4f} seconds")
 
     if not to_evaluate or 944 in to_evaluate:
         since = time.time()
@@ -614,3 +1021,6 @@ for num in range(1, 17):
 #print(xorMultiply(a, a) ^ xorMultiply(2, xorMultiply(a, b)) ^ xorMultiply(b, b), xorMultiply(c, c))
 #for num in range(21):
 #    print(num, xorMultiply(num, num))
+
+#for s in ("aaaa", "ababab", "aabaab", "abcd"):
+#    print(s, calculateStringPrimitiveRoot(s))
