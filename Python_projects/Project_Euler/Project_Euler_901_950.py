@@ -156,6 +156,139 @@ def redBlackCardGameLastCardBlackProbabilityFloat(n_red_init: int=24690, n_black
     #print(res)
     #return res.numerator / res.denominator
 
+# Problem 939
+def partisanNimNumberOfWinningPositionsBasic(max_n_stones: int) -> int:
+
+    # Review- try to make fully iterative
+    # Also look into the game theoretic solutions on the forum
+
+    memo = {}
+    def turn(player1_piles: Dict[int, int], player2_piles: Dict[int, int]) -> bool:
+        if not player1_piles and not player2_piles:
+            return False
+        args = tuple(tuple((x, pile[x]) for x in sorted(pile.keys())) for pile in (player1_piles, player2_piles))
+        if args in memo.keys(): return memo[args]
+        res = False
+        for num in list(player1_piles.keys()):
+            player1_piles[num] -= 1
+            if not player1_piles[num]: player1_piles.pop(num)
+            if not turn(player2_piles, player1_piles):
+                res = True
+            player1_piles[num] = player1_piles.get(num, 0) + 1
+        if res:
+            memo[args] = res
+            return res
+        for num in list(player2_piles.keys()):
+            player2_piles[num] -= 1
+            if not player2_piles[num]: player2_piles.pop(num)
+            if num > 1:
+                player2_piles[num - 1] = player2_piles.get(num - 1, 0) + 1
+            if not turn(player2_piles, player1_piles):
+                res = True
+            if num > 1:
+                player2_piles[num - 1] -= 1
+                if not player2_piles[num - 1]: player2_piles.pop(num - 1)
+            player2_piles[num] = player2_piles.get(num, 0) + 1
+            if res: break
+        memo[args] = res
+        return res
+
+    res = []
+    p1_dict = {}
+    p2_dict = {}
+    def recur(remain: int, sz: Optional[int]=None, p1: bool=True) -> None:
+        if not remain: return
+        if sz is None:
+            sz = remain
+        if not sz:
+            if not p1: return
+            p1 = False
+            sz = remain
+        p_dict = p1_dict if p1 else p2_dict
+        recur(remain, sz - 1, p1)
+        if remain < sz: return
+        for f in range(1, (remain // sz) + 1):
+            p_dict[sz] = f
+            if turn(p1_dict, p2_dict) and not turn(p2_dict, p1_dict):
+                res.append((dict(p1_dict), dict(p2_dict)))
+            recur(remain - sz * f, sz - 1, p1)
+        p_dict.pop(sz)
+        return
+
+    recur(max_n_stones, sz=max_n_stones, p1=True)
+    #print(res)
+    return len(res)
+
+def partisanNimNumberOfWinningPositions(max_n_stones: int=5000, md: int=1234567891) -> int:
+
+    sys.setrecursionlimit(10 ** 6)
+
+    part_arr = [[1]]
+    for i in range(1, max_n_stones + 1):
+        part_arr.append([0])
+        i_hlf = i >> 1
+        #print(i, i_hlf)
+        for j in range(1, i_hlf + 1):
+            #print(j, i - j)
+            #print(part_arr)
+            part_arr[-1].append(part_arr[i - j][j] + part_arr[i - 1][j - 1])
+        for j in range(i_hlf + 1, i + 1):
+            part_arr[-1].append(part_arr[i - 1][j - 1])
+
+
+    #memo = {}
+    def nObjectsIntoKNonemptyBoxes(n: int, k: int) -> int:
+        if n < 0 or k < 0 or n < k: return 0
+        #print(n, k)
+        return part_arr[n][k]
+        """
+        if not n and not k:
+            return 1
+        if n <= 0 or k <= 0:# or k > n:
+            return 0
+        args = (n, k)
+        if args in memo.keys(): return memo[args]
+        res = nObjectsIntoKNonemptyBoxes(n - k, k) + nObjectsIntoKNonemptyBoxes(n - 1, k - 1)
+        if md is not None: res %= md
+        memo[args] = res
+        return res
+        """
+
+    memo2 = {}
+    def countPartitionsWithUpToNObjectsAndUpToMMoreObjectsThanNonemptyBoxes(n: int, m: int) -> int:
+        if n < 0 or m < 0: return 0
+        m = min(m, n)
+        args = (n, m)
+        if args in memo2.keys(): return memo2[args]
+        res = nObjectsIntoKNonemptyBoxes(n, n - m) +\
+            countPartitionsWithUpToNObjectsAndUpToMMoreObjectsThanNonemptyBoxes(n - 1, m) +\
+            countPartitionsWithUpToNObjectsAndUpToMMoreObjectsThanNonemptyBoxes(n, m - 1) -\
+            countPartitionsWithUpToNObjectsAndUpToMMoreObjectsThanNonemptyBoxes(n - 1, m - 1)
+        if md is not None: res %= md
+        memo2[args] = res
+        return res
+    
+    res = 0
+    for n_extra1 in range(1, max_n_stones):
+        border_cumu = [nObjectsIntoKNonemptyBoxes(i, i - n_extra1 + 1) for i in range(2)]
+        for n_stones2 in range(2, max_n_stones - n_extra1):
+            border_cumu.append(border_cumu[-2] + nObjectsIntoKNonemptyBoxes(n_stones2, n_stones2 - n_extra1 + 1))
+            if md is not None: border_cumu[-1] %= md
+        for n_stones1 in range(n_extra1 + 1, max_n_stones + 1):
+            num = nObjectsIntoKNonemptyBoxes(n_stones1, n_stones1 - n_extra1)
+            num2 = countPartitionsWithUpToNObjectsAndUpToMMoreObjectsThanNonemptyBoxes(max_n_stones - n_stones1, n_extra1 - 2)
+            #print(num2)
+            num2 += border_cumu[max_n_stones - n_stones1 - (max_n_stones & 1)]
+            if md is not None: num2 %= md
+            #for n_stones2 in range(n_stones1 & 1, max_n_stones - n_stones1 + 1, 2):
+            #    #print(n_stones2, n_piles1 + 1 + (n_stones2 - n_stones1))
+            #    num2 += nObjectsIntoKNonemptyBoxes(n_stones2, n_stones2 - n_extra1 + 1)
+            #    if md is not None: num2 %= md
+            #print(f"n_stones1 = {n_stones1}, n_piles1 = {n_piles1}, mult = {num}, n_player2_configs = {num2}, ans = {num * num2}")
+            res += num * num2
+            if md is not None: res %= md
+    #print(partisanNimNumberOfWinningPositionsBasic(max_n_stones))
+    return res
 
 # Problem 940
 def twoDimensionalRecurrenceFibonacciSum(k_min: int=2, k_max: int=50, md: Optional[int]=1123581313) -> int:
@@ -972,13 +1105,18 @@ def xorEquationSolutionsCount(a_b_max: int=10 ** 7) -> int:
     return res
 
 if __name__ == "__main__":
-    to_evaluate = {941}
+    to_evaluate = {939}
     since0 = time.time()
 
     if not to_evaluate or 938 in to_evaluate:
         since = time.time()
         res = redBlackCardGameLastCardBlackProbabilityFloat(n_red_init=24690, n_black_init=12345)
         print(f"Solution to Project Euler #938 = {res}, calculated in {time.time() - since:.4f} seconds")
+
+    if not to_evaluate or 939 in to_evaluate:
+        since = time.time()
+        res = partisanNimNumberOfWinningPositions(max_n_stones=5000, md=1234567891)
+        print(f"Solution to Project Euler #939 = {res}, calculated in {time.time() - since:.4f} seconds")
 
     if not to_evaluate or 940 in to_evaluate:
         since = time.time()
