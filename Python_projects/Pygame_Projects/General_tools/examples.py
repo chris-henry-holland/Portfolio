@@ -599,7 +599,7 @@ def runExampleSliderGroup1() -> None:
     #print(slider_group.demarc_line_colors)
     #print(sliders[0].demarc_line_colors)
     slider_group.track_color = (named_colors_def["black"], 0.5)
-    print(f"changing the slider group shape")
+    #print(f"changing the slider group shape")
     slider_group.slider_shape = (300, 200)
     
     clock = pg.time.Clock()
@@ -882,7 +882,7 @@ def runExampleSliderPlusGroup1() -> None:
     slider_group.title_color = (named_colors_def["silver"], .7)
     slider_group.val_text_color = (named_colors_def["gray"], .7)
 
-    print("Changing slider group shape")
+    #print("Changing slider group shape")
     slider_group.shape = (500, 200)
     
     clock = pg.time.Clock()
@@ -1072,7 +1072,7 @@ def runExampleSliderPlusGrid1() -> None:
     #slider_group.val_text_color = (named_colors_def["white"], 1)
     #slider_group.shape = (300, 200)
     #slider_group.slider_borders = (0, 0)
-    print("changing slider grid shape")
+    #print("changing slider grid shape")
     slider_grid.shape = (500, 600)
     
     clock = pg.time.Clock()

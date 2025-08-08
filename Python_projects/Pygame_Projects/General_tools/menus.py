@@ -266,7 +266,7 @@ class MenuOverlayBase(InteractiveDisplayComponentBase):
         return tuple(round(x * framerate) for x in time_tuple)
     
     def textPrinter(self, surf: "pg.Surface") -> None:
-        print("Using MenuOverlayBase method textPrinter()")
+        #print("Using MenuOverlayBase method textPrinter()")
         surf_shape = (surf.get_width(), surf.get_height())
         for text_obj, max_shape_rel, anchor_screen_pos_norm in self.text_objects:
             #print(f"setting text object max shape to {tuple(x * y for x, y in zip(surf_shape, max_shape_rel))}")
@@ -321,7 +321,7 @@ class MenuOverlayBase(InteractiveDisplayComponentBase):
         return res
     """
     def createOverlayBackgroundSurface(self) -> "pg.Surface":
-        print("Using createOverlayBackgroundSurface()")
+        #print("Using createOverlayBackgroundSurface()")
         if self.overlay_color is None: return ()
         overlay_bg_surf = pg.Surface(self.shape, pg.SRCALPHA)
         color, alpha0 = self.overlay_color
@@ -343,7 +343,7 @@ class MenuOverlayBase(InteractiveDisplayComponentBase):
             return lambda surf: None
         
         def constructor(obj: "MenuOverlayBase", surf: "pg.Surface") -> None:
-            print("Using overlay background surface constructor")
+            #print("Using overlay background surface constructor")
             overlay_bg_surf = self.overlay_bg_surf
             if not overlay_bg_surf: return
             surf.blit(overlay_bg_surf, (0, 0))
@@ -377,7 +377,7 @@ class MenuOverlayBase(InteractiveDisplayComponentBase):
     """
     def createTextImageConstructor(self) -> Callable[["MenuOverlayBase", "pg.Surface"], None]:
         def constructor(obj: "MenuOverlayBase", surf: "pg.Surface") -> None:
-            print("Using text image constructor")
+            #print("Using text image constructor")
             text_surf = self.text_surf
             if not text_surf: return
             surf.blit(text_surf, (0, 0))
@@ -637,7 +637,7 @@ class ButtonMenuOverlay(MenuOverlayBase):
         new_val: Optional[Tuple[int, int]],
         prev_val: Optional[Tuple[int, int]],
     ) -> None:
-        print("Using customButtonGridShapeActualChangePropogation()")
+        #print("Using customButtonGridShapeActualChangePropogation()")
         button_grid = self.button_grid
         if button_grid is None: return
         button_grid.shape = new_val
@@ -648,8 +648,8 @@ class ButtonMenuOverlay(MenuOverlayBase):
         new_val: Optional[Tuple[int, int]],
         prev_val: Optional[Tuple[int, int]],
     ) -> None:
-        print("Using customButtonGridAnchorPositionActualChangePropogation()")
-        print(f"new anchor position = {new_val}")
+        #print("Using customButtonGridAnchorPositionActualChangePropogation()")
+        #print(f"new anchor position = {new_val}")
         button_grid = self.button_grid
         if button_grid is None: return
         button_grid.anchor_rel_pos = new_val

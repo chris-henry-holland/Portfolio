@@ -1537,10 +1537,10 @@ class DisplayComponentBase(ComponentBaseClass):
                 self.anchor_rel_pos)
     
     def calculateScreenTopleftToComponentTopleftOffset(self):
-        print(f"Using calculateScreenTopleftToComponentTopleftOffset() for {self}")
+        #print(f"Using calculateScreenTopleftToComponentTopleftOffset() for {self}")
         # Position of the topleft relative to the screen origin (the screen topleft)
         res = self.calculateScreenPositionFromRelativePosition(self.topleft_rel_pos)
-        print(f"new topleft screen position for {self} = {res}")
+        #print(f"new topleft screen position for {self} = {res}")
         return res
     
     @staticmethod

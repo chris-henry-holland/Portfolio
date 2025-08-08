@@ -523,7 +523,7 @@ class GamePlay:
         return self.screenPosition(pos)
     
     def _resetGameDimensions(self) -> None:
-        print("Using _resetGameDimensions()")
+        #print("Using _resetGameDimensions()")
         self._arena_dims = None
         self._screen_shape = None
         self._auto_fruitpos = None
@@ -581,7 +581,7 @@ class GamePlay:
         arena_dims = getattr(self, "_arena_dims", None)
         if arena_dims is not None:
             return arena_dims
-        print("calculating arena_dims")
+        #print("calculating arena_dims")
         self._arena_dims = tuple(self._head_size * x for x in\
                                 self._arena_shape)
         return self._arena_dims
@@ -668,7 +668,7 @@ class GamePlay:
         return res
     
     def createArena(self):
-        print("Using createArena()")
+        #print("Using createArena()")
         return pg.Rect(*self.arena_topleft, *self.arena_dims)
     
     @property
@@ -862,7 +862,7 @@ class GamePlay:
         text_objs[0].max_shape = (None, max_w)
         
         anchor = self.score_text_static_bottomright_pos
-        print(f"static score text anchor position = {anchor}")
+        #print(f"static score text anchor position = {anchor}")
         text_objs[0].anchor_rel_pos0 = anchor
         return
 
@@ -1056,9 +1056,9 @@ class GamePlay:
                 return (running, quit, True)
             if event_tup[0].key in self.navkeys_dict.keys():
                 key_buffer_qu.append(event_tup[0].key)
-        if esc_pressed:
-            print("escape key pressed")
-            print(f"running = {running}, quit = {quit}")
+        #if esc_pressed:
+        #    print("escape key pressed")
+        #    print(f"running = {running}, quit = {quit}")
         return (running, quit, False)
     
     @property

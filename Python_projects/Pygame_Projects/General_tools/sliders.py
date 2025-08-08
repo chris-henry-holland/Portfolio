@@ -215,7 +215,7 @@ class Slider(InteractiveDisplayComponentBase):
         return changed_attrs_dict
 
     def setValueDirectly(self, new_val: Real) -> None:
-        print(f"new_val = {new_val}")
+        #print(f"new_val = {new_val}")
         thumb_x_screen_raw = getattr(self, "thumb_x_screen_raw", None)
         if thumb_x_screen_raw is not None:
             # Ensuring that val_raw is reset in the case where the value
@@ -227,7 +227,7 @@ class Slider(InteractiveDisplayComponentBase):
         #self.val_raw = None
         #self.val_raw
         self.val_raw = new_val
-        print(f"new_val = {new_val}, self.val_raw = {self.val_raw}")
+        #print(f"new_val = {new_val}, self.val_raw = {self.val_raw}")
         return
     
     def calculateMouseEnablement(self) -> None:
@@ -763,20 +763,20 @@ class Slider(InteractiveDisplayComponentBase):
         return vra[0] + round((vra[1] - vra[0]) * ((x - x_range[0]) / (self.increment * (x_range[1] - x_range[0])))) * self.increment
     
     def calculateSliderRangesSurface(self) -> Tuple[Tuple[Real]]:
-        print("Using calculateSliderRangesSurface()")
+        #print("Using calculateSliderRangesSurface()")
         y_extend = max(1, self.thumb_radius_rel - 1) * self.track_shape[1]
         x_extend = self.thumb_radius_rel * self.track_shape[1]
         return ((self.track_topleft[0] - x_extend, self.track_topleft[0] + self.track_shape[0] + x_extend), (self.track_topleft[1] - y_extend, self.track_topleft[1] + self.track_shape[1] + y_extend))
     
     def calculateSliderRangesScreen(self) -> Tuple[Tuple[Real]]:
-        print("Using calculateSliderRangesScreen()")
+        #print("Using calculateSliderRangesScreen()")
         res = self.rangesSurface2RangesScreen(self.slider_ranges_surf)
-        print(f"new slider ranges screen = {res}")
+        #print(f"new slider ranges screen = {res}")
         return res
 
     
     def mouseOverSlider(self, mouse_pos: Tuple[int], check_axes: Tuple[int]=(0, 1)):
-        print("checking mouseOverSlider()")
+        #print("checking mouseOverSlider()")
         rngs = self.slider_ranges_screen
         #print(rngs, mouse_pos)
         #print(mouse_pos, rngs, self.slider_ranges_surf, self.screen_topleft_to_parent_topleft_offset)
@@ -1057,7 +1057,7 @@ class SliderGroup(ComponentGroupBaseClass):
         return res
     
     def calculateSliderComponentDimensions(self):
-        print("Using SliderGroup method calculateSliderComponentDimensions()")
+        #print("Using SliderGroup method calculateSliderComponentDimensions()")
         #print(len(self._elements_weakref))
         res = Slider._calculateMultipleSliderComponentDimensions(
             [slider_weakref() for slider_weakref in self._elements_weakref if slider_weakref is not None],
@@ -1068,7 +1068,7 @@ class SliderGroup(ComponentGroupBaseClass):
             demarc_numbers_min_gap_rel_height=1,
             demarc_numbers_min_gap_pixel=0,
         )
-        print(f"value = {res}")
+        #print(f"value = {res}")
         return res
         """
         #print("\ncreating TextGroup to calculate SliderGroup component dimensions")
@@ -1360,14 +1360,14 @@ class SliderPlus(InteractiveDisplayComponentBase):
 
     @staticmethod
     def sliderShapeCalculator(slider_plus_shape: Tuple[int, int], slider_shape_rel: Tuple[float, float]) -> Tuple[int, int]:
-        print("Using SliderPlus method sliderShapeCalculator()")
+        #print("Using SliderPlus method sliderShapeCalculator()")
         return tuple(math.floor(x * y) for x, y in zip(slider_plus_shape, slider_shape_rel)) 
 
     def calculateSliderShape(self) -> Tuple[int, int]:
         return self.sliderShapeCalculator(self.shape, self.slider_shape_rel)
     
     def calculateSliderBottomLeft(self) -> Tuple[int]:
-        print(f"Using calculateSliderBottomLeft()")
+        #print(f"Using calculateSliderBottomLeft()")
         return (0, self.shape[1])
     
     def calculateSliderBorders(self) -> Tuple[int]:

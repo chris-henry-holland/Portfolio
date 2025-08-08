@@ -111,7 +111,7 @@ class Game:
         #menu_overlay = ButtonMenuOverlay(self.screen_shape, framerate=self.menu_framerate,\
         #    overlay_color=self.menu_overlay_color,\
         #    mouse_enabled=mouse_enabled, navkeys_enabled=navkeys_enabled)
-        print(f"menu framerate = {self.menu_framerate}")
+        #print(f"menu framerate = {self.menu_framerate}")
         main_menu_overlay = ButtonMenuOverlay(
             shape=self.screen_shape,
             framerate=self.menu_framerate,
@@ -199,7 +199,7 @@ class Game:
         #menu_overlay = ButtonMenuOverlay(self.screen_shape, framerate=self.menu_framerate,\
         #    overlay_color=self.menu_overlay_color,\
         #    mouse_enabled=mouse_enabled, navkeys_enabled=navkeys_enabled)
-        print(f"menu framerate = {self.menu_framerate}")
+        #print(f"menu framerate = {self.menu_framerate}")
         settings_menu_overlay = SliderAndButtonMenuOverlay(
             shape=self.screen_shape,
             framerate=self.menu_framerate,
@@ -341,11 +341,11 @@ class Game:
         return res
 
     def resetSettingsMenuSliders(self) -> None:
-        print("Using resetSettingsMenuSliders()")
+        #print("Using resetSettingsMenuSliders()")
         smo = self.settings_menu_overlay
         # Number of fruits
         smo.slider_plus_grid[0, 0].slider.setValueDirectly(self.n_fruit)
-        print(f"self.n_fruit = {self.n_fruit}, fruit count slider value = {smo.slider_plus_grid[0, 0].val}, slider value raw = {getattr(smo.slider_plus_grid[0, 0], '_val_raw', None)}")
+        #print(f"self.n_fruit = {self.n_fruit}, fruit count slider value = {smo.slider_plus_grid[0, 0].val}, slider value raw = {getattr(smo.slider_plus_grid[0, 0], '_val_raw', None)}")
         smo.slider_plus_grid[0, 1].slider.setValueDirectly(self.move_rate)
         smo.slider_plus_grid[0, 2].slider.setValueDirectly(self.arena_shape[0])
         smo.slider_plus_grid[0, 3].slider.setValueDirectly(self.arena_shape[1])
@@ -364,7 +364,7 @@ class Game:
             menu = getattr(self, menu_attr, None)
             if menu is None: continue
             menu.shape = self.screen_shape
-            print(f"self.screen_shape = {self.screen_shape}, {menu} shape = {menu.shape}")
+            #print(f"self.screen_shape = {self.screen_shape}, {menu} shape = {menu.shape}")
         #gameplay_obj = getattr(self, "_gameplay", None)
         #if gameplay_obj is not None:
         #    gameplay_obj.head_size = self.head_size
@@ -422,7 +422,7 @@ class Game:
         
         gameplay_obj = getattr(self, "_gameplay", None)
         if gameplay_obj is not None:
-            print("setting gameplay object arena shape")
+            #print("setting gameplay object arena shape")
             gameplay_obj.arena_shape = arena_shape
         
         if getattr(self, "_screen", None) is not None:
@@ -575,7 +575,7 @@ class Game:
         return menu
     """
     def mainMenuActionResolver(self, action: int) -> Tuple[bool, bool, bool, bool]:
-        print(f"action = {action}")
+        #print(f"action = {action}")
         if not action:
             return (True, True, False, True)
         elif action == 3:
