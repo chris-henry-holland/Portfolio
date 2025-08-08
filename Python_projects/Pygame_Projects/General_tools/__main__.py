@@ -18,17 +18,18 @@ from General_tools import (
     runExampleSliderAndButtonMenuOverlay1,
 )
 
-#runExampleButton1()
-#runExampleButtonGroup1()
-#runExampleButtonGrid1()
+if __name__ == "__main__":
+    #runExampleButton1()
+    #runExampleButtonGroup1()
+    #runExampleButtonGrid1()
 
-#address = runExampleSlider1()
-#print(f"reference count = {ctypes.c_long.from_address(address)}")
-#runExampleSliderGroup1()
-#runExampleSliderPlus1()
-#runExampleSliderPlusGroup1()
-runExampleSliderPlusGrid1()
+    #address = runExampleSlider1()
+    #print(f"reference count = {ctypes.c_long.from_address(address)}")
+    #runExampleSliderGroup1()
+    #runExampleSliderPlus1()
+    #runExampleSliderPlusGroup1()
+    runExampleSliderPlusGrid1()
 
-#runExampleMenuOverlayBase1()
-#runExampleButtonMenuOverlay1()
-#runExampleSliderAndButtonMenuOverlay1()
+    #runExampleMenuOverlayBase1()
+    #runExampleButtonMenuOverlay1()
+    #runExampleSliderAndButtonMenuOverlay1()
