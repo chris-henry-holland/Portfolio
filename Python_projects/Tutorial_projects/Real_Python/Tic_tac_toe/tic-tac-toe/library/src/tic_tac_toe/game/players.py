@@ -6,7 +6,7 @@ import abc
 import time
 
 from tic_tac_toe.logic.exceptions import InvalidMove
-from tic_tac_toe.logic.minimax import findBestMove
+from tic_tac_toe.logic.minimax import findBestMove, findBestMovePrecomputed
 from tic_tac_toe.logic.models import GameState, Mark, Move
 
 class Player(metaclass=abc.ABCMeta):
@@ -33,8 +33,11 @@ class ComputerPlayer(Player, metaclass=abc.ABCMeta):
         self.move_delay_s = move_delay_s
     
     def getMove(self, game_state: GameState) -> Move | None:
-        time.sleep(self.move_delay_s)
-        return self.getComputerMove(game_state)
+        since = time.time()
+        res = self.getComputerMove(game_state)
+        intvl = time.time() - since
+        time.sleep(max(0, self.move_delay_s - intvl))
+        return res
 
     @abc.abstractmethod
     def getComputerMove(self, game_state: GameState) -> Move | None:
@@ -43,7 +46,6 @@ class ComputerPlayer(Player, metaclass=abc.ABCMeta):
         """
 
 class RandomComputerPlayer(ComputerPlayer):
-    
     def getComputerMove(self, game_state: GameState) -> Move | None:
         return game_state.makeRandomMove()
         #try:
@@ -51,9 +53,16 @@ class RandomComputerPlayer(ComputerPlayer):
         #except IndexError:
         #    return None
 
-class MinimaxComputerPlayer(ComputerPlayer):
-
+class MinimaxComputerPlayerV1(ComputerPlayer):
     def getComputerMove(self, game_state: GameState) -> Move | None:
         if game_state.game_not_started:
             return game_state.makeRandomMove()
         return findBestMove(game_state)
+
+class MinimaxComputerPlayerV2(ComputerPlayer):
+    def getComputerMove(self, game_state: GameState) -> Move | None:
+        if game_state.game_not_started:
+            return game_state.makeRandomMove()
+        return findBestMovePrecomputed(game_state)
+
+MinimaxComputerPlayer = MinimaxComputerPlayerV1
