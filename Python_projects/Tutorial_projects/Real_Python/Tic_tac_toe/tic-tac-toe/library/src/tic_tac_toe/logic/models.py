@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 
 if TYPE_CHECKING:
     from tic_tac_toe.logic.models import Grid
@@ -67,6 +67,10 @@ class Grid:
             elif d == 2: l = "O"
             cells.append(l)
         return Grid("".join(cells))
+    
+    def __eq__(self, other: Any) -> bool:
+        if not isinstance(other, Grid): return False
+        return self.encoding == other.encoding
 
     def __hash__(self) -> int:
         return self.hsh
@@ -134,6 +138,10 @@ class Move:
         before_state = GameState.decode(before_enc)
         after_state = GameState.decode(after_enc)
         return Move(mark, cell_idx, before_state, after_state)
+    
+    def __eq__(self, other: Any) -> bool:
+        if not isinstance(other, Move): return False
+        return self.encoding == other.encoding
 
 @dataclass(frozen=True)
 class GameState:
@@ -174,6 +182,10 @@ class GameState:
     def hsh(self) -> int:
         return hash(self.encoding)
         #return hash((self.grid, self.starting_mark))
+    
+    def __eq__(self, other: Any) -> bool:
+        if not isinstance(other, GameState): return False
+        return self.encoding == other.encoding
     
     @cached_property
     def current_mark(self) -> Mark:

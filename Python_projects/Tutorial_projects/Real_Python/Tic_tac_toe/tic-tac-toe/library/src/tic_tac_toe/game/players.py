@@ -63,6 +63,7 @@ class MinimaxComputerPlayerV2(ComputerPlayer):
     def getComputerMove(self, game_state: GameState) -> Move | None:
         if game_state.game_not_started:
             return game_state.makeRandomMove()
+        #findBestMove(game_state)
         return findBestMovePrecomputed(game_state)
 
-MinimaxComputerPlayer = MinimaxComputerPlayerV1
+MinimaxComputerPlayer = MinimaxComputerPlayerV2
