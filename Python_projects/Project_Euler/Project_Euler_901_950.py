@@ -21,6 +21,78 @@ from prime_sieves import PrimeSPFsieve, SimplePrimeSieve
 from pseudorandom_number_generators import blumBlumShubPseudoRandomGenerator
 from string_searching_algorithms import KnuthMorrisPratt
 
+# Problem 934
+def unluckyPrimeCalculatorBruteForce(n: int, p_md: int, ps: Optional[SimplePrimeSieve]=None) -> int:
+    if ps is None: ps = SimplePrimeSieve()
+    for p in ps.endlessPrimeGenerator():
+        if (n % p) % p_md: return p
+    return -1
+
+def unluckyPrimeSumBruteForce(n_max: int, p_md: int=7, ps: Optional[SimplePrimeSieve]=None) -> int:
+    if ps is None: ps = SimplePrimeSieve()
+    res = 0
+    for n in range(1, n_max + 1):
+        p = unluckyPrimeCalculatorBruteForce(n, p_md=p_md, ps=ps)
+        #if p > 11: print(n, p)
+        res += p
+    return res
+
+def unluckyPrimeSum(n_max: int=10 ** 17, p_md: int=7, ps: Optional[SimplePrimeSieve]=None) -> int:
+    """
+    Solution to Project Euler #934
+    """
+    # Look into the residue class solutions to get faster solution
+    if ps is None: ps = SimplePrimeSieve()
+    res = 0
+    remain = n_max
+    mult = 1
+    add_starts = []
+    p_it = ps.endlessPrimeGenerator()
+    remain_transition = integerNthRoot(n_max, 3)#isqrt(n_max)
+    for p in p_it:
+        print(f"p = {p}, remain = {remain}, len(add_starts) = {len(add_starts)}")
+        mult_md = mult % p
+        mult_md_inv = pow(mult_md, p - 2, p)
+        add_starts2 = [(num + mult * ((((-num) % p) * mult_md_inv) % p)) for num in add_starts]
+        for r in range(p_md, p, p_md):
+            add_starts2.append(mult * ((r * mult_md_inv) % p))
+            for num in add_starts:
+                add_starts2.append(num + mult * ((((r - num) % p) * mult_md_inv) % p))
+
+        add_starts = sorted(add_starts2)
+        #print(f"p = {p}, add_starts = {add_starts}, mult_md_inv = {mult_md_inv}")
+        mult *= p
+        cnt0, r = divmod(n_max, mult)
+        cnt = cnt0 * (1 + len(add_starts)) + bisect.bisect_right(add_starts, r)
+        res += (remain - cnt) * p
+        remain = cnt
+        if remain < remain_transition: break
+        #add_starts2 = []
+        #for p2 in range(p_md, p, p_md):
+        #    add_starts2
+        #add_starts2.sort()
+    print("transitioning to phase 2")
+    remain_set = set(range(mult, n_max + 1, mult))
+    for add_start in add_starts:
+        for num in range(add_start, n_max + 1, mult):
+            remain_set.add(num)
+    print(len(remain_set), remain)
+    for p in p_it:
+        print(f"p = {p}, remain = {len(remain_set)}")
+        remain_set2 = set()
+        for num in remain_set:
+            if not (num % p) % p_md:
+                remain_set2.add(num)
+            else: res += p
+        remain_set = remain_set2
+        if not remain_set:
+            break
+
+    #print(f"largest p = {p}")
+    #print(unluckyPrimeSumBruteForce(n_max, p_md=p_md, ps=None))
+    return res
+    
+
 # Problem 938
 def redBlackCardGameLastCardBlackProbabilityFraction(n_red_init: int, n_black_init: int) -> CustomFraction:
 
@@ -1105,8 +1177,13 @@ def xorEquationSolutionsCount(a_b_max: int=10 ** 7) -> int:
     return res
 
 if __name__ == "__main__":
-    to_evaluate = {939}
+    to_evaluate = {934}
     since0 = time.time()
+
+    if not to_evaluate or 934 in to_evaluate:
+        since = time.time()
+        res = unluckyPrimeSum(n_max=10 ** 17, p_md=7, ps=None)
+        print(f"Solution to Project Euler #934 = {res}, calculated in {time.time() - since:.4f} seconds")
 
     if not to_evaluate or 938 in to_evaluate:
         since = time.time()
