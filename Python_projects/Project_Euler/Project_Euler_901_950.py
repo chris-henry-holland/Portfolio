@@ -144,8 +144,77 @@ def rollingRegularPolygonReturnAfterAtMostNRollsCount(n_roll_max: int, n_sides: 
             #res += fact
         return res
     """
-    res = n_roll_max // n_sides 
-    #print(f"res = {res}")
+    """
+    res = 0
+    #ps = PrimeSPFsieve()
+    cnt_arr = [[0] for _ in range(n_roll_max + 1)]
+    for corner in range(1, n_roll_max + 1):
+        n_rpt = n_sides // (gcd(corner, n_sides))#lcm(corner, n_sides) // corner
+        m = n_roll_max // n_rpt
+        #if m < corner: continue
+        #mult = ((m - 1) // (corner + 1))
+        ans0 = m - corner + 1
+        if ans0 > 0:
+            cnt_arr[corner] += ans0
+        res += cnt_arr[corner]
+        for num in range(2 * corner, n_roll_max + 1, corner):
+            cnt_arr[num] -= cnt_arr[corner]
+        print(cnt_arr)
+    return res
+    """
+    res = 0
+    ps = PrimeSPFsieve()
+    for corner in range(1, n_roll_max + 1):
+        
+        ans = 0
+        for i, num in enumerate(range(corner, n_roll_max + 1, corner), start=1):
+            # number of rolls = (n_rolls0 + 1) * i - 1
+            # min number of rolls = corner
+            # max number of rolls = n_roll_max
+            
+            # (max number of rolls + 1) // i - 1
+            mn_abs = (num + i - 1)
+            if mn_abs & 1 and not num & 1: continue
+
+            n_rpt = n_sides // (gcd(num, n_sides))#lcm(corner, n_sides) // corner
+            #print(num, n_rpt)
+            #mx = ((n_roll_max + 1) // i - 1) // n_rpt
+            #mx = n_roll_max // (i * n_rpt)
+            #mn = max(0, num + i - 2)
+            #if not num & 1:
+            #    mx >>= 1
+            #    mn >>= 1
+            
+            
+            if not num & 1 and mn_abs & 1: mn_abs += 1
+            mn_abs *= n_rpt
+            mx_abs = n_roll_max
+            intvl = n_rpt * (2 - (num & 1))
+            #mn, mx = (mn_abs - 1) // intvl, mx_abs // intvl
+            #if m < num: continue
+            #if m < corner: continue
+            #mult = ((m - 1) // (corner + 1))
+            #ans0 = m - (corner - 1) // n_rpt#(m // (i)) - (num - 1) // (i)
+            ans0 = (mx_abs - mn_abs) // intvl + 1
+            
+            if ans0 <= 0: continue
+            print(i, (mn_abs, mx_abs), intvl, ans0)
+            pf = ps.primeFactorisation(i)
+            ans += -ans0 if sum(pf.values()) & 1 else ans0
+        
+        res += ans
+        print(corner, res)
+        #if ans0 > 0:
+        #    cnt_arr[corner] += ans0
+        #res += cnt_arr[corner]
+        #for num in range(2 * corner, n_roll_max + 1, corner):
+        #    cnt_arr[num] -= cnt_arr[corner]
+        #print(cnt_arr)
+    return res
+    """
+    ps = PrimeSPFsieve(n_roll_max)
+    res = n_roll_max // n_sides
+    print(f"res = {res}")
     for corner in range(1, (n_roll_max >> 1) + 1):
         # lcm = a * b // gcd
         # lcm // a = b // gcd
@@ -155,9 +224,28 @@ def rollingRegularPolygonReturnAfterAtMostNRollsCount(n_roll_max: int, n_sides: 
         #print(f"corner = {corner}, n_rpt = {n_rpt}, m = {m}")
         if m - corner + 1 <= 0: continue
         ans = m - corner + 1# ((not corner & 1) or corner == 1)#(corner <= 24)#cornerRollCount(corner, m)
+        corner2 = corner
+        while not corner2 & 1: corner2 >>= 1
+        pf = ps.primeFactors(corner2)
+        nums = set()
+        for p in pf:
+            if p == 2: continue
+            num0 = p >> 1
+            nums |= set(range(num0, corner, p))
+        nums = sorted(nums)
+        q, r = divmod(m, corner)
+        ans -= len(nums) * (q - 1) + bisect.bisect_right(nums, r)
+
+        #if corner > 1 and corner & 1:
+        #if corner == 3:
+        #    n_roll0 = (corner >> 1) * 3 + 1
+        #    sub = max(0, (m - n_roll0) // corner) + 1
+        #    print(f"corner = {corner}, n_roll0 = {n_roll0}, sub = {sub}")
+        #    ans -= sub
         print(corner, n_rpt, m, ans)
         res += ans
     return res
+    """
 
 # Problem 938
 def redBlackCardGameLastCardBlackProbabilityFraction(n_red_init: int, n_black_init: int) -> CustomFraction:
@@ -1251,10 +1339,10 @@ if __name__ == "__main__":
         res = unluckyPrimeSum(n_max=10 ** 17, p_md=7, ps=None)
         print(f"Solution to Project Euler #934 = {res}, calculated in {time.time() - since:.4f} seconds")
 
-    #if not to_evaluate or 935 in to_evaluate:
-    #    since = time.time()
-    #    res = rollingRegularPolygonReturnAfterAtMostNRollsCount(n_roll_max=100, n_sides=4)
-    #    print(f"Solution to Project Euler #935 = {res}, calculated in {time.time() - since:.4f} seconds")
+    if not to_evaluate or 935 in to_evaluate:
+        since = time.time()
+        res = rollingRegularPolygonReturnAfterAtMostNRollsCount(n_roll_max=100, n_sides=4)
+        print(f"Solution to Project Euler #935 = {res}, calculated in {time.time() - since:.4f} seconds")
 
     if not to_evaluate or 938 in to_evaluate:
         since = time.time()
@@ -1310,18 +1398,74 @@ for num in range(1, 17):
 
 #for s in ("aaaa", "ababab", "aabaab", "abcd"):
 #    print(s, calculateStringPrimitiveRoot(s))
+
+
+x1_inv = .5
+x2_inv = 2 - math.sqrt(2)
+x3_inv = 2 + math.sqrt(2) - math.sqrt(2 + 4 * math.sqrt(2))
+x4_inv = 8 - 5 * math.sqrt(2) + 4 * math.sqrt(3) - 3 * math.sqrt(6)
+print(x1_inv, x2_inv, x3_inv, x4_inv)
+print(1 / x1_inv, 1 / x2_inv, 1 / x3_inv, 1 / x4_inv)
+
 """
-a = math.sqrt(2) + 10 ** -5
+a = 1 / (8 - 5 * math.sqrt(2) + 4 * math.sqrt(3) - 3 * math.sqrt(6))#(2 + math.sqrt(2) + math.sqrt(2 + 4 * math.sqrt(2))) / 4
 x = a - 1
-for i in range(1000):
+for i in range(100):
     print(i, x)
     x = a - math.sqrt(1 - x ** 2)
+    x -= math.floor(x)
     #if x > math.sqrt(2) / 2: break
-
+"""
+"""
 n = 4
 res = 0
 for k in range(1, n):
     res += math.floor(math.sqrt(n ** 2 - (k + .5) ** 2) - .5)
 res = res * 4 + 4 * n - 3
 print(n, res)
+"""
+"""
+def calculateEndState(n_roll: int, a: float, verbose: bool=False) -> tuple[int, float]:
+    x = a - 1#math.sqrt(2) / 2
+    if verbose: print(f"a = {a}, n_roll = {n_roll}, x0 = {x}")
+    remain = n_roll
+    side = 1
+    while remain > 0:
+        x_int = min(math.floor(x), remain)
+        x -= x_int
+        remain -= x_int
+        if verbose: print(x, remain)
+        if not remain:
+            break
+        x = a - math.sqrt(1 - x ** 2)
+        side += 1
+        remain -= 1
+    #print(side, x)
+    return (side, -x)
+
+corner = 16
+eps = 1e-12
+a = math.sqrt(2)
+target_func1 = lambda corner_, a_: (corner_, -math.sqrt(2) / 2)
+target_func2 = lambda corner_, a_: (corner_, -a_ * .5)
+target_func3 = lambda corner_, a_: (corner_, -(a_ + 1) * .5)
+
+target_func = target_func3
+
+for n_roll in range(corner, (corner << 1) - 1):
+    print(f"corner = {corner}, n_roll = {n_roll}")
+    lft, rgt = a, 2
+    while (rgt - lft) > eps:
+        mid = lft + (rgt - lft) * .5
+        end = calculateEndState(n_roll - 1, mid, verbose=False)
+        t = target_func(corner, mid)
+        #print(f"mid = {mid}, end_state = {end}, target = {t}")
+        if end > t:#(corner, -math.sqrt(2) / 2):
+            lft = mid
+        else: rgt = mid
+    a = lft + (rgt - lft) * .5
+    side, x = calculateEndState(n_roll - 1, a, verbose=True)
+    #if side > corner:
+    #    side, x = side - 1, x + a
+    print(a, side, x, abs(x - target_func(corner, a)[1]))
 """
