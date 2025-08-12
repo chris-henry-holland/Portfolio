@@ -91,7 +91,73 @@ def unluckyPrimeSum(n_max: int=10 ** 17, p_md: int=7, ps: Optional[SimplePrimeSi
     #print(f"largest p = {p}")
     #print(unluckyPrimeSumBruteForce(n_max, p_md=p_md, ps=None))
     return res
-    
+
+# Problem 935
+def rollingRegularPolygonReturnAfterAtMostNRollsCount(n_roll_max: int, n_sides: int=4) -> int:
+    """
+    Solution to Project Euler #935
+    """
+    # Note- requires n_sides > 3 (otherwise cannot transition from a
+    # shape being in the corner as described without part of the
+    # shape being outside the boundaries, effectively locking the
+    # shape in the corner)
+    """
+    ps = PrimeSPFsieve(n_roll_max)
+
+    def cornerRollCount(corner: int, mx: int) -> int:
+        p_fact = ps.primeFactorisation(corner)
+        phi = 1
+        for p, f in enumerate(p_fact):
+            phi *= (p - 1) * p ** (f - 1)
+        p_lst = list(p_fact.keys())
+        f_lst = [p_fact[p] for p in p_lst]
+        print(p_lst, f_lst)
+        n_p = len(p_lst)
+        n_fact = sum(f_lst)
+        
+        def recur(idx: int, curr: int=1) -> Generator[int, None, None]:
+            if idx == n_p:
+                yield curr
+                return
+            curr2 = curr
+            for f in range(f_lst[idx] + 1):
+                yield from recur(idx + 1, curr=curr2)
+                curr2 *= -p_lst[idx]
+            return
+        
+        #res = phi
+        #for num in range(1, corner):
+        #    if gcd(num, corner)
+        #if gcd(res)
+
+        #return max(0, mx - corner + 1)
+
+        res = 0
+        for fact in recur(0, curr=(1 - ((n_fact & 1) << 1))):
+            fact2 = corner // abs(fact)
+            mx2 = ((mx - fact2 + 1) // fact2)
+            #num = max(0, ((mx * abs(fact)) // corner) - abs(fact) + 1)# // corner
+            num = max(0, mx2 - abs(fact) + 1)
+            #num = max(0, mx2 - abs(fact) + 1 + (abs(fact) != 1))
+            print(f"fact = {fact}, mx2 = {mx2}, contrib = {num}")
+            res += num if fact > 0 else -num
+            #res += fact
+        return res
+    """
+    res = n_roll_max // n_sides 
+    #print(f"res = {res}")
+    for corner in range(1, (n_roll_max >> 1) + 1):
+        # lcm = a * b // gcd
+        # lcm // a = b // gcd
+        n_rpt = n_sides // (gcd(2 * corner, n_sides))#lcm(corner, n_sides) // corner
+        
+        m = (n_roll_max) // (2 * n_rpt)
+        #print(f"corner = {corner}, n_rpt = {n_rpt}, m = {m}")
+        if m - corner + 1 <= 0: continue
+        ans = m - corner + 1# ((not corner & 1) or corner == 1)#(corner <= 24)#cornerRollCount(corner, m)
+        print(corner, n_rpt, m, ans)
+        res += ans
+    return res
 
 # Problem 938
 def redBlackCardGameLastCardBlackProbabilityFraction(n_red_init: int, n_black_init: int) -> CustomFraction:
@@ -1177,13 +1243,18 @@ def xorEquationSolutionsCount(a_b_max: int=10 ** 7) -> int:
     return res
 
 if __name__ == "__main__":
-    to_evaluate = {934}
+    to_evaluate = {935}
     since0 = time.time()
 
     if not to_evaluate or 934 in to_evaluate:
         since = time.time()
         res = unluckyPrimeSum(n_max=10 ** 17, p_md=7, ps=None)
         print(f"Solution to Project Euler #934 = {res}, calculated in {time.time() - since:.4f} seconds")
+
+    #if not to_evaluate or 935 in to_evaluate:
+    #    since = time.time()
+    #    res = rollingRegularPolygonReturnAfterAtMostNRollsCount(n_roll_max=100, n_sides=4)
+    #    print(f"Solution to Project Euler #935 = {res}, calculated in {time.time() - since:.4f} seconds")
 
     if not to_evaluate or 938 in to_evaluate:
         since = time.time()
@@ -1239,3 +1310,18 @@ for num in range(1, 17):
 
 #for s in ("aaaa", "ababab", "aabaab", "abcd"):
 #    print(s, calculateStringPrimitiveRoot(s))
+"""
+a = math.sqrt(2) + 10 ** -5
+x = a - 1
+for i in range(1000):
+    print(i, x)
+    x = a - math.sqrt(1 - x ** 2)
+    #if x > math.sqrt(2) / 2: break
+
+n = 4
+res = 0
+for k in range(1, n):
+    res += math.floor(math.sqrt(n ** 2 - (k + .5) ** 2) - .5)
+res = res * 4 + 4 * n - 3
+print(n, res)
+"""
