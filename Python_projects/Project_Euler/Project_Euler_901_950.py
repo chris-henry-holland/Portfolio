@@ -93,6 +93,32 @@ def unluckyPrimeSum(n_max: int=10 ** 17, p_md: int=7, ps: Optional[SimplePrimeSi
     return res
 
 # Problem 935
+def rollingRegularPolygonReturnAfterAtMostNRollsCountBasic(n_roll_max: int, n_sides: int=4) -> int:
+    res = 0
+    arr = [[] for _ in range(n_roll_max + 1)]
+    
+    for corner in range(1, n_roll_max + 1):
+        ans = 0
+        n_rpt = n_sides // (gcd(corner, n_sides))
+        mn = corner
+        mx = n_roll_max // n_rpt
+        intvl = 1
+        arr[corner].extend([0] * (mx - len(arr[corner]) + 1))
+        for n_roll in range(mn, mx + 1, intvl):
+            arr[corner][n_roll] += 1
+            ans += arr[corner][n_roll]
+        for i, corner2 in enumerate(range(corner * 2, n_roll_max + 1, corner), start=2):
+            n_rpt2 = n_sides // (gcd(corner2, n_sides))
+            mx2 = n_roll_max // n_rpt2
+            for n_roll in range(mn, mx + 1, intvl):
+                if not arr[corner][n_roll]: continue
+                n_roll2 = (n_roll + 1) * i - 1
+                if n_roll2 > mx2: break
+                arr[corner2].extend([0] * (n_roll2 - len(arr[corner2]) + 1))
+                arr[corner2][n_roll2] -= arr[corner][n_roll]
+        res += ans
+    return res
+
 def rollingRegularPolygonReturnAfterAtMostNRollsCount(n_roll_max: int, n_sides: int=4) -> int:
     """
     Solution to Project Euler #935
@@ -162,8 +188,51 @@ def rollingRegularPolygonReturnAfterAtMostNRollsCount(n_roll_max: int, n_sides: 
         print(cnt_arr)
     return res
     """
+    """
     res = 0
-    ps = PrimeSPFsieve()
+    arr = [[] for _ in range(n_roll_max + 1)]
+    
+    for corner in range(1, n_roll_max + 1):
+        ans = 0
+        n_rpt = n_sides // (gcd(corner, n_sides))
+        mn = corner
+        mx = n_roll_max // n_rpt
+        intvl = 1#2 - (corner & 1)
+        arr[corner].extend([0] * (mx - len(arr[corner]) + 1))
+        for n_roll in range(mn, mx + 1, intvl):
+            arr[corner][n_roll] += 1
+            ans += arr[corner][n_roll]
+        for i, corner2 in enumerate(range(corner * 2, n_roll_max + 1, corner), start=2):
+            n_rpt2 = n_sides // (gcd(corner2, n_sides))
+            mx2 = n_roll_max // n_rpt2
+            #mn = corner2 + i - 1
+            #mx = n_roll_max // n_rpt
+            #if mn > mx: break
+            #intvl = i#2 - (corner & 1)
+            for n_roll in range(mn, mx + 1, intvl):
+                if not arr[corner][n_roll]: continue
+                n_roll2 = (n_roll + 1) * i - 1
+                if n_roll2 > mx2: break
+                arr[corner2].extend([0] * (n_roll2 - len(arr[corner2]) + 1))
+                arr[corner2][n_roll2] -= arr[corner][n_roll]
+        res += ans
+        #print(corner, ans, res)#, arr)
+        #if ans0 > 0:
+        #    cnt_arr[corner] += ans0
+        #res += cnt_arr[corner]
+        #for num in range(2 * corner, n_roll_max + 1, corner):
+        #    cnt_arr[num] -= cnt_arr[corner]
+        #print(cnt_arr)
+    #print(arr)
+    #for i, lst in enumerate(arr):
+    #    print(i, sum(lst))
+    
+    return res
+    """
+    
+    res = 0
+    ps = PrimeSPFsieve(n_roll_max)
+    print("finished creating prime sieve")
     for corner in range(1, n_roll_max + 1):
         
         ans = 0
@@ -174,7 +243,7 @@ def rollingRegularPolygonReturnAfterAtMostNRollsCount(n_roll_max: int, n_sides: 
             
             # (max number of rolls + 1) // i - 1
             mn_abs = (num + i - 1)
-            if mn_abs & 1 and not num & 1: continue
+            #if mn_abs & 1 and not num & 1: continue
 
             n_rpt = n_sides // (gcd(num, n_sides))#lcm(corner, n_sides) // corner
             #print(num, n_rpt)
@@ -186,10 +255,11 @@ def rollingRegularPolygonReturnAfterAtMostNRollsCount(n_roll_max: int, n_sides: 
             #    mn >>= 1
             
             
-            if not num & 1 and mn_abs & 1: mn_abs += 1
+            #if not num & 1 and mn_abs & 1: mn_abs += 1
             mn_abs *= n_rpt
             mx_abs = n_roll_max
-            intvl = n_rpt * (2 - (num & 1))
+            intvl = n_rpt * i# * (2 - (num & 1))
+            if mx_abs < mn_abs: continue
             #mn, mx = (mn_abs - 1) // intvl, mx_abs // intvl
             #if m < num: continue
             #if m < corner: continue
@@ -198,19 +268,31 @@ def rollingRegularPolygonReturnAfterAtMostNRollsCount(n_roll_max: int, n_sides: 
             ans0 = (mx_abs - mn_abs) // intvl + 1
             
             if ans0 <= 0: continue
-            print(i, (mn_abs, mx_abs), intvl, ans0)
+            print(corner, num, i, (mn_abs, mx_abs), intvl, ans0)
+            
             pf = ps.primeFactorisation(i)
-            ans += -ans0 if sum(pf.values()) & 1 else ans0
+            if any(x & 1 for x in pf.values()) or not any(x % 4 for x in pf.values()):
+                #print(sum(pf.values()))
+                ans += -ans0 if (sum(pf.values()) & 1) else ans0
+            #ans += -ans0 if (sum(pf.values()) & 1) else ans0
+            #n_factors_pa = 1
+            #for exp in pf.values():
+            #    n_factors *= (exp + 1)
+            #n_factors_odd = (isqrt(i) ** 2 == i)
+            #ans += ans0 if (n_factors_odd) else -ans0
+            
         
         res += ans
-        print(corner, res)
+        print(corner, ans, res)
         #if ans0 > 0:
         #    cnt_arr[corner] += ans0
         #res += cnt_arr[corner]
         #for num in range(2 * corner, n_roll_max + 1, corner):
         #    cnt_arr[num] -= cnt_arr[corner]
         #print(cnt_arr)
+    print(rollingRegularPolygonReturnAfterAtMostNRollsCountBasic(n_roll_max=n_roll_max, n_sides=n_sides))
     return res
+    
     """
     ps = PrimeSPFsieve(n_roll_max)
     res = n_roll_max // n_sides
@@ -1341,7 +1423,7 @@ if __name__ == "__main__":
 
     if not to_evaluate or 935 in to_evaluate:
         since = time.time()
-        res = rollingRegularPolygonReturnAfterAtMostNRollsCount(n_roll_max=100, n_sides=4)
+        res = rollingRegularPolygonReturnAfterAtMostNRollsCountBasic(n_roll_max=100, n_sides=4)
         print(f"Solution to Project Euler #935 = {res}, calculated in {time.time() - since:.4f} seconds")
 
     if not to_evaluate or 938 in to_evaluate:
