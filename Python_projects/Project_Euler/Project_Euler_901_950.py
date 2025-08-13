@@ -21,6 +21,157 @@ from prime_sieves import PrimeSPFsieve, SimplePrimeSieve
 from pseudorandom_number_generators import blumBlumShubPseudoRandomGenerator
 from string_searching_algorithms import KnuthMorrisPratt
 
+# Problem 932
+def splitSumSquareNumbersSum(n_dig_max: int=16, base: int=10) -> int:
+
+    def squareIsSplitSquare(num: int, num_sqrt: int, n_d: int, base: int=10) -> bool:
+        i0 = n_d >> 1
+        i_set = {i0, n_d - i0}
+        for i in i_set:
+            base_pow = base ** i
+            num1, num2 = divmod(num, base_pow)
+            #num1 = 0
+            #for j in reversed(range(i)):
+            #    num1 = num1 * base + digs[j]
+            #num2 = 0
+            #for j in reversed(range(i, n_d)):
+            #    num2 = num2 * base + digs[j]
+            if (num2 * base) // base_pow and (num1 + num2) ** 2 == num:
+                return True
+        return False
+    
+    res = 0
+    next_base_pow = base ** 2
+    n_dig = 2
+    for num_sqrt in range(isqrt(base - 1) + 1, isqrt(base ** n_dig_max - 1) + 1):
+        num = num_sqrt * num_sqrt
+        while num >= next_base_pow:
+            next_base_pow *= base
+            n_dig += 1
+            #print(next_base_pow, n_dig)
+        if squareIsSplitSquare(num, num_sqrt, n_dig, base=base):
+            num = num_sqrt * num_sqrt
+            res += num
+            print(num)
+    return res
+
+
+# Problem 933
+def paperCuttingWinningMoveSumBasic(width_min: int=2, width_max: int=123, height_min: int=2, height_max: int=1234567) -> int:
+    # Using Sprague-Grundy theorem
+
+    memo = {}
+    def grundy(w: int, h: int) -> int:
+        if w == 1 or h == 1:
+            return 0
+        if w > h: w, h = h, w
+        args = (w, h)
+        if args in memo.keys(): return memo[args]
+        nums = SortedSet()
+        for i1 in range(1, w):
+            for i2 in range(1, h):
+                num = grundy(i1, i2) ^ grundy(w - i1, i2) ^ grundy(i1, h - i2) ^ grundy(w - i1, h - i2)
+                nums.add(num)
+        lft, rgt = 0, len(nums)
+        while lft < rgt:
+            mid = lft + ((rgt - lft) >> 1)
+            if nums[mid] == mid:
+                lft = mid + 1
+            else: rgt = mid
+        res = lft
+        memo[args] = res
+        return res
+    """
+    for w in range(19, 24):
+        for h in range(250, 400):
+            ans = 0
+            for w1 in range(1, w):
+                w2 = w - w1
+                for h1 in range(1, h):
+                    h2 = h - h1
+                    ans += not (grundy(w1, h1) ^ grundy(w1, h2) ^ grundy(w2, h1) ^ grundy(w2, h2))
+            print(f"C({w}, {h}) = {ans}")
+    """
+    res = 0
+    for w in range(width_min, width_max + 1):
+        print(f"w = {w} of {width_max}")
+        for w1 in range(1, w):
+            seen_lsts = {}
+            w2 = w - w1
+            for h in range(max(1, height_min >> 1), (height_max >> 1) + 1):
+                g = grundy(w1, h) ^ grundy(w2, h)
+                seen_lsts.setdefault(g, [])
+                res += (len(seen_lsts[g]) << 1) + 1
+                seen_lsts[g].append(h)
+            for h in range(max(1, height_min >> 1, (height_max >> 1) + 1), height_max):
+                g = grundy(w1, h) ^ grundy(w2, h)
+                seen_lsts.setdefault(g, [])
+                res += bisect.bisect_right(seen_lsts[g], height_max - h) << 1
+                seen_lsts[g].append(h)
+    return res
+    
+def paperCuttingWinningMoveSum(width_min: int=2, width_max: int=123, height_min: int=2, height_max: int=1234567) -> int:
+
+    # Using C(w, h + 1) = C(w, h) + w - 1 and C(w, 1) = 0 for all w and sufficiently large h
+    if height_max < width_max:
+        height_max, width_max = width_max, height_max
+        height_min, width_min = width_min, height_min
+    memo = {}
+    def grundy(w: int, h: int) -> int:
+        if w == 1 or h == 1:
+            return 0
+        if w > h: w, h = h, w
+        args = (w, h)
+        if args in memo.keys(): return memo[args]
+        nums = SortedSet()
+        for i1 in range(1, w):
+            for i2 in range(1, h):
+                num = grundy(i1, i2) ^ grundy(w - i1, i2) ^ grundy(i1, h - i2) ^ grundy(w - i1, h - i2)
+                nums.add(num)
+        lft, rgt = 0, len(nums)
+        while lft < rgt:
+            mid = lft + ((rgt - lft) >> 1)
+            if nums[mid] == mid:
+                lft = mid + 1
+            else: rgt = mid
+        res = lft
+        memo[args] = res
+        return res
+
+    h_min = max(height_min, 2)
+    w_min = max(width_min, 2)
+    res = 0
+    #for w in range(w_min, width_max + 1):
+    #    res += (w - 1) * ((height_max - 1) * height_max - (h_min) * (h_min - 1))
+    
+    req_run_len = 100
+    for w in range(w_min, width_max + 1):
+        print(f"w = {w} of {width_max}")
+        since = time.time()
+        ans = -float("inf")
+        d_run = 0
+        for h in range(h_min, height_max + 1):
+            prev = ans
+            ans = 0
+            for w1 in range(1, w):
+                w2 = w - w1
+                for h1 in range(1, h):
+                    h2 = h - h1
+                    ans += not (grundy(w1, h1) ^ grundy(w1, h2) ^ grundy(w2, h1) ^ grundy(w2, h2))
+            #print(f"C({w}, {h}) = {ans}")
+            res += ans
+            diff = ans - prev
+            if diff == w - 1:
+                d_run += 1
+                if d_run >= req_run_len: break
+            else: d_run = 0
+        else: continue
+        print(f"pattern starts at h = {h - req_run_len}")
+        #print(w, h, ans, (height_max - h) * ans + ((w - 1) * ((height_max - h + 1) * (height_max - h)) >> 1))
+        res += (height_max - h) * ans + ((w - 1) * ((height_max - h + 1) * (height_max - h)) >> 1)
+        print(f"iteration took {time.time() - since:.4f} seconds")
+    return res
+
 # Problem 934
 def unluckyPrimeCalculatorBruteForce(n: int, p_md: int, ps: Optional[SimplePrimeSieve]=None) -> int:
     if ps is None: ps = SimplePrimeSieve()
@@ -1413,8 +1564,18 @@ def xorEquationSolutionsCount(a_b_max: int=10 ** 7) -> int:
     return res
 
 if __name__ == "__main__":
-    to_evaluate = {935}
+    to_evaluate = {932}
     since0 = time.time()
+
+    if not to_evaluate or 932 in to_evaluate:
+        since = time.time()
+        res = splitSumSquareNumbersSum(n_dig_max=16, base=10)
+        print(f"Solution to Project Euler #932 = {res}, calculated in {time.time() - since:.4f} seconds")
+
+    if not to_evaluate or 933 in to_evaluate:
+        since = time.time()
+        res = paperCuttingWinningMoveSum(width_min=2, width_max=123, height_min=2, height_max=1234567)
+        print(f"Solution to Project Euler #933 = {res}, calculated in {time.time() - since:.4f} seconds")
 
     if not to_evaluate or 934 in to_evaluate:
         since = time.time()
@@ -1481,14 +1642,14 @@ for num in range(1, 17):
 #for s in ("aaaa", "ababab", "aabaab", "abcd"):
 #    print(s, calculateStringPrimitiveRoot(s))
 
-
+"""
 x1_inv = .5
 x2_inv = 2 - math.sqrt(2)
 x3_inv = 2 + math.sqrt(2) - math.sqrt(2 + 4 * math.sqrt(2))
 x4_inv = 8 - 5 * math.sqrt(2) + 4 * math.sqrt(3) - 3 * math.sqrt(6)
 print(x1_inv, x2_inv, x3_inv, x4_inv)
 print(1 / x1_inv, 1 / x2_inv, 1 / x3_inv, 1 / x4_inv)
-
+"""
 """
 a = 1 / (8 - 5 * math.sqrt(2) + 4 * math.sqrt(3) - 3 * math.sqrt(6))#(2 + math.sqrt(2) + math.sqrt(2 + 4 * math.sqrt(2))) / 4
 x = a - 1
