@@ -116,6 +116,37 @@ def paperCuttingWinningMoveSum(width_min: int=2, width_max: int=123, height_min:
     if height_max < width_max:
         height_max, width_max = width_max, height_max
         height_min, width_min = width_min, height_min
+
+    grundy_arr = []
+
+    def extendGrundy(num: int) -> int:
+        for h in range(len(grundy_arr), num + 1):
+            print(f"extending Grundy array to h = {h}")
+            grundy_arr.append([])
+            for w in range(min(h, width_max - 1) + 1):
+                nums = set()
+                curr = 0
+                for w1 in range(1, w):
+                    w2 = w - w1
+                    for h1 in range(1, h):
+                        h2 = h - h1
+                        #print(sorted([w1, h1]))
+                        num = 0
+                        for i1, i2 in [[w1, h1], [w1, h2], [w2, h1], [w2, h2]]:
+                            if i1 < i2: i1, i2 = i2, i1
+                            num ^= grundy_arr[i1][i2]
+                        if num == curr:
+                            for curr in itertools.count(num + 1):
+                                if curr not in nums: break
+                        nums.add(num)
+                grundy_arr[-1].append(curr)
+        return
+
+    def getGrundy(w: int, h: int) -> int:
+        if w > h: w, h = h, w
+        extendGrundy(h)
+        return grundy_arr[h][w]
+    """
     memo = {}
     def grundy(w: int, h: int) -> int:
         if w == 1 or h == 1:
@@ -137,7 +168,7 @@ def paperCuttingWinningMoveSum(width_min: int=2, width_max: int=123, height_min:
         res = lft
         memo[args] = res
         return res
-
+    """
     h_min = max(height_min, 2)
     w_min = max(width_min, 2)
     res = 0
@@ -157,7 +188,7 @@ def paperCuttingWinningMoveSum(width_min: int=2, width_max: int=123, height_min:
                 w2 = w - w1
                 for h1 in range(1, h):
                     h2 = h - h1
-                    ans += not (grundy(w1, h1) ^ grundy(w1, h2) ^ grundy(w2, h1) ^ grundy(w2, h2))
+                    ans += not (getGrundy(w1, h1) ^ getGrundy(w1, h2) ^ getGrundy(w2, h1) ^ getGrundy(w2, h2))
             #print(f"C({w}, {h}) = {ans}")
             res += ans
             diff = ans - prev
@@ -1564,7 +1595,7 @@ def xorEquationSolutionsCount(a_b_max: int=10 ** 7) -> int:
     return res
 
 if __name__ == "__main__":
-    to_evaluate = {932}
+    to_evaluate = {933}
     since0 = time.time()
 
     if not to_evaluate or 932 in to_evaluate:
