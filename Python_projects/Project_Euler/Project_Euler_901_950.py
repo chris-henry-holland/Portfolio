@@ -4,7 +4,6 @@ import bisect
 import heapq
 import itertools
 import math
-import numpy as np
 import os
 import random
 import sys
@@ -175,7 +174,7 @@ def paperCuttingWinningMoveSum(width_min: int=2, width_max: int=123, height_min:
     #for w in range(w_min, width_max + 1):
     #    res += (w - 1) * ((height_max - 1) * height_max - (h_min) * (h_min - 1))
     
-    req_run_len = 100
+    req_run_len = 150
     for w in range(w_min, width_max + 1):
         print(f"w = {w} of {width_max}")
         since = time.time()
@@ -203,14 +202,106 @@ def paperCuttingWinningMoveSum(width_min: int=2, width_max: int=123, height_min:
         print(f"iteration took {time.time() - since:.4f} seconds")
     return res
 
+def paperCuttingWinningMoveSum2(width_min: int=2, width_max: int=123, height_min: int=2, height_max: int=1234567) -> int:
+
+    # Using C(w, h + 1) = C(w, h) + w - 1 and C(w, 1) = 0 for all w and sufficiently large h
+    if height_max < width_max:
+        height_max, width_max = width_max, height_max
+        height_min, width_min = width_min, height_min
+
+    grundy_arr = []
+
+    def extendGrundy(num: int) -> int:
+        for h in range(len(grundy_arr), num + 1):
+            if not h % 10:
+                print(f"extending Grundy array to h = {h}")
+            grundy_arr.append([])
+            for w in range(min(h, width_max - 1) + 1):
+                nums = set()
+                curr = 0
+                for w1 in range(1, w):
+                    w2 = w - w1
+                    for h1 in range(1, h):
+                        h2 = h - h1
+                        #print(sorted([w1, h1]))
+                        num = 0
+                        for i1, i2 in [[w1, h1], [w1, h2], [w2, h1], [w2, h2]]:
+                            if i1 < i2: i1, i2 = i2, i1
+                            num ^= grundy_arr[i1][i2]
+                        if num == curr:
+                            for curr in itertools.count(num + 1):
+                                if curr not in nums: break
+                        nums.add(num)
+                grundy_arr[-1].append(curr)
+        return
+
+    def getGrundy(w: int, h: int) -> int:
+        if w > h: w, h = h, w
+        extendGrundy(h)
+        return grundy_arr[h][w]
+
+        
+    h_min = max(height_min, 2)
+    w_min = max(width_min, 2)
+    res = 0
+    #for w in range(w_min, width_max + 1):
+    #    res += (w - 1) * ((height_max - 1) * height_max - (h_min) * (h_min - 1))
+    
+    def calculateTotal(h_max: int) -> int:
+        print(f"calculating total for h_max = {h_max}")
+        res = 0
+        for w in range(w_min, width_max + 1):
+            #print(f"w = {w} of {width_max}")
+            for w1 in range(1, w):
+                seen_lsts = {}
+                w2 = w - w1
+                for h in range(max(1, h_min >> 1), (h_max >> 1) + 1):
+                    g = getGrundy(w1, h) ^ getGrundy(w2, h)
+                    seen_lsts.setdefault(g, [])
+                    res += (len(seen_lsts[g]) << 1) + 1
+                    seen_lsts[g].append(h)
+                for h in range(max(1, h_min >> 1, (h_max >> 1) + 1), h_max):
+                    g = getGrundy(w1, h) ^ getGrundy(w2, h)
+                    seen_lsts.setdefault(g, [])
+                    res += bisect.bisect_right(seen_lsts[g], h_max - h) << 1
+                    seen_lsts[g].append(h)
+        return res
+
+    #req_run_len = 150
+    #tot = 0
+    target_diff = (width_max * (width_max - 1) - (w_min - 1) * (w_min - 2)) >> 1
+    h_mx = 2
+    while h_mx < height_max:
+        h1 = h_mx - 1
+        h2 = h_mx
+        h3 = h_mx + 1
+        h4 = h_mx + 2
+        tot1 = calculateTotal(h1)
+        tot2 = calculateTotal(h2)
+        tot3 = calculateTotal(h3)
+        d1 = tot3 - 2 * tot2 + tot1
+        if d1 != target_diff:
+            print(f"difference = {d1}, target difference = {target_diff}")
+            h_mx <<= 1
+            continue
+        tot4 = calculateTotal(h4)
+        
+        d2 = tot4 - 2 * tot3 + tot2
+        print(f"differences = {d1}, {d2}, target difference = {target_diff}")
+        if d2 == target_diff:
+            print("target difference found")
+            return tot1 + (tot2 - tot1) * (height_max - h1) + target_diff * (((height_max - h1) * (height_max - h1 - 1)) >> 1)
+        h_mx <<= 1
+    return calculateTotal(height_max)
+
 # Problem 934
-def unluckyPrimeCalculatorBruteForce(n: int, p_md: int, ps: Optional[SimplePrimeSieve]=None) -> int:
+def unluckyPrimeCalculatorBruteForce(n: int, p_md: int, ps: Optional["SimplePrimeSieve"]=None) -> int:
     if ps is None: ps = SimplePrimeSieve()
     for p in ps.endlessPrimeGenerator():
         if (n % p) % p_md: return p
     return -1
 
-def unluckyPrimeSumBruteForce(n_max: int, p_md: int=7, ps: Optional[SimplePrimeSieve]=None) -> int:
+def unluckyPrimeSumBruteForce(n_max: int, p_md: int=7, ps: Optional["SimplePrimeSieve"]=None) -> int:
     if ps is None: ps = SimplePrimeSieve()
     res = 0
     for n in range(1, n_max + 1):
@@ -219,7 +310,7 @@ def unluckyPrimeSumBruteForce(n_max: int, p_md: int=7, ps: Optional[SimplePrimeS
         res += p
     return res
 
-def unluckyPrimeSum(n_max: int=10 ** 17, p_md: int=7, ps: Optional[SimplePrimeSieve]=None) -> int:
+def unluckyPrimeSum(n_max: int=10 ** 17, p_md: int=7, ps: Optional["SimplePrimeSieve"]=None) -> int:
     """
     Solution to Project Euler #934
     """
@@ -511,8 +602,203 @@ def rollingRegularPolygonReturnAfterAtMostNRollsCount(n_roll_max: int, n_sides: 
     return res
     """
 
+# Problem 936
+def peerlessTreesWithMaxVertexCount(n_vertex_max: int=50) -> int:
+
+    # dim 0: degree of root (including incoming edge)
+    # dim 1: max number of vertices in the rooted trees
+    # dim 2: max depth of the rooted trees
+    arr = [[], [[0], [1]]]
+
+    d_mx = (n_vertex_max - 1) >> 1
+    v_mx = n_vertex_max - d_mx - 1
+
+    def recur(idx: int, curr: int, v_remain: int, prev_depth: int, prev_n_v: int, root_deg: int, n_rpt: int=1) -> int:
+        if not curr: return 0
+        if idx == root_deg - 2:
+            depth_max = min(v_remain - 1, prev_depth + (prev_n_v >= v_remain))
+            res = getRootedCountRootDegreeAndDepthCumu(v_remain + 1, n_v=v_remain, depth_max=depth_max)
+            if v_remain + 1 >= root_deg:
+                res -= getRootedCountRootDegreeAndDepthCumu(root_deg, n_v=v_remain, depth_max=depth_max) - getRootedCountRootDegreeAndDepthCumu(root_deg - 1, n_v=v_remain, depth_max=depth_max) 
+            res *= curr
+            if v_remain == prev_n_v and v_remain > prev_depth:
+                div = n_rpt + 1
+                res -= (curr * (div - 1) * getRootedCount(prev_depth, n_v=prev_n_v, depth=prev_depth)) // div
+            return res
+        res = 0
+        for depth in range(min(prev_depth - 1, v_remain - (root_deg - idx - 1))):
+            for n_v in range(depth + 1, v_remain - (root_deg - idx - 1)):
+                curr2 = getRootedCountRootDegreeCumu(n_v, n_v, depth)
+                if n_v >= root_deg:
+                    curr2 -= getRootedCount(root_deg, n_v, depth)
+                if not curr2: continue
+                res += recur(idx + 1, curr * curr2, v_remain - n_v, depth, n_v, root_deg, n_rpt=1)
+        if prev_depth < v_remain:
+            for n_v in range(prev_depth + 1, min(prev_n_v, v_remain - (root_deg - idx - 1))):
+                curr2 = getRootedCountRootDegreeCumu(n_v, n_v, prev_depth)
+                if n_v >= root_deg:
+                    curr2 -= getRootedCount(root_deg, n_v, prev_depth)
+                if not curr2: continue
+                res += recur(idx + 1, curr * curr2, v_remain - n_v, prev_depth, n_v, root_deg, n_rpt=1)
+            if v_remain - (root_deg - idx - 1) > prev_n_v:
+                n_v = prev_n_v
+                n_rpt2 = n_rpt + 1
+                curr2 = (getRootedCountRootDegreeCumu(n_v, n_v, prev_depth) - n_rpt)
+                if n_v >= root_deg:
+                    curr2 -= getRootedCount(root_deg, n_v, prev_depth)
+                if curr2:
+                    res += recur(idx + 1, curr * curr2, v_remain - n_v, prev_depth, n_v, root_deg, n_rpt=n_rpt2) // n_rpt2
+        return res
+
+    memo1 = {}
+    def getRootedCount(root_deg: int, n_v: int, depth: int) -> int:
+        if root_deg < 1: return 0
+        elif n_v < 1 or depth < 0: return 0
+        elif depth > n_v - 1: return 0
+        elif root_deg == 1:
+            return (n_v == 1 and depth == 0)
+        args = (root_deg, n_v, depth)
+        if args in memo1.keys(): return memo1[args]
+        if root_deg == 2:
+            # Exactly one sub-tree
+            res = getRootedCountRootDegreeCumu(n_v, n_v - 1, depth - 1)
+            memo1[args] = res
+            return res
+        #v_remain = n_v
+        #curr = (depth, n_v + 1)
+        #seen = {}
+        
+        res = 0
+        for n_v2 in range(depth, n_v - root_deg + 2):
+            curr = getRootedCountRootDegreeCumu(n_v2, n_v2, depth - 1)
+            if n_v2 >= root_deg:
+                curr -= getRootedCount(root_deg, n_v2, depth - 1)
+            res += recur(1, curr, n_v - n_v2 - 1, depth, n_v, root_deg, n_rpt=1)
+
+        memo1[args] = res
+        return res 
+
+    memo2 = {}
+    def getRootedCountCumu(root_deg: int, n_v_max: int, depth_max: int) -> int:
+        if root_deg < 1: return 0
+        elif n_v_max < 1 or depth_max < 0: return 0
+        args = (root_deg, n_v_max, depth_max)
+        if args in memo2.keys(): return memo2[args]
+        res = getRootedCount(root_deg, n_v_max, depth_max) + getRootedCountCumu(root_deg, n_v_max - 1, depth_max) +\
+            getRootedCountCumu(root_deg, n_v_max, depth_max - 1) - getRootedCountCumu(root_deg, n_v_max - 1, depth_max - 1)
+        memo2[args] = res
+        return res
+
+    memo3 = {}
+    def getRootedCountRootDegreeCumu(root_deg_max: int, n_v: int, depth: int) -> int:
+        if root_deg_max < 1: return 0
+        elif n_v < 1 or depth < 0: return 0
+        args = (root_deg_max, n_v, depth)
+        if args in memo3.keys(): return memo3[args]
+        res = getRootedCount(root_deg_max, n_v, depth) + getRootedCountRootDegreeCumu(root_deg_max - 1, n_v, depth)
+        memo3[args] = res
+        return res
+    
+    memo4 = {}
+    def getRootedCountRootDegreeAndDepthCumu(root_deg_max: int, n_v: int, depth_max: int) -> int:
+        if root_deg_max < 1: return 0
+        elif n_v < 1 or depth_max < 0: return 0
+        args = (root_deg_max, n_v, depth_max)
+        if args in memo4.keys(): return memo4[args]
+        res = getRootedCount(root_deg_max, n_v, depth_max) + getRootedCountRootDegreeAndDepthCumu(root_deg_max - 1, n_v, depth_max) +\
+            getRootedCountRootDegreeAndDepthCumu(root_deg_max, n_v, depth_max - 1) - getRootedCountRootDegreeAndDepthCumu(root_deg_max - 1, n_v, depth_max - 1)
+        memo4[args] = res
+        return res
+
+    memo5 = {}
+    def getRootedCountVertexCountCumu(root_deg: int, n_v_max: int, depth: int) -> int:
+        if root_deg < 1: return 0
+        elif n_v_max < 1 or depth < 0: return 0
+        args = (root_deg, n_v_max, depth)
+        if args in memo5.keys(): return memo5[args]
+        res = getRootedCount(root_deg, n_v_max, depth) + getRootedCountVertexCountCumu(root_deg, n_v_max - 1, depth)
+        memo5[args] = res
+        return res
+
+    memo6 = {}
+    def getRootedCountRootDegreeAndVertexCountCumu(root_deg_max: int, n_v_max: int, depth: int) -> int:
+        if root_deg_max < 1: return 0
+        elif n_v_max < 1 or depth < 0: return 0
+        args = (root_deg_max, n_v_max, depth)
+        if args in memo6.keys(): return memo6[args]
+        res = getRootedCount(root_deg_max, n_v_max, depth) + getRootedCountRootDegreeAndVertexCountCumu(root_deg_max, n_v_max - 1, depth) +\
+            getRootedCountRootDegreeAndVertexCountCumu(root_deg_max - 1, n_v_max, depth) - getRootedCountRootDegreeAndVertexCountCumu(root_deg_max - 1, n_v_max - 1, depth)
+        memo6[args] = res
+        return res
+
+    if n_vertex_max < 1: return 0
+    elif n_vertex_max <= 2: return 1
+    elif n_vertex_max == 3: return 2
+    res = 2
+    # Tree centre is two adjacent nodes
+    for depth in range(1, d_mx + 1):
+        for n_v1 in range(depth + 1, (n_vertex_max >> 1) + 1):
+            for degree1 in range(2, n_v1 + 1):
+                #mult = getRootedCount(degree1, n_v1, depth)
+                n_v2_min = n_v1
+                n_v2_max = n_vertex_max - n_v1
+                ans = getRootedCountRootDegreeAndVertexCountCumu(n_v2_max, n_v2_max, depth) -\
+                    getRootedCountRootDegreeAndVertexCountCumu(n_v2_min, n_v2_min, depth)
+                if n_v2_max >= degree1:
+                    # Ensure the two roots have different degrees
+                    ans -= getRootedCountVertexCountCumu(degree1, n_v2_max, depth) - getRootedCountVertexCountCumu(degree1, n_v2_min, depth)
+                #for degree2 in range(2, n_v2_max + 1):
+                #    if degree2 == degree1: continue
+                #    ans += getRootedCountVertexCountCumu(degree2, n_v2_max, depth) - getRootedCountRootVertexCountCumu(degree2, n_v1, depth)
+                #ans *= mult
+                #ans2 = 0
+                # Avoiding double counting when the two nodes central nodes have the same number of vertices
+                # by only counting those for which degree2 is less than degree1 (recall they cannot be equal)
+                ans += getRootedCountRootDegreeCumu(degree1 - 1, n_v1, depth)
+                res += ans * getRootedCount(degree1, n_v1, depth)
+
+    # Trees with a single centre
+    for centre_degree in range(2, n_vertex_max):
+        res += 1 # Every vertex other than centre is a leaf
+        for depth in range(1, d_mx + 1):
+            for tot_n_v in range((depth + 1) * 2 + 1 + (centre_degree - 2), n_vertex_max + 1):
+                for n_v1 in range(depth + 1, tot_n_v - 1 - (depth + 1) - (centre_degree - 2) + 1):
+                    curr2 = getRootedCountRootDegreeCumu(n_v1, n_v1, depth)
+                    if n_v1 >= centre_degree:
+                        curr2 -= getRootedCount(centre_degree, n_v1, depth)
+                    v_remain = tot_n_v - n_v1 - 1
+                    for n_v2 in range(depth + 1, min(n_v1, v_remain - centre_degree - 2 + 1)):
+                        n_rpt = 1
+                        if n_v2 == n_v1:
+                            curr3 = curr2 - 1
+                            n_rpt += 1
+                        else:
+                            curr3 = getRootedCountRootDegreeCumu(n_v2, n_v2, depth)
+                            if n_v2 >= centre_degree:
+                                curr3 -= getRootedCount(centre_degree, n_v2, depth)
+                        res += recur(2, curr2 * curr3, v_remain - n_v2, depth, n_v2, centre_degree, n_rpt=n_rpt) // n_rpt
+    return res
+
+
+    """
+    for v in range(2, v_mx + 1):
+        for d in range(1, min(d_mx, v) + 1):
+            for deg0 in range(2, v - d + 1):
+                if len(arr) <= deg0:
+                    arr.append([])
+                while len(arr[deg0]) <= v:
+                    arr[deg0].append([])
+                while len(arr[deg0][v] <= d):
+                    arr[deg0][v].append(0)
+    """
+
+
+    #memo1 = {}
+    #def rootedTreeWithMaxDepthUpToMaxVertices(max_depth: int, max_n_vertices: int, req_max_depth: bool=True) -> int:
+
+
 # Problem 938
-def redBlackCardGameLastCardBlackProbabilityFraction(n_red_init: int, n_black_init: int) -> CustomFraction:
+def redBlackCardGameLastCardBlackProbabilityFraction(n_red_init: int, n_black_init: int) -> "CustomFraction":
 
     prev = [0] * (n_red_init + 1)
     row = [0] * (n_red_init + 1)
@@ -1595,7 +1881,7 @@ def xorEquationSolutionsCount(a_b_max: int=10 ** 7) -> int:
     return res
 
 if __name__ == "__main__":
-    to_evaluate = {933}
+    to_evaluate = {936}
     since0 = time.time()
 
     if not to_evaluate or 932 in to_evaluate:
@@ -1605,7 +1891,7 @@ if __name__ == "__main__":
 
     if not to_evaluate or 933 in to_evaluate:
         since = time.time()
-        res = paperCuttingWinningMoveSum(width_min=2, width_max=123, height_min=2, height_max=1234567)
+        res = paperCuttingWinningMoveSum2(width_min=2, width_max=123, height_min=2, height_max=1234567)
         print(f"Solution to Project Euler #933 = {res}, calculated in {time.time() - since:.4f} seconds")
 
     if not to_evaluate or 934 in to_evaluate:
@@ -1617,6 +1903,11 @@ if __name__ == "__main__":
         since = time.time()
         res = rollingRegularPolygonReturnAfterAtMostNRollsCountBasic(n_roll_max=100, n_sides=4)
         print(f"Solution to Project Euler #935 = {res}, calculated in {time.time() - since:.4f} seconds")
+
+    if not to_evaluate or 936 in to_evaluate:
+        since = time.time()
+        res = peerlessTreesWithMaxVertexCount(n_vertex_max=30)
+        print(f"Solution to Project Euler #936 = {res}, calculated in {time.time() - since:.4f} seconds")
 
     if not to_evaluate or 938 in to_evaluate:
         since = time.time()
