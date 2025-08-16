@@ -616,52 +616,87 @@ def peerlessTreesWithMaxVertexCount(n_vertex_max: int=50) -> int:
     def recur(idx: int, curr: int, v_remain: int, prev_depth: int, prev_n_v: int, root_deg: int, n_rpt: int=1) -> int:
         if not curr: return 0
         if idx == root_deg - 2:
-            depth_max = min(v_remain - 1, prev_depth + (prev_n_v >= v_remain))
-            res = getRootedCountRootDegreeAndDepthCumu(v_remain + 1, n_v=v_remain, depth_max=depth_max)
+            #print("hi")
+            #print(idx, curr, v_remain, prev_depth, prev_n_v, root_deg, n_rpt)
+            depth_max = min(v_remain, prev_depth - (v_remain > prev_n_v))# + (prev_n_v >= v_remain))
+            res = getRootedCountRootDegreeAndDepthCumu(v_remain + 1, n_v=v_remain, depth_max=depth_max - 1)
+            #print(f"res = {res}")
             if v_remain + 1 >= root_deg:
-                res -= getRootedCountRootDegreeAndDepthCumu(root_deg, n_v=v_remain, depth_max=depth_max) - getRootedCountRootDegreeAndDepthCumu(root_deg - 1, n_v=v_remain, depth_max=depth_max) 
+                res -= getRootedCountRootDegreeAndDepthCumu(root_deg, n_v=v_remain, depth_max=depth_max - 1) - getRootedCountRootDegreeAndDepthCumu(root_deg - 1, n_v=v_remain, depth_max=depth_max - 1) 
+            #print(res)
             res *= curr
             if v_remain == prev_n_v and v_remain > prev_depth:
                 div = n_rpt + 1
                 res -= (curr * (div - 1) * getRootedCount(prev_depth, n_v=prev_n_v, depth=prev_depth)) // div
+            #print(f"res = {res}")
             return res
         res = 0
-        for depth in range(min(prev_depth - 1, v_remain - (root_deg - idx - 1))):
-            for n_v in range(depth + 1, v_remain - (root_deg - idx - 1)):
-                curr2 = getRootedCountRootDegreeCumu(n_v, n_v, depth)
+        #print(f"depth range = [1, {min(prev_depth, v_remain - (root_deg - idx - 2)) + 1})")
+        for depth in range(1, min(prev_depth - 1, v_remain - (root_deg - idx - 2)) + 1):
+            #print(f"v_remain = {v_remain}, root_deg = {root_deg}, idx = {idx}, n_v range = [{depth}, {v_remain - (root_deg - idx - 2) + 1})")
+            for n_v in range(depth, v_remain - (root_deg - idx - 2) + 1):
+                #print(f"n_v = {n_v}, depth = {depth}")
+                curr2 = getRootedCountRootDegreeCumu(n_v, n_v, depth - 1)
                 if n_v >= root_deg:
-                    curr2 -= getRootedCount(root_deg, n_v, depth)
+                    curr2 -= getRootedCount(root_deg, n_v, depth - 1)
+                #print(f"curr2 = {curr2}")
                 if not curr2: continue
                 res += recur(idx + 1, curr * curr2, v_remain - n_v, depth, n_v, root_deg, n_rpt=1)
-        if prev_depth < v_remain:
-            for n_v in range(prev_depth + 1, min(prev_n_v, v_remain - (root_deg - idx - 1))):
-                curr2 = getRootedCountRootDegreeCumu(n_v, n_v, prev_depth)
+        #print(f"main loop res = {res}")
+        if prev_depth <= v_remain:
+            #print("hi2")
+            #print(prev_depth, v_remain, root_deg, idx, prev_n_v + 1, v_remain - (root_deg - idx - 2))
+            for n_v in range(prev_depth, min(prev_n_v - 1, v_remain - (root_deg - idx - 2)) + 1):
+                #print(f"n_v = {n_v}, prev_depth = {prev_depth}")
+                curr2 = getRootedCountRootDegreeCumu(n_v, n_v, prev_depth - 1)
                 if n_v >= root_deg:
-                    curr2 -= getRootedCount(root_deg, n_v, prev_depth)
+                    curr2 -= getRootedCount(root_deg, n_v, prev_depth - 1)
+                #print(f"curr2 2 = {curr2}")
                 if not curr2: continue
                 res += recur(idx + 1, curr * curr2, v_remain - n_v, prev_depth, n_v, root_deg, n_rpt=1)
-            if v_remain - (root_deg - idx - 1) > prev_n_v:
+            #print(f"post depth match res = {res}")
+            if v_remain - (root_deg - idx - 2) >= prev_n_v:
                 n_v = prev_n_v
                 n_rpt2 = n_rpt + 1
-                curr2 = (getRootedCountRootDegreeCumu(n_v, n_v, prev_depth) - n_rpt)
+                curr2 = (getRootedCountRootDegreeCumu(n_v, n_v, prev_depth - 1) + n_rpt)
                 if n_v >= root_deg:
-                    curr2 -= getRootedCount(root_deg, n_v, prev_depth)
+                    curr2 -= getRootedCount(root_deg, n_v, prev_depth - 1)
+                #print(f"curr2 3 = {curr2}")
                 if curr2:
+                    print("repeat found")
                     res += recur(idx + 1, curr * curr2, v_remain - n_v, prev_depth, n_v, root_deg, n_rpt=n_rpt2) // n_rpt2
+            #print(f"post duplicates res = {res}")
+        #print(f"overall res = {res}")
         return res
 
     memo1 = {}
     def getRootedCount(root_deg: int, n_v: int, depth: int) -> int:
+        
+        if not depth:
+            #print("hi1")
+            return int(n_v == 1 and root_deg == 1)
+        elif depth == 1:
+            return int(n_v == root_deg)
         if root_deg < 1: return 0
         elif n_v < 1 or depth < 0: return 0
-        elif depth > n_v - 1: return 0
+        elif depth > n_v - root_deg + 1: return 0
         elif root_deg == 1:
-            return (n_v == 1 and depth == 0)
+            #print("hi2")
+            return int(n_v == 1 and depth == 0)
         args = (root_deg, n_v, depth)
-        if args in memo1.keys(): return memo1[args]
+        if args in memo1.keys():
+            return memo1[args]
+        ref = None#(4, 4, 1)
+        if (root_deg, n_v, depth) == ref:
+            print("***************************")
         if root_deg == 2:
             # Exactly one sub-tree
+            
             res = getRootedCountRootDegreeCumu(n_v, n_v - 1, depth - 1)
+            if n_v - 1 >= root_deg:
+                res -= getRootedCount(root_deg, n_v - 1, depth - 1)
+            if args == ref:
+                print(res)
             memo1[args] = res
             return res
         #v_remain = n_v
@@ -669,13 +704,27 @@ def peerlessTreesWithMaxVertexCount(n_vertex_max: int=50) -> int:
         #seen = {}
         
         res = 0
+        if args == ref:
+            print(f"n_v2 range: [{depth}, {n_v - root_deg + 2})")
         for n_v2 in range(depth, n_v - root_deg + 2):
+            
             curr = getRootedCountRootDegreeCumu(n_v2, n_v2, depth - 1)
             if n_v2 >= root_deg:
                 curr -= getRootedCount(root_deg, n_v2, depth - 1)
-            res += recur(1, curr, n_v - n_v2 - 1, depth, n_v, root_deg, n_rpt=1)
+            #print(f"n_v2 = {n_v2}, curr = {curr}")
+            if not curr: continue
+            ans = recur(1, curr, n_v - n_v2 - 1, depth, n_v2, root_deg, n_rpt=1)
+            if args == ref:
+                print(f"for n_v2 = {n_v2}, ans = {ans}")
+
+            res += ans
+            #if depth == 1:
+            #    print(f"root_deg = {root_deg}, n_v = {n_v}, depth = {depth}, n_v2 = {n_v2}, curr = {curr}, ans = {ans}")
 
         memo1[args] = res
+        if (root_deg, n_v, depth) == ref:
+            print("***************************")
+            print(f"res = {res}")
         return res 
 
     memo2 = {}
@@ -733,20 +782,32 @@ def peerlessTreesWithMaxVertexCount(n_vertex_max: int=50) -> int:
 
     if n_vertex_max < 1: return 0
     elif n_vertex_max <= 2: return 1
-    elif n_vertex_max == 3: return 2
-    res = 2
+    #elif n_vertex_max == 3: return 2
+    res = 0
     # Tree centre is two adjacent nodes
     for depth in range(1, d_mx + 1):
         for n_v1 in range(depth + 1, (n_vertex_max >> 1) + 1):
             for degree1 in range(2, n_v1 + 1):
+                mult = getRootedCount(degree1, n_v1, depth)
                 #mult = getRootedCount(degree1, n_v1, depth)
-                n_v2_min = n_v1
+                n_v2_min = n_v1 + 1
                 n_v2_max = n_vertex_max - n_v1
-                ans = getRootedCountRootDegreeAndVertexCountCumu(n_v2_max, n_v2_max, depth) -\
-                    getRootedCountRootDegreeAndVertexCountCumu(n_v2_min, n_v2_min, depth)
+                cumu1 = getRootedCountRootDegreeAndVertexCountCumu(n_v2_max, n_v2_max, depth)
+                cumu2 = getRootedCountRootDegreeAndVertexCountCumu(n_v2_max, n_v2_min - 1, depth)
+                #print(f"n_v1 = {n_v1}, degree1 = {degree1}, degree_max = {n_v2_max}, depth = {depth}, n_v2 range = [{n_v2_min}, {n_v2_max}], lower cumu = {cumu2}, upper_cumu = {cumu1}")
+                #print(n_v2_min, n_v2_max + 1)
+                #for n_v2 in range(n_v2_min, n_v2_max + 1):
+                #    for degree in range(1, n_v2_max + 1):
+                #        print(degree, n_v2, depth, getRootedCount(degree, n_v2, depth))
+                ans = cumu1 - cumu2
+                #print(f"ans0 = {ans}")
                 if n_v2_max >= degree1:
                     # Ensure the two roots have different degrees
-                    ans -= getRootedCountVertexCountCumu(degree1, n_v2_max, depth) - getRootedCountVertexCountCumu(degree1, n_v2_min, depth)
+                    
+                    sub = getRootedCountVertexCountCumu(degree1, n_v2_max, depth) - getRootedCountVertexCountCumu(degree1, n_v2_min - 1, depth)
+                    #print(f"subtracting {sub}")
+                    ans -= sub
+                #print(f"ans1 = {ans}")
                 #for degree2 in range(2, n_v2_max + 1):
                 #    if degree2 == degree1: continue
                 #    ans += getRootedCountVertexCountCumu(degree2, n_v2_max, depth) - getRootedCountRootVertexCountCumu(degree2, n_v1, depth)
@@ -755,29 +816,73 @@ def peerlessTreesWithMaxVertexCount(n_vertex_max: int=50) -> int:
                 # Avoiding double counting when the two nodes central nodes have the same number of vertices
                 # by only counting those for which degree2 is less than degree1 (recall they cannot be equal)
                 ans += getRootedCountRootDegreeCumu(degree1 - 1, n_v1, depth)
-                res += ans * getRootedCount(degree1, n_v1, depth)
-
+                
+                ans2 = ans * mult
+                print(f"depth = {depth}, n_v1 = {n_v1}, n_v2 range = [{n_v2_min - 1}, {n_v2_max}], degree1 = {degree1}, mult = {mult}, count = {ans2}")
+                res += ans2
+    print(f"\ndouble centre: {res}\n")
+    res2 = n_vertex_max - 1 # Every vertex other than the centre is a leaf, plus the single node graph
     # Trees with a single centre
-    for centre_degree in range(2, n_vertex_max):
-        res += 1 # Every vertex other than centre is a leaf
+    # Centre degree 2
+    centre_degree = 2
+    #print(f"\ncentre_degree = {centre_degree}")
+    for depth in range(1, d_mx + 1):
+        #print(f"depth = {depth}")
+        for tot_n_v in range((depth + 1) * 2 + 1 + (centre_degree - 2), n_vertex_max + 1):
+            #print(f"tot_n_v = {tot_n_v}")
+            for n_v1 in range(max(depth + 1, (tot_n_v >> 1)), tot_n_v - depth - 1):
+                #print(f"n_v1 = {n_v1}")
+                curr2 = getRootedCountRootDegreeCumu(n_v1, n_v1, depth)
+                if n_v1 >= centre_degree:
+                    curr2 -= getRootedCount(centre_degree, n_v1, depth)
+                n_v2 = tot_n_v - n_v1 - 1
+                #print(f"n_v2 = {n_v2}")
+                n_rpt = 1
+                if n_v2 == n_v1:
+                    curr3 = curr2 + 1
+                    n_rpt += 1
+                else:
+                    curr3 = getRootedCountRootDegreeCumu(n_v2, n_v2, depth)
+                    if n_v2 >= centre_degree:
+                        curr3 -= getRootedCount(centre_degree, n_v2, depth)
+                ans0 = curr2 * curr3
+                ans = ans0 // n_rpt
+                print(f"centre_degree = {centre_degree}, depth = {depth}, tot_n_v = {tot_n_v}, n_v1 = {n_v1}, n_v2 = {n_v2}, curr2 = {curr2}, curr3 = {curr3}, count0 = {ans0}, count = {ans}")
+                res2 += ans
+
+    # Centre degree 3 or more
+    for centre_degree in range(3, n_vertex_max):
+        #print(f"\ncentre_degree = {centre_degree}")
+        #res2 += 1 # Every vertex other than centre is a leaf
         for depth in range(1, d_mx + 1):
+            #print(f"depth = {depth}")
             for tot_n_v in range((depth + 1) * 2 + 1 + (centre_degree - 2), n_vertex_max + 1):
+                #print(f"tot_n_v = {tot_n_v}")
                 for n_v1 in range(depth + 1, tot_n_v - 1 - (depth + 1) - (centre_degree - 2) + 1):
+                    #print(f"n_v1 = {n_v1}")
                     curr2 = getRootedCountRootDegreeCumu(n_v1, n_v1, depth)
                     if n_v1 >= centre_degree:
                         curr2 -= getRootedCount(centre_degree, n_v1, depth)
                     v_remain = tot_n_v - n_v1 - 1
-                    for n_v2 in range(depth + 1, min(n_v1, v_remain - centre_degree - 2 + 1)):
+                    #print(f"v_remain = {v_remain}, n_v2 range = [{depth + 1}, {min(n_v1, v_remain - centre_degree + 2) + 1})")
+                    #n_v2_mn = max(depth + 1, )
+                    for n_v2 in range(depth + 1, min(n_v1, v_remain - centre_degree + 2) + 1):
+                        #print(f"n_v2 = {n_v2}")
                         n_rpt = 1
                         if n_v2 == n_v1:
-                            curr3 = curr2 - 1
+                            curr3 = curr2 + 1
                             n_rpt += 1
                         else:
                             curr3 = getRootedCountRootDegreeCumu(n_v2, n_v2, depth)
                             if n_v2 >= centre_degree:
                                 curr3 -= getRootedCount(centre_degree, n_v2, depth)
-                        res += recur(2, curr2 * curr3, v_remain - n_v2, depth, n_v2, centre_degree, n_rpt=n_rpt) // n_rpt
-    return res
+                        #print(f"calling recur() with curr = {curr2 * curr3}, v_remain = {v_remain - n_v2}, prev_depth = {depth + 1}, n_v2 = {n_v2}, root_degree = {centre_degree}")
+                        ans0 = recur(1, curr2 * curr3, v_remain - n_v2, depth + 1, n_v2, centre_degree, n_rpt=n_rpt)
+                        ans = ans0 // n_rpt
+                        print(f"centre_degree = {centre_degree}, depth = {depth}, tot_n_v = {tot_n_v}, n_v1 = {n_v1}, n_v2 = {n_v2}, curr2 = {curr2}, curr3 = {curr3}, count0 = {ans0}, count = {ans}")
+                        res2 += ans
+    print(f"\nsingle centre: {res2}\n")
+    return res + res2
 
 
     """
@@ -1906,7 +2011,7 @@ if __name__ == "__main__":
 
     if not to_evaluate or 936 in to_evaluate:
         since = time.time()
-        res = peerlessTreesWithMaxVertexCount(n_vertex_max=30)
+        res = peerlessTreesWithMaxVertexCount(n_vertex_max=20)
         print(f"Solution to Project Euler #936 = {res}, calculated in {time.time() - since:.4f} seconds")
 
     if not to_evaluate or 938 in to_evaluate:
