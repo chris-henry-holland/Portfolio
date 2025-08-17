@@ -541,7 +541,7 @@ def rollingRegularPolygonReturnAfterAtMostNRollsCount(n_roll_max: int, n_sides: 
             ans0 = (mx_abs - mn_abs) // intvl + 1
             
             if ans0 <= 0: continue
-            print(corner, num, i, (mn_abs, mx_abs), intvl, ans0)
+            #print(corner, num, i, (mn_abs, mx_abs), intvl, ans0)
             
             pf = ps.primeFactorisation(i)
             if any(x & 1 for x in pf.values()) or not any(x % 4 for x in pf.values()):
@@ -556,14 +556,14 @@ def rollingRegularPolygonReturnAfterAtMostNRollsCount(n_roll_max: int, n_sides: 
             
         
         res += ans
-        print(corner, ans, res)
+        #print(corner, ans, res)
         #if ans0 > 0:
         #    cnt_arr[corner] += ans0
         #res += cnt_arr[corner]
         #for num in range(2 * corner, n_roll_max + 1, corner):
         #    cnt_arr[num] -= cnt_arr[corner]
         #print(cnt_arr)
-    print(rollingRegularPolygonReturnAfterAtMostNRollsCountBasic(n_roll_max=n_roll_max, n_sides=n_sides))
+    #print(rollingRegularPolygonReturnAfterAtMostNRollsCountBasic(n_roll_max=n_roll_max, n_sides=n_sides))
     return res
     
     """
@@ -603,7 +603,7 @@ def rollingRegularPolygonReturnAfterAtMostNRollsCount(n_roll_max: int, n_sides: 
     """
 
 # Problem 936
-def peerlessTreesWithMaxVertexCount(n_vertex_max: int=50) -> int:
+def peerlessTreesWithVertexCountInRange(n_vertex_min: int=3, n_vertex_max: int=50) -> int:
 
     # dim 0: degree of root (including incoming edge)
     # dim 1: max number of vertices in the rooted trees
@@ -663,7 +663,7 @@ def peerlessTreesWithMaxVertexCount(n_vertex_max: int=50) -> int:
                     curr2 -= getRootedCount(root_deg, n_v, prev_depth - 1)
                 #print(f"curr2 3 = {curr2}")
                 if curr2:
-                    print("repeat found")
+                    #print("repeat found")
                     res += recur(idx + 1, curr * curr2, v_remain - n_v, prev_depth, n_v, root_deg, n_rpt=n_rpt2) // n_rpt2
             #print(f"post duplicates res = {res}")
         #print(f"overall res = {res}")
@@ -780,110 +780,112 @@ def peerlessTreesWithMaxVertexCount(n_vertex_max: int=50) -> int:
         memo6[args] = res
         return res
 
-    if n_vertex_max < 1: return 0
-    elif n_vertex_max <= 2: return 1
-    #elif n_vertex_max == 3: return 2
-    res = 0
-    # Tree centre is two adjacent nodes
-    for depth in range(1, d_mx + 1):
-        for n_v1 in range(depth + 1, (n_vertex_max >> 1) + 1):
-            for degree1 in range(2, n_v1 + 1):
-                mult = getRootedCount(degree1, n_v1, depth)
-                #mult = getRootedCount(degree1, n_v1, depth)
-                n_v2_min = n_v1 + 1
-                n_v2_max = n_vertex_max - n_v1
-                cumu1 = getRootedCountRootDegreeAndVertexCountCumu(n_v2_max, n_v2_max, depth)
-                cumu2 = getRootedCountRootDegreeAndVertexCountCumu(n_v2_max, n_v2_min - 1, depth)
-                #print(f"n_v1 = {n_v1}, degree1 = {degree1}, degree_max = {n_v2_max}, depth = {depth}, n_v2 range = [{n_v2_min}, {n_v2_max}], lower cumu = {cumu2}, upper_cumu = {cumu1}")
-                #print(n_v2_min, n_v2_max + 1)
-                #for n_v2 in range(n_v2_min, n_v2_max + 1):
-                #    for degree in range(1, n_v2_max + 1):
-                #        print(degree, n_v2, depth, getRootedCount(degree, n_v2, depth))
-                ans = cumu1 - cumu2
-                #print(f"ans0 = {ans}")
-                if n_v2_max >= degree1:
-                    # Ensure the two roots have different degrees
+    def peerlessTreesWithMaxVertexCount(n_vertex_max: int):
+        if n_vertex_max < 1: return 0
+        elif n_vertex_max <= 2: return 1
+        #elif n_vertex_max == 3: return 2
+        res = 0
+        # Tree centre is two adjacent nodes
+        for depth in range(1, d_mx + 1):
+            for n_v1 in range(depth + 1, (n_vertex_max >> 1) + 1):
+                for degree1 in range(2, n_v1 + 1):
+                    mult = getRootedCount(degree1, n_v1, depth)
+                    #mult = getRootedCount(degree1, n_v1, depth)
+                    n_v2_min = n_v1 + 1
+                    n_v2_max = n_vertex_max - n_v1
+                    cumu1 = getRootedCountRootDegreeAndVertexCountCumu(n_v2_max, n_v2_max, depth)
+                    cumu2 = getRootedCountRootDegreeAndVertexCountCumu(n_v2_max, n_v2_min - 1, depth)
+                    #print(f"n_v1 = {n_v1}, degree1 = {degree1}, degree_max = {n_v2_max}, depth = {depth}, n_v2 range = [{n_v2_min}, {n_v2_max}], lower cumu = {cumu2}, upper_cumu = {cumu1}")
+                    #print(n_v2_min, n_v2_max + 1)
+                    #for n_v2 in range(n_v2_min, n_v2_max + 1):
+                    #    for degree in range(1, n_v2_max + 1):
+                    #        print(degree, n_v2, depth, getRootedCount(degree, n_v2, depth))
+                    ans = cumu1 - cumu2
+                    #print(f"ans0 = {ans}")
+                    if n_v2_max >= degree1:
+                        # Ensure the two roots have different degrees
+                        
+                        sub = getRootedCountVertexCountCumu(degree1, n_v2_max, depth) - getRootedCountVertexCountCumu(degree1, n_v2_min - 1, depth)
+                        #print(f"subtracting {sub}")
+                        ans -= sub
+                    #print(f"ans1 = {ans}")
+                    #for degree2 in range(2, n_v2_max + 1):
+                    #    if degree2 == degree1: continue
+                    #    ans += getRootedCountVertexCountCumu(degree2, n_v2_max, depth) - getRootedCountRootVertexCountCumu(degree2, n_v1, depth)
+                    #ans *= mult
+                    #ans2 = 0
+                    # Avoiding double counting when the two nodes central nodes have the same number of vertices
+                    # by only counting those for which degree2 is less than degree1 (recall they cannot be equal)
+                    ans += getRootedCountRootDegreeCumu(degree1 - 1, n_v1, depth)
                     
-                    sub = getRootedCountVertexCountCumu(degree1, n_v2_max, depth) - getRootedCountVertexCountCumu(degree1, n_v2_min - 1, depth)
-                    #print(f"subtracting {sub}")
-                    ans -= sub
-                #print(f"ans1 = {ans}")
-                #for degree2 in range(2, n_v2_max + 1):
-                #    if degree2 == degree1: continue
-                #    ans += getRootedCountVertexCountCumu(degree2, n_v2_max, depth) - getRootedCountRootVertexCountCumu(degree2, n_v1, depth)
-                #ans *= mult
-                #ans2 = 0
-                # Avoiding double counting when the two nodes central nodes have the same number of vertices
-                # by only counting those for which degree2 is less than degree1 (recall they cannot be equal)
-                ans += getRootedCountRootDegreeCumu(degree1 - 1, n_v1, depth)
-                
-                ans2 = ans * mult
-                print(f"depth = {depth}, n_v1 = {n_v1}, n_v2 range = [{n_v2_min - 1}, {n_v2_max}], degree1 = {degree1}, mult = {mult}, count = {ans2}")
-                res += ans2
-    print(f"\ndouble centre: {res}\n")
-    res2 = n_vertex_max - 1 # Every vertex other than the centre is a leaf, plus the single node graph
-    # Trees with a single centre
-    # Centre degree 2
-    centre_degree = 2
-    #print(f"\ncentre_degree = {centre_degree}")
-    for depth in range(1, d_mx + 1):
-        #print(f"depth = {depth}")
-        for tot_n_v in range((depth + 1) * 2 + 1 + (centre_degree - 2), n_vertex_max + 1):
-            #print(f"tot_n_v = {tot_n_v}")
-            for n_v1 in range(max(depth + 1, (tot_n_v >> 1)), tot_n_v - depth - 1):
-                #print(f"n_v1 = {n_v1}")
-                curr2 = getRootedCountRootDegreeCumu(n_v1, n_v1, depth)
-                if n_v1 >= centre_degree:
-                    curr2 -= getRootedCount(centre_degree, n_v1, depth)
-                n_v2 = tot_n_v - n_v1 - 1
-                #print(f"n_v2 = {n_v2}")
-                n_rpt = 1
-                if n_v2 == n_v1:
-                    curr3 = curr2 + 1
-                    n_rpt += 1
-                else:
-                    curr3 = getRootedCountRootDegreeCumu(n_v2, n_v2, depth)
-                    if n_v2 >= centre_degree:
-                        curr3 -= getRootedCount(centre_degree, n_v2, depth)
-                ans0 = curr2 * curr3
-                ans = ans0 // n_rpt
-                print(f"centre_degree = {centre_degree}, depth = {depth}, tot_n_v = {tot_n_v}, n_v1 = {n_v1}, n_v2 = {n_v2}, curr2 = {curr2}, curr3 = {curr3}, count0 = {ans0}, count = {ans}")
-                res2 += ans
-
-    # Centre degree 3 or more
-    for centre_degree in range(3, n_vertex_max):
+                    ans2 = ans * mult
+                    #print(f"depth = {depth}, n_v1 = {n_v1}, n_v2 range = [{n_v2_min - 1}, {n_v2_max}], degree1 = {degree1}, mult = {mult}, count = {ans2}")
+                    res += ans2
+        print(f"\ndouble centre: {res}\n")
+        res2 = n_vertex_max - 1 # Every vertex other than the centre is a leaf, plus the single node graph
+        # Trees with a single centre
+        # Centre degree 2
+        centre_degree = 2
         #print(f"\ncentre_degree = {centre_degree}")
-        #res2 += 1 # Every vertex other than centre is a leaf
         for depth in range(1, d_mx + 1):
             #print(f"depth = {depth}")
             for tot_n_v in range((depth + 1) * 2 + 1 + (centre_degree - 2), n_vertex_max + 1):
                 #print(f"tot_n_v = {tot_n_v}")
-                for n_v1 in range(depth + 1, tot_n_v - 1 - (depth + 1) - (centre_degree - 2) + 1):
+                for n_v1 in range(max(depth + 1, (tot_n_v >> 1)), tot_n_v - depth - 1):
                     #print(f"n_v1 = {n_v1}")
                     curr2 = getRootedCountRootDegreeCumu(n_v1, n_v1, depth)
                     if n_v1 >= centre_degree:
                         curr2 -= getRootedCount(centre_degree, n_v1, depth)
-                    v_remain = tot_n_v - n_v1 - 1
-                    #print(f"v_remain = {v_remain}, n_v2 range = [{depth + 1}, {min(n_v1, v_remain - centre_degree + 2) + 1})")
-                    #n_v2_mn = max(depth + 1, )
-                    for n_v2 in range(depth + 1, min(n_v1, v_remain - centre_degree + 2) + 1):
-                        #print(f"n_v2 = {n_v2}")
-                        n_rpt = 1
-                        if n_v2 == n_v1:
-                            curr3 = curr2 + 1
-                            n_rpt += 1
-                        else:
-                            curr3 = getRootedCountRootDegreeCumu(n_v2, n_v2, depth)
-                            if n_v2 >= centre_degree:
-                                curr3 -= getRootedCount(centre_degree, n_v2, depth)
-                        #print(f"calling recur() with curr = {curr2 * curr3}, v_remain = {v_remain - n_v2}, prev_depth = {depth + 1}, n_v2 = {n_v2}, root_degree = {centre_degree}")
-                        ans0 = recur(1, curr2 * curr3, v_remain - n_v2, depth + 1, n_v2, centre_degree, n_rpt=n_rpt)
-                        ans = ans0 // n_rpt
-                        print(f"centre_degree = {centre_degree}, depth = {depth}, tot_n_v = {tot_n_v}, n_v1 = {n_v1}, n_v2 = {n_v2}, curr2 = {curr2}, curr3 = {curr3}, count0 = {ans0}, count = {ans}")
-                        res2 += ans
-    print(f"\nsingle centre: {res2}\n")
-    return res + res2
+                    n_v2 = tot_n_v - n_v1 - 1
+                    #print(f"n_v2 = {n_v2}")
+                    n_rpt = 1
+                    if n_v2 == n_v1:
+                        curr3 = curr2 + 1
+                        n_rpt += 1
+                    else:
+                        curr3 = getRootedCountRootDegreeCumu(n_v2, n_v2, depth)
+                        if n_v2 >= centre_degree:
+                            curr3 -= getRootedCount(centre_degree, n_v2, depth)
+                    ans0 = curr2 * curr3
+                    ans = ans0 // n_rpt
+                    #print(f"centre_degree = {centre_degree}, depth = {depth}, tot_n_v = {tot_n_v}, n_v1 = {n_v1}, n_v2 = {n_v2}, curr2 = {curr2}, curr3 = {curr3}, count0 = {ans0}, count = {ans}")
+                    res2 += ans
 
+        # Centre degree 3 or more
+        for centre_degree in range(3, n_vertex_max):
+            #print(f"\ncentre_degree = {centre_degree}")
+            #res2 += 1 # Every vertex other than centre is a leaf
+            for depth in range(1, d_mx + 1):
+                #print(f"depth = {depth}")
+                for tot_n_v in range((depth + 1) * 2 + 1 + (centre_degree - 2), n_vertex_max + 1):
+                    #print(f"tot_n_v = {tot_n_v}")
+                    for n_v1 in range(depth + 1, tot_n_v - 1 - (depth + 1) - (centre_degree - 2) + 1):
+                        #print(f"n_v1 = {n_v1}")
+                        curr2 = getRootedCountRootDegreeCumu(n_v1, n_v1, depth)
+                        if n_v1 >= centre_degree:
+                            curr2 -= getRootedCount(centre_degree, n_v1, depth)
+                        v_remain = tot_n_v - n_v1 - 1
+                        #print(f"v_remain = {v_remain}, n_v2 range = [{depth + 1}, {min(n_v1, v_remain - centre_degree + 2) + 1})")
+                        #n_v2_mn = max(depth + 1, )
+                        for n_v2 in range(depth + 1, min(n_v1, v_remain - centre_degree + 2) + 1):
+                            #print(f"n_v2 = {n_v2}")
+                            n_rpt = 1
+                            if n_v2 == n_v1:
+                                curr3 = curr2 + 1
+                                n_rpt += 1
+                            else:
+                                curr3 = getRootedCountRootDegreeCumu(n_v2, n_v2, depth)
+                                if n_v2 >= centre_degree:
+                                    curr3 -= getRootedCount(centre_degree, n_v2, depth)
+                            #print(f"calling recur() with curr = {curr2 * curr3}, v_remain = {v_remain - n_v2}, prev_depth = {depth + 1}, n_v2 = {n_v2}, root_degree = {centre_degree}")
+                            ans0 = recur(1, curr2 * curr3, v_remain - n_v2, depth + 1, n_v2, centre_degree, n_rpt=n_rpt)
+                            ans = ans0 // n_rpt
+                            #print(f"centre_degree = {centre_degree}, depth = {depth}, tot_n_v = {tot_n_v}, n_v1 = {n_v1}, n_v2 = {n_v2}, curr2 = {curr2}, curr3 = {curr3}, count0 = {ans0}, count = {ans}")
+                            res2 += ans
+        print(f"\nsingle centre: {res2}\n")
+        return res + res2
+
+    return peerlessTreesWithMaxVertexCount(n_vertex_max) - peerlessTreesWithMaxVertexCount(n_vertex_min - 1)
 
     """
     for v in range(2, v_mx + 1):
@@ -901,6 +903,258 @@ def peerlessTreesWithMaxVertexCount(n_vertex_max: int=50) -> int:
     #memo1 = {}
     #def rootedTreeWithMaxDepthUpToMaxVertices(max_depth: int, max_n_vertices: int, req_max_depth: bool=True) -> int:
 
+def peerlessTreesWithVertexCountInRange2(n_vertex_min: int=3, n_vertex_max: int=50) -> int:
+    """
+    Solution to Project Euler #936
+    """
+
+    def recur(branch_remain: int, curr: int, v_remain: int, prev_n_v: int, root_deg: int, n_rpt: int=1) -> int:
+        #print(branch_remain, curr, v_remain, prev_n_v, root_deg, n_rpt)
+        if not curr: return 0
+        if branch_remain == 1:
+            #print("hello")
+            
+            if v_remain > prev_n_v: return 0
+            res = getRootedCountRootDegreeCumu(root_deg_max=v_remain + 1, n_v=v_remain)
+            #print(f"res = {res}")
+            if v_remain + 1 >= root_deg:
+                res -= getRootedCount(root_deg=root_deg, n_v=v_remain)
+            #print(res)
+            if v_remain == prev_n_v:
+                #div = n_rpt + 1
+                res = (curr * (res + n_rpt)) // (n_rpt + 1)
+            else: res *= curr
+            #print(f"res = {res}")
+            return res
+        res = 0
+        min_n_v = (v_remain - 1) // branch_remain + 1
+        max_n_v = min(prev_n_v, v_remain - (branch_remain - 1))
+        for n_v in range(min_n_v, max_n_v - (max_n_v == prev_n_v) + 1):
+            curr2 = getRootedCountRootDegreeCumu(root_deg_max=n_v, n_v=n_v)
+            if n_v >= root_deg:
+                curr2 -= getRootedCount(root_deg, n_v)
+            if not curr2: continue
+            res += recur(branch_remain - 1, curr * curr2, v_remain - n_v, n_v, root_deg, n_rpt=1)
+        if max_n_v == prev_n_v:
+            n_v = prev_n_v
+            n_rpt2 = n_rpt + 1
+            curr2 = getRootedCountRootDegreeCumu(root_deg_max=n_v, n_v=n_v) + n_rpt
+            if n_v >= root_deg:
+                curr2 -= getRootedCount(root_deg, n_v)
+            if curr2:
+                res += recur(branch_remain - 1, curr * curr2, v_remain - n_v, n_v, root_deg, n_rpt=n_rpt2) // n_rpt2
+        return res
+
+    memo1 = {}
+    def getRootedCount(root_deg: int, n_v: int) -> int:
+        if root_deg < 1 or n_v < 1: return 0
+        elif root_deg == 1:
+            #print("hi2")
+            return int(n_v == 1)
+        args = (root_deg, n_v)
+        if args in memo1.keys():
+            return memo1[args]
+        ref = None#(4, 4, 1)
+        if (root_deg, n_v) == ref:
+            print("***************************")
+        if root_deg == 2:
+            # Exactly one sub-tree
+            
+            res = getRootedCountRootDegreeCumu(n_v - 1, n_v - 1)
+            if n_v - 1 >= root_deg:
+                res -= getRootedCount(root_deg, n_v - 1)
+            if args == ref:
+                print(res)
+            memo1[args] = res
+            return res
+        
+        res = 0
+        if args == ref:
+            print(f"n_v2 range: [1, {n_v - root_deg + 2})")
+
+        res = recur(root_deg - 1, 1, n_v - 1, n_v, root_deg, n_rpt=1)
+        #for n_v2 in range(1, n_v - root_deg + 2):
+        #    
+        #    curr = getRootedCountRootDegreeCumu(n_v2, n_v2)
+        #    if n_v2 >= root_deg:
+        #        curr -= getRootedCount(root_deg, n_v2)
+        #    #print(f"n_v2 = {n_v2}, curr = {curr}")
+        #    if not curr: continue
+        #    ans = recur(root_deg - 2, curr, n_v - n_v2 - 1, n_v2, root_deg, n_rpt=1)
+        #    if args == ref:
+        #        print(f"for n_v2 = {n_v2}, ans = {ans}")
+        #
+        #    res += ans
+
+        memo1[args] = res
+        if args == ref:
+            print("***************************")
+            print(f"res = {res}")
+        return res 
+
+    memo2 = {}
+    def getRootedCountCumu(root_deg_max: int, n_v_max: int) -> int:
+        if root_deg_max < 1 or n_v_max < 1: return 0
+        args = (root_deg_max, n_v_max)
+        if args in memo2.keys(): return memo2[args]
+        res = getRootedCount(root_deg_max, n_v_max) + getRootedCountCumu(root_deg_max, n_v_max - 1) +\
+            getRootedCountCumu(root_deg_max - 1, n_v_max) - getRootedCountCumu(root_deg_max - 1, n_v_max - 1)
+        memo2[args] = res
+        return res
+
+    memo3 = {}
+    def getRootedCountRootDegreeCumu(root_deg_max: int, n_v: int) -> int:
+        if root_deg_max < 1 or n_v < 1: return 0
+        args = (root_deg_max, n_v)
+        if args in memo3.keys(): return memo3[args]
+        res = getRootedCount(root_deg_max, n_v) + getRootedCountRootDegreeCumu(root_deg_max - 1, n_v)
+        memo3[args] = res
+        return res
+
+    memo4 = {}
+    def getRootedCountVertexCountCumu(root_deg: int, n_v_max: int) -> int:
+        if root_deg < 1 or n_v_max < 1: return 0
+        args = (root_deg, n_v_max)
+        if args in memo4.keys(): return memo4[args]
+        res = getRootedCount(root_deg, n_v_max) + getRootedCountVertexCountCumu(root_deg, n_v_max - 1)
+        memo4[args] = res
+        return res
+
+    def peerlessTreesWithNumberOfVerticesCount(n_v: int) -> int:
+        if n_v < 1 or n_v == 2: return 0
+        elif n_v == 1: return 1
+
+        n_v_hlf = n_v >> 1
+
+        # Tree centroid is two adjacent nodes
+        res1 = 0
+        if not n_v & 1:
+            for deg1 in range(3, n_v_hlf + 1):
+                mult = getRootedCount(root_deg=deg1, n_v=n_v_hlf)
+                ans = mult * getRootedCountRootDegreeCumu(root_deg_max=deg1 - 1, n_v=n_v_hlf)
+                #print(f"n_v = {n_v}, centroid pair, deg1 = {deg1}, total = {ans}")
+                res1 += ans
+            #print(f"centroid pair count = {res1}")
+        
+        # Tree centroid is a single node
+        res2 = 0
+        for root_deg in range(2, n_v):
+            ans = recur(root_deg, 1, n_v - 1, n_v_hlf - (not n_v & 1), root_deg, n_rpt=0)
+            #print(f"n_v = {n_v}, single centroid, root_deg = {root_deg}, total = {ans}")
+            res2 += ans
+        return res1 + res2
+    
+    res = 0
+    for n_v in range(n_vertex_min, n_vertex_max + 1):
+        ans = peerlessTreesWithNumberOfVerticesCount(n_v)
+        res += ans
+        print(n_v, ans, res)
+    return res
+
+# Problem 937
+def calculateFactorialsInEquiproductPartitionWithUnit(n_max: int) -> List[int]:
+    ps = PrimeSPFsieve()
+    def factorsPrimeFactorisationPowersGenerator(p_pows: List[int]) -> Generator[List[int], None, None]:
+        n_p = len(p_pows)
+        curr = [0] * n_p
+        def recur(idx: int, non_mid_seen: bool=False) -> Generator[List[int], None, None]:
+            if idx == n_p:
+                yield list(curr)
+                return
+            if non_mid_seen:
+                for i in range(p_pows[idx] + 1):
+                    curr[idx] = i
+                    yield from recur(idx + 1, non_mid_seen=True)
+                return
+            for i in range((p_pows[idx] + 1) >> 1):
+                curr[idx] = i
+                yield from recur(idx + 1, non_mid_seen=True)
+            if not p_pows[idx] & 1:
+                curr[idx] = p_pows[idx] >> 1
+                yield from recur(idx + 1, non_mid_seen=False)
+            return
+        
+        yield from recur(0, non_mid_seen=False)
+        return
+
+    memo = {}
+    def isInA(p_pows: List[int]) -> bool:
+        p_pows2 = sorted(p_pows, reverse=True)
+        #while p_pows2 and not p_pows2[-1]:
+        #    p_pows2.pop()
+        if not p_pows2: return True
+        elif len(p_pows2) == 1: return False
+        args = tuple(p_pows2)
+        if args in memo.keys(): return memo[args]
+        tot = 0
+        it = iter(factorsPrimeFactorisationPowersGenerator(p_pows2))
+        next(it)
+        for f1_pows in it:
+            f2_pows = [x - y for x, y in zip(p_pows, f1_pows)]
+            if f1_pows >= f2_pows: continue
+            #print(p_pows, f1_pows, f2_pows)
+            b1, b2 = isInA(f1_pows), isInA(f2_pows)
+            if b1 != b2: continue
+            tot += 2 * b1 - 1
+        res = (tot == -1)
+
+        memo[args] = res
+        return res
+    
+    memo2 = {}
+    def isPSplit(p: int) -> bool:
+        if p in memo2.keys(): return memo2[p]
+        res = False
+        for b in range(isqrt(p >> 1) + 1):
+            
+            a_sq = p - 2 * b ** 2
+            #print(f"p = {p}, b = {b}, a_sq = {a_sq}")
+            if isqrt(a_sq) ** 2 == a_sq:
+                res = True
+                break
+        memo2[p] = res
+        return res
+    #print(isPSplit(2), isPSplit(3), isPSplit(5))
+    res = []
+    curr = {}
+    if isInA(list(curr.values())):
+        print(1, math.factorial(1))
+        res.append(1)
+    for num in range(2, n_max + 1):
+        print(f"num = {num}")
+        pf = ps.primeFactorisation(num)
+        for p, f in pf.items():
+            curr[p] = curr.get(p, 0) + f
+        lst = []
+        for p, f in curr.items():
+            if p == 2: lst.append(2 * f)
+            elif isPSplit(p): lst.extend([f, f])
+            else: lst.append(f)
+        #print(num, curr, lst)
+        if isInA(lst):
+            print(f"solution found: {num}! = {math.factorial(num)}")
+            res.append(num)
+    #print(memo)
+    return res
+
+def calculateFactorialsInEquiproductPartitionWithUnitSum(n_max: int=10 ** 8, md: Optional[int]=10 ** 9 + 7) -> int:
+
+    nums = calculateFactorialsInEquiproductPartitionWithUnit(n_max)
+    print(nums)
+    addMod = (lambda x, y: x + y) if md is None else (lambda x, y: (x + y) % md)
+    multMod = (lambda x, y: x * y) if md is None else (lambda x, y: (x * y) % md)
+
+    curr = 1
+    res = 0
+    i = 0
+    for j in range(1, nums[-1] + 1):
+        curr = multMod(curr, j)
+        #print(nums[i], j)
+        if nums[i] == j:
+            res = addMod(res, curr)
+            i += 1
+
+    return res
 
 # Problem 938
 def redBlackCardGameLastCardBlackProbabilityFraction(n_red_init: int, n_black_init: int) -> "CustomFraction":
@@ -1986,7 +2240,7 @@ def xorEquationSolutionsCount(a_b_max: int=10 ** 7) -> int:
     return res
 
 if __name__ == "__main__":
-    to_evaluate = {936}
+    to_evaluate = {935}
     since0 = time.time()
 
     if not to_evaluate or 932 in to_evaluate:
@@ -2006,13 +2260,18 @@ if __name__ == "__main__":
 
     if not to_evaluate or 935 in to_evaluate:
         since = time.time()
-        res = rollingRegularPolygonReturnAfterAtMostNRollsCountBasic(n_roll_max=100, n_sides=4)
+        res = rollingRegularPolygonReturnAfterAtMostNRollsCount(n_roll_max=20, n_sides=4)
         print(f"Solution to Project Euler #935 = {res}, calculated in {time.time() - since:.4f} seconds")
 
     if not to_evaluate or 936 in to_evaluate:
         since = time.time()
-        res = peerlessTreesWithMaxVertexCount(n_vertex_max=20)
+        res = peerlessTreesWithVertexCountInRange2(n_vertex_min=3, n_vertex_max=50)
         print(f"Solution to Project Euler #936 = {res}, calculated in {time.time() - since:.4f} seconds")
+
+    if not to_evaluate or 937 in to_evaluate:
+        since = time.time()
+        res = calculateFactorialsInEquiproductPartitionWithUnitSum(n_max=100, md=10 ** 9 + 7)
+        print(f"Solution to Project Euler #937 = {res}, calculated in {time.time() - since:.4f} seconds")
 
     if not to_evaluate or 938 in to_evaluate:
         since = time.time()
@@ -2138,4 +2397,30 @@ for n_roll in range(corner, (corner << 1) - 1):
     #if side > corner:
     #    side, x = side - 1, x + a
     print(a, side, x, abs(x - target_func(corner, a)[1]))
+"""
+"""
+row_max = 20
+col_max = 30
+res = [[False for _ in range(col_max + 1)] for _ in range(row_max + 1)]
+res[0][0] = True
+for i1 in range(1, row_max + 1):
+    for i2 in range(1, col_max + 1):
+        tot = 0
+        for j1 in range((i1 + 1) >> 1):
+            for j2 in range(i2 + 1):
+                if res[j1][j2] == res[i1 - j1][i2 - j2]:
+                    if (j1 == i1 - j1 and j2 == i2 - j2):
+                        print(f"repeat 1: ({j1, j2})")
+                    tot += 2 * res[j1][j2] - 1
+        if not i1 & 1:
+            j1 = i1 >> 1
+            for j2 in range(((i2 + 1) >> 1)):
+                if res[j1][j2] == res[i1 - j1][i2 - j2]:
+                    if (j1 == i1 - j1 and j2 == i2 - j2):
+                        print(f"repeat 2: ({j1, j2})")
+                    tot += 2 * res[j1][j2] - 1
+        #print(tot)
+        res[i1][i2] = (tot == -1)
+for i, row in enumerate(res):
+    print(i, ["A" if b else "B" for b in row])
 """
