@@ -400,6 +400,78 @@ def rollingRegularPolygonReturnAfterAtMostNRollsCount(n_roll_max: int, n_sides: 
     # shape being in the corner as described without part of the
     # shape being outside the boundaries, effectively locking the
     # shape in the corner)
+
+    # Review- Try to make faster
+    """
+    rpt_func = lambda corner: n_sides // (gcd(corner, n_sides))
+   
+    res = 0
+    for corner in range(1, n_roll_max + 1):
+        ans = max(0, (n_roll_max // rpt_func(corner)) - corner + 1)
+        #print(ans)
+        for a in range(n_sides):
+            rpt2 = rpt_func(a * corner)
+            term = 0
+            for r in range(corner, (n_roll_max >> 1) + 1):
+                term2 = (n_roll_max + rpt2) // ((r + 1) * rpt2)
+                term += max((term2 - a) // n_sides, 0)
+            ans -= term
+        print(corner, ans)
+        res += ans
+    return res
+    """
+    #ps = PrimeSPFsieve(n_roll_max)
+    ps = SimplePrimeSieve(isqrt(n_roll_max))
+    print("finished creating prime sieve")
+
+    def calculatePrimeFactors(num: int) -> List[int]:
+        num2 = num
+        res = []
+        for p in ps.p_lst:
+            if p ** 2 > num2: break
+            num3, r = divmod(num2, p)
+            if r: continue
+            res.append(p)
+            num2 = num3
+            num3, r = divmod(num2, p)
+            while not r:
+                num2 = num3
+                num3, r = divmod(num2, p)
+        if num2 > 1: res.append(num2)
+        return res
+    res = 0
+    #corner_md_rpts = [n_sides // (gcd(corner, n_sides)) for corner in range(n_sides)]
+    for corner_md in range(n_sides):
+        #print(f"corner mod {n_sides} = {corner_md}")
+        n_rpt = n_sides // (gcd(corner_md, n_sides))
+        start = corner_md + (n_sides if not corner_md else 0)
+        end = n_roll_max // n_rpt
+        roll_mx = n_roll_max // n_rpt
+        for corner in range(start, end + 1, n_sides):
+            if not ((corner - start) % (n_sides * 10 ** 5)):
+                print(f"corner mod {n_sides} = {corner_md}, corner = {corner} (max {end})")
+            #pf = ps.primeFactorisation(corner)
+            #p_lst = sorted(pf.keys())
+            p_lst = calculatePrimeFactors(corner)
+            #print(corner, p_lst)
+            n_p = len(p_lst)
+            r_plus_one_rng = (corner + 1, roll_mx + 1)
+            ans = r_plus_one_rng[1] - r_plus_one_rng[0] + 1
+            for bm in range(1, 1 << n_p):
+                neg = False
+                num = 1
+                for i in range(n_p):
+                    if bm & 1:
+                        neg = not neg
+                        num *= p_lst[i]
+                        if bm == 1: break
+                    bm >>= 1
+                cnt = (r_plus_one_rng[1] // num) - ((r_plus_one_rng[0] - 1) // num)
+                ans += -cnt if neg else cnt
+            res += ans
+    #print(rollingRegularPolygonReturnAfterAtMostNRollsCountBasic(n_roll_max=n_roll_max, n_sides=n_sides))
+    return res
+    
     """
     ps = PrimeSPFsieve(n_roll_max)
 
@@ -502,7 +574,7 @@ def rollingRegularPolygonReturnAfterAtMostNRollsCount(n_roll_max: int, n_sides: 
     
     return res
     """
-    
+    """
     res = 0
     ps = PrimeSPFsieve(n_roll_max)
     print("finished creating prime sieve")
@@ -565,7 +637,7 @@ def rollingRegularPolygonReturnAfterAtMostNRollsCount(n_roll_max: int, n_sides: 
         #print(cnt_arr)
     #print(rollingRegularPolygonReturnAfterAtMostNRollsCountBasic(n_roll_max=n_roll_max, n_sides=n_sides))
     return res
-    
+    """
     """
     ps = PrimeSPFsieve(n_roll_max)
     res = n_roll_max // n_sides
@@ -2260,7 +2332,7 @@ if __name__ == "__main__":
 
     if not to_evaluate or 935 in to_evaluate:
         since = time.time()
-        res = rollingRegularPolygonReturnAfterAtMostNRollsCount(n_roll_max=20, n_sides=4)
+        res = rollingRegularPolygonReturnAfterAtMostNRollsCount(n_roll_max=10 ** 8, n_sides=4)
         print(f"Solution to Project Euler #935 = {res}, calculated in {time.time() - since:.4f} seconds")
 
     if not to_evaluate or 936 in to_evaluate:
