@@ -248,7 +248,7 @@ def paperCuttingWinningMoveSum2(width_min: int=2, width_max: int=123, height_min
     #    res += (w - 1) * ((height_max - 1) * height_max - (h_min) * (h_min - 1))
     
     def calculateTotal(h_max: int) -> int:
-        print(f"calculating total for h_max = {h_max}")
+        #print(f"calculating total for h_max = {h_max}")
         res = 0
         for w in range(w_min, width_max + 1):
             #print(f"w = {w} of {width_max}")
@@ -271,6 +271,7 @@ def paperCuttingWinningMoveSum2(width_min: int=2, width_max: int=123, height_min
     #tot = 0
     target_diff = (width_max * (width_max - 1) - (w_min - 1) * (w_min - 2)) >> 1
     h_mx = 2
+    #print(f"height_max = {height_max}")
     while h_mx < height_max:
         h1 = h_mx - 1
         h2 = h_mx
@@ -292,7 +293,109 @@ def paperCuttingWinningMoveSum2(width_min: int=2, width_max: int=123, height_min
             print("target difference found")
             return tot1 + (tot2 - tot1) * (height_max - h1) + target_diff * (((height_max - h1) * (height_max - h1 - 1)) >> 1)
         h_mx <<= 1
+    #print(f"height_max = {height_max}")
     return calculateTotal(height_max)
+
+def paperCuttingWinningMoveSum3(width_min: int=2, width_max: int=123, height_min: int=2, height_max: int=1234567) -> int:
+
+    # Using C(w, h + 1) = C(w, h) + w - 1 and C(w, 1) = 0 for all w and sufficiently large h
+    if height_max < width_max:
+        height_max, width_max = width_max, height_max
+        height_min, width_min = width_min, height_min
+    
+    h_min = max(2, height_min)
+    w_min = max(2, width_min)
+    if w_min > width_max or h_min > height_max:
+        return 0
+
+    grundy_pairs = [[[0] * min(w1, width_max - w1) for w1 in range(1, width_max)]]
+
+    def getGrundyPair(h: int, w1: int, w2: int) -> int:
+        #if w2 > w1: w1, w2 = w2, w1
+        #print(h, w1, w2)
+        #print(grundy_pairs)
+        return grundy_pairs[h - 1][w1 - 1][w2 - 1]
+    
+    def calculateTotal(h_max: int) -> int:
+        #print(f"calculating total for h_max = {h_max}")
+        #print(grundy_pairs)
+        res = 0
+        for w in range(w_min, width_max + 1):
+            #print(f"w = {w} of {width_max}")
+            for w1 in range((w + 1) >> 1, w):
+                seen_lsts = {}
+                w2 = w - w1
+                mult = 1 + (w1 != w2)
+                ans = 0
+                for h in range(max(1, h_min >> 1), (h_max >> 1) + 1):
+                    g = getGrundyPair(h, w1, w2)#grundy_pairs[h][w1][w2]
+                    seen_lsts.setdefault(g, [])
+                    ans += ((len(seen_lsts[g]) << 1) + 1) * mult
+                    seen_lsts[g].append(h)
+                for h in range(max(1, h_min >> 1, (h_max >> 1) + 1), h_max):
+                    g = getGrundyPair(h, w1, w2)#grundy_pairs[h - 1][w1 - 1][w2 - 1]
+                    seen_lsts.setdefault(g, [])
+                    ans += (bisect.bisect_right(seen_lsts[g], h_max - h) << 1) * mult
+                    #print(h_max - h)
+                    seen_lsts[g].append(h)
+                #print(f"w1 = {w1}, w2 = {w2}, ans = {ans}")
+                #print(seen_lsts)
+                res += ans
+        return res
+
+    
+    target_diffdiff = (width_max * (width_max - 1) - (w_min - 1) * (w_min - 2)) >> 1
+    req_run_len = 50
+    curr_run_len = 0
+    tots_prev = [0, 0]
+
+    def calculateSecondDifference(tot1: int, tot2: int, tot3: int) -> int:
+        return tot3 - 2 * tot2 + tot1
+
+    since = time.time()
+    for h in range(2, height_max):
+        #grundy_pairs.append([[0] * (w + 1) for w in range(width_max)])
+        tot = calculateTotal(h)
+        dd = calculateSecondDifference(*tots_prev, tot)
+        if not h % 10:
+            print(f"h = {h}, diffdiff = {dd} (target = {target_diffdiff}), time since last print = {time.time() - since:.3f} seconds")
+            since = time.time()
+        if dd == target_diffdiff:
+            curr_run_len += 1
+            if curr_run_len >= req_run_len:
+                print(f"diffdiff run found starting at h = {h - req_run_len}")
+                break
+        else: curr_run_len = 0
+        tots_prev = [tots_prev[1], tot]
+
+        curr_grundy = [0, 0]
+        for w in range(2, width_max):
+            seen = set()
+            curr = 0
+            for w1 in range((w + 1) >> 1, w):
+                w2 = w - w1
+                for h1 in range((h + 1) >> 1, h):
+                    h2 = h - h1
+                    grundy = getGrundyPair(h1, w1, w2) ^ getGrundyPair(h2, w1, w2) #grundy_pairs[h2 - 1][w - 1][w - w2 - 1] ^ grundy_pairs[h - h2 - 1][w - 1][w - w2 - 1]
+                    if curr == grundy:
+                        curr += 1
+                        while curr in seen:
+                            curr += 1
+                    seen.add(grundy)
+            
+            curr_grundy.append(curr)
+            #print(f"h = {h}, w = {w}, seen = {seen}, curr = {curr}")
+        grundy_pairs.append([])
+        for w1 in range(1, width_max):
+            grundy_pairs[-1].append([])
+            for w2 in range(1, min(w1, width_max - w1) + 1):
+                grundy_pairs[-1][-1].append(curr_grundy[w1] ^ curr_grundy[w2])
+        if h < h_min: continue
+        
+    else:
+        return calculateTotal(height_max)
+    tot0 = tots_prev[-1]
+    return tot + (tot - tot0) * (height_max - h) + target_diffdiff * (((height_max - h + 1) * (height_max - h)) >> 1)
 
 # Problem 934
 def unluckyPrimeCalculatorBruteForce(n: int, p_md: int, ps: Optional["SimplePrimeSieve"]=None) -> int:
@@ -402,6 +505,10 @@ def rollingRegularPolygonReturnAfterAtMostNRollsCount(n_roll_max: int, n_sides: 
     # shape in the corner)
 
     # Review- Try to make faster
+
+    if n_sides <= 3:
+        return 0
+
     """
     rpt_func = lambda corner: n_sides // (gcd(corner, n_sides))
    
@@ -2311,8 +2418,57 @@ def xorEquationSolutionsCount(a_b_max: int=10 ** 7) -> int:
         print(f"{format(odd, 'b')}: {[format(x, 'b') for x in sorted(ab_pairs[odd])]}")
     return res
 
+# Problem 946
+def continuedFractionRationalExpression(cf: Iterable[int], a: int, b: int, c: int, d: int) -> Generator[int, None, None]:
+
+    # Using algorithm from https://perl.plover.com/classes/cftalk/TALK
+
+    #print("hi")
+    it = iter(cf)
+
+    def outputLoop(curr: Tuple[int, int, int, int]) -> Tuple[List[int], Tuple[int, int, int, int]]:
+        res = []
+        while curr[2] and curr[3]:
+            q1 = curr[0] // curr[2]
+            q2 = curr[1] // curr[3]
+            if q1 != q2: break
+            res.append(q1)
+            #print("output", q1, curr)
+            curr = (curr[2], curr[3], curr[0] - curr[2] * q1, curr[1] - curr[3] * q1)
+        return (res, curr)
+
+
+    curr = (a, b, c, d)
+    for p in it:
+        curr = (curr[1], curr[0] + curr[1] * p, curr[3], curr[2] + curr[3] * p)
+        #print("input", p, curr)
+        lst, curr = outputLoop(curr)
+        for num in lst: yield num
+        if not curr[2] and not curr[3]:
+            break
+    else:
+        curr = (curr[1], curr[1], curr[3], curr[3])
+        lst, curr = outputLoop(curr)
+        for num in lst: yield num
+    return
+
+def continuedFractionAlphaTermsGenerator() -> Generator[int, None, None]:
+    ps = SimplePrimeSieve()
+    for p in ps.endlessPrimeGenerator():
+        yield 2
+        for _ in range(p):
+            yield 1
+    return
+
+def continuedFractionAlphaRationalExpressionInitalTermsSum(n_init_terms: int=10 ** 8, a: int=3, b: int=2, c: int=2, d: int=3) -> int:
+    cf = iter(continuedFractionAlphaTermsGenerator())
+    res = sum(num for _, num in zip(range(n_init_terms), continuedFractionRationalExpression(cf, a, b, c, d)))
+    return res
+
+        
+
 if __name__ == "__main__":
-    to_evaluate = {935}
+    to_evaluate = {946}
     since0 = time.time()
 
     if not to_evaluate or 932 in to_evaluate:
@@ -2322,7 +2478,7 @@ if __name__ == "__main__":
 
     if not to_evaluate or 933 in to_evaluate:
         since = time.time()
-        res = paperCuttingWinningMoveSum2(width_min=2, width_max=123, height_min=2, height_max=1234567)
+        res = paperCuttingWinningMoveSum3(width_min=2, width_max=123, height_min=2, height_max=1234567)
         print(f"Solution to Project Euler #933 = {res}, calculated in {time.time() - since:.4f} seconds")
 
     if not to_evaluate or 934 in to_evaluate:
@@ -2382,6 +2538,11 @@ if __name__ == "__main__":
     #    since = time.time()
     #    res = xorEquationSolutionsCount(a_b_max=127)
     #    print(f"Solution to Project Euler #945 = {res}, calculated in {time.time() - since:.4f} seconds")
+
+    if not to_evaluate or 946 in to_evaluate:
+        since = time.time()
+        res = continuedFractionAlphaRationalExpressionInitalTermsSum(n_init_terms=10 ** 8, a=3, b=2, c=2, d=3)
+        print(f"Solution to Project Euler #946 = {res}, calculated in {time.time() - since:.4f} seconds")
 
     print(f"Total time taken = {time.time() - since0:.4f} seconds")
 
@@ -2495,4 +2656,11 @@ for i1 in range(1, row_max + 1):
         res[i1][i2] = (tot == -1)
 for i, row in enumerate(res):
     print(i, ["A" if b else "B" for b in row])
+"""
+"""
+cnt = 0
+for term in continuedFractionRationalExpression([1, 5, 2], 1, 2, 2, 0):
+    print(term)
+    if cnt > 10: break
+    cnt += 1
 """
