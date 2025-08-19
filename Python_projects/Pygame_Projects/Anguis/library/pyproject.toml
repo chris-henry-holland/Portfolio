@@ -20,9 +20,6 @@ keywords = ["pygame", "game", "UI", "user interface", "button", "slider", "text 
 dependencies = [
     "sortedcontainers>=2.4.0",
     "pygame>=2.1.3",
-    "pygame_display_component_classes @ git+ssh://git@github.com/chris-henry-holland/Portfolio/tree/main/Python_projects/Pygame_Projects/General_pygame_tools>=1.0.0",
+    "pygame_display_component_classes @ git+https://github.com/chris-henry-holland/Portfolio/tree/main/Python_projects/Pygame_Projects/General_pygame_tools/library",
 ]
 requires-python = ">=3.11"
-
-[tool.hatch.metadata]
-allow-direct-references = true
