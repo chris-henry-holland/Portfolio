@@ -210,11 +210,12 @@ def paperCuttingWinningMoveSum2(width_min: int=2, width_max: int=123, height_min
         height_min, width_min = width_min, height_min
 
     grundy_arr = []
-
+    since = [time.time()]
     def extendGrundy(num: int) -> int:
         for h in range(len(grundy_arr), num + 1):
             if not h % 10:
-                print(f"extending Grundy array to h = {h}")
+                print(f"extending Grundy array to h = {h}, time since last print = {time.time() - since[0]:.3f} seconds")
+                since[0] = time.time()
             grundy_arr.append([])
             for w in range(min(h, width_max - 1) + 1):
                 nums = set()
@@ -243,7 +244,7 @@ def paperCuttingWinningMoveSum2(width_min: int=2, width_max: int=123, height_min
         
     h_min = max(height_min, 2)
     w_min = max(width_min, 2)
-    res = 0
+    #res = 0
     #for w in range(w_min, width_max + 1):
     #    res += (w - 1) * ((height_max - 1) * height_max - (h_min) * (h_min - 1))
     
@@ -272,6 +273,8 @@ def paperCuttingWinningMoveSum2(width_min: int=2, width_max: int=123, height_min
     target_diff = (width_max * (width_max - 1) - (w_min - 1) * (w_min - 2)) >> 1
     h_mx = 2
     #print(f"height_max = {height_max}")
+    linear_transition = 100
+    h_mx_linear_diff = 100
     while h_mx < height_max:
         h1 = h_mx - 1
         h2 = h_mx
@@ -281,18 +284,21 @@ def paperCuttingWinningMoveSum2(width_min: int=2, width_max: int=123, height_min
         tot2 = calculateTotal(h2)
         tot3 = calculateTotal(h3)
         d1 = tot3 - 2 * tot2 + tot1
-        if d1 != target_diff:
+        if d1 == target_diff:
+            tot4 = calculateTotal(h4)
+            d2 = tot4 - 2 * tot3 + tot2
+            print(f"differences = {d1}, {d2}, target difference = {target_diff}")
+            if d2 == target_diff:
+                print("target difference found")
+                return tot1 + (tot2 - tot1) * (height_max - h1) + target_diff * (((height_max - h1) * (height_max - h1 - 1)) >> 1)
+        else:
             print(f"difference = {d1}, target difference = {target_diff}")
-            h_mx <<= 1
-            continue
-        tot4 = calculateTotal(h4)
         
-        d2 = tot4 - 2 * tot3 + tot2
-        print(f"differences = {d1}, {d2}, target difference = {target_diff}")
-        if d2 == target_diff:
-            print("target difference found")
-            return tot1 + (tot2 - tot1) * (height_max - h1) + target_diff * (((height_max - h1) * (height_max - h1 - 1)) >> 1)
-        h_mx <<= 1
+        if h_mx > linear_transition:
+            h_mx += h_mx_linear_diff
+        else:
+            h_mx <<= 1
+        print(f"new h_mx = {h_mx}")
     #print(f"height_max = {height_max}")
     return calculateTotal(height_max)
 
@@ -2468,7 +2474,7 @@ def continuedFractionAlphaRationalExpressionInitalTermsSum(n_init_terms: int=10 
         
 
 if __name__ == "__main__":
-    to_evaluate = {946}
+    to_evaluate = {933}
     since0 = time.time()
 
     if not to_evaluate or 932 in to_evaluate:
@@ -2478,7 +2484,7 @@ if __name__ == "__main__":
 
     if not to_evaluate or 933 in to_evaluate:
         since = time.time()
-        res = paperCuttingWinningMoveSum3(width_min=2, width_max=123, height_min=2, height_max=1234567)
+        res = paperCuttingWinningMoveSum2(width_min=2, width_max=123, height_min=2, height_max=1234567)
         print(f"Solution to Project Euler #933 = {res}, calculated in {time.time() - since:.4f} seconds")
 
     if not to_evaluate or 934 in to_evaluate:

@@ -1,0 +1,28 @@
+# pyproject.toml
+
+[build-system]
+requires = ["setuptools>=64.0.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "anguis"
+version = "1.0.0"
+description = "Anguis, a snake clone game"
+readme = "README.md"
+authors = [{ name = "Christopher Holland", email = "chris.henry.holland@gmail.com" }]
+license = { file = "LICENSE" }
+classifiers = [
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python",
+    "Programming Language :: Python :: 3",
+]
+keywords = ["pygame", "game", "UI", "user interface", "button", "slider", "text manager", "menu"]
+dependencies = [
+    "sortedcontainers>=2.4.0",
+    "pygame>=2.1.3",
+    "pygame_display_component_classes @ git+ssh://git@github.com/chris-henry-holland/Portfolio/tree/main/Python_projects/Pygame_Projects/General_pygame_tools>=1.0.0",
+]
+requires-python = ">=3.11"
+
+[tool.hatch.metadata]
+allow-direct-references = true
