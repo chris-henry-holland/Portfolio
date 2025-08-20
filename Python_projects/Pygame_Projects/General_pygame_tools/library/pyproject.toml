@@ -10,6 +10,7 @@ version = "1.0.0"
 description = "Custom display component classes for use in pygame user interfaces, including menus"
 readme = "README.md"
 authors = [{ name = "Christopher Holland", email = "chris.henry.holland@gmail.com" }]
+urls.Code = "https://github.com/chris-henry-holland/Portfolio/tree/main/Python_projects/Pygame_Projects/General_pygame_tools"
 license = { file = "LICENSE" }
 classifiers = [
     "License :: OSI Approved :: MIT License",

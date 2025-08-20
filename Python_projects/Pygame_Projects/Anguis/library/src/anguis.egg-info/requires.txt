@@ -1,3 +1,3 @@
 sortedcontainers>=2.4.0
 pygame>=2.1.3
-pygame_display_component_classes@ git+https://github.com/chris-henry-holland/Portfolio/tree/main/Python_projects/Pygame_Projects/General_pygame_tools/library
+pygame_display_component_classes@ git+https://github.com/chris-henry-holland/Portfolio
