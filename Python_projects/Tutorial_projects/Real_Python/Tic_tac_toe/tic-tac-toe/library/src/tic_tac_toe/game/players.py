@@ -2,24 +2,37 @@
 
 from __future__ import annotations
 
+from typing import Callable
+
 import abc
+import enum
 import time
 
 from tic_tac_toe.logic.exceptions import InvalidMove
 from tic_tac_toe.logic.minimax import findBestMove, findBestMovePrecomputed
-from tic_tac_toe.logic.models import GameState, Mark, Move
+from tic_tac_toe.logic.models import Grid, GameState, Mark, Move
+
+class PlayerType(enum.StrEnum):
+    HUMAN = "human"
+    RANDOM = "random"
+    MINIMAX = "minimax"
+
+    @property
+    def is_computer(self) -> bool:
+        return self != PlayerType.HUMAN
 
 class Player(metaclass=abc.ABCMeta):
     def __init__(self, mark: Mark) -> None:
         self.mark = mark
 
-    def makeMove(self, game_state: GameState) -> GameState:
+    def makeMove(self, game_state: GameState | int) -> GameState | None:
         if self.mark is not game_state.current_mark:
             raise InvalidMove("It is the other player's turn")
         if move := self.getMove(game_state):
+            if move == -1:
+                return None
             return move.after_state
         raise InvalidMove("No more possible moves")
-        return
     
     @abc.abstractmethod
     def getMove(self, game_state: GameState) -> Move | None:
@@ -27,6 +40,7 @@ class Player(metaclass=abc.ABCMeta):
         Returns the current player's move in the given game state.
         """
 
+    #def resetRequest(self) -> 
 class ComputerPlayer(Player, metaclass=abc.ABCMeta):
     def __init__(self, mark: Mark, move_delay_s: float=0.25, **kwargs) -> None:
         super().__init__(mark)

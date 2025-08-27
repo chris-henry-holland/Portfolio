@@ -13,3 +13,9 @@ class Renderer(metaclass=abc.ABCMeta):
         """
         Renders the given game state.
         """
+    
+    def isResetRequested(self) -> bool:
+        return False
+    
+    def reset(self) -> None:
+        return

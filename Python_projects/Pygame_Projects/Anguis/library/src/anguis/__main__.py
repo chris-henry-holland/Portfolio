@@ -1,13 +1,8 @@
-#!/usr/bin/env python3
-import os
-import sys
+# library/src/anguis/__main__.py
 
-#sys.path.append(os.path.join(os.path.dirname(__file__), "../"))
+from anguis.game import Game
 
-from .game import Game
-
-
-if __name__ == "__main__":
+def main() -> None:
     game = Game(
         arena_shape=(15, 16),
         move_rate=15,
@@ -15,3 +10,6 @@ if __name__ == "__main__":
         head_init_direct=(0, 0)
     )
     game.run()
+
+if __name__ == "__main__":
+    main()

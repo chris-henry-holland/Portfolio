@@ -1,10 +1,6 @@
-#!/usr/bin/env python
+# library/src/anguis/gameplay.py
 
 from collections import deque
-import random
-import sys
-import os
-import copy
 
 from sortedcontainers import SortedSet, SortedDict
 
@@ -12,26 +8,11 @@ from typing import Union, Tuple, List, Set, Dict, Optional, Callable, Any, Gener
 
 import pygame as pg
 
-from pygame.locals import (
-    RLEACCEL,
-    K_UP,
-    K_DOWN,
-    K_LEFT,
-    K_RIGHT,
-    K_ESCAPE,
-    KEYDOWN,
-    QUIT,
-    K_RETURN,
-    K_KP_ENTER,
-)
+from anguis.utils import randomKTupleGenerator, findKthMissing
 
-sys.path.append(os.path.join(os.path.dirname(__file__), "../../"))
-#sys.path.append(os.path.abspath('../../bin/Algorithms/'))
-from Graph_classes.utils import randomKTupleGenerator, findKthMissing
-
-sys.path.append(os.path.join(os.path.dirname(__file__), "../"))
+#sys.path.append(os.path.join(os.path.dirname(__file__), "../"))
 #sys.path.append(os.path.abspath('../'))
-from General_tools import (
+from pygame_display_component_classes import (
     createNavkeyDict,
     Real,
     enter_keys_def_glob,
@@ -45,7 +26,7 @@ from General_tools import (
     UserInputProcessor
 )
 
-from .bots import TailChaserBot
+from anguis.bots import TailChaserBot
 
 class NoSpaceToCreateError(Exception):
     """

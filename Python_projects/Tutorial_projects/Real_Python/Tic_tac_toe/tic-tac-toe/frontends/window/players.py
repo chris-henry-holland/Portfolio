@@ -12,8 +12,10 @@ class WindowPlayer(Player):
         super().__init__(mark)
         self.events = events
     
-    def getMove(self, game_state: GameState) -> Move | None:
+    def getMove(self, game_state: GameState) -> Move | int | None:
         idx = self.events.get()
+        if idx == -1:
+            return -1
         try:
             return game_state.makeMoveTo(idx)
         finally:

@@ -1,33 +1,11 @@
-#!/usr/bin/env python
+# library/src/anguis/bots.py
 
 from collections import deque
 import random
 
 from typing import Union, Tuple, List, Set, Dict, Optional, Callable, Any, Generator
 
-class UnionFind:
-    def __init__(self, n: int):
-        self.n = n
-        self.root = list(range(n))
-        self.rank = [1] * n
-        #self.group_sizes = {idx: 1 for idx in range(n)}
-    
-    def find(self, v: int) -> int:
-        r = self.root[v]
-        if r == v: return v
-        res = self.find(r)
-        self.root[v] = res
-        return res
-    
-    def union(self, v1: int, v2: int) -> None:
-        r1, r2 = list(map(self.find, (v1, v2)))
-        if r1 == r2: return
-        d = self.rank[r1] - self.rank[r2]
-        if d < 0: r1, r2 = r2, r1
-        elif not d: self.rank[r1] += 1
-        self.root[r2] = r1
-        #self.group_sizes[r1] += self.group_sizes.pop(r2)
-        return
+from anguis.utils import UnionFind
 
 class TailChaserBot:
     def __init__(self, shape: Tuple[int], head_idx: int, head_direct: Tuple[int], fruits: Set[int], snake_qu: Optional[deque]=None):

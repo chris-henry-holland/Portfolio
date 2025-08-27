@@ -1,6 +1,4 @@
-#!/usr/bin/env python
-import sys
-import os
+# library/src/anguis/gameplay.py
 
 from typing import Union, Tuple, List, Set, Dict, Optional, Callable, Any
 
@@ -11,8 +9,8 @@ from pygame.locals import (
     K_DOWN,
 )
 
-sys.path.append(os.path.join(os.path.dirname(__file__), "../"))
-from General_tools import (
+#sys.path.append(os.path.join(os.path.dirname(__file__), "../"))
+from pygame_display_component_classes import (
     enter_keys_def_glob,
     named_colors_def,
     font_def_func,
@@ -21,14 +19,14 @@ from General_tools import (
     TextGroup,
 )
 
-from .gameplay import GamePlay
+from anguis.gameplay import GamePlay
 
 class Game:
     def __init__(
         self,
         head_size: int=25,
         arena_shape: Tuple[int, int]=(16, 15),
-        head_init_pos_func: Optional[Union[Tuple[int, int], Callable[["Gameplay"], Tuple[int, int]]]]=None,
+        head_init_pos_func: Optional[Union[Tuple[int, int], Callable[[GamePlay], Tuple[int, int]]]]=None,
         head_init_direct: Tuple[int, int]=(0, 1),
         move_rate: float=15,
         n_frame_per_move: float=2,

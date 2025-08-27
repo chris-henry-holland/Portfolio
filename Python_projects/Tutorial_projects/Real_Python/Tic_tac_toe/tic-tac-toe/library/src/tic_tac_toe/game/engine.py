@@ -24,6 +24,8 @@ class TicTacToe:
         validatePlayers(self.player1, self.player2)
 
     def play(self, starting_mark: Mark = Mark("X")) -> None:
+        #print("using play()")
+        self.renderer.reset()
         game_state = GameState(Grid(), starting_mark)
         while True:
             self.renderer.render(game_state)
@@ -35,7 +37,16 @@ class TicTacToe:
             except InvalidMove as  ex:
                 if self.error_handler:
                     self.error_handler(ex)
+            if game_state is None:
+                #print("hi")
+                return
+        while True:
+            b = self.renderer.isResetRequested()
+            #print(b)
+            if b:
+                break
         return
+    
     
     def getCurrentPlayer(self, game_state: GameState) -> Player:
         return self.player1 if game_state.current_mark is self.player1.mark else self.player2
