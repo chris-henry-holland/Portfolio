@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import tkinter as tk
 
-from tkinter import font, ttk
+from tkinter import font
 from queue import Queue
 
 from tic_tac_toe.game.renderers import Renderer
@@ -17,7 +17,7 @@ class TicTacToeWindowBoard(tk.Tk):
 
     def __init__(self, events: Queue, player_colors: dict[str, str]={"X": "blue", "O": "green"}):
         super().__init__()
-        self.title("Tic-Tac-Tie Game")
+        self.title("Tic-Tac-Toe Game")
         self.events = events
         self.player_colors = player_colors
         self._reset_requested = False
